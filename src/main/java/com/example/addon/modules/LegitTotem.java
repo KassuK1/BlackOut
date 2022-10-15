@@ -21,7 +21,11 @@ public class LegitTotem extends Module {
     private void onTick(TickEvent.Pre event) {
         FindItemResult result = InvUtils.find(Items.TOTEM_OF_UNDYING);
         totems = result.count();
-        if (totems != 0 )
+        if (mc.currentScreen != null)
+        if (totems != 0 && mc.currentScreen instanceof InventoryScreen) {
             if (mc.player.getOffHandStack().getItem() != Items.TOTEM_OF_UNDYING) {
                 InvUtils.move().from(result.slot()).toOffhand();
-}}}
+            }
+        }
+    }
+}
