@@ -1,3 +1,4 @@
+[![Downloads](https://img.shields.io/github/downloads/KassuK1/BlackOut/total?color=blue&style=for-the-badge)](https://github.com/KassuK1/BlackOut/releases)
 # Blackout
 Ghost/Misc feature addon for Meteor client
 
