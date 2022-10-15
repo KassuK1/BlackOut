@@ -1,14 +1,12 @@
 package com.example.addon.modules;
 
+import baritone.api.event.events.TickEvent;
 import com.example.addon.Addon;
 import meteordevelopment.meteorclient.events.entity.EntityAddedEvent;
 import meteordevelopment.meteorclient.events.entity.EntityDestroyEvent;
 import meteordevelopment.meteorclient.events.entity.EntityRemovedEvent;
 import meteordevelopment.meteorclient.events.entity.player.InteractBlockEvent;
-import meteordevelopment.meteorclient.settings.BoolSetting;
-import meteordevelopment.meteorclient.settings.DoubleSetting;
-import meteordevelopment.meteorclient.settings.Setting;
-import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
@@ -18,6 +16,7 @@ import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -44,18 +43,17 @@ public class GhostCrystal extends Module {
         .defaultValue(true)
         .build()
     );
-    private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Slow")
-        .description("Slow.")
-        .defaultValue(10)
-        .range(0, 10000)
-        .sliderMax(10000)
+    private final Setting<Integer> delay = sgGeneral.add(new IntSetting.Builder()
+        .name("Delay")
+        .description("Delay.")
+        .defaultValue(5)
+        .range(0, 20)
+        .sliderMax(20)
         .build()
     );
     protected BlockPos placePos;
     protected boolean canBreak;
-    protected boolean canPlace;
-    protected final StopWatch stopWatch = new StopWatch();
+    protected int timer = 0;
 
     public GhostCrystal() {
         super(Addon.CATEGORY, "GhostCrystal", "Breaks crystals automatically.");
@@ -67,16 +65,27 @@ public class GhostCrystal extends Module {
             BlockHitResult result = event.result;
             boolean holding = mc.player.isHolding(Items.END_CRYSTAL);
             if (holding) {
-                if (stopWatch.isStopped()) {
-                    stopWatch.start();
+                if (placePos == null) {
+                    timer = 0;
                 }
-                if (stopWatch.getTime() > delay.get()) {
+                if (timer == 0 || !slow.get()) {
+                    if (slow.get()) {
+                        timer = delay.get();
+                    }
+                    ChatUtils.sendMsg(Text.of(String.valueOf(timer)));
                     canBreak = true;
                     placePos = new BlockPos(result.getBlockPos().getX(), result.getBlockPos().getY() + 1, result.getBlockPos().getZ());
                 } else {
                     event.cancel();
                 }
             }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOW)
+    private void onTick(TickEvent event) {
+        if (timer > 0) {
+            timer--;
         }
     }
 
@@ -94,17 +103,6 @@ public class GhostCrystal extends Module {
                             mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
                         }
                     }
-                }
-            }
-        }
-    }
-    private void onKill(EntityRemovedEvent event) {
-        if (mc.player != null && event.entity instanceof EndCrystalEntity) {
-            BlockPos position = event.entity.getBlockPos();
-            if (placePos != null) {
-                if (position.equals(placePos) && slow.get()) {
-                    ChatUtils.sendMsg(Text.of("reset"));
-                    stopWatch.reset();
                 }
             }
         }
