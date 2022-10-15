@@ -1,8 +1,5 @@
-# Meteor Addon Template
+# Blackout
+Ghost/Misc feature addon for Meteor client
 
-A template to allow easy usage of the Meteor Addon API.
-
-### How to use:  
-- Clone this project
-- Use this template to create new modules/commands
+### How to use:
 - Run the mod with Meteor.
