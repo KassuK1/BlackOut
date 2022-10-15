@@ -1,12 +1,13 @@
 package com.example.addon.modules;
 
-import baritone.api.event.events.TickEvent;
 import com.example.addon.Addon;
 import meteordevelopment.meteorclient.events.entity.EntityAddedEvent;
-import meteordevelopment.meteorclient.events.entity.EntityDestroyEvent;
-import meteordevelopment.meteorclient.events.entity.EntityRemovedEvent;
 import meteordevelopment.meteorclient.events.entity.player.InteractBlockEvent;
-import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.settings.BoolSetting;
+import meteordevelopment.meteorclient.settings.IntSetting;
+import meteordevelopment.meteorclient.settings.Setting;
+import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
@@ -16,13 +17,9 @@ import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
-import org.apache.commons.lang3.time.StopWatch;
-
-import javax.xml.crypto.dom.DOMCryptoContext;
 
 /*
 Made by OLEPOSSU / Raksamies
@@ -72,7 +69,6 @@ public class GhostCrystal extends Module {
                     if (slow.get()) {
                         timer = delay.get();
                     }
-                    ChatUtils.sendMsg(Text.of(String.valueOf(timer)));
                     canBreak = true;
                     placePos = new BlockPos(result.getBlockPos().getX(), result.getBlockPos().getY() + 1, result.getBlockPos().getZ());
                 } else {
@@ -82,10 +78,10 @@ public class GhostCrystal extends Module {
         }
     }
 
-    @EventHandler(priority = EventPriority.LOW)
-    private void onTick(TickEvent event) {
+    @EventHandler(priority = EventPriority.HIGHEST)
+    private void onTick(TickEvent.Pre event) {
         if (timer > 0) {
-            timer--;
+            timer -= 1;
         }
     }
 
