@@ -15,8 +15,8 @@ public class HudExample extends HudElement {
 
     @Override
     public void render(HudRenderer renderer) {
-        setSize(renderer.textWidth("Example element", true), renderer.textHeight(true));
+        setSize(renderer.textWidth("Blackout", true), renderer.textHeight(true));
 
-        renderer.text("Example element", x, y, Color.WHITE, true);
+        renderer.text("Blackout", x, y, Color.BLACK, true);
     }
 }
