@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
-  "id": "addon-template",
+  "id": "blackout",
   "version": "${version}",
-  "name": "Addon Template",
-  "description": "An addon template for the Meteor addons.",
+  "name": "Blackout",
+  "description": "An addon for Meteor.",
   "authors": [
-    "seasnail"
+    "KassuK and OLEPOSSU"
   ],
   "contact": {
     "repo": "https://github.com/MeteorDevelopment/meteor-addon-template"
