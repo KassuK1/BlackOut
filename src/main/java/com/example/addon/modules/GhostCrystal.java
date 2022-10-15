@@ -3,41 +3,60 @@ package com.example.addon.modules;
 import com.example.addon.Addon;
 import meteordevelopment.meteorclient.events.entity.EntityAddedEvent;
 import meteordevelopment.meteorclient.events.entity.player.InteractBlockEvent;
+import meteordevelopment.meteorclient.settings.BoolSetting;
+import meteordevelopment.meteorclient.settings.Setting;
+import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.settings.Settings;
 import meteordevelopment.meteorclient.systems.modules.Module;
-import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
-import net.minecraft.item.ItemStack;
+import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.item.Items;
-import net.minecraft.text.Text;
+import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
+import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 
 public class GhostCrystal extends Module {
+    private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
+    private final Setting<Boolean> swing = sgGeneral.add(new BoolSetting.Builder()
+        .name("Swing")
+        .description("Swings.")
+        .defaultValue(true)
+        .build()
+    );
     protected BlockPos placePos;
+
     public GhostCrystal() {
-        super(Addon.CATEGORY, "AutoCrystal", "Breaks crystals automately.");
+        super(Addon.CATEGORY, "GhostCrystal", "Breaks crystals automatically.");
     }
 
     @EventHandler(priority = EventPriority.LOW)
     private void onInteract(InteractBlockEvent event) {
         if (mc.player != null) {
-            ChatUtils.sendMsg(Text.of("rurr"));
             BlockHitResult result = event.result;
-            boolean holding = mc.player.getStackInHand(event.hand).equals(new ItemStack(Items.END_CRYSTAL));
+            boolean holding = mc.player.isHolding(Items.END_CRYSTAL);
             if (holding) {
-                placePos = result.getBlockPos();
+                placePos = new BlockPos(result.getBlockPos().getX(), result.getBlockPos().getY() + 1, result.getBlockPos().getZ());
             }
         }
     }
 
+
     @EventHandler(priority = EventPriority.LOW)
     private void onSpawn(EntityAddedEvent event) {
-        if (mc.player != null) {
-            BlockPos position = new BlockPos(event.entity.getBlockPos());
-            if (position.equals(placePos)) {
-                mc.player.attack(event.entity);
+        if (mc.player != null && event.entity instanceof EndCrystalEntity) {
+            BlockPos position = event.entity.getBlockPos();
+            if (placePos != null) {
+                if (position.equals(placePos)) {
+                    placePos = null;
+                    mc.player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(event.entity, mc.player.isSneaking()));
+                    if (swing.get()) {
+                        mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
+                    }
+                }
             }
         }
     }
