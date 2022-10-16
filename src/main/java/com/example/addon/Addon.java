@@ -2,6 +2,7 @@ package com.example.addon;
 
 import com.example.addon.commands.CommandExample;
 import com.example.addon.hud.HudExample;
+import com.example.addon.modules.AutoAnchor;
 import com.example.addon.modules.GhostCrystal;
 import com.example.addon.modules.LegitTotem;
 import com.mojang.logging.LogUtils;
@@ -24,6 +25,7 @@ public class Addon extends MeteorAddon {
 
         // Modules
         Modules.get().add(new GhostCrystal());
+        Modules.get().add(new AutoAnchor());
         Modules.get().add(new LegitTotem());
 
         // Commands
