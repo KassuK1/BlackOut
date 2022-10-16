@@ -6,15 +6,15 @@ import net.minecraft.command.CommandSource;
 
 import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
 
-public class CommandExample extends Command {
-    public CommandExample() {
-        super("example", "Sends a message.");
+public class BlackoutGit extends Command {
+    public BlackoutGit() {
+        super("BlackoutInfo", "Gives the Blackout GitHub");
     }
 
     @Override
     public void build(LiteralArgumentBuilder<CommandSource> builder) {
         builder.executes(context -> {
-            info("hi");
+            info("https://github.com/KassuK1/BlackOut");
             return SINGLE_SUCCESS;
         });
     }

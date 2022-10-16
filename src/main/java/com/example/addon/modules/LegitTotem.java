@@ -22,10 +22,10 @@ public class LegitTotem extends Module {
         FindItemResult result = InvUtils.find(Items.TOTEM_OF_UNDYING);
         totems = result.count();
         if (mc.currentScreen != null)
-        if (totems != 0 && mc.currentScreen instanceof InventoryScreen) {
-            if (mc.player.getOffHandStack().getItem() != Items.TOTEM_OF_UNDYING) {
-                InvUtils.move().from(result.slot()).toOffhand();
+            if (totems != 0 && mc.currentScreen instanceof InventoryScreen) {
+                if (mc.player.getOffHandStack().getItem() != Items.TOTEM_OF_UNDYING) {
+                    InvUtils.move().from(result.slot()).toOffhand();
+                }
             }
-        }
     }
 }

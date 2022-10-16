@@ -1,6 +1,7 @@
 package com.example.addon;
 
-import com.example.addon.commands.CommandExample;
+import com.example.addon.commands.BlackoutGit;
+import com.example.addon.commands.GearInfo;
 import com.example.addon.hud.HudExample;
 import com.example.addon.modules.AutoAnchor;
 import com.example.addon.modules.GhostCrystal;
@@ -29,7 +30,8 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new LegitTotem());
 
         // Commands
-        Commands.get().add(new CommandExample());
+        Commands.get().add(new BlackoutGit());
+        Commands.get().add(new GearInfo());
 
         // HUD
         Hud.get().register(HudExample.INFO);
