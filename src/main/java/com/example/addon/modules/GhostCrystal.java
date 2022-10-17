@@ -11,6 +11,8 @@ import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityInteraction;
 import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.item.Items;
@@ -30,6 +32,12 @@ public class GhostCrystal extends Module {
     private final Setting<Boolean> swing = sgGeneral.add(new BoolSetting.Builder()
         .name("Swing")
         .description("Swings.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> setDead = sgGeneral.add(new BoolSetting.Builder()
+        .name("SetDead")
+        .description("Removes crystals right efter they despawned to maximize the speed.")
         .defaultValue(true)
         .build()
     );
@@ -84,16 +92,18 @@ public class GhostCrystal extends Module {
         }
     }
 
-
     @EventHandler(priority = EventPriority.LOW)
     private void onSpawn(EntityAddedEvent event) {
         if (mc.player != null && event.entity instanceof EndCrystalEntity) {
             BlockPos position = event.entity.getBlockPos();
-            if (placePos != null && mc.player.hasStatusEffect(StatusEffect.byRawId(18))) {
+            if (placePos != null && !mc.player.hasStatusEffect(StatusEffect.byRawId(18))) {
                 if (position.equals(placePos)) {
                     if (canBreak) {
                         canBreak = false;
                         mc.player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(event.entity, mc.player.isSneaking()));
+                        if (setDead.get()){
+                            event.entity.setRemoved(Entity.RemovalReason.KILLED);
+                        }
                         if (swing.get()) {
                             mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
                         }

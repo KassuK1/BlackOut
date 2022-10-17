@@ -67,14 +67,24 @@ public class AutoAnchor extends Module {
         .sliderMax(20)
         .build()
     );
-    protected BlockPos placePos;
-    protected boolean canBreak;
+    protected BlockPos placePos = null;
+    protected boolean canBreak = false;
     protected int glowTimer = 0;
     protected int breakTimer = 0;
     protected int replaceTimer = 0;
 
     public AutoAnchor() {
         super(Addon.CATEGORY, "AutoAnchor", "Blows up anchors.");
+    }
+
+    @Override
+    public void onActivate() {
+        super.onActivate();
+        placePos = null;
+        canBreak = false;
+        glowTimer = 0;
+        breakTimer = 0;
+        replaceTimer = 0;
     }
 
     @EventHandler(priority = EventPriority.LOW)
