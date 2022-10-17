@@ -23,11 +23,13 @@ public class Addon extends MeteorAddon {
         LOG.info("Initializing Blackout");
 
         // Modules
-        Modules.get().add(new AutoAnchor());
-        Modules.get().add(new AutoSwitch());
         Modules.get().add(new GhostCrystal());
+        Modules.get().add(new AutoAnchor());
         Modules.get().add(new LegitTotem());
         Modules.get().add(new WeakAlert());
+        Modules.get().add(new AutoClickerPlus());
+        Modules.get().add(new OffhandPlus());
+        Modules.get().add(new AutoSwitch());
 
         // Commands
         Commands.get().add(new BlackoutGit());
