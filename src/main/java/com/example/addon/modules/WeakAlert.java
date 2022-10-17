@@ -2,6 +2,7 @@ package com.example.addon.modules;
 
 import com.example.addon.Addon;
 import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.IntSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
@@ -13,6 +14,12 @@ import net.minecraft.entity.effect.StatusEffect;
 
 public class WeakAlert extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final Setting<Boolean> single = sgGeneral.add(new BoolSetting.Builder()
+        .name("Single")
+        .description("Only sends the message once.")
+        .defaultValue(false)
+        .build()
+    );
 
     private final Setting<Integer> delay = sgGeneral.add(new IntSetting.Builder()
         .name("Delay")
@@ -22,6 +29,8 @@ public class WeakAlert extends Module {
         .sliderMax(60)
         .build()
     );
+    private int timer;
+    private boolean last;
 
     public WeakAlert() {
         super(Addon.CATEGORY, "WeakAlert", "Alerts you if you get weakness");
@@ -29,9 +38,27 @@ public class WeakAlert extends Module {
 
     @EventHandler(priority = EventPriority.HIGH)
     private void onTick(TickEvent.Pre event) {
-        if (mc.player.hasStatusEffect(StatusEffect.byRawId(18)))
-            info("You have Weakness!!!");
+        if (mc.player != null && mc.world != null) {
+            if (mc.player.hasStatusEffect(StatusEffect.byRawId(18))) {
+                if (single.get()) {
+                    if (!last) {
+                        last = true;
+                        info("You have Weakness!!!");
+                    }
+                } else {
+                    if (timer > 0) {
+                        timer--;
+                    } else {
+                        timer = delay.get();
+                        info("You have Weakness!!!");
+                    }
+                }
+            } else if (last) {
+                last = false;
+                info("Weakness has ended");
+            }
         }
     }
+}
 
 

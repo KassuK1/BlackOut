@@ -12,6 +12,7 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.entity.decoration.EndCrystalEntity;
+import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
@@ -88,7 +89,7 @@ public class GhostCrystal extends Module {
     private void onSpawn(EntityAddedEvent event) {
         if (mc.player != null && event.entity instanceof EndCrystalEntity) {
             BlockPos position = event.entity.getBlockPos();
-            if (placePos != null) {
+            if (placePos != null && mc.player.hasStatusEffect(StatusEffect.byRawId(18))) {
                 if (position.equals(placePos)) {
                     if (canBreak) {
                         canBreak = false;

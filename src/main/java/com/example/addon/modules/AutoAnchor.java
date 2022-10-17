@@ -13,6 +13,7 @@ import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
@@ -35,6 +36,7 @@ public class AutoAnchor extends Module {
         .defaultValue(false)
         .build()
     );
+
     private final Setting<Integer> glowDelay = sgGeneral.add(new IntSetting.Builder()
         .name("Glowstone Delay")
         .description("Delay for placing glowstone.")
@@ -51,10 +53,25 @@ public class AutoAnchor extends Module {
         .sliderMax(20)
         .build()
     );
+    private final Setting<Boolean> replace = sgGeneral.add(new BoolSetting.Builder()
+        .name("Replace")
+        .description("Replaces anchor when placed over enemy's head.")
+        .defaultValue(false)
+        .build()
+    );
+    private final Setting<Integer> replaceDelay = sgGeneral.add(new IntSetting.Builder()
+        .name("Replace Delay")
+        .description("Delay for replacing.")
+        .defaultValue(5)
+        .range(0, 20)
+        .sliderMax(20)
+        .build()
+    );
     protected BlockPos placePos;
     protected boolean canBreak;
     protected int glowTimer = 0;
     protected int breakTimer = 0;
+    protected int replaceTimer = 0;
 
     public AutoAnchor() {
         super(Addon.CATEGORY, "AutoAnchor", "Blows up anchors.");
@@ -73,7 +90,9 @@ public class AutoAnchor extends Module {
                     placePos = result.getBlockPos().offset(event.result.getSide());
                     canBreak = true;
                 } else {
-                    event.cancel();
+                    if (canBreak) {
+                        event.cancel();
+                    }
                 }
             }
         }
@@ -92,6 +111,13 @@ public class AutoAnchor extends Module {
             breakTimer -= 1;
         } else if (breakTimer == 0) {
             breakTimer = -1;
+            InvUtils.swap(InvUtils.findInHotbar(Items.RESPAWN_ANCHOR).slot(), false);
+            place();
+        }
+        if (replaceTimer > 0) {
+            replaceTimer -= 1;
+        } else if (replaceTimer == 0) {
+            replaceTimer = -1;
             InvUtils.swap(InvUtils.findInHotbar(Items.RESPAWN_ANCHOR).slot(), false);
             place();
         }
@@ -114,19 +140,37 @@ public class AutoAnchor extends Module {
                         breakTimer = glowDelay.get() + breakDelay.get();
                     }
                 }
+            } else if (event.newState.getBlock().equals(Blocks.AIR) && event.oldState.getBlock().equals(Blocks.RESPAWN_ANCHOR) &&
+            replace.get() && onTop(placePos)) {
+                BlockPos position = event.pos;
+                if (placePos != null) {
+                    if (position.equals(placePos)) {
+                        replaceTimer = replaceDelay.get();
+                    }
+                }
             }
         }
     }
 
     private void place() {
-
         if (mc.player != null && mc.world != null && placePos != null) {
-
             mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
                 new BlockHitResult(new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ()), Direction.UP, placePos, false), 0));
             if (swing.get()) {
                 mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
             }
         }
+    }
+
+    private boolean onTop(BlockPos pos) {
+        if (mc.player != null && mc.world != null) {
+            for (PlayerEntity player : mc.world.getPlayers()) {
+                BlockPos playerPos = new BlockPos(Math.floor(player.getPos().x), Math.round(player.getPos().y), Math.floor(player.getPos().z));
+                if (playerPos.offset(Direction.UP, 2).equals(pos)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
