@@ -3,10 +3,7 @@ package com.example.addon;
 import com.example.addon.commands.BlackoutGit;
 import com.example.addon.commands.GearInfo;
 import com.example.addon.hud.HudExample;
-import com.example.addon.modules.AutoAnchor;
-import com.example.addon.modules.GhostCrystal;
-import com.example.addon.modules.LegitTotem;
-import com.example.addon.modules.WeakAlert;
+import com.example.addon.modules.*;
 import com.mojang.logging.LogUtils;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
 import meteordevelopment.meteorclient.systems.commands.Commands;
@@ -26,8 +23,9 @@ public class Addon extends MeteorAddon {
         LOG.info("Initializing Blackout");
 
         // Modules
-        Modules.get().add(new GhostCrystal());
         Modules.get().add(new AutoAnchor());
+        Modules.get().add(new AutoSwitch());
+        Modules.get().add(new GhostCrystal());
         Modules.get().add(new LegitTotem());
         Modules.get().add(new WeakAlert());
 

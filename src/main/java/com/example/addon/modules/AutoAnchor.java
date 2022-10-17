@@ -96,7 +96,8 @@ public class AutoAnchor extends Module {
                 if (placePos == null) {
                     placePos = result.getBlockPos().offset(event.result.getSide());
                     canBreak = true;
-                } else if (mc.world.getBlockState(placePos).getBlock().equals(Blocks.AIR)) {
+                } else if (mc.world.getBlockState(placePos).getBlock().equals(Blocks.AIR) ||
+                !result.getBlockPos().equals(placePos)) {
                     placePos = result.getBlockPos().offset(event.result.getSide());
                     canBreak = true;
                 } else {
@@ -179,6 +180,15 @@ public class AutoAnchor extends Module {
                 if (playerPos.offset(Direction.UP, 2).equals(pos)) {
                     return true;
                 }
+            }
+        }
+        return false;
+    }
+
+    private boolean isNextTo(BlockPos pos1, BlockPos pos2) {
+        for (Direction dir : Direction.values()) {
+            if (pos1.offset(dir).equals(pos2)) {
+                return true;
             }
         }
         return false;
