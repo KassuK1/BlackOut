@@ -28,7 +28,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new LegitTotem());
         Modules.get().add(new WeakAlert());
         Modules.get().add(new AutoClickerPlus());
-        Modules.get().add(new OffhandPlus());
+        Modules.get().add(new OffHandPlus());
 
         // Commands
         Commands.get().add(new BlackoutGit());

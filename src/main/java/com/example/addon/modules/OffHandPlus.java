@@ -21,6 +21,21 @@ public class OffHandPlus extends Module {
         .defaultValue(true)
         .build()
     );
+    private final Setting<Boolean> fall = sgGeneral.add(new BoolSetting.Builder()
+        .name("Fall switch")
+        .description("Should we switch to a totem when falling")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Integer> Falldist = sgGeneral.add(new IntSetting.Builder()
+        .name("Fall distance")
+        .description("When to switch after falling")
+        .defaultValue(3)
+        .range(0, 20)
+        .sliderMax(20)
+        .visible(() -> fall.get())
+        .build()
+    );
 
     private final Setting<Integer> hp = sgGeneral.add(new IntSetting.Builder()
         .name("Health")
@@ -45,7 +60,7 @@ public class OffHandPlus extends Module {
         totems = result.count();{
             if (mc.player != null)
                 if (mc.player.getOffHandStack().getItem() != Items.TOTEM_OF_UNDYING)
-                    if (health < hp.get()){
+                    if (health < hp.get() || fall.get() && mc.player.fallDistance > Falldist.get()){
                         InvUtils.move().from(result.slot()).toOffhand();}
         }
         FindItemResult result2 = InvUtils.find(Items.END_CRYSTAL);
@@ -53,7 +68,7 @@ public class OffHandPlus extends Module {
             if (mc.player != null)
                 if (crystal.get() && crystals > 0)
                     if (mc.player.getOffHandStack().getItem() != Items.END_CRYSTAL)
-                        if (health > hp.get()){
+                        if (health > hp.get()) {
                             InvUtils.move().from(result2.slot()).toOffhand();}
         }
     }
