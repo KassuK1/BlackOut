@@ -9,6 +9,7 @@ import meteordevelopment.meteorclient.settings.IntSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.entity.Entity;
@@ -16,10 +17,13 @@ import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 
 /*
 Made by OLEPOSSU / Raksamies
@@ -54,7 +58,22 @@ public class GhostCrystal extends Module {
         .sliderMax(20)
         .build()
     );
+    private final Setting<Boolean> obby = sgGeneral.add(new BoolSetting.Builder()
+        .name("Obby")
+        .description("Places crystal when you place obby.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Integer> obbyDelay = sgGeneral.add(new IntSetting.Builder()
+        .name("Obby Delay")
+        .description("Delay for switching from obby.")
+        .defaultValue(2)
+        .range(0, 20)
+        .sliderMax(20)
+        .build()
+    );
     protected BlockPos placePos;
+    protected int obbyTimer;
     protected boolean canBreak;
     protected int timer = 0;
 
@@ -80,14 +99,30 @@ public class GhostCrystal extends Module {
                 } else {
                     event.cancel();
                 }
+            } else if (mc.player.isHolding(Items.OBSIDIAN) && obby.get()) {
+                obbyTimer = obbyDelay.get();
+                canBreak = true;
+                placePos = event.result.getBlockPos().offset(event.result.getSide()).offset(Direction.UP);
             }
         }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onTick(TickEvent.Pre event) {
-        if (timer > 0) {
-            timer -= 1;
+        if (mc.player != null) {
+            if (timer > 0) {
+                timer -= 1;
+            }
+            if (obbyTimer > 0) {
+                obbyTimer--;
+            } else if (obbyTimer == 0) {
+                obbyTimer = -1;
+                if (placePos != null) {
+                    InvUtils.swap(InvUtils.findInHotbar(Items.END_CRYSTAL).slot(), false);
+                    mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
+                        new BlockHitResult(new Vec3d(placePos.getX(), placePos.getY() - 1, placePos.getZ()), Direction.UP, placePos.offset(Direction.DOWN), false), 0));
+                }
+            }
         }
     }
 
