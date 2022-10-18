@@ -13,7 +13,7 @@ import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.item.Items;
 
-public class OffhandPlus extends Module {
+public class OffHandPlus extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Boolean> crystal = sgGeneral.add(new BoolSetting.Builder()
         .name("Crystal")
@@ -34,7 +34,7 @@ public class OffhandPlus extends Module {
     private int crystals;
     private float health;
 
-    public OffhandPlus() {
+    public OffHandPlus() {
         super(Addon.CATEGORY, "Offhand+", "Non shit offhand");
     }
 
@@ -47,7 +47,7 @@ public class OffhandPlus extends Module {
                 if (mc.player.getOffHandStack().getItem() != Items.TOTEM_OF_UNDYING)
                     if (health < hp.get()){
                         InvUtils.move().from(result.slot()).toOffhand();}
-            }
+        }
         FindItemResult result2 = InvUtils.find(Items.END_CRYSTAL);
         crystals = result2.count();{
             if (mc.player != null)
