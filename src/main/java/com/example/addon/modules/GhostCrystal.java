@@ -9,6 +9,7 @@ import meteordevelopment.meteorclient.settings.IntSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
@@ -19,6 +20,7 @@ import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
+import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -58,6 +60,12 @@ public class GhostCrystal extends Module {
         .sliderMax(20)
         .build()
     );
+    private final Setting<Boolean> predict = sgGeneral.add(new BoolSetting.Builder()
+        .name("ID Predict")
+        .description("SPEEEEEED")
+        .defaultValue(true)
+        .build()
+    );
     private final Setting<Boolean> obby = sgGeneral.add(new BoolSetting.Builder()
         .name("Obby")
         .description("Places crystal when you place obby.")
@@ -76,6 +84,7 @@ public class GhostCrystal extends Module {
     protected int obbyTimer;
     protected boolean canBreak;
     protected int timer = 0;
+    protected int lastId;
 
     public GhostCrystal() {
         super(Addon.CATEGORY, "GhostCrystal", "Breaks crystals automatically.");
@@ -95,7 +104,16 @@ public class GhostCrystal extends Module {
                         timer = delay.get();
                     }
                     canBreak = true;
+                    if (placePos != null) {
+                        if (!placePos.equals(result.getBlockPos().offset(Direction.UP))) {
+                            lastId = Integer.MIN_VALUE;
+                        }
+                    }
                     placePos = new BlockPos(result.getBlockPos().getX(), result.getBlockPos().getY() + 1, result.getBlockPos().getZ());
+                    if (predict.get()) {
+                        predictHit();
+                        event.cancel();
+                    }
                 } else {
                     event.cancel();
                 }
@@ -103,6 +121,10 @@ public class GhostCrystal extends Module {
                 obbyTimer = obbyDelay.get();
                 canBreak = true;
                 placePos = event.result.getBlockPos().offset(event.result.getSide()).offset(Direction.UP);
+                if (predict.get()) {
+                    predictHit();
+                    event.cancel();
+                }
             }
         }
     }
@@ -119,8 +141,13 @@ public class GhostCrystal extends Module {
                 obbyTimer = -1;
                 if (placePos != null) {
                     InvUtils.swap(InvUtils.findInHotbar(Items.END_CRYSTAL).slot(), false);
-                    mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
-                        new BlockHitResult(new Vec3d(placePos.getX(), placePos.getY() - 1, placePos.getZ()), Direction.UP, placePos.offset(Direction.DOWN), false), 0));
+                    if (predict.get()) {
+                        predictHit();
+                    } else {
+                        mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
+                            new BlockHitResult(new Vec3d(placePos.getX(), placePos.getY() - 1, placePos.getZ()), Direction.UP, placePos.offset(Direction.DOWN), false), 0));
+
+                    }
                 }
             }
         }
@@ -145,5 +172,27 @@ public class GhostCrystal extends Module {
                 }
             }
         }
+    }
+
+    private int highest() {
+        int highest = lastId;
+        if (mc.world != null) {
+            for (Entity entity : mc.world.getEntities()) {
+                if (entity.getId() > highest) {
+                    highest = entity.getId();
+                }
+            }
+        }
+        return highest;
+    }
+
+    private void predictHit() {
+        mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
+            new BlockHitResult(new Vec3d(placePos.getX(), placePos.getY() - 1, placePos.getZ()), Direction.UP, placePos.offset(Direction.DOWN), false), 0));
+        EndCrystalEntity en = new EndCrystalEntity(mc.world, placePos.getX() + 0.5, placePos.getY() + 2, placePos.getZ() + 0.5);
+        en.setId(highest() + 1);
+        lastId = en.getId();
+        ChatUtils.sendMsg(Text.of(String.valueOf(lastId)));
+        mc.player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(en, mc.player.isSneaking()));
     }
 }
