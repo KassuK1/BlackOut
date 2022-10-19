@@ -2,6 +2,7 @@ package com.example.addon;
 
 import com.example.addon.commands.BlackoutGit;
 import com.example.addon.commands.GearInfo;
+import com.example.addon.commands.Kick;
 import com.example.addon.hud.HudExample;
 import com.example.addon.modules.anarchy.OffHandPlus;
 import com.example.addon.modules.anarchy.WeakAlert;
@@ -40,6 +41,7 @@ public class Addon extends MeteorAddon {
         // Commands
         Commands.get().add(new BlackoutGit());
         Commands.get().add(new GearInfo());
+        Commands.get().add(new Kick());
 
         // HUD
         Hud.get().register(HudExample.INFO);
