@@ -1,4 +1,4 @@
-package com.example.addon.modules;
+package com.example.addon.modules.ghost;
 
 import com.example.addon.Addon;
 import meteordevelopment.meteorclient.events.entity.player.InteractBlockEvent;
@@ -74,7 +74,7 @@ public class AutoAnchor extends Module {
     protected int replaceTimer = 0;
 
     public AutoAnchor() {
-        super(Addon.CATEGORY, "AutoAnchor", "Blows up anchors.");
+        super(Addon.GHOST, "AutoAnchor", "Blows up anchors.");
     }
 
     @Override

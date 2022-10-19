@@ -1,4 +1,4 @@
-package com.example.addon.modules;
+package com.example.addon.modules.ghost;
 
 import com.example.addon.Addon;
 import meteordevelopment.meteorclient.systems.modules.Module;
@@ -13,7 +13,7 @@ import net.minecraft.item.Items;
 public class LegitTotem extends Module {
 
     public LegitTotem() {
-        super(Addon.CATEGORY, "LegitTotem", "More legit autototem");
+        super(Addon.GHOST, "LegitTotem", "More legit autototem");
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

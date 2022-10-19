@@ -1,4 +1,4 @@
-package com.example.addon.modules;
+package com.example.addon.modules.ghost;
 
 import baritone.api.event.events.PacketEvent;
 import com.example.addon.Addon;
@@ -91,7 +91,7 @@ public class GhostCrystal extends Module {
     protected int lowest;
 
     public GhostCrystal() {
-        super(Addon.CATEGORY, "GhostCrystal", "Breaks crystals automatically.");
+        super(Addon.GHOST, "GhostCrystal", "Breaks crystals automatically.");
     }
 
     @Override

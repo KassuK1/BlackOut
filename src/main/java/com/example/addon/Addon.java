@@ -3,7 +3,9 @@ package com.example.addon;
 import com.example.addon.commands.BlackoutGit;
 import com.example.addon.commands.GearInfo;
 import com.example.addon.hud.HudExample;
-import com.example.addon.modules.*;
+import com.example.addon.modules.anarchy.OffHandPlus;
+import com.example.addon.modules.anarchy.WeakAlert;
+import com.example.addon.modules.ghost.*;
 import com.mojang.logging.LogUtils;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
 import meteordevelopment.meteorclient.systems.commands.Commands;
@@ -15,20 +17,25 @@ import org.slf4j.Logger;
 
 public class Addon extends MeteorAddon {
     public static final Logger LOG = LogUtils.getLogger();
-    public static final Category CATEGORY = new Category("Blackout");
-    public static final HudGroup HUD_GROUP = new HudGroup("Blackout");
+    public static final Category GHOST = new Category("Ghost");
+    public static final Category ANARCHY = new Category("Anarchy");
+    public static final HudGroup HUD_GHOST = new HudGroup("Ghost");
+    public static final HudGroup HUD_ANARCHY = new HudGroup("Anarchy");
+
 
     @Override
     public void onInitialize() {
         LOG.info("Initializing Blackout");
 
-        // Modules
-        Modules.get().add(new GhostCrystal());
+        // Ghost
         Modules.get().add(new AutoAnchor());
-        Modules.get().add(new LegitTotem());
-        Modules.get().add(new WeakAlert());
         Modules.get().add(new AutoClickerPlus());
+        Modules.get().add(new GhostCrystal());
+        Modules.get().add(new LegitTotem());
+
+        //Anarchy
         Modules.get().add(new OffHandPlus());
+        Modules.get().add(new WeakAlert());
 
         // Commands
         Commands.get().add(new BlackoutGit());
@@ -40,7 +47,8 @@ public class Addon extends MeteorAddon {
 
     @Override
     public void onRegisterCategories() {
-        Modules.registerCategory(CATEGORY);
+        Modules.registerCategory(GHOST);
+        Modules.registerCategory(ANARCHY);
     }
 
     @Override

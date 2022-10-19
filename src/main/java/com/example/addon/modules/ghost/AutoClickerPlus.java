@@ -1,4 +1,4 @@
-package com.example.addon.modules;
+package com.example.addon.modules.ghost;
 
 import com.example.addon.Addon;
 import meteordevelopment.meteorclient.systems.modules.Module;
@@ -22,7 +22,7 @@ public class AutoClickerPlus extends Module {
     private int leftClickTimer;
 
     public AutoClickerPlus() {
-        super(Addon.CATEGORY, "AutoClicker+", "Better AutoClicker");
+        super(Addon.GHOST, "AutoClicker+", "Better AutoClicker");
     }
     @Override
     public void onActivate() {
@@ -38,6 +38,9 @@ public class AutoClickerPlus extends Module {
     private void onTick(TickEvent.Post event) {
         if (leftClickTimer > leftClickDelay.get() && mc.options.attackKey.isPressed()){
             Utils.leftClick();
-            leftClickTimer = 0;}
+            leftClickTimer = 0;
+        } else {
+            leftClickTimer++;
+        }
 }
 }

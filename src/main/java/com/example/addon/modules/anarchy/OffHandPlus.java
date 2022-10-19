@@ -1,4 +1,4 @@
-package com.example.addon.modules;
+package com.example.addon.modules.anarchy;
 
 import com.example.addon.Addon;
 import meteordevelopment.meteorclient.settings.BoolSetting;
@@ -50,7 +50,7 @@ public class OffHandPlus extends Module {
     private float health;
 
     public OffHandPlus() {
-        super(Addon.CATEGORY, "Offhand+", "Non shit offhand");
+        super(Addon.ANARCHY, "Offhand+", "Non shit offhand");
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
