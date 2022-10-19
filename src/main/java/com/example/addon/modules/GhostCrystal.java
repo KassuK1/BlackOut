@@ -189,11 +189,6 @@ public class GhostCrystal extends Module {
                     lowest = ((EntitySpawnS2CPacket) event.getPacket()).getId();
                 }
             }
-            if (event.getPacket() instanceof EntityS2CPacket) {
-                if (((EntityS2CPacket) event.getPacket()).getEntity(mc.world).getId() > lowest) {
-                    lowest = ((EntityS2CPacket) event.getPacket()).getEntity(mc.world).getId();
-                }
-            }
         }
     }
 
