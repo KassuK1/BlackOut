@@ -94,6 +94,12 @@ public class GhostCrystal extends Module {
         super(Addon.CATEGORY, "GhostCrystal", "Breaks crystals automatically.");
     }
 
+    @Override
+    public void onActivate() {
+        super.onActivate();
+        lowest = Integer.MIN_VALUE;
+    }
+
     @EventHandler(priority = EventPriority.LOW)
     private void onInteract(InteractBlockEvent event) {
         if (mc.player != null) {
