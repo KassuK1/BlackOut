@@ -1,5 +1,6 @@
 package com.example.addon.modules;
 
+import baritone.api.event.events.PacketEvent;
 import com.example.addon.Addon;
 import meteordevelopment.meteorclient.events.entity.EntityAddedEvent;
 import meteordevelopment.meteorclient.events.entity.player.InteractBlockEvent;
@@ -20,6 +21,8 @@ import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
+import net.minecraft.network.packet.s2c.play.EntityS2CPacket;
+import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -85,6 +88,7 @@ public class GhostCrystal extends Module {
     protected boolean canBreak;
     protected int timer = 0;
     protected int lastId;
+    protected int lowest;
 
     public GhostCrystal() {
         super(Addon.CATEGORY, "GhostCrystal", "Breaks crystals automatically.");
@@ -106,7 +110,7 @@ public class GhostCrystal extends Module {
                     canBreak = true;
                     if (placePos != null) {
                         if (!placePos.equals(result.getBlockPos().offset(Direction.UP))) {
-                            lastId = Integer.MIN_VALUE;
+                            lastId = lowest;
                         }
                     }
                     placePos = new BlockPos(result.getBlockPos().getX(), result.getBlockPos().getY() + 1, result.getBlockPos().getZ());
@@ -155,6 +159,9 @@ public class GhostCrystal extends Module {
 
     @EventHandler(priority = EventPriority.LOW)
     private void onSpawn(EntityAddedEvent event) {
+        if (event.entity.getId() > lowest) {
+            lowest = event.entity.getId();
+        }
         if (mc.player != null && event.entity instanceof EndCrystalEntity) {
             BlockPos position = event.entity.getBlockPos();
             if (placePos != null && !mc.player.hasStatusEffect(StatusEffect.byRawId(18))) {
@@ -173,6 +180,23 @@ public class GhostCrystal extends Module {
             }
         }
     }
+
+    @EventHandler(priority = EventPriority.LOW)
+    private void onPacket(PacketEvent event) {
+        if (mc.world != null) {
+            if (event.getPacket() instanceof EntitySpawnS2CPacket) {
+                if (((EntitySpawnS2CPacket) event.getPacket()).getId() > lowest) {
+                    lowest = ((EntitySpawnS2CPacket) event.getPacket()).getId();
+                }
+            }
+            if (event.getPacket() instanceof EntityS2CPacket) {
+                if (((EntityS2CPacket) event.getPacket()).getEntity(mc.world).getId() > lowest) {
+                    lowest = ((EntityS2CPacket) event.getPacket()).getEntity(mc.world).getId();
+                }
+            }
+        }
+    }
+
 
     private int highest() {
         int highest = lastId;
