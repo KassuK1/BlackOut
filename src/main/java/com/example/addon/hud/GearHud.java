@@ -14,7 +14,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 
 public class GearHud extends HudElement {
-    //EI TOIMI
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Double> scale = sgGeneral.add(new DoubleSetting.Builder()
         .name("Scale")
