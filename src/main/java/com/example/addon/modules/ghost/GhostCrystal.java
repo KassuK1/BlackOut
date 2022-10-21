@@ -1,9 +1,9 @@
 package com.example.addon.modules.ghost;
 
-import baritone.api.event.events.PacketEvent;
 import com.example.addon.Addon;
 import meteordevelopment.meteorclient.events.entity.EntityAddedEvent;
 import meteordevelopment.meteorclient.events.entity.player.InteractBlockEvent;
+import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.IntSetting;
@@ -21,7 +21,6 @@ import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
-import net.minecraft.network.packet.s2c.play.EntityS2CPacket;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
@@ -165,9 +164,6 @@ public class GhostCrystal extends Module {
 
     @EventHandler(priority = EventPriority.LOW)
     private void onSpawn(EntityAddedEvent event) {
-        if (event.entity.getId() > lowest) {
-            lowest = event.entity.getId();
-        }
         if (mc.player != null && event.entity instanceof EndCrystalEntity) {
             BlockPos position = event.entity.getBlockPos();
             if (placePos != null && !mc.player.hasStatusEffect(StatusEffect.byRawId(18))) {
@@ -182,17 +178,6 @@ public class GhostCrystal extends Module {
                             mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
                         }
                     }
-                }
-            }
-        }
-    }
-
-    @EventHandler(priority = EventPriority.LOW)
-    private void onPacket(PacketEvent event) {
-        if (mc.world != null) {
-            if (event.getPacket() instanceof EntitySpawnS2CPacket) {
-                if (((EntitySpawnS2CPacket) event.getPacket()).getId() > lowest) {
-                    lowest = ((EntitySpawnS2CPacket) event.getPacket()).getId();
                 }
             }
         }
@@ -217,7 +202,6 @@ public class GhostCrystal extends Module {
         EndCrystalEntity en = new EndCrystalEntity(mc.world, placePos.getX() + 0.5, placePos.getY() + 2, placePos.getZ() + 0.5);
         en.setId(highest() + 1);
         lastId = en.getId();
-        ChatUtils.sendMsg(Text.of(String.valueOf(lastId)));
         mc.player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(en, mc.player.isSneaking()));
     }
 }
