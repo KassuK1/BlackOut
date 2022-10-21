@@ -3,10 +3,7 @@ package com.example.addon.modules.anarchy;
 import com.example.addon.Addon;
 import meteordevelopment.meteorclient.events.entity.EntityAddedEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
-import meteordevelopment.meteorclient.settings.BoolSetting;
-import meteordevelopment.meteorclient.settings.DoubleSetting;
-import meteordevelopment.meteorclient.settings.Setting;
-import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.meteorclient.utils.player.DamageUtils;
@@ -19,6 +16,7 @@ import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
+import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.util.Hand;
@@ -72,7 +70,6 @@ public class AutoCrystal extends Module {
         .defaultValue(6)
         .range(0, 10)
         .sliderMax(10)
-        .visible(place::get)
         .build()
     );
     private final Setting<Double> minPlaceDamage = sgPlace.add(new DoubleSetting.Builder()
@@ -81,7 +78,6 @@ public class AutoCrystal extends Module {
         .defaultValue(5)
         .range(0, 20)
         .sliderMax(20)
-        .visible(place::get)
         .build()
     );
     private final Setting<Double> maxSelfPlace = sgPlace.add(new DoubleSetting.Builder()
@@ -90,7 +86,26 @@ public class AutoCrystal extends Module {
         .defaultValue(0.7)
         .range(0, 10)
         .sliderMax(10)
-        .visible(place::get)
+        .build()
+    );
+    private final Setting<Boolean> placeSwing = sgPlace.add(new BoolSetting.Builder()
+        .name("Place Swing")
+        .description(".")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> prePlaceSwing = sgPlace.add(new BoolSetting.Builder()
+        .name("Pre Place Swing")
+        .description(".")
+        .defaultValue(true)
+        .visible(placeSwing::get)
+        .build()
+    );
+    private final Setting<SwingMode> placeSwingMode = sgPlace.add(new EnumSetting.Builder<SwingMode>()
+        .name("Place Swing Mode")
+        .description(".")
+        .defaultValue(SwingMode.Full)
+        .visible(placeSwing::get)
         .build()
     );
 
@@ -151,6 +166,26 @@ public class AutoCrystal extends Module {
         .name("Explode Blocking")
         .description(".")
         .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> explodeSwing = sgExplode.add(new BoolSetting.Builder()
+        .name("Explode Swing")
+        .description(".")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> preExplodeSwing = sgExplode.add(new BoolSetting.Builder()
+        .name("Pre Explode Swing")
+        .description(".")
+        .defaultValue(true)
+        .visible(explodeSwing::get)
+        .build()
+    );
+    private final Setting<SwingMode> explodeSwingMode = sgExplode.add(new EnumSetting.Builder<SwingMode>()
+        .name("Explode Swing Mode")
+        .description(".")
+        .defaultValue(SwingMode.Full)
+        .visible(explodeSwing::get)
         .build()
     );
 
@@ -256,6 +291,12 @@ public class AutoCrystal extends Module {
         .sliderMax(3)
         .build()
     );
+    public enum SwingMode {
+        None,
+        Full,
+        Client,
+        Packet
+    }
     private int lowest;
 
     protected BlockPos placePos;
@@ -286,8 +327,10 @@ public class AutoCrystal extends Module {
                 }
                 if (!blocked && place.get()) {
                     if (getHand(Items.END_CRYSTAL, preferMainHand.get()) != null) {
+                        swing(getHand(Items.END_CRYSTAL, preferMainHand.get()), placeSwingMode.get(), placeSwing.get(), prePlaceSwing.get(), true);
                         mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(getHand(Items.END_CRYSTAL, preferMainHand.get()),
                             new BlockHitResult(new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ()), Direction.UP, placePos, false), 0));
+                        swing(getHand(Items.END_CRYSTAL, preferMainHand.get()), placeSwingMode.get(), placeSwing.get(), prePlaceSwing.get(), false);
                         if (idPredict.get()) {
                             attackID(highestID() + 1, new Vec3d(placePos.getX() + 0.5, placePos.getY() + 1, placePos.getZ() + 0.5), false);
                         }
@@ -522,6 +565,19 @@ public class AutoCrystal extends Module {
         }
     }
 
+    private void swing(Hand hand, SwingMode mode, boolean mainSetting, boolean timingSetting, boolean pre) {
+        if (mainSetting && mc.player != null) {
+            if (timingSetting == pre) {
+                if (mode == SwingMode.Full || mode == SwingMode.Packet) {
+                    mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(hand));
+                }
+                if (mode == SwingMode.Full || mode == SwingMode.Client) {
+                    mc.player.swingHand(hand);
+                }
+            }
+        }
+    }
+
     private void attackID(int id, Vec3d pos, boolean checkSD) {
         EndCrystalEntity en = new EndCrystalEntity(mc.world, pos.x, pos.y, pos.z);
         en.setId(id);
@@ -529,9 +585,13 @@ public class AutoCrystal extends Module {
     }
 
     private void attackEntity(Entity en, boolean checkSD) {
-        mc.player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(en, mc.player.isSneaking()));
-        if (setDead.get() && checkSD) {
-            en.setRemoved(Entity.RemovalReason.KILLED);
+        if (mc.player != null) {
+            swing(getHand(Items.END_CRYSTAL, preferMainHand.get()), explodeSwingMode.get(), explodeSwing.get(), preExplodeSwing.get(), true);
+            mc.player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(en, mc.player.isSneaking()));
+            swing(getHand(Items.END_CRYSTAL, preferMainHand.get()), explodeSwingMode.get(), explodeSwing.get(), preExplodeSwing.get(), false);
+            if (setDead.get() && checkSD) {
+                en.setRemoved(Entity.RemovalReason.KILLED);
+            }
         }
     }
 }

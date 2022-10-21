@@ -9,45 +9,35 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
+import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
+import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 
 public class OffHandPlus extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private final Setting<Boolean> crystal = sgGeneral.add(new BoolSetting.Builder()
-        .name("Crystal")
+    private final Setting<Boolean> onlyTotem = sgGeneral.add(new BoolSetting.Builder()
+        .name("Only Totem")
         .description("Should we hold a crystal if you are above the totem health")
         .defaultValue(true)
         .build()
     );
-    private final Setting<Boolean> fall = sgGeneral.add(new BoolSetting.Builder()
-        .name("Fall switch")
-        .description("Should we switch to a totem when falling")
+    private final Setting<Boolean> safety = sgGeneral.add(new BoolSetting.Builder()
+        .name("Safety")
+        .description("Doesn't fail")
         .defaultValue(true)
-        .build()
-    );
-    private final Setting<Integer> Falldist = sgGeneral.add(new IntSetting.Builder()
-        .name("Fall distance")
-        .description("When to switch after falling")
-        .defaultValue(3)
-        .range(0, 20)
-        .sliderMax(20)
-        .visible(() -> fall.get())
         .build()
     );
 
     private final Setting<Integer> hp = sgGeneral.add(new IntSetting.Builder()
         .name("Health")
         .description("When to switch")
-        .defaultValue(5)
-        .range(0, 20)
-        .sliderMax(20)
+        .defaultValue(14)
+        .range(0, 36)
+        .sliderMax(36)
         .build()
     );
-    private int totems;
-    private int crystals;
-    private float health;
 
     public OffHandPlus() {
         super(Addon.ANARCHY, "Offhand+", "Non shit offhand");
@@ -55,21 +45,48 @@ public class OffHandPlus extends Module {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onTick(TickEvent.Pre event) {
-        health = mc.player.getHealth() +mc.player.getAbsorptionAmount();
-        FindItemResult result = InvUtils.find(Items.TOTEM_OF_UNDYING);
-        totems = result.count();{
-            if (mc.player != null)
-                if (mc.player.getOffHandStack().getItem() != Items.TOTEM_OF_UNDYING)
-                    if (health < hp.get() || fall.get() && mc.player.fallDistance > Falldist.get()){
-                        InvUtils.move().from(result.slot()).toOffhand();}
+        if (mc.player != null && mc.world != null) {
+            Item item = getItem();
+            if (!mc.player.getOffHandStack().getItem().equals(item) && item != null) {
+                InvUtils.move().from(InvUtils.find(item).slot()).toOffhand();
+            }
         }
-        FindItemResult result2 = InvUtils.find(Items.END_CRYSTAL);
-        crystals = result2.count();{
-            if (mc.player != null)
-                if (crystal.get() && crystals > 0)
-                    if (mc.player.getOffHandStack().getItem() != Items.END_CRYSTAL)
-                        if (health > hp.get()) {
-                            InvUtils.move().from(result2.slot()).toOffhand();}
+    }
+
+    private Item getItem() {
+        if (mc.player != null) {
+            boolean crystalAvailable = InvUtils.find(itemStack -> itemStack.getItem().equals(Items.END_CRYSTAL)).count() > 0;
+            boolean totemAvailable = InvUtils.find(itemStack -> itemStack.getItem().equals(Items.TOTEM_OF_UNDYING)).count() > 0;
+            boolean gapAvailable = InvUtils.find(itemStack -> itemStack.getItem().equals(Items.ENCHANTED_GOLDEN_APPLE)).count() > 0;
+            double health = mc.player.getHealth() + mc.player.getAbsorptionAmount();
+            if (onlyTotem.get() && totemAvailable) {
+                return Items.TOTEM_OF_UNDYING;
+            } else {
+                if (!totemAvailable) {
+                    if (crystalAvailable) {
+                        return Items.END_CRYSTAL;
+                    } else if (gapAvailable) {
+                        return Items.ENCHANTED_GOLDEN_APPLE;
+                    } else {
+                        return null;
+                    }
+                } else {
+                    if (health > hp.get() && isSafe(health)) {
+                        if (crystalAvailable) {
+                            return Items.END_CRYSTAL;
+                        } else {
+                            return Items.TOTEM_OF_UNDYING;
+                        }
+                    } else {
+                        return Items.TOTEM_OF_UNDYING;
+                    }
+                }
+            }
         }
+        return null;
+    }
+
+    private boolean isSafe(double playerHP) {
+        return !safety.get() || PlayerUtils.possibleHealthReductions() < playerHP;
     }
 }

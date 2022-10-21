@@ -3,10 +3,9 @@ package com.example.addon;
 import com.example.addon.commands.BlackoutGit;
 import com.example.addon.commands.GearInfo;
 import com.example.addon.commands.Kick;
+import com.example.addon.hud.GearHud;
 import com.example.addon.hud.HudExample;
-import com.example.addon.modules.anarchy.FastXP;
-import com.example.addon.modules.anarchy.OffHandPlus;
-import com.example.addon.modules.anarchy.WeakAlert;
+import com.example.addon.modules.anarchy.*;
 import com.example.addon.modules.ghost.*;
 import com.mojang.logging.LogUtils;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
@@ -36,9 +35,11 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new LegitTotem());
 
         //Anarchy
-        Modules.get().add(new OffHandPlus());
-        Modules.get().add(new WeakAlert());
+        Modules.get().add(new AutoCrystal());
         Modules.get().add(new FastXP());
+        Modules.get().add(new OffHandPlus());
+        Modules.get().add(new Sprint());
+        Modules.get().add(new WeakAlert());
 
         // Commands
         Commands.get().add(new BlackoutGit());
@@ -46,6 +47,7 @@ public class Addon extends MeteorAddon {
         Commands.get().add(new Kick());
 
         // HUD
+        Hud.get().register(GearHud.INFO);
         Hud.get().register(HudExample.INFO);
     }
 
