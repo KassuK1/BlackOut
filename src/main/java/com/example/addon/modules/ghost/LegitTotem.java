@@ -10,6 +10,10 @@ import meteordevelopment.orbit.EventPriority;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.item.Items;
 
+/*
+Made by KassuK
+*/
+
 public class LegitTotem extends Module {
 
     public LegitTotem() {

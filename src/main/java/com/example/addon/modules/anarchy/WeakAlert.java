@@ -11,6 +11,10 @@ import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.entity.effect.StatusEffect;
 
+/*
+Made by KassuK
+*/
+
 
 public class WeakAlert extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
