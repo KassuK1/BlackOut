@@ -9,6 +9,10 @@ import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.utils.Utils;
 
+/*
+Made by KassuK
+*/
+
 public class AutoClickerPlus extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Integer> leftClickDelay = sgGeneral.add(new IntSetting.Builder()

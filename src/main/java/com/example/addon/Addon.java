@@ -2,9 +2,9 @@ package com.example.addon;
 
 import com.example.addon.commands.BlackoutGit;
 import com.example.addon.commands.GearInfo;
-import com.example.addon.hud.GearHud;
+import com.example.addon.commands.Kick;
 import com.example.addon.hud.HudExample;
-import com.example.addon.modules.anarchy.AutoCrystal;
+import com.example.addon.modules.anarchy.FastXP;
 import com.example.addon.modules.anarchy.OffHandPlus;
 import com.example.addon.modules.anarchy.WeakAlert;
 import com.example.addon.modules.ghost.*;
@@ -36,17 +36,17 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new LegitTotem());
 
         //Anarchy
-        Modules.get().add(new AutoCrystal());
         Modules.get().add(new OffHandPlus());
         Modules.get().add(new WeakAlert());
+        Modules.get().add(new FastXP());
 
         // Commands
         Commands.get().add(new BlackoutGit());
         Commands.get().add(new GearInfo());
+        Commands.get().add(new Kick());
 
         // HUD
         Hud.get().register(HudExample.INFO);
-        Hud.get().register(GearHud.INFO);
     }
 
     @Override

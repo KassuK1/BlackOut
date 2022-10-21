@@ -1,9 +1,12 @@
 package com.example.addon.commands;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.systems.commands.Command;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
+import meteordevelopment.orbit.EventHandler;
+import meteordevelopment.orbit.EventPriority;
 import net.minecraft.command.CommandSource;
 import net.minecraft.item.Items;
 
@@ -19,9 +22,8 @@ public class GearInfo extends Command {
     public GearInfo() {
         super("GearInfo", "Tells you how much stuff you have");
     }
-
-    @Override
-    public void build(LiteralArgumentBuilder<CommandSource> builder) {
+    @EventHandler(priority = EventPriority.LOWEST)
+    private void onTick(TickEvent.Pre event) {
         FindItemResult result = InvUtils.find(Items.TOTEM_OF_UNDYING);
         totem = result.count();
         FindItemResult result2 = InvUtils.find(Items.END_CRYSTAL);
@@ -29,9 +31,13 @@ public class GearInfo extends Command {
         FindItemResult result3 = InvUtils.find(Items.OBSIDIAN);
         obby = result3.count();
         FindItemResult result4 = InvUtils.find(Items.ENCHANTED_GOLDEN_APPLE);
-       gapple = result4.count();
+        gapple = result4.count();
         FindItemResult result5 = InvUtils.find(Items.GOLDEN_APPLE);
         crapple = result5.count();
+    }
+
+    @Override
+    public void build(LiteralArgumentBuilder<CommandSource> builder) {
 
         builder.executes(context -> {
             info("Totems " + totem);
