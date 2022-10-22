@@ -53,6 +53,12 @@ public class Sprint extends Module {
             }
         }
     }
+    @Override
+    public void onDeactivate() {
+        if (mc.player != null && mc.world != null)
+            mc.player.setSprinting(false);
+    }
+
     public enum SprintMode {
         Vanilla,
         Omni,
