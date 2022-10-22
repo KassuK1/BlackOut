@@ -55,6 +55,12 @@ public class AutoCrystal extends Module {
         .defaultValue(true)
         .build()
     );
+    private final Setting<Boolean> eatPause = sgGeneral.add(new BoolSetting.Builder()
+        .name("Pause When Eating")
+        .description(".")
+        .defaultValue(true)
+        .build()
+    );
 
     //  Place Page
     private final Setting<Boolean> superSmartRangeChecks = sgGeneral.add(new BoolSetting.Builder()
@@ -303,6 +309,7 @@ public class AutoCrystal extends Module {
     protected BlockPos lastPos;
     protected boolean blocked;
     private int lastId;
+    private boolean lastPaused;
 
     public AutoCrystal() {
         super(Addon.ANARCHY, "Auto Crystal", "Breaks crystals automatically.");
@@ -322,19 +329,25 @@ public class AutoCrystal extends Module {
         if (mc.player != null && mc.world != null) {
             placePos = findBestPos();
             if (placePos != null) {
-                if (!placePos.equals(lastPos)) {
+                if (pausedCheck() != lastPaused) {
+                    lastPaused = pausedCheck();
                     resetVar();
                 }
-                if (!blocked && place.get()) {
-                    if (getHand(Items.END_CRYSTAL, preferMainHand.get()) != null) {
-                        swing(getHand(Items.END_CRYSTAL, preferMainHand.get()), placeSwingMode.get(), placeSwing.get(), prePlaceSwing.get(), true);
-                        mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(getHand(Items.END_CRYSTAL, preferMainHand.get()),
-                            new BlockHitResult(new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ()), Direction.UP, placePos, false), 0));
-                        swing(getHand(Items.END_CRYSTAL, preferMainHand.get()), placeSwingMode.get(), placeSwing.get(), prePlaceSwing.get(), false);
-                        if (idPredict.get()) {
-                            attackID(highestID() + 1, new Vec3d(placePos.getX() + 0.5, placePos.getY() + 1, placePos.getZ() + 0.5), false);
+                if (!pausedCheck()) {
+                    if (!placePos.equals(lastPos)) {
+                        resetVar();
+                    }
+                    if (!blocked && place.get()) {
+                        if (getHand(Items.END_CRYSTAL, preferMainHand.get()) != null) {
+                            swing(getHand(Items.END_CRYSTAL, preferMainHand.get()), placeSwingMode.get(), placeSwing.get(), prePlaceSwing.get(), true);
+                            mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(getHand(Items.END_CRYSTAL, preferMainHand.get()),
+                                new BlockHitResult(new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ()), Direction.UP, placePos, false), 0));
+                            swing(getHand(Items.END_CRYSTAL, preferMainHand.get()), placeSwingMode.get(), placeSwing.get(), prePlaceSwing.get(), false);
+                            if (idPredict.get()) {
+                                attackID(highestID() + 1, new Vec3d(placePos.getX() + 0.5, placePos.getY() + 1, placePos.getZ() + 0.5), false);
+                            }
+                            blocked = !idPredict.get();
                         }
-                        blocked = !idPredict.get();
                     }
                 }
             }
@@ -347,17 +360,19 @@ public class AutoCrystal extends Module {
             lowest = event.entity.getId();
         }
         if (mc.player != null && mc.world != null) {
-            if (event.entity.getType() == EntityType.END_CRYSTAL){
-                Box box = new Box(placePos.getX(), placePos.getY() + 1, placePos.getZ(),
-                    placePos.getX() + 1, placePos.getY() + 3, placePos.getZ() + 1);
+            if (!pausedCheck()) {
+                if (event.entity.getType() == EntityType.END_CRYSTAL) {
+                    Box box = new Box(placePos.getX(), placePos.getY() + 1, placePos.getZ(),
+                        placePos.getX() + 1, placePos.getY() + 3, placePos.getZ() + 1);
 
-                if (canBreak(event.entity.getPos()) ||
-                    (event.entity.getBoundingBox().intersects(box) && !event.entity.getBlockPos().equals(placePos)
-                    && explodeBlocking.get())) {
-                    if (event.entity.getBlockPos().equals(placePos.up())) {
-                        blocked = false;
+                    if (canBreak(event.entity.getPos()) ||
+                        (event.entity.getBoundingBox().intersects(box) && !event.entity.getBlockPos().equals(placePos)
+                            && explodeBlocking.get())) {
+                        if (event.entity.getBlockPos().equals(placePos.up())) {
+                            blocked = false;
+                        }
+                        attackEntity(event.entity, true);
                     }
-                    attackEntity(event.entity, true);
                 }
             }
         }
@@ -593,5 +608,12 @@ public class AutoCrystal extends Module {
                 en.setRemoved(Entity.RemovalReason.KILLED);
             }
         }
+    }
+
+    private boolean pausedCheck() {
+        if (mc.player != null) {
+            return eatPause.get() && (mc.player.isUsingItem() && mc.player.isHolding(Items.ENCHANTED_GOLDEN_APPLE));
+        }
+        return true;
     }
 }
