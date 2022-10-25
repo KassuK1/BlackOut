@@ -36,9 +36,11 @@ public class Addon extends MeteorAddon {
 
         //Anarchy
         Modules.get().add(new AutoCrystal());
+        Modules.get().add(new AutoMine());
         Modules.get().add(new FastXP());
+        Modules.get().add(new HoleSnap());
         Modules.get().add(new OffHandPlus());
-        Modules.get().add(new Sprint());
+        Modules.get().add(new SprintPlus());
         Modules.get().add(new WeakAlert());
         Modules.get().add(new ResetVL());
 

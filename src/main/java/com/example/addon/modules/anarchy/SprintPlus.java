@@ -11,7 +11,7 @@ import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 
-public class Sprint extends Module {
+public class SprintPlus extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Boolean> sprintTime = sgGeneral.add(new BoolSetting.Builder()
         .name("sprintTime")
@@ -26,8 +26,8 @@ public class Sprint extends Module {
         .build()
     );
 
-    public Sprint() {
-        super(Addon.ANARCHY, "Sprint", "Non shit sprint");
+    public SprintPlus() {
+        super(Addon.ANARCHY, "Sprint+", "Non shit sprint");
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
