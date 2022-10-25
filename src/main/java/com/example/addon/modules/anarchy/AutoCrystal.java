@@ -1,6 +1,7 @@
 package com.example.addon.modules.anarchy;
 
 import com.example.addon.Addon;
+import com.example.addon.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.entity.EntityAddedEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
@@ -8,6 +9,7 @@ import meteordevelopment.meteorclient.events.world.BlockUpdateEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.meteorclient.utils.player.DamageUtils;
@@ -513,7 +515,7 @@ public class AutoCrystal extends Module {
                             double dmg = highestDmg(pos);
                             double self = DamageUtils.crystalDamage(mc.player, new Vec3d(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5),
                                 false, pos, false);
-                            double dist = distance(new Vec3d(x + mc.player.getBlockPos().getX() + 0.5,
+                            double dist = OLEPOSSUtils.distance(new Vec3d(x + mc.player.getBlockPos().getX() + 0.5,
                                 y + mc.player.getBlockPos().getY(), z + mc.player.getBlockPos().getZ() + 0.5),
                                 playerRangePos(true));
                             if (placeDamageCheck(dmg, self, highestDMG, dist, highestDist)) {
@@ -527,17 +529,6 @@ public class AutoCrystal extends Module {
             }
         }
         return position;
-    }
-
-    private double distance(Vec3d v1, Vec3d v2) {
-        double dX = Math.abs(v1.x - v2.x);
-        double dY = Math.abs(v1.y - v2.y);
-        double dZ = Math.abs(v1.z - v2.z);
-        return Math.sqrt(dX * dX + dY * dY + dZ * dZ);
-    }
-    private boolean placeDamageCheck(double dmg, double self) {
-        if (dmg < minPlaceDamage.get()) {return false;}
-        return self / dmg <= maxSelfPlace.get();
     }
 
     private boolean placeDamageCheck(double dmg, double self, double highest, double distance, double highestDist) {
@@ -557,7 +548,7 @@ public class AutoCrystal extends Module {
         double highest = 0;
         if (mc.player != null && mc.world != null) {
             for (PlayerEntity enemy : mc.world.getPlayers()) {
-                if (enemy != mc.player) {
+                if (enemy != mc.player && !Friends.get().isFriend(enemy)) {
                     double dmg = DamageUtils.crystalDamage(enemy, new Vec3d(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5),
                         false, pos, false);
                     if (dmg > highest) {
@@ -601,13 +592,13 @@ public class AutoCrystal extends Module {
     }
 
     private boolean placeRangeCheck(BlockPos pos) {
-        return (distance(playerRangePos(true),
+        return (OLEPOSSUtils.distance(playerRangePos(true),
             new Vec3d(pos.getX() + 0.5, pos.getY() + placeRangeHeight.get(), pos.getZ() + 0.5)) <= placeRange.get()) &&
             (!superSmartRangeChecks.get() || breakRangeCheck(new Vec3d(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5)));
     }
 
     private boolean breakRangeCheck(Vec3d pos) {
-        return distance(playerRangePos(false),
+        return OLEPOSSUtils.distance(playerRangePos(false),
             new Vec3d(pos.getX(), pos.getY() + breakRangeHeight.get(), pos.getZ())) <= getBreakRange(pos);
     }
 

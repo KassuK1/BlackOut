@@ -1,6 +1,7 @@
 package com.example.addon.modules.anarchy;
 
 import com.example.addon.Addon;
+import com.example.addon.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.settings.DoubleSetting;
 import meteordevelopment.meteorclient.settings.IntSetting;
@@ -45,14 +46,6 @@ public class HoleSnap extends Module {
         .sliderMax(10)
         .build()
     );
-    private final Setting<Double> fallSpeed = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Fall Speed")
-        .description(".")
-        .defaultValue(3)
-        .range(0, 10)
-        .sliderMax(10)
-        .build()
-    );
     private Direction[] horizontals = new Direction[] {
         Direction.EAST,
         Direction.WEST,
@@ -84,6 +77,8 @@ public class HoleSnap extends Module {
                     }
                 } else {
                     mc.player.addVelocity(-mc.player.getVelocity().x, 0, -mc.player.getVelocity().z);
+                    double x = speed.get() * yaw / 100;
+                    double dX = Math.abs(hole.getX() + 0.5 - mc.player.getX());
                     mc.player.addVelocity(speed.get() * yaw / 100, 0, speed.get() * pit / 100);
                 }
             } else {
@@ -95,13 +90,13 @@ public class HoleSnap extends Module {
     private BlockPos findHole() {
         Map<BlockPos, Double> holeMap = new HashMap<>();
         List<BlockPos> holes = new ArrayList<>();
-        for (int y = -range.get(); y <= range.get(); y++) {
+        for (int y = -downRange.get(); y < 0; y++) {
             for (int x = -range.get(); x <= range.get(); x++) {
                 for (int z = -range.get(); z <= range.get(); z++) {
                     BlockPos position = mc.player.getBlockPos().add(x, y, z);
                     if (isHole(position)) {
                         holes.add(position);
-                        holeMap.put(position, distance(new Vec3d(mc.player.getX(), mc.player.getY(), mc.player.getZ()),
+                        holeMap.put(position, OLEPOSSUtils.distance(new Vec3d(mc.player.getX(), mc.player.getY(), mc.player.getZ()),
                             new Vec3d(position.getX() + 0.5, position.getY(), position.getZ() + 0.5)));
                     }
                 }
@@ -129,13 +124,6 @@ public class HoleSnap extends Module {
         }
         if (mc.world.getBlockState(pos.up()).getBlock() != Blocks.AIR) {return false;}
         return mc.world.getBlockState(pos.down()).getBlock() != Blocks.AIR;
-    }
-
-    private double distance(Vec3d v1, Vec3d v2) {
-        double dX = Math.abs(v1.x - v2.x);
-        double dY = Math.abs(v1.y - v2.y);
-        double dZ = Math.abs(v1.z - v2.z);
-        return Math.sqrt(dX * dX + dY * dY + dZ * dZ);
     }
 
     private float getAngle(double x, double z, double x2, double z2)
