@@ -43,6 +43,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new SprintPlus());
         Modules.get().add(new WeakAlert());
         Modules.get().add(new ResetVL());
+        Modules.get().add(new CevBreaker());
 
         // Commands
         Commands.get().add(new BlackoutGit());
