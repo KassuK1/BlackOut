@@ -11,6 +11,10 @@ import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 
+/*
+Made by KassuK
+*/
+
 public class SprintPlus extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Boolean> sprintTime = sgGeneral.add(new BoolSetting.Builder()

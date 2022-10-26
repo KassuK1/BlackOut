@@ -3,10 +3,7 @@ package com.example.addon.modules.anarchy;
 import com.example.addon.Addon;
 import com.example.addon.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
-import meteordevelopment.meteorclient.settings.DoubleSetting;
-import meteordevelopment.meteorclient.settings.IntSetting;
-import meteordevelopment.meteorclient.settings.Setting;
-import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
@@ -20,8 +17,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/*
+Made by OLEPOSSU / Raksamies
+*/
+
 public class HoleSnap extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final Setting<Boolean> single = sgGeneral.add(new BoolSetting.Builder()
+        .name("Single")
+        .description("Only chooses target hole once")
+        .defaultValue(true)
+        .build()
+    );
     private final Setting<Integer> speed = sgGeneral.add(new IntSetting.Builder()
         .name("Speed")
         .description("Speed")
@@ -52,16 +59,23 @@ public class HoleSnap extends Module {
         Direction.NORTH,
         Direction.SOUTH
     };
+    BlockPos singleHole;
 
 
     public HoleSnap() {
         super(Addon.ANARCHY, "HoleSnap", "So u don't need to die");
     }
 
+    @Override
+    public void onActivate() {
+        super.onActivate();
+        singleHole = findHole();
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onMove(PlayerMoveEvent event) {
         if (mc.player != null && mc.world != null) {
-            BlockPos hole = findHole();
+            BlockPos hole = single.get() ? singleHole : findHole();
             if (hole != null) {
                 double yaw =
                     Math.cos(Math.toRadians(
@@ -79,7 +93,9 @@ public class HoleSnap extends Module {
                     mc.player.addVelocity(-mc.player.getVelocity().x, 0, -mc.player.getVelocity().z);
                     double x = speed.get() * yaw / 100;
                     double dX = Math.abs(hole.getX() + 0.5 - mc.player.getX());
-                    mc.player.addVelocity(speed.get() * yaw / 100, 0, speed.get() * pit / 100);
+                    double z = speed.get() * pit / 100;
+                    double dZ = Math.abs(hole.getZ() + 0.5 - mc.player.getZ());
+                    mc.player.addVelocity(Math.min(x, dX), 0, Math.min(z, dZ));
                 }
             } else {
                 this.toggle();
@@ -90,6 +106,7 @@ public class HoleSnap extends Module {
     private BlockPos findHole() {
         Map<BlockPos, Double> holeMap = new HashMap<>();
         List<BlockPos> holes = new ArrayList<>();
+        if (isHole(mc.player.getBlockPos())) {return mc.player.getBlockPos();}
         for (int y = -downRange.get(); y < 0; y++) {
             for (int x = -range.get(); x <= range.get(); x++) {
                 for (int z = -range.get(); z <= range.get(); z++) {

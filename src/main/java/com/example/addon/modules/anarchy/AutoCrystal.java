@@ -1,11 +1,12 @@
 package com.example.addon.modules.anarchy;
 
+import baritone.api.event.events.RenderEvent;
 import com.example.addon.Addon;
 import com.example.addon.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.entity.EntityAddedEvent;
+import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
-import meteordevelopment.meteorclient.events.world.BlockUpdateEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
@@ -28,7 +29,6 @@ import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
-import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
@@ -69,6 +69,12 @@ public class AutoCrystal extends Module {
         .name("Pause When Eating")
         .description(".")
         .defaultValue(true)
+        .build()
+    );
+    private final Setting<ListenerMode> calcMode = sgGeneral.add(new EnumSetting.Builder<ListenerMode>()
+        .name("Calculation Mode")
+        .description(".")
+        .defaultValue(ListenerMode.TickPre)
         .build()
     );
 
@@ -317,6 +323,14 @@ public class AutoCrystal extends Module {
         Packet
     }
 
+    public enum ListenerMode {
+        TickPre,
+        TickPost,
+        Tick,
+        Render,
+        MotionUpdate
+    }
+
     //  Render Page
 
     private final Setting<Boolean> animation = sgRender.add(new BoolSetting.Builder()
@@ -326,7 +340,7 @@ public class AutoCrystal extends Module {
         .build()
     );
     private final Setting<Double> renderMoveSpeed = sgRender.add(new DoubleSetting.Builder()
-        .name("AnimationSpeed")
+        .name("Animation Move Speed")
         .description(".")
         .defaultValue(5)
         .range(0, 10)
@@ -336,7 +350,7 @@ public class AutoCrystal extends Module {
     );
 
     private final Setting<Double> animationSpeed = sgRender.add(new DoubleSetting.Builder()
-        .name("AnimationSpeed")
+        .name("Animation Speed")
         .description(".")
         .defaultValue(5)
         .range(0, 10)
@@ -381,41 +395,23 @@ public class AutoCrystal extends Module {
         resetVar();
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
-    private void onTick(TickEvent.Pre event) {
-        if (mc.player != null && mc.world != null) {
-            placePos = findBestPos();
-            if (placePos != null) {
-                if (pausedCheck() != lastPaused) {
-                    lastPaused = pausedCheck();
-                    resetVar();
-                }
-                if (!pausedCheck()) {
-                    if (!placePos.equals(lastPos)) {
-                        resetVar();
-                    }
-                    else if (crystalAtPos(placePos.up()) == null && isAround(placePos.up()) != null && alwaysExplodeBlocking.get()) {
-                        cleanPos(placePos.up());
-                    }
-                    if (!blocked && place.get()) {
-                        Hand swingHand = getHand(Items.END_CRYSTAL, preferMainHand.get(), true);
-                        Hand handToUse = getHand(Items.END_CRYSTAL, preferMainHand.get(), false);
-                        if (handToUse != null) {
-                            swing(swingHand, placeSwingMode.get(), placeSwing.get(), prePlaceSwing.get(), true);
-                            mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(handToUse,
-                                new BlockHitResult(new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ()), Direction.UP, placePos, false), 0));
-                            swing(swingHand, placeSwingMode.get(), placeSwing.get(), prePlaceSwing.get(), false);
-                            if (idPredict.get()) {
-                                attackID(highestID() + 1, new Vec3d(placePos.getX() + 0.5, placePos.getY() + 1, placePos.getZ() + 0.5), false);
-                            }
-                            blocked = !idPredict.get();
-                        }
-                    }
-                }
-            } else {
-                lastPos = null;
-            }
-        }
+    @EventHandler(priority = EventPriority.HIGHEST + 1)
+    private void onTickPre(TickEvent.Pre event) {
+        if (calcMode.get().equals(ListenerMode.Tick) || calcMode.get().equals(ListenerMode.TickPre)) {update();}
+    }
+    @EventHandler(priority = EventPriority.HIGHEST + 1)
+    private void onTickPost(TickEvent.Pre event) {
+        if (calcMode.get().equals(ListenerMode.Tick) || calcMode.get().equals(ListenerMode.TickPost)) {update();}
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST + 1)
+    private void onMoveUpdate(PlayerMoveEvent event) {
+        if (calcMode.get().equals(ListenerMode.MotionUpdate)) {update();}
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST + 1)
+    private void onRender3D(Render3DEvent event) {
+        if (calcMode.get().equals(ListenerMode.Render)) {update();}
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -480,7 +476,7 @@ public class AutoCrystal extends Module {
         if (mc.player != null && mc.world != null) {
             if (placePos != null) {
                 renderPos = smoothMove(renderPos,
-                    new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ()), (float) (animationSpeed.get() * event.tickDelta / 10));
+                    new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ()), (float) (renderMoveSpeed.get() * event.tickDelta / 10));
             }
             if (animation.get()) {
                 renderAnim = placePos != null ?
@@ -499,6 +495,42 @@ public class AutoCrystal extends Module {
     }
 
     // Other stuff
+
+    private void update() {
+        if (mc.player != null && mc.world != null) {
+            placePos = findBestPos();
+            if (placePos != null) {
+                if (pausedCheck() != lastPaused) {
+                    lastPaused = pausedCheck();
+                    resetVar();
+                }
+                if (!pausedCheck()) {
+                    if (!placePos.equals(lastPos)) {
+                        resetVar();
+                    }
+                    else if (crystalAtPos(placePos.up()) == null && isAround(placePos.up()) != null && alwaysExplodeBlocking.get()) {
+                        cleanPos(placePos.up());
+                    }
+                    if (!blocked && place.get()) {
+                        Hand swingHand = getHand(Items.END_CRYSTAL, preferMainHand.get(), true);
+                        Hand handToUse = getHand(Items.END_CRYSTAL, preferMainHand.get(), false);
+                        if (handToUse != null) {
+                            swing(swingHand, placeSwingMode.get(), placeSwing.get(), prePlaceSwing.get(), true);
+                            mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(handToUse,
+                                new BlockHitResult(new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ()), Direction.UP, placePos, false), 0));
+                            swing(swingHand, placeSwingMode.get(), placeSwing.get(), prePlaceSwing.get(), false);
+                            if (idPredict.get()) {
+                                attackID(highestID() + 1, new Vec3d(placePos.getX() + 0.5, placePos.getY() + 1, placePos.getZ() + 0.5), false);
+                            }
+                            blocked = !idPredict.get();
+                        }
+                    }
+                }
+            } else {
+                lastPos = null;
+            }
+        }
+    }
 
     private BlockPos findBestPos() {
         BlockPos position = null;

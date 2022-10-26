@@ -14,6 +14,10 @@ import meteordevelopment.orbit.EventPriority;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 
+/*
+Made by OLEPOSSU / Raksamies and KassuK
+*/
+
 public class OffHandPlus extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Boolean> onlyTotem = sgGeneral.add(new BoolSetting.Builder()

@@ -27,6 +27,10 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
+/*
+Made by OLEPOSSU / Raksamies
+*/
+
 public class AutoMine extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Boolean> swing = sgGeneral.add(new BoolSetting.Builder()
@@ -128,7 +132,11 @@ public class AutoMine extends Module {
                         tick = speed.get();
                         start(target.getBlockPos().offset(side));
                     }
+                } else {
+                    targetPos = null;
                 }
+            } else {
+                targetPos = null;
             }
         }
     }

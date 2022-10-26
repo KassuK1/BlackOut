@@ -35,15 +35,18 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new LegitTotem());
 
         //Anarchy
+        Modules.get().add(new AutoCraftingTable());
         Modules.get().add(new AutoCrystal());
         Modules.get().add(new AutoMine());
+        Modules.get().add(new BedBomb());
+        Modules.get().add(new CevBreaker());
         Modules.get().add(new FastXP());
         Modules.get().add(new HoleSnap());
         Modules.get().add(new OffHandPlus());
+        Modules.get().add(new ResetVL());
         Modules.get().add(new SprintPlus());
         Modules.get().add(new WeakAlert());
-        Modules.get().add(new ResetVL());
-        Modules.get().add(new CevBreaker());
+        Modules.get().add(new WebPlus());
 
         // Commands
         Commands.get().add(new BlackoutGit());
