@@ -6,18 +6,22 @@ import meteordevelopment.meteorclient.events.world.BlockUpdateEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
+import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
@@ -27,6 +31,12 @@ Made by OLEPOSSU / Raksamies
 
 public class BedBomb extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final Setting<Boolean> swing = sgGeneral.add(new BoolSetting.Builder()
+        .name("Swing")
+        .description("Swing")
+        .defaultValue(true)
+        .build()
+    );
     public final Setting<LogicMode> mode = sgGeneral.add(new EnumSetting.Builder<LogicMode>()
         .name("Mode")
         .description("Logic for bullying kids.")
@@ -126,6 +136,7 @@ public class BedBomb extends Module {
                     }
                 }
             }
+
         }
     }
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -136,6 +147,9 @@ public class BedBomb extends Module {
                     mc.getNetworkHandler().sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
                         new BlockHitResult(new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ()),
                             Direction.UP, placePos, false), 0));
+                    if (swing.get()) {
+                        mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
+                    }
                 }
             }
         }
@@ -160,11 +174,17 @@ public class BedBomb extends Module {
         Direction closest = null;
         for (Direction dir : horizontals) {
             BlockPos dirPos = pos.offset(dir).up();
+            if (isBedBlock(mc.world.getBlockState(pos.up()).getBlock()) && isBedBlock(mc.world.getBlockState(dirPos).getBlock())) {
+                return dir;
+            }
             if (mc.world.getBlockState(dirPos).getBlock() == Blocks.AIR) {
+                Box box = new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1);
                 if (closest == null) {
                     closest = dir;
                 }
-                else if (OLEPOSSUtils.distance(mc.player.getPos(), new Vec3d(dirPos.getX() + 0.5, dirPos.getY() + 0.5, dirPos.getZ() + 0.5)) < range.get()) {
+                else if (OLEPOSSUtils.distance(mc.player.getPos(), new Vec3d(dirPos.getX() + 0.5, dirPos.getY() + 0.5, dirPos.getZ() + 0.5)) < range.get() &&
+                    EntityUtils.intersectsWithEntity(box, entity -> !entity.isSpectator() && !(
+                        entity.getBlockPos().equals(pos.up()) && entity.getType() != EntityType.ITEM))) {
                     BlockPos epicPos = pos.offset(closest).up();
                     if (OLEPOSSUtils.distance(mc.player.getPos(), new Vec3d(dirPos.getX() + 0.5, dirPos.getY() + 0.5, dirPos.getZ() + 0.5)) <
                         OLEPOSSUtils.distance(mc.player.getPos(), new Vec3d(epicPos.getX() + 0.5, epicPos.getY() + 0.5, epicPos.getZ() + 0.5))) {
@@ -185,6 +205,9 @@ public class BedBomb extends Module {
             mc.getNetworkHandler().sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
                 new BlockHitResult(new Vec3d(pos.getX(), pos.getY() - 1, pos.getZ()),
                     Direction.UP, pos.down(), false), 0));
+            if (swing.get()) {
+                mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
+            }
         };
 
         if (mode.get() == LogicMode.PlaceBreak) {
@@ -195,8 +218,19 @@ public class BedBomb extends Module {
             mc.getNetworkHandler().sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
                 new BlockHitResult(new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ()),
                     Direction.UP, placePos, false), 0));
+            if (swing.get()) {
+                mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
+            }
         }
         if (mode.get() == LogicMode.BreakPlace) {
+            if (isBedBlock(mc.world.getBlockState(placePos).getBlock())) {
+                mc.getNetworkHandler().sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
+                    new BlockHitResult(new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ()),
+                        Direction.UP, placePos, false), 0));
+                if (swing.get()) {
+                    mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
+                }
+            }
             run.run();
         }
     }

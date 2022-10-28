@@ -5,6 +5,8 @@ import com.example.addon.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.systems.modules.Modules;
+import meteordevelopment.meteorclient.systems.modules.world.Timer;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Blocks;
@@ -34,6 +36,14 @@ public class HoleSnap extends Module {
         .description("Speed")
         .defaultValue(27)
         .range(0, 100)
+        .sliderMax(100)
+        .build()
+    );
+    private final Setting<Double> timer = sgGeneral.add(new DoubleSetting.Builder()
+        .name("Timer")
+        .description("Speed but better")
+        .defaultValue(1)
+        .min(0)
         .sliderMax(100)
         .build()
     );
@@ -72,11 +82,18 @@ public class HoleSnap extends Module {
         singleHole = findHole();
     }
 
+    @Override
+    public void onDeactivate() {
+        super.onDeactivate();
+        Modules.get().get(Timer.class).setOverride(1);
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onMove(PlayerMoveEvent event) {
         if (mc.player != null && mc.world != null) {
             BlockPos hole = single.get() ? singleHole : findHole();
             if (hole != null) {
+                Modules.get().get(Timer.class).setOverride(timer.get());
                 double yaw =
                     Math.cos(Math.toRadians(
                         getAngle(hole.getX() + 0.5, hole.getZ() + 0.5, mc.player.getX(), mc.player.getZ())  + 90.0f));
