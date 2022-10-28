@@ -7,6 +7,7 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.world.Timer;
+import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Blocks;
@@ -96,10 +97,10 @@ public class HoleSnap extends Module {
                 Modules.get().get(Timer.class).setOverride(timer.get());
                 double yaw =
                     Math.cos(Math.toRadians(
-                        getAngle(hole.getX() + 0.5, hole.getZ() + 0.5, mc.player.getX(), mc.player.getZ())  + 90.0f));
+                        getAngle(new Vec3d(hole.getX(), hole.getY(), hole.getZ()))  + 90.0f));
                 double pit =
                     Math.sin(Math.toRadians(
-                        getAngle(hole.getX() + 0.5, hole.getZ() + 0.5, mc.player.getX(), mc.player.getZ()) + 90.0f));
+                        getAngle(new Vec3d(hole.getX(), hole.getY(), hole.getZ())) + 90.0f));
                 if (Math.abs(mc.player.getX() - hole.getX() - 0.5) < 0.200 && Math.abs(mc.player.getZ() - hole.getZ() - 0.5) < 0.200) {
                     if (Math.floor(mc.player.getY()) == hole.getY()) {
                         this.toggle();
@@ -160,19 +161,8 @@ public class HoleSnap extends Module {
         return mc.world.getBlockState(pos.down()).getBlock() != Blocks.AIR;
     }
 
-    private float getAngle(double x, double z, double x2, double z2)
+    private float getAngle(Vec3d pos)
     {
-        //credits to 3arthqu4ke
-        float yaw = (float) (Math.atan2(z - z2, x - x2) * 180.0 / Math.PI) - 90.0f;
-        float prevYaw = mc.player.prevYaw;
-        float diff = yaw - prevYaw;
-
-        if (diff < -180.0f || diff > 180.0f)
-        {
-            float round = Math.round(Math.abs(diff / 360.0f));
-            diff = diff < 0.0f ? diff + 360.0f * round : diff - (360.0f * round);
-        }
-
-        return prevYaw + diff;
+        return (float) Rotations.getYaw(new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5));
     }
 }

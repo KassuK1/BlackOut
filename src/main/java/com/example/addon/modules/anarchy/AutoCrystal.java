@@ -1,6 +1,5 @@
 package com.example.addon.modules.anarchy;
 
-import baritone.api.event.events.RenderEvent;
 import com.example.addon.Addon;
 import com.example.addon.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.entity.EntityAddedEvent;
@@ -14,6 +13,7 @@ import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.meteorclient.utils.player.DamageUtils;
+import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
@@ -25,10 +25,7 @@ import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
+import net.minecraft.network.packet.c2s.play.*;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
@@ -37,6 +34,9 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /*
 Made by OLEPOSSU / Raksamies
@@ -47,7 +47,8 @@ public class AutoCrystal extends Module {
     private final SettingGroup sgPlace = settings.createGroup("Place");
     private final SettingGroup sgExplode = settings.createGroup("Explode");
     private final SettingGroup sgMisc = settings.createGroup("Misc");
-    private final SettingGroup sgSwitch = settings.createGroup("Switch");
+    private final SettingGroup sgDamage = settings.createGroup("Damage");
+    private final SettingGroup sgRotate = settings.createGroup("Rotate");
     private final SettingGroup sgRaytrace = settings.createGroup("Raytrace");
     private final SettingGroup sgRender = settings.createGroup("Render");
 
@@ -94,22 +95,6 @@ public class AutoCrystal extends Module {
         .sliderMax(10)
         .build()
     );
-    private final Setting<Double> minPlaceDamage = sgPlace.add(new DoubleSetting.Builder()
-        .name("Min Place Damage")
-        .description(".")
-        .defaultValue(5)
-        .range(0, 20)
-        .sliderMax(20)
-        .build()
-    );
-    private final Setting<Double> maxSelfPlace = sgPlace.add(new DoubleSetting.Builder()
-        .name("Max Place Damage")
-        .description(".")
-        .defaultValue(0.7)
-        .range(0, 10)
-        .sliderMax(10)
-        .build()
-    );
     private final Setting<Boolean> placeSwing = sgPlace.add(new BoolSetting.Builder()
         .name("Place Swing")
         .description(".")
@@ -145,29 +130,6 @@ public class AutoCrystal extends Module {
         .defaultValue(3)
         .range(0, 10)
         .sliderMax(10)
-        .build()
-    );
-    private final Setting<Double> minExplodeDamage = sgExplode.add(new DoubleSetting.Builder()
-        .name("Min Explode Damage")
-        .description(".")
-        .defaultValue(5)
-        .range(0, 20)
-        .sliderMax(20)
-        .build()
-    );
-    private final Setting<Boolean> ignoreBreak = sgExplode.add(new BoolSetting.Builder()
-        .name("Ignore Damage")
-        .description("Removes crystals.")
-        .defaultValue(false)
-        .build()
-    );
-    private final Setting<Double> maxSelfBreak = sgExplode.add(new DoubleSetting.Builder()
-        .name("Max Explode Damage")
-        .description(".")
-        .defaultValue(0.7)
-        .range(0, 10)
-        .sliderMax(10)
-        .visible(() -> !ignoreBreak.get())
         .build()
     );
     private final Setting<Boolean> onlyExplodeWhenHolding = sgExplode.add(new BoolSetting.Builder()
@@ -237,9 +199,95 @@ public class AutoCrystal extends Module {
         .build()
     );
 
-    //  Switch Page
+    //  Damage Page
 
+    private final Setting<Integer> forcePop = sgDamage.add(new IntSetting.Builder()
+        .name("Force Pop")
+        .description(".")
+        .defaultValue(2)
+        .range(0, 10)
+        .sliderMax(10)
+        .build()
+    );
+    private final Setting<Integer> antiPop = sgDamage.add(new IntSetting.Builder()
+        .name("Anti Pop")
+        .description(".")
+        .defaultValue(1)
+        .range(0, 10)
+        .sliderMax(10)
+        .build()
+    );
+    private final Setting<Boolean> suicidal = sgDamage.add(new BoolSetting.Builder()
+        .name("Suicidal")
+        .description("Attacks if both pop")
+        .defaultValue(false)
+        .build()
+    );
+    private final Setting<Double> minHealthLeft = sgDamage.add(new DoubleSetting.Builder()
+        .name("Min Health Left")
+        .description(".")
+        .defaultValue(4)
+        .range(0, 36)
+        .sliderMax(36)
+        .build()
+    );
+    private final Setting<Double> minPlaceDamage = sgDamage.add(new DoubleSetting.Builder()
+        .name("Min Place Damage")
+        .description(".")
+        .defaultValue(5)
+        .range(0, 20)
+        .sliderMax(20)
+        .build()
+    );
+    private final Setting<Double> maxSelfPlace = sgDamage.add(new DoubleSetting.Builder()
+        .name("Max Place Damage")
+        .description(".")
+        .defaultValue(0.7)
+        .range(0, 10)
+        .sliderMax(10)
+        .build()
+    );
+    private final Setting<Boolean> ignoreBreak = sgDamage.add(new BoolSetting.Builder()
+        .name("Ignore Damage")
+        .description("Ignores Break Damage")
+        .defaultValue(false)
+        .build()
+    );
+    private final Setting<Double> minExplodeDamage = sgDamage.add(new DoubleSetting.Builder()
+        .name("Min Explode Damage")
+        .description(".")
+        .defaultValue(5)
+        .range(0, 20)
+        .sliderMax(20)
+        .visible(() -> !ignoreBreak.get())
+        .build()
+    );
+    private final Setting<Double> maxSelfBreak = sgDamage.add(new DoubleSetting.Builder()
+        .name("Max Explode Damage")
+        .description(".")
+        .defaultValue(0.7)
+        .range(0, 10)
+        .sliderMax(10)
+        .visible(() -> !ignoreBreak.get())
+        .build()
+    );
 
+    //  Rotate Page
+
+    private final Setting<Boolean> rotate = sgRotate.add(new BoolSetting.Builder()
+        .name("Rotate")
+        .description(".")
+        .defaultValue(false)
+        .build()
+    );
+    private final Setting<Double> rotationHeight = sgRotate.add(new DoubleSetting.Builder()
+        .name("Rotation Height")
+        .description(".")
+        .defaultValue(0.3)
+        .range(0, 3)
+        .sliderMax(3)
+        .build()
+    );
 
     //  Raytrace Page
 
@@ -381,7 +429,8 @@ public class AutoCrystal extends Module {
     private double renderAnim;
     private Vec3d renderPos;
     private double height;
-
+    private List<PlayerEntity> extPos = new ArrayList<>();
+    private PlayerEntity selfExtEntity;
     public AutoCrystal() {
         super(Addon.ANARCHY, "Auto Crystal", "Breaks crystals automatically.");
     }
@@ -494,6 +543,31 @@ public class AutoCrystal extends Module {
         }
     }
 
+    @EventHandler(priority = EventPriority.HIGHEST + 1)
+    private void onRotate(PacketEvent.Send event) {
+        if (rotate.get() && placePos != null) {
+            if (event.packet instanceof PlayerMoveC2SPacket) {
+                double yaw = Rotations.getYaw(new Vec3d(placePos.getX() + 0.5, placePos.getY() + rotationHeight.get(), placePos.getZ() + 0.5));
+                double pitch = Rotations.getPitch(new Vec3d(placePos.getX() + 0.5, placePos.getY() + rotationHeight.get(), placePos.getZ() + 0.5));
+
+                PlayerMoveC2SPacket packet = (PlayerMoveC2SPacket) event.packet;
+                if (packet.changesLook()) {
+                    event.cancel();
+                }
+                if (packet.changesLook() && packet.changesPosition()) {
+                    mc.getNetworkHandler().sendPacket(new PlayerMoveC2SPacket.Full(packet.getX(mc.player.getX()),
+                        packet.getX(mc.player.getY()), packet.getX(mc.player.getZ()), (float) yaw, (float) pitch, packet.isOnGround()));
+                } else if (packet.changesPosition()) {
+                    mc.getNetworkHandler().sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(packet.getX(mc.player.getX()),
+                        packet.getX(mc.player.getY()), packet.getX(mc.player.getZ()), packet.isOnGround()));
+                } else if (packet.changesLook()) {
+                    mc.getNetworkHandler().sendPacket(new PlayerMoveC2SPacket.LookAndOnGround((float) yaw, (float) pitch,
+                        packet.isOnGround()));
+                }
+            }
+        }
+    }
+
     // Other stuff
 
     private void update() {
@@ -544,14 +618,13 @@ public class AutoCrystal extends Module {
                         BlockPos pos = new BlockPos(x + mc.player.getBlockPos().getX(),
                             y + mc.player.getBlockPos().getY(), z + mc.player.getBlockPos().getZ());
                         if (canBePlaced(pos)) {
-                            double dmg = highestDmg(pos);
-                            double self = DamageUtils.crystalDamage(mc.player, new Vec3d(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5),
-                                false, pos, false);
+                            double dmg[] = highestDmg(pos);
+                            double self = getSelfDamage(new Vec3d(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5), pos);
                             double dist = OLEPOSSUtils.distance(new Vec3d(x + mc.player.getBlockPos().getX() + 0.5,
                                 y + mc.player.getBlockPos().getY(), z + mc.player.getBlockPos().getZ() + 0.5),
                                 playerRangePos(true));
-                            if (placeDamageCheck(dmg, self, highestDMG, dist, highestDist)) {
-                                highestDMG = dmg;
+                            if (placeDamageCheck(dmg[0], self, dmg[1], highestDMG, dist, highestDist)) {
+                                highestDMG = dmg[0];
                                 highestDist = dist;
                                 position = pos;
                             }
@@ -563,21 +636,31 @@ public class AutoCrystal extends Module {
         return position;
     }
 
-    private boolean placeDamageCheck(double dmg, double self, double highest, double distance, double highestDist) {
+    private boolean placeDamageCheck(double dmg, double self, double health, double highest, double distance, double highestDist) {
         if (dmg < highest) {return false;}
         if (dmg == highest && distance > highestDist) {return false;}
+
+        //  Force pop check
+        double playerHP = mc.player.getHealth() + mc.player.getAbsorptionAmount();
+        boolean[] valid = new boolean[] {forcePop.get() * dmg > health, playerHP - (antiPop.get() * dmg) > minHealthLeft.get()};
+        if (valid[0] && (valid[1] || suicidal.get())) {return true;}
         if (dmg < minPlaceDamage.get()) {return false;}
         return self / dmg <= maxSelfPlace.get();
     }
 
-    private boolean breakDamageCheck(double dmg, double self) {
+    private boolean breakDamageCheck(double dmg, double self, double health) {
+        if (ignoreBreak.get()) {return true;}
 
-        if (!ignoreBreak.get() && dmg < minExplodeDamage.get()) {return false;}
-        return self / dmg <= maxSelfBreak.get();
+        //  Force pop check
+        double playerHP = mc.player.getHealth() + mc.player.getAbsorptionAmount();
+        boolean[] valid = new boolean[] {forcePop.get() * dmg > health, playerHP - (antiPop.get() * dmg) > minHealthLeft.get()};
+        if (valid[0] && (valid[1] || suicidal.get())) {return true;}
+        return self / dmg <= maxSelfBreak.get() && dmg < minExplodeDamage.get();
     }
 
-    protected double highestDmg(BlockPos pos) {
+    protected double[] highestDmg(BlockPos pos) {
         double highest = 0;
+        double highestHP = 0;
         if (mc.player != null && mc.world != null) {
             for (PlayerEntity enemy : mc.world.getPlayers()) {
                 if (enemy != mc.player && !Friends.get().isFriend(enemy)) {
@@ -585,11 +668,12 @@ public class AutoCrystal extends Module {
                         false, pos, false);
                     if (dmg > highest) {
                         highest = dmg;
+                        highestHP = enemy.getHealth() + enemy.getAbsorptionAmount();
                     }
                 }
             }
         }
-        return highest;
+        return new double[] {highest, highestHP};
     }
 
     protected boolean canBePlaced(BlockPos pos) {
@@ -664,10 +748,10 @@ public class AutoCrystal extends Module {
 
     private boolean canBreak(Vec3d pos) {
         if (!explode.get()) {return false;}
-        double self = DamageUtils.crystalDamage(mc.player, new Vec3d(pos.x, pos.y, pos.z),
-            false, new BlockPos(Math.floor(pos.x), Math.floor(pos.y) - 1, Math.floor(pos.z)), false);
+        double self = getSelfDamage(pos ,new BlockPos(Math.floor(pos.x), Math.floor(pos.y) - 1, Math.floor(pos.z)));
         if (onlyExplodeWhenHolding.get() && getHand(Items.END_CRYSTAL, preferMainHand.get(), false) == null) {return false;}
-        if (!breakDamageCheck(highestDmg(new BlockPos(Math.floor(pos.x), Math.floor(pos.y) - 1, Math.floor(pos.z))), self)) {return false;}
+        double[] dmg = highestDmg(new BlockPos(Math.floor(pos.x), Math.floor(pos.y) - 1, Math.floor(pos.z)));
+        if (!breakDamageCheck(dmg[0], self, dmg[1])) {return false;}
         return breakRangeCheck(new Vec3d(pos.x, pos.y, pos.z));
     }
 
@@ -824,5 +908,10 @@ public class AutoCrystal extends Module {
             }
         }
         return null;
+    }
+
+    private double getSelfDamage(Vec3d vec, BlockPos pos) {
+        return DamageUtils.crystalDamage(mc.player, vec,
+            false, pos.down(), false);
     }
 }

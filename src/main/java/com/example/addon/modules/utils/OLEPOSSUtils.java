@@ -1,8 +1,6 @@
 package com.example.addon.modules.utils;
 
 import meteordevelopment.meteorclient.utils.Utils;
-import net.minecraft.block.Block;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
 public class OLEPOSSUtils extends Utils {
