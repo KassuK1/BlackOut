@@ -544,27 +544,12 @@ public class AutoCrystal extends Module {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST + 1)
-    private void onRotate(PacketEvent.Send event) {
+    private void onRotate(TickEvent.Pre event) {
         if (rotate.get() && placePos != null) {
-            if (event.packet instanceof PlayerMoveC2SPacket) {
-                double yaw = Rotations.getYaw(new Vec3d(placePos.getX() + 0.5, placePos.getY() + rotationHeight.get(), placePos.getZ() + 0.5));
-                double pitch = Rotations.getPitch(new Vec3d(placePos.getX() + 0.5, placePos.getY() + rotationHeight.get(), placePos.getZ() + 0.5));
+            double yaw = Rotations.getYaw(new Vec3d(placePos.getX() + 0.5, placePos.getY() + rotationHeight.get(), placePos.getZ() + 0.5));
+            double pitch = Rotations.getPitch(new Vec3d(placePos.getX() + 0.5, placePos.getY() + rotationHeight.get(), placePos.getZ() + 0.5));
 
-                PlayerMoveC2SPacket packet = (PlayerMoveC2SPacket) event.packet;
-                if (packet.changesLook()) {
-                    event.cancel();
-                }
-                if (packet.changesLook() && packet.changesPosition()) {
-                    mc.getNetworkHandler().sendPacket(new PlayerMoveC2SPacket.Full(packet.getX(mc.player.getX()),
-                        packet.getX(mc.player.getY()), packet.getX(mc.player.getZ()), (float) yaw, (float) pitch, packet.isOnGround()));
-                } else if (packet.changesPosition()) {
-                    mc.getNetworkHandler().sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(packet.getX(mc.player.getX()),
-                        packet.getX(mc.player.getY()), packet.getX(mc.player.getZ()), packet.isOnGround()));
-                } else if (packet.changesLook()) {
-                    mc.getNetworkHandler().sendPacket(new PlayerMoveC2SPacket.LookAndOnGround((float) yaw, (float) pitch,
-                        packet.isOnGround()));
-                }
-            }
+            Rotations.rotate(yaw, pitch);
         }
     }
 
