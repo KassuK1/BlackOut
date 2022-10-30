@@ -55,7 +55,7 @@ public class AutoEz extends Module {
     private final Setting<List<String>> messages = sgGeneral.add(new StringListSetting.Builder()
         .name("Messages")
         .description("Messages to send when killing enemy")
-        .defaultValue(List.of("Fucked by BlackOut!", "BlackOut on top", "BlackOut stronk", "BlackOut gaeming"))
+        .defaultValue(List.of("Fucked by BlackOut!", "BlackOut on top", "BlackOut strong", "BlackOut gayming","BlackOut on top"))
         .build()
     );
     Random r = new Random();
