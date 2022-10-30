@@ -5,6 +5,7 @@ import com.example.addon.commands.GearInfo;
 import com.example.addon.commands.Kick;
 import com.example.addon.hud.GearHud;
 import com.example.addon.hud.HudExample;
+import com.example.addon.hud.HudHelper;
 import com.example.addon.modules.anarchy.*;
 import com.example.addon.modules.ghost.*;
 import com.mojang.logging.LogUtils;
@@ -35,8 +36,10 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new LegitTotem());
 
         //Anarchy
+        Modules.get().add(new AntiAim());
         Modules.get().add(new AutoCraftingTable());
         Modules.get().add(new AutoCrystal());
+        Modules.get().add(new AutoEz());
         Modules.get().add(new AutoMine());
         Modules.get().add(new BedBomb());
         Modules.get().add(new CevBreaker());
@@ -56,6 +59,7 @@ public class Addon extends MeteorAddon {
         // HUD
         Hud.get().register(GearHud.INFO);
         Hud.get().register(HudExample.INFO);
+        Hud.get().register(HudHelper.INFO);
     }
 
     @Override

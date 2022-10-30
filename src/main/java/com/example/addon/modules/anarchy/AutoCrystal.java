@@ -25,7 +25,10 @@ import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.*;
+import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
@@ -153,7 +156,21 @@ public class AutoCrystal extends Module {
     private final Setting<Boolean> alwaysExplodeBlocking = sgExplode.add(new BoolSetting.Builder()
         .name("Always Explode Blocking")
         .description(".")
+        .defaultValue(true)
+        .visible(explodeBlocking::get)
+        .build()
+    );
+    private final Setting<Boolean> rangeIgnBlocking = sgExplode.add(new BoolSetting.Builder()
+        .name("Ignore Range When Blocking")
+        .description(".")
         .defaultValue(false)
+        .visible(explodeBlocking::get)
+        .build()
+    );
+    private final Setting<Boolean> damageIgnBlocking = sgExplode.add(new BoolSetting.Builder()
+        .name("Ignore Damage When Blocking")
+        .description(".")
+        .defaultValue(true)
         .visible(explodeBlocking::get)
         .build()
     );
@@ -440,6 +457,7 @@ public class AutoCrystal extends Module {
     @Override
     public void onActivate() {
         super.onActivate();
+        renderAnim = 0;
         lowest = Integer.MIN_VALUE;
         resetVar();
     }
@@ -483,7 +501,7 @@ public class AutoCrystal extends Module {
                             return;
                         }
                     }
-                    if (canBreak(event.entity.getPos())) {
+                    if (canBreak(event.entity.getPos(), false)) {
                         if (event.entity.getBlockPos().equals(placePos.up())) {
                             blocked = false;
                         }
@@ -524,8 +542,12 @@ public class AutoCrystal extends Module {
     private void onRender(Render3DEvent event) {
         if (mc.player != null && mc.world != null) {
             if (placePos != null) {
-                renderPos = smoothMove(renderPos,
-                    new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ()), (float) (renderMoveSpeed.get() * event.tickDelta / 10));
+                if (animation.get()) {
+                    renderPos = smoothMove(renderPos,
+                        new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ()), (float) (renderMoveSpeed.get() * event.tickDelta / 10));
+                } else {
+                    renderPos = new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ());
+                }
             }
             if (animation.get()) {
                 renderAnim = placePos != null ?
@@ -533,10 +555,10 @@ public class AutoCrystal extends Module {
                     :
                     (renderAnim - animationSpeed.get() < 0 ? 0 : renderAnim - animationSpeed.get());
             }
-            if (renderPos != null && renderAnim > 0) {
+            if (renderPos != null && (!animation.get() || renderAnim > 0)) {
                 Vec3d v = new Vec3d(renderPos.getX() + 0.5, renderPos.getY() + 0.5, renderPos.getZ() + 0.5);
                 double progress = renderAnim / 100 / 2;
-                Box toRender = new Box(v.x - progress, v.y - progress, v.z - progress, v.x + progress, v.y + progress, v.z + progress);
+                Box toRender = new Box(v.x - progress, v.y - progress + height, v.z - progress, v.x + progress, v.y + progress - height, v.z + progress);
                 event.renderer.box(toRender, new Color(color.get().r, color.get().g, color.get().b,
                     (int) Math.floor(color.get().a / 5f)), color.get(), ShapeMode.Both, 0);
             }
@@ -629,6 +651,7 @@ public class AutoCrystal extends Module {
         double playerHP = mc.player.getHealth() + mc.player.getAbsorptionAmount();
         boolean[] valid = new boolean[] {forcePop.get() * dmg > health, playerHP - (antiPop.get() * dmg) > minHealthLeft.get()};
         if (valid[0] && (valid[1] || suicidal.get())) {return true;}
+
         if (dmg < minPlaceDamage.get()) {return false;}
         return self / dmg <= maxSelfPlace.get();
     }
@@ -640,6 +663,7 @@ public class AutoCrystal extends Module {
         double playerHP = mc.player.getHealth() + mc.player.getAbsorptionAmount();
         boolean[] valid = new boolean[] {forcePop.get() * dmg > health, playerHP - (antiPop.get() * dmg) > minHealthLeft.get()};
         if (valid[0] && (valid[1] || suicidal.get())) {return true;}
+
         return self / dmg <= maxSelfBreak.get() && dmg < minExplodeDamage.get();
     }
 
@@ -731,13 +755,15 @@ public class AutoCrystal extends Module {
         }
     }
 
-    private boolean canBreak(Vec3d pos) {
+    private boolean canBreak(Vec3d pos, boolean clean) {
+        boolean[] i = new boolean[] {clean && damageIgnBlocking.get() && explodeBlocking.get(),
+            clean && rangeIgnBlocking.get() && explodeBlocking.get()};
         if (!explode.get()) {return false;}
         double self = getSelfDamage(pos ,new BlockPos(Math.floor(pos.x), Math.floor(pos.y) - 1, Math.floor(pos.z)));
         if (onlyExplodeWhenHolding.get() && getHand(Items.END_CRYSTAL, preferMainHand.get(), false) == null) {return false;}
         double[] dmg = highestDmg(new BlockPos(Math.floor(pos.x), Math.floor(pos.y) - 1, Math.floor(pos.z)));
-        if (!breakDamageCheck(dmg[0], self, dmg[1])) {return false;}
-        return breakRangeCheck(new Vec3d(pos.x, pos.y, pos.z));
+        if (!breakDamageCheck(dmg[0], self, dmg[1]) && !i[0]) {return false;}
+        return breakRangeCheck(new Vec3d(pos.x, pos.y, pos.z)) || i[1];
     }
 
     private int highestID() {
@@ -759,7 +785,7 @@ public class AutoCrystal extends Module {
             if (EntityUtils.intersectsWithEntity(box, entity -> entity.getType() == EntityType.END_CRYSTAL)) {
                 for (Entity en : mc.world.getEntities()) {
                     if (en.getBoundingBox().intersects(box) && en instanceof EndCrystalEntity) {
-                        if (canBreak(en.getPos())) {
+                        if (canBreak(en.getPos(), true)) {
                             attackEntity(en, true);
                             blocked = false;
                             break;
@@ -774,11 +800,7 @@ public class AutoCrystal extends Module {
         Box box = new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 2, pos.getZ() + 1);
         for (Entity en : mc.world.getEntities()) {
             if (en.getBoundingBox().intersects(box) && en instanceof EndCrystalEntity && !en.getBlockPos().equals(pos)) {
-                if (canBreak(en.getPos())) {
-                    attackEntity(en, true);
-                    blocked = false;
-                    break;
-                }
+                return (EndCrystalEntity) en;
             }
         }
         return null;
@@ -855,7 +877,8 @@ public class AutoCrystal extends Module {
         double absX = Math.abs(current.x - target.x);
         double absY = Math.abs(current.y - target.y);
         double absZ = Math.abs(current.z - target.z);
-        height = (float) ((speed * absX + speed * absZ) * 1.5f / animationSpeed.get() * 10);
+        height = Math.sqrt(absX * absX + absZ * absZ) * speed;
+
         return new Vec3d(
             current.x > target.x ?
                 (absX <= speed * absX ? target.x : current.x - speed * absX) :

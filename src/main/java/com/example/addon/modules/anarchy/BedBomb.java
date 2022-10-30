@@ -5,6 +5,7 @@ import com.example.addon.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.world.BlockUpdateEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.orbit.EventHandler;
@@ -73,42 +74,7 @@ public class BedBomb extends Module {
         Direction.SOUTH
     };
     private int ticks;
-    private Item[] bedItems = new Item[] {
-        Items.BLACK_BED,
-        Items.BLUE_BED,
-        Items.BROWN_BED,
-        Items.CYAN_BED,
-        Items.GRAY_BED,
-        Items.GREEN_BED,
-        Items.LIGHT_BLUE_BED,
-        Items.LIGHT_GRAY_BED,
-        Items.LIME_BED,
-        Items.MAGENTA_BED,
-        Items.ORANGE_BED,
-        Items.PINK_BED,
-        Items.RED_BED,
-        Items.WHITE_BED,
-        Items.YELLOW_BED,
-        Items.PURPLE_BED
-    };
-    private Block[] bedBlocks = new Block[] {
-        Blocks.BLACK_BED,
-        Blocks.BLUE_BED,
-        Blocks.BROWN_BED,
-        Blocks.CYAN_BED,
-        Blocks.GRAY_BED,
-        Blocks.GREEN_BED,
-        Blocks.LIGHT_BLUE_BED,
-        Blocks.LIGHT_GRAY_BED,
-        Blocks.LIME_BED,
-        Blocks.MAGENTA_BED,
-        Blocks.ORANGE_BED,
-        Blocks.PINK_BED,
-        Blocks.RED_BED,
-        Blocks.WHITE_BED,
-        Blocks.YELLOW_BED,
-        Blocks.PURPLE_BED
-    };
+
 
     public enum LogicMode {
         PlaceBreak,
@@ -142,7 +108,7 @@ public class BedBomb extends Module {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onBlock(BlockUpdateEvent event) {
         if (mc.player != null && mc.world != null && placePos != null) {
-            if (isBedBlock(event.newState.getBlock()) && event.pos.equals(placePos)) {
+            if (OLEPOSSUtils.isBedBlock(event.newState.getBlock()) && event.pos.equals(placePos)) {
                 if (!instant.get() && mode.get() == LogicMode.PlaceBreak) {
                     mc.getNetworkHandler().sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
                         new BlockHitResult(new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ()),
@@ -158,7 +124,7 @@ public class BedBomb extends Module {
     private PlayerEntity findTarget() {
         PlayerEntity closest = null;
         for (PlayerEntity pl : mc.world.getPlayers()) {
-            if (pl != mc.player) {
+            if (pl != mc.player && !Friends.get().isFriend(pl)) {
                 if (closest == null) {
                     closest = pl;
                 } else if (OLEPOSSUtils.distance(mc.player.getPos(), pl.getPos()) < OLEPOSSUtils.distance(mc.player.getPos(), closest.getPos())) {
@@ -174,7 +140,7 @@ public class BedBomb extends Module {
         Direction closest = null;
         for (Direction dir : horizontals) {
             BlockPos dirPos = pos.offset(dir).up();
-            if (isBedBlock(mc.world.getBlockState(pos.up()).getBlock()) && isBedBlock(mc.world.getBlockState(dirPos).getBlock())) {
+            if (OLEPOSSUtils.isBedBlock(mc.world.getBlockState(pos.up()).getBlock()) && OLEPOSSUtils.isBedBlock(mc.world.getBlockState(dirPos).getBlock())) {
                 return dir;
             }
             if (mc.world.getBlockState(dirPos).getBlock() == Blocks.AIR) {
@@ -223,7 +189,7 @@ public class BedBomb extends Module {
             }
         }
         if (mode.get() == LogicMode.BreakPlace) {
-            if (isBedBlock(mc.world.getBlockState(placePos).getBlock())) {
+            if (OLEPOSSUtils.isBedBlock(mc.world.getBlockState(placePos).getBlock())) {
                 mc.getNetworkHandler().sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
                     new BlockHitResult(new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ()),
                         Direction.UP, placePos, false), 0));
@@ -236,25 +202,8 @@ public class BedBomb extends Module {
     }
 
     private boolean isHolding() {
-        for (Item item : bedItems) {
+        for (Item item : OLEPOSSUtils.bedItems) {
             if (mc.player.getMainHandStack().getItem() == item) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean isBedBlock(Block block) {
-        for (Block bed : bedBlocks) {
-            if (block == bed) {
-                return true;
-            }
-        }
-        return false;
-    }
-    private boolean isBedItem(Item item) {
-        for (Item bed : bedItems) {
-            if (item == bed) {
                 return true;
             }
         }

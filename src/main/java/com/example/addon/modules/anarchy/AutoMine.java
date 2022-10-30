@@ -8,6 +8,7 @@ import meteordevelopment.meteorclient.events.world.BlockUpdateEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
@@ -219,7 +220,7 @@ public class AutoMine extends Module {
         PlayerEntity closest = null;
         Vec3d closestPos = null;
         for (PlayerEntity pl : mc.world.getPlayers()) {
-            if (pl != mc.player) {
+            if (pl != mc.player && !Friends.get().isFriend(pl)) {
                 if (getSide(pl) != null) {
                     BlockPos pos = pl.getBlockPos().offset(getSide(pl));
                     if (closest == null) {

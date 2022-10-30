@@ -6,6 +6,7 @@ import meteordevelopment.meteorclient.settings.DoubleSetting;
 import meteordevelopment.meteorclient.settings.IntSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.orbit.EventHandler;
@@ -59,7 +60,7 @@ public class WebPlus extends Module {
 
     private boolean isAt(BlockPos pos) {
         for (PlayerEntity pl : mc.world.getPlayers()) {
-            if (pl != mc.player && (pl.getBlockPos().up(1) == pos || pl.getBlockPos().up(2) == pos)) {
+            if (pl != mc.player && !Friends.get().isFriend(pl) && (pl.getBlockPos().up(1) == pos || pl.getBlockPos().up(2) == pos)) {
                 if (isAbove(2, pl)) {
                     return true;
                 }
