@@ -2,10 +2,7 @@ package com.example.addon.modules.anarchy;
 
 import com.example.addon.Addon;
 import meteordevelopment.meteorclient.events.world.TickEvent;
-import meteordevelopment.meteorclient.settings.BoolSetting;
-import meteordevelopment.meteorclient.settings.DoubleSetting;
-import meteordevelopment.meteorclient.settings.Setting;
-import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.world.Timer;
@@ -41,6 +38,15 @@ public class ScaffoldPlus extends Module {
         .sliderMax(10)
         .build()
     );
+    private final Setting<Integer> delay = sgGeneral.add(new IntSetting.Builder()
+        .name("Delay")
+        .description("Delay.")
+        .defaultValue(5)
+        .range(0, 60)
+        .sliderMax(60)
+        .build()
+    );
+    private int tdelay;
     @Override
     public void onDeactivate() {
         super.onDeactivate();
@@ -48,7 +54,7 @@ public class ScaffoldPlus extends Module {
     }
 
     @EventHandler
-    private void onTick(TickEvent.Post event) {
+    private void onTick(TickEvent.Pre event) {
         if (mc.player != null && mc.world != null){
             BlockPos pos = mc.player.getBlockPos();
             BlockPos ypos = mc.player.getBlockPos().down(1);
