@@ -7,10 +7,12 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.world.Timer;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Blocks;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
@@ -64,6 +66,13 @@ public class HoleSnap extends Module {
         .sliderMax(10)
         .build()
     );
+    private final Setting<Integer> coll = sgGeneral.add(new IntSetting.Builder()
+        .name("Collisions to disable")
+        .description("0 = doesn't disable")
+        .defaultValue(15)
+        .sliderRange(0, 100)
+        .build()
+    );
     private Direction[] horizontals = new Direction[] {
         Direction.EAST,
         Direction.WEST,
@@ -71,6 +80,7 @@ public class HoleSnap extends Module {
         Direction.SOUTH
     };
     BlockPos singleHole;
+    private int collisions;
 
 
     public HoleSnap() {
@@ -93,7 +103,7 @@ public class HoleSnap extends Module {
     private void onMove(PlayerMoveEvent event) {
         if (mc.player != null && mc.world != null) {
             BlockPos hole = single.get() ? singleHole : findHole();
-            if (hole != null) {
+            if (hole != null && mc.world.getBlockState(singleHole).getBlock() == Blocks.AIR) {
                 Modules.get().get(Timer.class).setOverride(timer.get());
                 double yaw =
                     Math.cos(Math.toRadians(
@@ -104,10 +114,20 @@ public class HoleSnap extends Module {
                 if (Math.abs(mc.player.getX() - hole.getX() - 0.5) < 0.200 && Math.abs(mc.player.getZ() - hole.getZ() - 0.5) < 0.200) {
                     if (Math.floor(mc.player.getY()) == hole.getY()) {
                         this.toggle();
+                        info("Toggled: In hole");
                     } else {
                         mc.player.addVelocity(-mc.player.getVelocity().x, 0, -mc.player.getVelocity().z);
                     }
                 } else {
+                    if (mc.player.horizontalCollision) {
+                        collisions++;
+                    } else {
+                        collisions = 0;
+                    }
+                    if (collisions >= coll.get() && coll.get() > 0) {
+                        this.toggle();
+                        info("Toggled: too many collisions");
+                    }
                     mc.player.addVelocity(-mc.player.getVelocity().x, 0, -mc.player.getVelocity().z);
                     double x = speed.get() * yaw / 100;
                     double dX = Math.abs(hole.getX() + 0.5 - mc.player.getX());
@@ -117,6 +137,7 @@ public class HoleSnap extends Module {
                 }
             } else {
                 this.toggle();
+                info("Toggled: no hole found");
             }
         }
     }
@@ -157,7 +178,8 @@ public class HoleSnap extends Module {
         for (Direction dir : horizontals) {
             if (mc.world.getBlockState(pos.offset(dir)).getBlock() == Blocks.AIR) {return false;}
         }
-        if (mc.world.getBlockState(pos.up()).getBlock() != Blocks.AIR) {return false;}
+        if (mc.world.getBlockState(pos.up(1)).getBlock() != Blocks.AIR ||
+            mc.world.getBlockState(pos.up(2)).getBlock() != Blocks.AIR) {return false;}
         return mc.world.getBlockState(pos.down()).getBlock() != Blocks.AIR;
     }
 

@@ -87,6 +87,12 @@ public class OLEPOSSUtils extends Utils {
         Items.NETHERITE_BOOTS,
     };
 
+    public static Block[] anvils = new Block[] {
+        Blocks.ANVIL,
+        Blocks.CHIPPED_ANVIL,
+        Blocks.DAMAGED_ANVIL,
+    };
+
     public static boolean isBedItem(Item item) {
         for (Item i : bedItems) {
             if (i.equals(item)) {return true;}
@@ -128,5 +134,11 @@ public class OLEPOSSUtils extends Utils {
     }
     public static String armorCategory(Item item) {
         return isHelmet(item) ? "helmet" : isChestPlate(item) ? "chestplate" : isLegging(item) ? "leggings" : isBoot(item) ? "boots" : null;
+    }
+    public static boolean isAnvilBlock(Block block) {
+        for (Block i : anvils) {
+            if (i.equals(block)) {return true;}
+        }
+        return false;
     }
 }

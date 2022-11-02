@@ -47,6 +47,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new HoleSnap());
         Modules.get().add(new OffHandPlus());
         Modules.get().add(new ResetVL());
+        Modules.get().add(new SelfTrapPlus());
         Modules.get().add(new SprintPlus());
         Modules.get().add(new WeakAlert());
         Modules.get().add(new WebPlus());

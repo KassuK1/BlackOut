@@ -59,6 +59,7 @@ public class AutoEz extends Module {
         .build()
     );
     Random r = new Random();
+    int lastNum;
 
 
     public AutoEz() {
@@ -70,6 +71,7 @@ public class AutoEz extends Module {
     public void onActivate() {
         super.onActivate();
         lastState = false;
+        lastNum = -1;
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -98,6 +100,11 @@ public class AutoEz extends Module {
     }
 
     private void sendMessage() {
-        ChatUtils.sendPlayerMsg(messages.get().get(r.nextInt(0, messages.get().size() - 1)));
+        int num = r.nextInt(0, messages.get().size() - 1);
+        if (num == lastNum) {
+            num = num < messages.get().size() - 1 ? num + 1 : 0;
+        }
+        lastNum = num;
+        ChatUtils.sendPlayerMsg(messages.get().get(num));
     }
 }

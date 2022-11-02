@@ -102,7 +102,7 @@ public class HudHelper extends HudElement {
                 boolean hasWeakness = mc.player.hasStatusEffect(StatusEffect.byRawId(18));
                 if (hasWeakness) {
                     StatusEffectInstance rur = mc.player.getActiveStatusEffects().get(StatusEffect.byRawId(18));
-                    alerts.add("You have weakness (" + rur.getDuration() + "s)");
+                    alerts.add("You have weakness (" + Math.round(rur.getDuration() / 20f) + "s)");
                 }
             }
             if (strength.get()) {
