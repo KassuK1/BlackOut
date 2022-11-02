@@ -55,9 +55,9 @@ public class AutoCraftingTable extends Module {
     private final Setting<Integer> minValue = sgGeneral.add(new IntSetting.Builder()
         .name("Min Value")
         .description("Don't change if you dont knwo what it does")
-        .defaultValue(5)
-        .range(0, 18)
-        .sliderMax(12)
+        .defaultValue(-1)
+        .range(-6, 12)
+        .sliderRange(-6, 12)
         .build()
     );
     private final Setting<Integer> delay = sgGeneral.add(new IntSetting.Builder()
@@ -121,7 +121,7 @@ public class AutoCraftingTable extends Module {
 
     private BlockPos findPos() {
         BlockPos bestPos = null;
-        int value = minValue.get() - 6;
+        int value = minValue.get();
         for (int x = (int) -Math.ceil(range.get()); x <= Math.ceil(range.get()); x++) {
             for (int y = (int) -Math.ceil(range.get()); y <= Math.ceil(range.get()); y++) {
                 for (int z = (int) -Math.ceil(range.get()); z <= Math.ceil(range.get()); z++) {

@@ -61,7 +61,7 @@ public class SelfTrapPlus extends Module {
 
 
     public SelfTrapPlus() {
-        super(Addon.ANARCHY, "Self Trap+", "Bullies enemies");
+        super(Addon.ANARCHY, "Self Trap+", "Bullies enemies (evil when it works)");
     }
 
     @Override

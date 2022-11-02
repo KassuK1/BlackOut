@@ -39,7 +39,7 @@ public class GearHud extends HudElement {
         .defaultValue(new SettingColor(0, 0, 0, 255))
         .build()
     );
-    public static final HudElementInfo<GearHud> INFO = new HudElementInfo<>(Addon.HUD_ANARCHY, "GearHud", "Gear.", GearHud::new);
+    public static final HudElementInfo<GearHud> INFO = new HudElementInfo<>(Addon.HUD_BLACKOUT, "GearHud", "Gear.", GearHud::new);
 
     public GearHud() {
         super(INFO);

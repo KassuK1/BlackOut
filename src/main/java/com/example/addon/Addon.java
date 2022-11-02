@@ -21,8 +21,8 @@ public class Addon extends MeteorAddon {
     public static final Logger LOG = LogUtils.getLogger();
     public static final Category GHOST = new Category("Ghost");
     public static final Category ANARCHY = new Category("Anarchy");
-    public static final HudGroup HUD_GHOST = new HudGroup("Ghost");
-    public static final HudGroup HUD_ANARCHY = new HudGroup("Anarchy");
+
+    public static final HudGroup HUD_BLACKOUT = new HudGroup("BlackOut");
 
 
     @Override

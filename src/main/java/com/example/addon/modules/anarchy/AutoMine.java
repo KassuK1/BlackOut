@@ -72,7 +72,7 @@ public class AutoMine extends Module {
     );
     private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
         .name("Range")
-        .description("hmm yes")
+        .description("Range for mining")
         .defaultValue(6)
         .range(0, 10)
         .sliderMax(10)

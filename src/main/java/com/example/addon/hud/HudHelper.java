@@ -74,7 +74,7 @@ public class HudHelper extends HudElement {
     );
 
     String item = null;
-    public static final HudElementInfo<HudHelper> INFO = new HudElementInfo<>(Addon.HUD_ANARCHY, "HudHelper", "Helps", HudHelper::new);
+    public static final HudElementInfo<HudHelper> INFO = new HudElementInfo<>(Addon.HUD_BLACKOUT, "HudHelper", "Helps", HudHelper::new);
 
     public HudHelper() {
         super(INFO);

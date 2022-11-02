@@ -44,7 +44,7 @@ public class HoleSnap extends Module {
     );
     private final Setting<Double> timer = sgGeneral.add(new DoubleSetting.Builder()
         .name("Timer")
-        .description("Speed but better")
+        .description("Sends packets faster")
         .defaultValue(1)
         .min(0)
         .sliderMax(100)

@@ -1,5 +1,6 @@
 package com.example.addon.modules.utils;
 
+import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.utils.Utils;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;

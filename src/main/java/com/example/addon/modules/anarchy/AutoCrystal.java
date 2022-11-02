@@ -198,7 +198,7 @@ public class AutoCrystal extends Module {
     //  Misc Page
     private final Setting<Boolean> idPredict = sgMisc.add(new BoolSetting.Builder()
         .name("ID Predict")
-        .description("Removes crystals Instantly after spawning.")
+        .description("Attacks crystals before they spawn.")
         .defaultValue(false)
         .build()
     );

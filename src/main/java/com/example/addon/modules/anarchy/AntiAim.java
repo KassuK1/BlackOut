@@ -11,6 +11,7 @@ import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
+import net.minecraft.item.Items;
 
 import java.util.List;
 import java.util.Random;
@@ -113,6 +114,7 @@ public class AntiAim extends Module {
     private final Setting<List<Item>> yItems = sgIgnore.add(new ItemListSetting.Builder()
         .name("Ignore Yaw when holding")
         .description(".")
+        .defaultValue(Items.ENDER_PEARL, Items.BOW, Items.EXPERIENCE_BOTTLE)
         .build()
     );
     private final Setting<Boolean> iPitch = sgIgnore.add(new BoolSetting.Builder()
@@ -124,6 +126,7 @@ public class AntiAim extends Module {
     private final Setting<List<Item>> pItems = sgIgnore.add(new ItemListSetting.Builder()
         .name("Ignore Pitch when holding")
         .description(".")
+        .defaultValue(Items.ENDER_PEARL, Items.BOW, Items.EXPERIENCE_BOTTLE)
         .build()
     );
 

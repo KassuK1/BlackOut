@@ -63,7 +63,7 @@ public class AutoEz extends Module {
 
 
     public AutoEz() {
-        super(Addon.ANARCHY, "AutoEZ", "Self explanatory");
+        super(Addon.ANARCHY, "AutoEZ", "Sends message after enemy dies");
     }
     boolean lastState;
 
