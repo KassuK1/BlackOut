@@ -278,15 +278,17 @@ public class AutoMine extends Module {
                 if (antiBurrow.get())  {
                     BlockPos pos = pl.getBlockPos();
                     if (mc.world.getBlockState(pl.getBlockPos()).getBlock() != Blocks.AIR) {
-                        if (closest == null) {
-                            closest = pl;
-                            value = 3;
-                            closestPos = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
-                        } else if (distance(new Vec3d(pos.getX(), pos.getY(), pos.getZ()), mc.player.getEyePos()) <
-                            distance(closestPos, mc.player.getEyePos()) || value < 3) {
-                            closest = pl;
-                            value = 3;
-                            closestPos = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
+                        if (distance(new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), mc.player.getEyePos()) <= range.get()) {
+                            if (closest == null) {
+                                closest = pl;
+                                value = 3;
+                                closestPos = new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+                            } else if (distance(new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), mc.player.getEyePos()) <
+                                distance(closestPos, mc.player.getEyePos()) || value < 3) {
+                                closest = pl;
+                                value = 3;
+                                closestPos = new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+                            }
                         }
                     }
                 }
@@ -294,16 +296,18 @@ public class AutoMine extends Module {
                 if (antiSurround.get() && value <= 2) {
                     if (getSide(pl) != null) {
                         BlockPos pos = pl.getBlockPos().offset(getSide(pl));
-                        if (closest == null) {
-                            closest = pl;
-                            value = 2;
-                            closestPos = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
-                        } else {
-                            if (distance(new Vec3d(pos.getX(), pos.getY(), pos.getZ()), mc.player.getEyePos()) <
-                                distance(closestPos, mc.player.getEyePos())) {
+                        if (distance(new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), mc.player.getEyePos()) <= range.get()) {
+                            if (closest == null) {
                                 closest = pl;
                                 value = 2;
-                                closestPos = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
+                                closestPos = new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+                            } else {
+                                if (distance(new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), mc.player.getEyePos()) <
+                                    distance(closestPos, mc.player.getEyePos())) {
+                                    closest = pl;
+                                    value = 2;
+                                    closestPos = new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+                                }
                             }
                         }
                     }
@@ -315,7 +319,7 @@ public class AutoMine extends Module {
                 if (mc.world.getBlockState(pl.getBlockPos()).getBlock() == Blocks.COBWEB) {
                     closest = mc.player;
                     value = 1;
-                    closestPos = new Vec3d(pos.getX(), pos.getY(), pos.getZ());
+                    closestPos = new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
                 }
             }
         }

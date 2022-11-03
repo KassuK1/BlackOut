@@ -105,6 +105,18 @@ public class AntiAim extends Module {
         .visible(() -> mode.get().equals(Modes.Custom))
         .build()
     );
+    private final Setting<Boolean> bowMode = sgGeneral.add(new BoolSetting.Builder()
+        .name("Look Up With Bow")
+        .description(".")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> encMode = sgGeneral.add(new BoolSetting.Builder()
+        .name("Look Down With Exp")
+        .description(".")
+        .defaultValue(true)
+        .build()
+    );
     private final Setting<Boolean> iYaw = sgIgnore.add(new BoolSetting.Builder()
         .name("Ignore Yaw")
         .description(".")
@@ -194,9 +206,12 @@ public class AntiAim extends Module {
                 }
             }
 
-            Rotations.rotate(contains(yItems.get(),
-                mc.player.getMainHandStack().getItem()) && iYaw.get() ? mc.player.getYaw() : y,
-                contains(pItems.get(), mc.player.getMainHandStack().getItem()) && iPitch.get() ? mc.player.getPitch() : p);
+            Rotations.rotate(
+                contains(yItems.get(), mc.player.getMainHandStack().getItem()) && iYaw.get() ? mc.player.getYaw() : y,
+
+                mc.player.getMainHandStack().getItem().equals(Items.EXPERIENCE_BOTTLE) && encMode.get() ? 90 :
+                    mc.player.getMainHandStack().getItem().equals(Items.BOW) && bowMode.get() ? -90 :
+                    (contains(pItems.get(), mc.player.getMainHandStack().getItem()) && iPitch.get() ? mc.player.getPitch() : p));
         }
     }
 

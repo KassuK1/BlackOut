@@ -3,6 +3,7 @@ package com.example.addon.modules.anarchy;
 import com.example.addon.Addon;
 import com.example.addon.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
+import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
@@ -12,6 +13,7 @@ import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Blocks;
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -73,6 +75,13 @@ public class HoleSnap extends Module {
         .sliderRange(0, 100)
         .build()
     );
+    private final Setting<Integer> rDisable = sgGeneral.add(new IntSetting.Builder()
+        .name("Rubberbands to disable")
+        .description("0 = doesn't disable")
+        .defaultValue(1)
+        .sliderRange(0, 100)
+        .build()
+    );
     private Direction[] horizontals = new Direction[] {
         Direction.EAST,
         Direction.WEST,
@@ -81,6 +90,7 @@ public class HoleSnap extends Module {
     };
     BlockPos singleHole;
     private int collisions;
+    private int rubberbands;
 
 
     public HoleSnap() {
@@ -91,12 +101,24 @@ public class HoleSnap extends Module {
     public void onActivate() {
         super.onActivate();
         singleHole = findHole();
+        rubberbands = 0;
     }
 
     @Override
     public void onDeactivate() {
         super.onDeactivate();
         Modules.get().get(Timer.class).setOverride(1);
+    }
+
+    @EventHandler
+    private void onPacket(PacketEvent.Receive event) {
+        if (event.packet instanceof PlayerPositionLookS2CPacket && rDisable.get() > 0) {
+            rubberbands++;
+            if (rubberbands >= rDisable.get() && rDisable.get() > 0) {
+                this.toggle();
+                info("Toggled: Rubberbanding");
+            }
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

@@ -12,7 +12,6 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
-import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.DamageUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.render.color.Color;
@@ -30,6 +29,7 @@ import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
+import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -85,13 +85,22 @@ public class AutoCrystal extends Module {
     );
 
     //  Place Page
-    private final Setting<Boolean> superSmartRangeChecks = sgGeneral.add(new BoolSetting.Builder()
-        .name("Super Smart Range Checks")
+
+    private final Setting<Boolean> instantPlace = sgPlace.add(new BoolSetting.Builder()
+        .name("Instant Explode")
         .description(".")
         .defaultValue(true)
         .build()
     );
-
+    private final Setting<Double> placeDelay = sgPlace.add(new DoubleSetting.Builder()
+        .name("Place Delay (ms)")
+        .description(".")
+        .defaultValue(0)
+        .range(0, 1000)
+        .sliderRange(0, 1000)
+        .visible(() -> !instantPlace.get())
+        .build()
+    );
     private final Setting<Double> placeRange = sgPlace.add(new DoubleSetting.Builder()
         .name("Place Range")
         .description(".")
@@ -120,7 +129,22 @@ public class AutoCrystal extends Module {
     );
 
     //  Explode Page
+    private final Setting<Boolean> instantExplode = sgExplode.add(new BoolSetting.Builder()
+        .name("Instant Explode")
+        .description(".")
+        .defaultValue(true)
+        .build()
+    );
 
+    private final Setting<Double> explodeDelay = sgExplode.add(new DoubleSetting.Builder()
+        .name("Explode Delay (ms)")
+        .description(".")
+        .defaultValue(0)
+        .range(0, 1000)
+        .sliderRange(0, 1000)
+        .visible(() -> !instantExplode.get())
+        .build()
+    );
     private final Setting<Double> explodeRange = sgExplode.add(new DoubleSetting.Builder()
         .name("Break Range")
         .description(".")
@@ -144,9 +168,25 @@ public class AutoCrystal extends Module {
         .build()
     );
     private final Setting<Boolean> setDead = sgExplode.add(new BoolSetting.Builder()
-        .name("SetDead")
+        .name("Set Dead")
         .description("Removes crystals.")
         .defaultValue(false)
+        .build()
+    );
+    private final Setting<Boolean> instantSetDead = sgExplode.add(new BoolSetting.Builder()
+        .name("Instant Set Dead")
+        .description(".")
+        .defaultValue(false)
+        .visible(setDead::get)
+        .build()
+    );
+    private final Setting<Double> sdDelay = sgExplode.add(new DoubleSetting.Builder()
+        .name("Set Dead Delay (ms)")
+        .description(".")
+        .defaultValue(50)
+        .range(0, 1000)
+        .sliderRange(0, 1000)
+        .visible(() -> setDead.get() && !instantSetDead.get())
         .build()
     );
     private final Setting<Boolean> explodeBlocking = sgExplode.add(new BoolSetting.Builder()
@@ -203,11 +243,35 @@ public class AutoCrystal extends Module {
         .build()
     );
     private final Setting<Double> idDelay = sgMisc.add(new DoubleSetting.Builder()
-        .name("ID Packet Delay")
+        .name("ID Packet Delay (ms)")
         .description(".")
-        .defaultValue(0.05)
-        .range(0, 1)
-        .sliderMax(1)
+        .defaultValue(50)
+        .range(0, 1000)
+        .sliderRange(0, 1000)
+        .visible(idPredict::get)
+        .build()
+    );
+    private final Setting<Boolean> idSingleSwing = sgMisc.add(new BoolSetting.Builder()
+        .name("Single Swing")
+        .description("Attacks crystals before they spawn.")
+        .defaultValue(true)
+        .visible(idPredict::get)
+        .build()
+    );
+    private final Setting<Integer> idOffset = sgMisc.add(new IntSetting.Builder()
+        .name("ID Offset")
+        .description("Attacks crystals before they spawn.")
+        .defaultValue(0)
+        .sliderRange(-10, 10)
+        .visible(idPredict::get)
+        .build()
+    );
+    private final Setting<Integer> idPackets = sgMisc.add(new IntSetting.Builder()
+        .name("ID Packets")
+        .description("Attacks crystals before they spawn.")
+        .defaultValue(1)
+        .sliderRange(-10, 10)
+        .visible(idPredict::get)
         .build()
     );
 
@@ -324,6 +388,12 @@ public class AutoCrystal extends Module {
 
     //  Raytrace Page
 
+    private final Setting<Boolean> superSmartRangeChecks = sgRaytrace.add(new BoolSetting.Builder()
+        .name("Super Smart Range Checks")
+        .description(".")
+        .defaultValue(true)
+        .build()
+    );
     private final Setting<Boolean> placeRangeFromEyes = sgRaytrace.add(new BoolSetting.Builder()
         .name("Place Range From Eyes")
         .description("Removes crystals Instantly after spawning.")
@@ -400,6 +470,12 @@ public class AutoCrystal extends Module {
 
     //  Render Page
 
+    private final Setting<SettingColor> color = sgRender.add(new ColorSetting.Builder()
+        .name("Color")
+        .description("U blind?")
+        .defaultValue(new SettingColor(255, 255, 255, 255))
+        .build()
+    );
     private final Setting<Boolean> animation = sgRender.add(new BoolSetting.Builder()
         .name("Animation")
         .description("Removes crystals Instantly after spawning.")
@@ -423,13 +499,6 @@ public class AutoCrystal extends Module {
         .range(0, 10)
         .sliderMax(10)
         .visible(animation::get)
-        .build()
-    );
-
-    private final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
-        .name("Color")
-        .description("U blind?")
-        .defaultValue(new SettingColor(255, 255, 255, 255))
         .build()
     );
 
@@ -459,7 +528,6 @@ public class AutoCrystal extends Module {
     protected BlockPos placePos;
     protected BlockPos lastPos;
     protected boolean blocked;
-    private int lastId;
     private boolean lastPaused;
     private double renderAnim;
     private Vec3d renderPos;
@@ -508,23 +576,42 @@ public class AutoCrystal extends Module {
     @EventHandler(priority = EventPriority.HIGHEST + 1)
     private void onRender3D(Render3DEvent event) {
         activeTime += event.frameTime;
+        List<Integer> toRemove = new ArrayList<>();
         if (!timeQueue.isEmpty()) {
             for (int i = 0; i < timeQueue.size(); i++) {
                 if (timeQueue.get(i) < activeTime) {
-                    timeQueue.remove(i);
+                    toRemove.add(i);
                     queue.get(i).run();
-                    ChatUtils.sendMsg(Text.of("ree"));
                 }
             }
         }
+        if (!toRemove.isEmpty()) {
+            List<Runnable> queue2 = new ArrayList<>();
+            List<Double> timeQueue2 = new ArrayList<>();
+            for (int i = 0; i < queue.size(); i++) {
+                if (!toRemove.contains(i)) {
+                    queue2.add(queue.get(i));
+                    timeQueue2.add(timeQueue.get(i));
+                }
+            }
+            queue = queue2;
+            timeQueue = timeQueue2;
+        }
+
         if (calcMode.get().equals(ListenerMode.Render)) {update();}
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
-    private void onEntity(EntityAddedEvent event) {
-        if (event.entity.getId() > lowest) {
-            lowest = event.entity.getId();
+    private void onReceive(PacketEvent.Receive event) {
+        if (event.packet instanceof EntitySpawnS2CPacket) {
+            EntitySpawnS2CPacket packet = (EntitySpawnS2CPacket) event.packet;
+            lowest = packet.getId();
         }
+    }
+
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    private void onEntity(EntityAddedEvent event) {
         if (mc.player != null && mc.world != null && explode.get()) {
             if (!pausedCheck()) {
                 if (event.entity.getType() == EntityType.END_CRYSTAL) {
@@ -533,12 +620,12 @@ public class AutoCrystal extends Module {
                             placePos.getX() + 1, placePos.getY() + 3, placePos.getZ() + 1);
                         if ((event.entity.getBoundingBox().intersects(box) && !event.entity.getBlockPos().equals(placePos)
                             && explodeBlocking.get())) {
-                            attackEntity(event.entity, true);
+                            explode(event.entity, event.entity.getPos(),true);
                             return;
                         }
                     }
                     if (canBreak(event.entity.getPos(), false)) {
-                        attackEntity(event.entity, true);
+                        explode(event.entity, event.entity.getPos(),true);
                     }
                 }
             }
@@ -556,16 +643,7 @@ public class AutoCrystal extends Module {
                     Hand swingHand = getHand(Items.END_CRYSTAL, preferMainHand.get(), true);
                     Hand handToUse = getHand(Items.END_CRYSTAL, preferMainHand.get(), false);
                     if (handToUse != null) {
-                        swing(swingHand, placeSwingMode.get(), placeSwing.get(), prePlaceSwing.get(), true);
-                        mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(handToUse,
-                            new BlockHitResult(new Vec3d(pos.getX(), pos.getY() - 1, pos.getZ()),
-                                Direction.UP, pos.down(), false), 0));
-                        swing(swingHand, placeSwingMode.get(), placeSwing.get(), prePlaceSwing.get(), false);
-                        if (idPredict.get()) {
-                            predictAttack(highestID() + 1, new Vec3d(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5), false,
-                                idDelay.get());
-                        }
-                        blocked = true;
+                        placeAt(handToUse, swingHand, placePos);
                     }
                 }
             }
@@ -621,21 +699,41 @@ public class AutoCrystal extends Module {
                         Hand swingHand = getHand(Items.END_CRYSTAL, preferMainHand.get(), true);
                         Hand handToUse = getHand(Items.END_CRYSTAL, preferMainHand.get(), false);
                         if (handToUse != null) {
-                            swing(swingHand, placeSwingMode.get(), placeSwing.get(), prePlaceSwing.get(), true);
-                            mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(handToUse,
-                                new BlockHitResult(new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ()), Direction.UP, placePos, false), 0));
-                            swing(swingHand, placeSwingMode.get(), placeSwing.get(), prePlaceSwing.get(), false);
-                            if (idPredict.get()) {
-                                predictAttack(highestID() + 1, new Vec3d(placePos.getX() + 0.5, placePos.getY() + 1, placePos.getZ() + 0.5), false,
-                                    idDelay.get());
-                            }
-                            blocked = true;
+                            placeAt(handToUse, swingHand, placePos);
                         }
                     }
                 }
             } else {
                 lastPos = null;
             }
+        }
+    }
+
+    private void placeAt(Hand hand, Hand swingHand, BlockPos pos) {
+        blocked = true;
+        if (instantPlace.get()) {
+            placeCrystal(hand, swingHand, pos);
+        } else {
+            add(() -> placeCrystal(hand, swingHand, pos), placeDelay.get());
+        }
+    }
+
+    private void placeCrystal(Hand hand, Hand swingHand, BlockPos pos) {
+        swing(swingHand, placeSwingMode.get(), placeSwing.get(), prePlaceSwing.get(), true);
+        mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand,
+            new BlockHitResult(new Vec3d(pos.getX(), pos.getY(), pos.getZ()), Direction.UP, pos, false), 0));
+        swing(swingHand, placeSwingMode.get(), placeSwing.get(), prePlaceSwing.get(), false);
+        if (idPredict.get()) {
+            predictAdd(highestID() + 1, new Vec3d(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5), false,
+                idDelay.get());
+        }
+    }
+
+    private void explode(Entity en, Vec3d pos, boolean checkSetDead) {
+        if (instantExplode.get()) {
+            attackEntity(en, checkSetDead, true, true);
+        } else {
+            add(() -> attackID(en.getId(), pos, checkSetDead, true, true), explodeDelay.get());
         }
     }
 
@@ -793,7 +891,7 @@ public class AutoCrystal extends Module {
     }
 
     private int highestID() {
-        int highest = lastId;
+        int highest = lowest;
         if (mc.world != null) {
             for (Entity entity : mc.world.getEntities()) {
                 if (entity.getId() > highest) {
@@ -801,7 +899,6 @@ public class AutoCrystal extends Module {
                 }
             }
         }
-        lastId = highest + 1;
         return highest;
     }
 
@@ -812,7 +909,7 @@ public class AutoCrystal extends Module {
                 for (Entity en : mc.world.getEntities()) {
                     if (en.getBoundingBox().intersects(box) && en instanceof EndCrystalEntity) {
                         if (canBreak(en.getPos(), true)) {
-                            attackEntity(en, true);
+                            attackEntity(en, true, true, true);
                             break;
                         }
                     }
@@ -843,7 +940,6 @@ public class AutoCrystal extends Module {
     }
 
     private void resetVar() {
-        lastId = Integer.MIN_VALUE;
         if (placePos != null) {
             blocked = crystalAtPos(placePos.up()) != null;
         } else {
@@ -867,27 +963,41 @@ public class AutoCrystal extends Module {
             }
         }
     }
-    private void predictAttack(int id, Vec3d pos, boolean checkSD, double delay) {
-        queue.add(() -> attackID(id, pos, checkSD));
-        timeQueue.add(activeTime + delay);
+    private void predictAdd(int id, Vec3d pos, boolean checkSD, double delay) {
+        add(() -> predictAttack(id, pos, checkSD), delay);
+    }
+    private void predictAttack(int id, Vec3d pos, boolean checkSD) {
+        if (idPackets.get() > 0) {
+            for (int i = 0; i < idPackets.get(); i++) {
+                int p = id + idOffset.get() + i;
+                if (p != mc.player.getId()) {
+                    attackID(p, pos, checkSD, !idSingleSwing.get() || i == 0, false);
+                }
+            }
+            blocked = false;
+        }
     }
 
-    private void attackID(int id, Vec3d pos, boolean checkSD) {
+    private void attackID(int id, Vec3d pos, boolean checkSD, boolean swing, boolean confirm) {
         EndCrystalEntity en = new EndCrystalEntity(mc.world, pos.x, pos.y, pos.z);
         en.setId(id);
-        attackEntity(en, checkSD);
+        attackEntity(en, checkSD, swing, confirm);
     }
 
-    private void attackEntity(Entity en, boolean checkSD) {
+    private void attackEntity(Entity en, boolean checkSD, boolean swing, boolean confirm) {
         if (mc.player != null) {
             Hand handToUse = getHand(Items.END_CRYSTAL, preferMainHand.get(), true);
             if (handToUse != null) {
-                blocked = false;
-                swing(handToUse, explodeSwingMode.get(), explodeSwing.get(), preExplodeSwing.get(), true);
+                if (swing) {swing(handToUse, explodeSwingMode.get(), explodeSwing.get(), preExplodeSwing.get(), true);}
                 mc.player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(en, mc.player.isSneaking()));
-                swing(handToUse, explodeSwingMode.get(), explodeSwing.get(), preExplodeSwing.get(), false);
+                if (swing) {swing(handToUse, explodeSwingMode.get(), explodeSwing.get(), preExplodeSwing.get(), false);}
+                if (confirm) {blocked = false;}
                 if (setDead.get() && checkSD) {
-                    en.setRemoved(Entity.RemovalReason.KILLED);
+                    if (instantSetDead.get()) {
+                        setEntityDead(en);
+                    } else {
+                        add(() -> setEntityDead(en), sdDelay.get());
+                    }
                 }
             }
         }
@@ -951,5 +1061,14 @@ public class AutoCrystal extends Module {
     private double getSelfDamage(Vec3d vec, BlockPos pos) {
         return DamageUtils.crystalDamage(mc.player, vec,
             false, pos.down(), false);
+    }
+
+    private void add(Runnable run, double ms) {
+        queue.add(run);
+        timeQueue.add(activeTime + (ms / 1000));
+    }
+
+    private void setEntityDead(Entity en) {
+        en.remove(Entity.RemovalReason.KILLED);
     }
 }
