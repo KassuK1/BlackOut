@@ -5,8 +5,11 @@ import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
+import meteordevelopment.meteorclient.systems.modules.movement.SafeWalk;
 import meteordevelopment.meteorclient.systems.modules.world.Timer;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.block.Blocks;
+import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -33,7 +36,7 @@ public class ScaffoldPlus extends Module {
         .visible(usetimer::get)
         .name("Timer")
         .description("Speed but better")
-        .defaultValue(1)
+        .defaultValue(1.088)
         .min(0)
         .sliderMax(10)
         .build()
@@ -46,11 +49,23 @@ public class ScaffoldPlus extends Module {
         .sliderMax(60)
         .build()
     );
+    private final Setting<Boolean> safewalk = sgGeneral.add(new BoolSetting.Builder()
+        .name("SafeWalk")
+        .description("Should SafeWalk be used")
+        .defaultValue(true)
+        .build()
+    );
+
     private int tdelay;
     @Override
     public void onDeactivate() {
-        super.onDeactivate();
         Modules.get().get(Timer.class).setOverride(1);
+        Modules.get().get(SafeWalk.class).toggle();
+    }
+    @Override
+    public void onActivate(){
+        if (safewalk.get())
+            Modules.get().get(SafeWalk.class).toggle();
     }
 
     @EventHandler
@@ -62,9 +77,10 @@ public class ScaffoldPlus extends Module {
                 mc.player.setSprinting(false);
             if (usetimer.get())
                 Modules.get().get(Timer.class).setOverride(timer.get());
-            mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
-                new BlockHitResult(new Vec3d(pos.getX(), ypos.getY(), pos.getZ()), Direction.UP,  ypos, false), 0));
-
+            if (mc.world.getBlockState(ypos).getBlock() == Blocks.AIR){
+                mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
+                    new BlockHitResult(new Vec3d(pos.getX(), ypos.getY(), pos.getZ()), Direction.UP,  ypos, false), 0));}
+            mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
         }
     }
 
