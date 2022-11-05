@@ -3,6 +3,7 @@ package com.example.addon;
 import com.example.addon.commands.BlackoutGit;
 import com.example.addon.commands.GearInfo;
 import com.example.addon.commands.Kick;
+import com.example.addon.commands.Panic;
 import com.example.addon.hud.GearHud;
 import com.example.addon.hud.HudExample;
 import com.example.addon.hud.HudHelper;
@@ -54,11 +55,13 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new WeakAlert());
         Modules.get().add(new WebPlus());
         Modules.get().add(new ScaffoldPlus());
+        Modules.get().add(new NCPDamageFly());
 
         // Commands
         Commands.get().add(new BlackoutGit());
         Commands.get().add(new GearInfo());
         Commands.get().add(new Kick());
+        Commands.get().add(new Panic());
 
         // HUD
         Hud.get().register(GearHud.INFO);
