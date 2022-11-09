@@ -1,19 +1,21 @@
 package com.example.addon.modules.utils;
 
-import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.item.BedItem;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
+
+import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class OLEPOSSUtils extends Utils {
     public static double distance(Vec3d v1, Vec3d v2) {
@@ -200,4 +202,9 @@ public class OLEPOSSUtils extends Utils {
     public static void sendBlockPos(BlockPos pos) {
         ChatUtils.sendMsg(Text.of("x" + pos.getX() + "  y" + pos.getY() + "  z" + pos.getZ()));
     }
+    public static boolean inside(PlayerEntity en, Box bb) {
+        if (mc.world == null) {return false;}
+        return mc.world.getBlockCollisions(en, bb).iterator().hasNext();
+    }
+
 }

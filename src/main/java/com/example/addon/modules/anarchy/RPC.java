@@ -24,17 +24,17 @@ Made by OLEPOSSU / Raksamies
 
 public class RPC extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private final Setting<List<String>> state = sgGeneral.add(new StringListSetting.Builder()
-        .name("State")
+    private final Setting<List<String>> l1 = sgGeneral.add(new StringListSetting.Builder()
+        .name("Line 1")
         .description(".")
         .defaultValue("Playing on {server}", "{player}")
         .renderer(StarscriptTextBoxRenderer.class)
         .build()
     );
-    private final Setting<List<String>> detail = sgGeneral.add(new StringListSetting.Builder()
-        .name("Detail")
+    private final Setting<List<String>> l2 = sgGeneral.add(new StringListSetting.Builder()
+        .name("Line 2")
         .description(".")
-        .defaultValue("{server.player_count} Players online", "{player.health}hp")
+        .defaultValue("{server.player_count} Players online", "{round(player.health, 1)}hp")
         .renderer(StarscriptTextBoxRenderer.class)
         .build()
     );
@@ -62,6 +62,11 @@ public class RPC extends Module {
         UpdatePresence();
     }
 
+    @Override
+    public void onDeactivate() {
+        DiscordIPC.stop();
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onTick(TickEvent.Pre event) {
         if (ticks > 0) {
@@ -73,10 +78,10 @@ public class RPC extends Module {
 
     public void UpdatePresence() {
         ticks = refreshDelay.get();
-        index1 = index1 < state.get().size() - 1 ? index1 + 1 : 0;
-        index2 = index2 < detail.get().size() - 1 ? index2 + 1 : 0;
-        presence.setState(mc.player == null ? "In Main Menu" : getMessages(state.get()).get(index1));
-        presence.setDetails(mc.player == null ? "In Main Menu" : getMessages(detail.get()).get(index2));
+        index1 = index1 < l1.get().size() - 1 ? index1 + 1 : 0;
+        index2 = index2 < l2.get().size() - 1 ? index2 + 1 : 0;
+        presence.setState(mc.player == null ? "In Main Menu" : getMessages(l2.get()).get(index2));
+        presence.setDetails(mc.player == null ? "In Main Menu" : getMessages(l1.get()).get(index1));
         presence.setLargeImage("blackout", "Very gud");
         DiscordIPC.setActivity(presence);
     }

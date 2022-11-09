@@ -135,11 +135,18 @@ public class HoleSnap extends Module {
                     if (Math.floor(mc.player.getY()) == hole.getY()) {
                         this.toggle();
                         info("Toggled: In hole");
+                    } else if (OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox().offset(0, -0.05, 0))){
+                        this.toggle();
+                        info("Toggled: Hole unreachable");
                     } else {
                         mc.player.addVelocity(-mc.player.getVelocity().x, 0, -mc.player.getVelocity().z);
                     }
                 } else {
-                    if (mc.player.horizontalCollision) {
+                    double x = speed.get() * yaw / 100;
+                    double dX = Math.abs(hole.getX() + 0.5 - mc.player.getX());
+                    double z = speed.get() * pit / 100;
+                    double dZ = Math.abs(hole.getZ() + 0.5 - mc.player.getZ());
+                    if (OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox().offset(Math.min(x, dX), 0, Math.min(z, dZ)))) {
                         collisions++;
                     } else {
                         collisions = 0;
@@ -149,10 +156,6 @@ public class HoleSnap extends Module {
                         info("Toggled: too many collisions");
                     }
                     mc.player.addVelocity(-mc.player.getVelocity().x, 0, -mc.player.getVelocity().z);
-                    double x = speed.get() * yaw / 100;
-                    double dX = Math.abs(hole.getX() + 0.5 - mc.player.getX());
-                    double z = speed.get() * pit / 100;
-                    double dZ = Math.abs(hole.getZ() + 0.5 - mc.player.getZ());
                     mc.player.addVelocity(Math.min(x, dX), 0, Math.min(z, dZ));
                 }
             } else {
