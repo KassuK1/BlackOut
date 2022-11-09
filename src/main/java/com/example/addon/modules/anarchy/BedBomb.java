@@ -1,6 +1,6 @@
 package com.example.addon.modules.anarchy;
 
-import com.example.addon.Addon;
+import com.example.addon.BlackOut;
 import com.example.addon.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.world.BlockUpdateEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -10,12 +10,10 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
-import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
-import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
@@ -85,7 +83,7 @@ public class BedBomb extends Module {
 
 
     public BedBomb() {
-        super(Addon.ANARCHY, "BedBomb", "So u don't need to die");
+        super(BlackOut.ANARCHY, "BedBomb", "So u don't need to die");
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

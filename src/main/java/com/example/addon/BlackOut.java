@@ -18,12 +18,14 @@ import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import org.slf4j.Logger;
 
-public class Addon extends MeteorAddon {
+public class BlackOut extends MeteorAddon {
     public static final Logger LOG = LogUtils.getLogger();
     public static final Category GHOST = new Category("Ghost");
     public static final Category ANARCHY = new Category("Anarchy");
 
     public static final HudGroup HUD_BLACKOUT = new HudGroup("BlackOut");
+    public static final String BLACKOUT_NAME = "BlackOut";
+    public static final String BLACKOUT_VERSION = "0.1.6";
 
 
     @Override
@@ -45,13 +47,17 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new AutoPearl());
         Modules.get().add(new BedBomb());
         Modules.get().add(new CevBreaker());
+        Modules.get().add(new CrystalChams());
         Modules.get().add(new FastXP());
+        Modules.get().add(new HoleFill());
         Modules.get().add(new HoleSnap());
         Modules.get().add(new OffHandPlus());
         Modules.get().add(new ResetVL());
+        Modules.get().add(new RPC());
         Modules.get().add(new SelfTrapPlus());
-        Modules.get().add(new SpeedPlus());
+        Modules.get().add(new Strafe());
         Modules.get().add(new SprintPlus());
+        Modules.get().add(new CrystalChams());
         Modules.get().add(new WeakAlert());
         Modules.get().add(new WebPlus());
         Modules.get().add(new ScaffoldPlus());

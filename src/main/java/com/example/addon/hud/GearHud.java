@@ -1,13 +1,12 @@
 package com.example.addon.hud;
 
-import com.example.addon.Addon;
+import com.example.addon.BlackOut;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.hud.HudElement;
 import meteordevelopment.meteorclient.systems.hud.HudElementInfo;
 import meteordevelopment.meteorclient.systems.hud.HudRenderer;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.RenderUtils;
-import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -39,7 +38,7 @@ public class GearHud extends HudElement {
         .defaultValue(new SettingColor(0, 0, 0, 255))
         .build()
     );
-    public static final HudElementInfo<GearHud> INFO = new HudElementInfo<>(Addon.HUD_BLACKOUT, "GearHud", "Gear.", GearHud::new);
+    public static final HudElementInfo<GearHud> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "GearHud", "Gear.", GearHud::new);
 
     public GearHud() {
         super(INFO);

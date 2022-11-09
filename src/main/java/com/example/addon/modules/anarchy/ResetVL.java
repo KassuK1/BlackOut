@@ -1,6 +1,6 @@
 package com.example.addon.modules.anarchy;
 
-import com.example.addon.Addon;
+import com.example.addon.BlackOut;
 import meteordevelopment.meteorclient.settings.DoubleSetting;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.settings.Setting;
@@ -27,7 +27,7 @@ public class ResetVL extends Module {
     );
 
     public ResetVL() {
-        super(Addon.ANARCHY, "ResetVL", "Tries to reset your violation level");
+        super(BlackOut.ANARCHY, "ResetVL", "Tries to reset your violation level");
     }
 
     @EventHandler

@@ -1,6 +1,6 @@
 package com.example.addon.modules.anarchy;
 
-import com.example.addon.Addon;
+import com.example.addon.BlackOut;
 import com.example.addon.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.systems.modules.Module;
@@ -21,7 +21,7 @@ import net.minecraft.util.math.Vec3d;
 
 public class CevBreaker extends Module {
 
-    public CevBreaker() {super(Addon.ANARCHY, "CevBreaker", "CevBreak");}
+    public CevBreaker() {super(BlackOut.ANARCHY, "CevBreaker", "CevBreak");}
     private Item[] pickaxes = new Item[] {
         Items.NETHERITE_PICKAXE,
         Items.DIAMOND_PICKAXE,

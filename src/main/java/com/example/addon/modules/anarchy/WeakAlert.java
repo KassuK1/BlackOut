@@ -1,6 +1,6 @@
 package com.example.addon.modules.anarchy;
 
-import com.example.addon.Addon;
+import com.example.addon.BlackOut;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.IntSetting;
@@ -37,7 +37,7 @@ public class WeakAlert extends Module {
     private boolean last;
 
     public WeakAlert() {
-        super(Addon.ANARCHY, "WeakAlert", "Alerts you if you get weakness");
+        super(BlackOut.ANARCHY, "WeakAlert", "Alerts you if you get weakness");
     }
 
     @EventHandler(priority = EventPriority.HIGH)

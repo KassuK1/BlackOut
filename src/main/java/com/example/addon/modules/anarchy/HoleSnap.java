@@ -1,6 +1,6 @@
 package com.example.addon.modules.anarchy;
 
-import com.example.addon.Addon;
+import com.example.addon.BlackOut;
 import com.example.addon.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
@@ -8,13 +8,11 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.world.Timer;
-import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Blocks;
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
-import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
@@ -94,7 +92,7 @@ public class HoleSnap extends Module {
 
 
     public HoleSnap() {
-        super(Addon.ANARCHY, "HoleSnap", "So u don't need to die");
+        super(BlackOut.ANARCHY, "HoleSnap", "So u don't need to die");
     }
 
     @Override

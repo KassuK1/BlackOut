@@ -1,6 +1,6 @@
 package com.example.addon.modules.anarchy;
 
-import com.example.addon.Addon;
+import com.example.addon.BlackOut;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
@@ -52,7 +52,7 @@ public class FastXP extends Module {
     }
 
     public FastXP() {
-        super(Addon.ANARCHY, "FastXP", "XP spamming moment");
+        super(BlackOut.ANARCHY, "FastXP", "XP spamming moment");
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

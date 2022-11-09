@@ -1,6 +1,6 @@
 package com.example.addon.modules.anarchy;
 
-import com.example.addon.Addon;
+import com.example.addon.BlackOut;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.EnumSetting;
@@ -31,7 +31,7 @@ public class SprintPlus extends Module {
     );
 
     public SprintPlus() {
-        super(Addon.ANARCHY, "Sprint+", "Non shit sprint");
+        super(BlackOut.ANARCHY, "Sprint+", "Non shit sprint");
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

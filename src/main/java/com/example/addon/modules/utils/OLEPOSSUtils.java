@@ -2,11 +2,17 @@ package com.example.addon.modules.utils;
 
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.utils.Utils;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.BedItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
+import net.minecraft.text.Text;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
 public class OLEPOSSUtils extends Utils {
@@ -16,6 +22,13 @@ public class OLEPOSSUtils extends Utils {
         double dZ = Math.abs(v1.z - v2.z);
         return Math.sqrt(dX * dX + dY * dY + dZ * dZ);
     }
+
+    public static Direction[] horizontals = new Direction[] {
+        Direction.EAST,
+        Direction.WEST,
+        Direction.NORTH,
+        Direction.SOUTH
+    };
 
     public static Item[] bedItems = new Item[] {
         Items.BLACK_BED,
@@ -93,6 +106,43 @@ public class OLEPOSSUtils extends Utils {
         Blocks.CHIPPED_ANVIL,
         Blocks.DAMAGED_ANVIL,
     };
+    public static StatusEffect[] effects = new StatusEffect[] {
+        StatusEffects.SPEED,
+        StatusEffects.ABSORPTION,
+        StatusEffects.BAD_OMEN,
+        StatusEffects.BLINDNESS,
+        StatusEffects.CONDUIT_POWER,
+        StatusEffects.DARKNESS,
+        StatusEffects.DOLPHINS_GRACE,
+        StatusEffects.FIRE_RESISTANCE,
+        StatusEffects.GLOWING,
+        StatusEffects.HASTE,
+        StatusEffects.HEALTH_BOOST,
+        StatusEffects.HERO_OF_THE_VILLAGE,
+        StatusEffects.HUNGER,
+        StatusEffects.INSTANT_DAMAGE,
+        StatusEffects.INSTANT_HEALTH,
+        StatusEffects.INVISIBILITY,
+        StatusEffects.JUMP_BOOST,
+        StatusEffects.LEVITATION,
+        StatusEffects.LUCK,
+        StatusEffects.MINING_FATIGUE,
+        StatusEffects.NAUSEA,
+        StatusEffects.NIGHT_VISION,
+        StatusEffects.POISON,
+        StatusEffects.REGENERATION,
+        StatusEffects.RESISTANCE,
+        StatusEffects.SATURATION,
+        StatusEffects.SLOW_FALLING,
+        StatusEffects.SLOWNESS,
+        StatusEffects.STRENGTH,
+        StatusEffects.SPEED,
+        StatusEffects.UNLUCK,
+        StatusEffects.WATER_BREATHING,
+        StatusEffects.WEAKNESS,
+        StatusEffects.WITHER
+    };
+
 
     public static boolean isBedItem(Item item) {
         for (Item i : bedItems) {
@@ -141,5 +191,13 @@ public class OLEPOSSUtils extends Utils {
             if (i.equals(block)) {return true;}
         }
         return false;
+    }
+
+    public static Vec3d getMiddle(BlockPos pos) {
+        return new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+    }
+
+    public static void sendBlockPos(BlockPos pos) {
+        ChatUtils.sendMsg(Text.of("x" + pos.getX() + "  y" + pos.getY() + "  z" + pos.getZ()));
     }
 }

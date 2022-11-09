@@ -1,6 +1,6 @@
 package com.example.addon.modules.anarchy;
 
-import com.example.addon.Addon;
+import com.example.addon.BlackOut;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
@@ -18,7 +18,7 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
 public class ScaffoldPlus extends Module {
-    public ScaffoldPlus() {super(Addon.ANARCHY, "Scaffold+", "KasumsSoft blockwalk");}
+    public ScaffoldPlus() {super(BlackOut.ANARCHY, "Scaffold+", "KasumsSoft blockwalk");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Boolean> ssprint = sgGeneral.add(new BoolSetting.Builder()
         .name("StopSprint")

@@ -1,20 +1,15 @@
 package com.example.addon.hud;
 
-import com.example.addon.Addon;
+import com.example.addon.BlackOut;
 import com.example.addon.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.hud.HudElement;
 import meteordevelopment.meteorclient.systems.hud.HudElementInfo;
 import meteordevelopment.meteorclient.systems.hud.HudRenderer;
-import meteordevelopment.meteorclient.utils.player.ChatUtils;
-import meteordevelopment.meteorclient.utils.player.InvUtils;
-import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.text.Text;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,7 +69,7 @@ public class HudHelper extends HudElement {
     );
 
     String item = null;
-    public static final HudElementInfo<HudHelper> INFO = new HudElementInfo<>(Addon.HUD_BLACKOUT, "HudHelper", "Helps", HudHelper::new);
+    public static final HudElementInfo<HudHelper> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "HudHelper", "Helps", HudHelper::new);
 
     public HudHelper() {
         super(INFO);

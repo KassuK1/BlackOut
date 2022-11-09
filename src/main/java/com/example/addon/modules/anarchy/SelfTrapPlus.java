@@ -1,16 +1,15 @@
 package com.example.addon.modules.anarchy;
 
-import com.example.addon.Addon;
+import com.example.addon.BlackOut;
 import com.example.addon.modules.utils.OLEPOSSUtils;
-import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.world.Timer;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
-import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Blocks;
@@ -24,11 +23,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /*
 Made by OLEPOSSU / Raksamies
@@ -61,7 +55,7 @@ public class SelfTrapPlus extends Module {
 
 
     public SelfTrapPlus() {
-        super(Addon.ANARCHY, "Self Trap+", "Bullies enemies (evil when it works)");
+        super(BlackOut.ANARCHY, "Self Trap+", "Bullies enemies (evil when it works)");
     }
 
     @Override
@@ -109,7 +103,7 @@ public class SelfTrapPlus extends Module {
 
     private boolean shouldPlace() {
         for (PlayerEntity pl : mc.world.getPlayers()) {
-            if (pl != mc.player) {
+            if (pl != mc.player && Friends.get().isFriend(pl)) {
                 BlockPos pPos = mc.player.getBlockPos();
                 Vec3d ePos = pl.getPos();
                 if (ePos.y >= pPos.getY() + 1 && OLEPOSSUtils.distance(new Vec3d(ePos.x, 0, ePos.z), new Vec3d(pPos.getX() + 0.5,

@@ -1,6 +1,6 @@
 package com.example.addon.modules.anarchy;
 
-import com.example.addon.Addon;
+import com.example.addon.BlackOut;
 import com.example.addon.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.world.BlockUpdateEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -73,7 +73,7 @@ public class AutoCraftingTable extends Module {
     BlockPos placePos;
 
     public AutoCraftingTable() {
-        super(Addon.ANARCHY, "AutoCraftingTable", "Opens Crafting Table");
+        super(BlackOut.ANARCHY, "AutoCraftingTable", "Opens Crafting Table");
     }
 
     @Override

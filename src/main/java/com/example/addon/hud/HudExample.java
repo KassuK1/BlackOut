@@ -1,6 +1,6 @@
 package com.example.addon.hud;
 
-import com.example.addon.Addon;
+import com.example.addon.BlackOut;
 import meteordevelopment.meteorclient.systems.hud.HudElement;
 import meteordevelopment.meteorclient.systems.hud.HudElementInfo;
 import meteordevelopment.meteorclient.systems.hud.HudRenderer;
@@ -10,7 +10,7 @@ Made by KassuK
 */
 
 public class HudExample extends HudElement {
-    public static final HudElementInfo<HudExample> INFO = new HudElementInfo<>(Addon.HUD_BLACKOUT, "BlackoutWatermark", "The Blackout watermark.", HudExample::new);
+    public static final HudElementInfo<HudExample> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "BlackoutWatermark", "The Blackout watermark.", HudExample::new);
 
     public HudExample() {
         super(INFO);

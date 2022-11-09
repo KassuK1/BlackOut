@@ -1,6 +1,6 @@
 package com.example.addon.modules.anarchy;
 
-import com.example.addon.Addon;
+import com.example.addon.BlackOut;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.IntSetting;
@@ -43,7 +43,7 @@ public class OffHandPlus extends Module {
     );
 
     public OffHandPlus() {
-        super(Addon.ANARCHY, "Offhand+", "Non shit offhand");
+        super(BlackOut.ANARCHY, "Offhand+", "Non shit offhand");
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

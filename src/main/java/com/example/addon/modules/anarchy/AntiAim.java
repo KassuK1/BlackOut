@@ -1,6 +1,6 @@
 package com.example.addon.modules.anarchy;
 
-import com.example.addon.Addon;
+import com.example.addon.BlackOut;
 import com.example.addon.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
@@ -156,7 +156,7 @@ public class AntiAim extends Module {
     private double csPitch;
 
     public AntiAim() {
-        super(Addon.ANARCHY, "AntiAim", "Very");
+        super(BlackOut.ANARCHY, "AntiAim", "Very");
     }
 
     @Override

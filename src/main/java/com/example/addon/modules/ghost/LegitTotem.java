@@ -1,6 +1,6 @@
 package com.example.addon.modules.ghost;
 
-import com.example.addon.Addon;
+import com.example.addon.BlackOut;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
@@ -17,7 +17,7 @@ Made by KassuK
 public class LegitTotem extends Module {
 
     public LegitTotem() {
-        super(Addon.GHOST, "LegitTotem", "More legit autototem");
+        super(BlackOut.GHOST, "LegitTotem", "More legit autototem");
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

@@ -1,6 +1,6 @@
 package com.example.addon.modules.ghost;
 
-import com.example.addon.Addon;
+import com.example.addon.BlackOut;
 import meteordevelopment.meteorclient.events.entity.EntityAddedEvent;
 import meteordevelopment.meteorclient.events.entity.player.InteractBlockEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -86,7 +86,7 @@ public class GhostCrystal extends Module {
     protected int lowest;
 
     public GhostCrystal() {
-        super(Addon.GHOST, "GhostCrystal", "Breaks crystals automatically.");
+        super(BlackOut.GHOST, "GhostCrystal", "Breaks crystals automatically.");
     }
 
     @Override

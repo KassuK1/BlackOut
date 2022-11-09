@@ -1,6 +1,6 @@
 package com.example.addon.modules.ghost;
 
-import com.example.addon.Addon;
+import com.example.addon.BlackOut;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.settings.IntSetting;
 import meteordevelopment.meteorclient.settings.Setting;
@@ -26,7 +26,7 @@ public class AutoClickerPlus extends Module {
     private int leftClickTimer;
 
     public AutoClickerPlus() {
-        super(Addon.GHOST, "AutoClicker+", "Better AutoClicker");
+        super(BlackOut.GHOST, "AutoClicker+", "Better AutoClicker");
     }
     @Override
     public void onActivate() {

@@ -1,6 +1,6 @@
 package com.example.addon.modules.anarchy;
 
-import com.example.addon.Addon;
+import com.example.addon.BlackOut;
 import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.IntSetting;
 import meteordevelopment.meteorclient.settings.Setting;
@@ -37,7 +37,7 @@ public class AutoPearl extends Module {
         .build()
     );
     public AutoPearl() {
-        super(Addon.ANARCHY, "AutoPearl", "Easily clip inside walls");
+        super(BlackOut.ANARCHY, "AutoPearl", "Easily clip inside walls");
     }
 
     @Override
