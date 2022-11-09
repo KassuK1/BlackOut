@@ -1,6 +1,6 @@
 package com.example.addon.modules.anarchy;
 
-import com.example.addon.Addon;
+import com.example.addon.BlackOut;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.IntSetting;
 import meteordevelopment.meteorclient.settings.Setting;
@@ -12,7 +12,7 @@ import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 
 public class NCPDamageFly extends Module {
-    public NCPDamageFly() {super(Addon.ANARCHY, "NCPDamageFly", "Epik fly");
+    public NCPDamageFly() {super(BlackOut.ANARCHY, "NCPDamageFly", "Epik fly");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Integer> damage = sgGeneral.add(new IntSetting.Builder()
