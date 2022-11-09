@@ -32,6 +32,14 @@ public class Strafe extends Module {
         .defaultValue(false)
         .build()
     );
+    private final Setting<Double> effect = sgGeneral.add(new DoubleSetting.Builder()
+        .name("Effect Multi")
+        .description("Speed multiplied each speed level")
+        .defaultValue(0.2)
+        .min(0)
+        .sliderMax(1)
+        .build()
+    );
     private final Setting<Double> kbFactor = sgGeneral.add(new DoubleSetting.Builder()
         .name("Damage Boost Factor")
         .description("yes")

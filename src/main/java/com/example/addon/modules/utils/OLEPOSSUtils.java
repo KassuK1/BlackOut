@@ -102,7 +102,14 @@ public class OLEPOSSUtils extends Utils {
         Items.DIAMOND_BOOTS,
         Items.NETHERITE_BOOTS,
     };
-
+    public static Item[] swords = new Item[] {
+        Items.NETHERITE_SWORD,
+        Items.DIAMOND_SWORD,
+        Items.IRON_SWORD,
+        Items.GOLDEN_SWORD,
+        Items.STONE_SWORD,
+        Items.WOODEN_SWORD,
+    };
     public static Block[] anvils = new Block[] {
         Blocks.ANVIL,
         Blocks.CHIPPED_ANVIL,
@@ -178,6 +185,12 @@ public class OLEPOSSUtils extends Utils {
     }
     public static boolean isBoot(Item item) {
         for (Item i : boots) {
+            if (i.equals(item)) {return true;}
+        }
+        return false;
+    }
+    public static boolean isSword(Item item) {
+        for (Item i : swords) {
             if (i.equals(item)) {return true;}
         }
         return false;
