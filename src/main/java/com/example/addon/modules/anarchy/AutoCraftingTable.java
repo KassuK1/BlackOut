@@ -72,9 +72,7 @@ public class AutoCraftingTable extends Module {
 
     BlockPos placePos;
 
-    public AutoCraftingTable() {
-        super(BlackOut.ANARCHY, "AutoCraftingTable", "Opens Crafting Table");
-    }
+    public AutoCraftingTable() {super(BlackOut.ANARCHY, "AutoCraftingTable", "Automatically places and opens an Crafting table");}
 
     @Override
     public void onActivate() {
