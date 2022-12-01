@@ -82,9 +82,7 @@ public class BedBomb extends Module {
 
 
 
-    public BedBomb() {
-        super(BlackOut.ANARCHY, "BedBomb", "So u don't need to die");
-    }
+    public BedBomb() {super(BlackOut.ANARCHY, "BedBomb", "Automatically places and breaks beds to cause damage to your opponents");}
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onTick(TickEvent.Pre event) {

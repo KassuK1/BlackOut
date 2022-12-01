@@ -25,7 +25,7 @@ public class BlackOut extends MeteorAddon {
 
     public static final HudGroup HUD_BLACKOUT = new HudGroup("BlackOut");
     public static final String BLACKOUT_NAME = "BlackOut";
-    public static final String BLACKOUT_VERSION = "0.1.6";
+    public static final String BLACKOUT_VERSION = "0.1.8";
 
 
     @Override
@@ -62,6 +62,7 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new WebPlus());
         Modules.get().add(new ScaffoldPlus());
         Modules.get().add(new NCPDamageFly());
+        Modules.get().add(new SurroundPlus());
 
         // Commands
         Commands.get().add(new BlackoutGit());

@@ -173,7 +173,7 @@ public class AutoMine extends Module {
 
 
     public AutoMine() {
-        super(BlackOut.ANARCHY, "AutoMine", "Evil");
+        super(BlackOut.ANARCHY, "AutoMine", "For the times your too lazy or bad to press your break bind");
     }
 
     @Override

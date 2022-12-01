@@ -92,7 +92,7 @@ public class HoleSnap extends Module {
 
 
     public HoleSnap() {
-        super(BlackOut.ANARCHY, "HoleSnap", "So u don't need to die");
+        super(BlackOut.ANARCHY, "HoleSnap", "For the time that you cant even press W");
     }
 
     @Override

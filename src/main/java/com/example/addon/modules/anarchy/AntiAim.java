@@ -156,7 +156,7 @@ public class AntiAim extends Module {
     private double csPitch;
 
     public AntiAim() {
-        super(BlackOut.ANARCHY, "AntiAim", "Very");
+        super(BlackOut.ANARCHY, "AntiAim", "Funi conter stik module");
     }
 
     @Override

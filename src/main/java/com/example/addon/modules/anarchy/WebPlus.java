@@ -42,7 +42,7 @@ public class WebPlus extends Module {
     };
 
     public WebPlus() {
-        super(BlackOut.ANARCHY, "Web+", "Evil");
+        super(BlackOut.ANARCHY, "Web+", "Places an web inside you automatically");
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

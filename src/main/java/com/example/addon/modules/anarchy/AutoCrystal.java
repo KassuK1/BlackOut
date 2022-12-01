@@ -551,7 +551,7 @@ public class AutoCrystal extends Module {
     private final Setting<SettingColor> color = sgRender.add(new ColorSetting.Builder()
         .name("Color")
         .description("U blind?")
-        .defaultValue(new SettingColor(255, 255, 255, 255))
+        .defaultValue(new SettingColor(255, 255, 255, 150))
         .build()
     );
     private final Setting<Boolean> animation = sgRender.add(new BoolSetting.Builder()
@@ -624,7 +624,7 @@ public class AutoCrystal extends Module {
     private Map<String, List<Vec3d>> motions = new HashMap<>();
     private List<BlockPos> own;
     public AutoCrystal() {
-        super(BlackOut.ANARCHY, "Auto Crystal", "Breaks crystals automatically.");
+        super(BlackOut.ANARCHY, "Auto Crystal", "Breaks and places crystals automatically.");
     }
 
     // Listeners

@@ -26,7 +26,7 @@ public class AutoClickerPlus extends Module {
     private int leftClickTimer;
 
     public AutoClickerPlus() {
-        super(BlackOut.GHOST, "AutoClicker+", "Better AutoClicker");
+        super(BlackOut.GHOST, "AutoClicker+", "Better AutoClicker WIP");
     }
     @Override
     public void onActivate() {

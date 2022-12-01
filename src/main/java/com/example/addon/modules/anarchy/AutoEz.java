@@ -45,7 +45,7 @@ public class AutoEz extends Module {
 
 
     public AutoEz() {
-        super(BlackOut.ANARCHY, "AutoEZ", "Sends message after enemy dies");
+        super(BlackOut.ANARCHY, "AutoEZ", "Sends message after enemy dies(too EZ nn's)");
     }
     boolean lastState;
 

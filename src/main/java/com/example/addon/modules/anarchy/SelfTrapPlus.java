@@ -55,7 +55,7 @@ public class SelfTrapPlus extends Module {
 
 
     public SelfTrapPlus() {
-        super(BlackOut.ANARCHY, "Self Trap+", "Bullies enemies (evil when it works)");
+        super(BlackOut.ANARCHY, "Self Trap+", "Traps yourself");
     }
 
     @Override

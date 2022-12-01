@@ -64,7 +64,7 @@ public class OffHandPlus extends Module {
     }
 
     public OffHandPlus() {
-        super(BlackOut.ANARCHY, "Offhand+", "Non shit offhand");
+        super(BlackOut.ANARCHY, "Offhand+", "Better offhand");
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

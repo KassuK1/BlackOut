@@ -78,7 +78,7 @@ public class HoleFill extends Module {
     private List<Double> renderProgress = new ArrayList<>();
 
     public HoleFill() {
-        super(BlackOut.ANARCHY, "Hole Filler", "Epic cham");
+        super(BlackOut.ANARCHY, "Hole Filler", "Automatically is an cunt to your enemies");
     }
 
     @Override

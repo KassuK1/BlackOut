@@ -82,7 +82,7 @@ public class RPC extends Module {
         index2 = index2 < l2.get().size() - 1 ? index2 + 1 : 0;
         presence.setState(mc.player == null ? "In Main Menu" : getMessages(l2.get()).get(index2));
         presence.setDetails(mc.player == null ? "In Main Menu" : getMessages(l1.get()).get(index1));
-        presence.setLargeImage("blackout", "Very gud");
+        presence.setLargeImage("logo1", "Best meteor client addon");
         DiscordIPC.setActivity(presence);
     }
 

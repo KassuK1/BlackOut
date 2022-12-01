@@ -61,7 +61,7 @@ public class Strafe extends Module {
     private boolean move = false;
     private double velocity;
 
-    public Strafe() {super(BlackOut.ANARCHY, "Strafe", "Very noice sped");}
+    public Strafe() {super(BlackOut.ANARCHY, "Strafe", "Very ass module");}
 
     @Override
     public void onActivate() {
