@@ -37,6 +37,7 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new AutoClickerPlus());
         Modules.get().add(new GhostCrystal());
         Modules.get().add(new LegitTotem());
+        Modules.get().add(new LegitScaffold());
 
         //Anarchy
         Modules.get().add(new AntiAim());
