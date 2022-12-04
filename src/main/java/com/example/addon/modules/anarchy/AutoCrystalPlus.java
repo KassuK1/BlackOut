@@ -810,13 +810,15 @@ public class AutoCrystalPlus extends Module {
             placePos = findBestPos();
             Entity expEntity = null;
             double highest = 0;
-            for (Entity en : mc.world.getEntities()) {
-                if (en.getType().equals(EntityType.END_CRYSTAL)) {
-                    if (canBreak(en.getPos(), en.getId())) {
-                        double[] dmg = highestDmg(en.getBlockPos().down());
-                        if (expEntity == null || dmg[0] > highest) {
-                            expEntity = en;
-                            highest = dmg[0];
+            if (!pausedCheck()) {
+                for (Entity en : mc.world.getEntities()) {
+                    if (en.getType().equals(EntityType.END_CRYSTAL)) {
+                        if (canBreak(en.getPos(), en.getId())) {
+                            double[] dmg = highestDmg(en.getBlockPos().down());
+                            if (expEntity == null || dmg[0] > highest) {
+                                expEntity = en;
+                                highest = dmg[0];
+                            }
                         }
                     }
                 }
