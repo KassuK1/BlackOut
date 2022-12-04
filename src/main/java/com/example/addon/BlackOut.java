@@ -43,12 +43,12 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new AntiAim());
         Modules.get().add(new AutoCraftingTable());
         Modules.get().add(new AutoCrystal());
+        Modules.get().add(new AutoCrystalPlus());
         Modules.get().add(new AutoEz());
         Modules.get().add(new AutoMine());
         Modules.get().add(new AutoPearl());
         Modules.get().add(new BedBomb());
         Modules.get().add(new CevBreaker());
-        Modules.get().add(new CrystalChams());
         Modules.get().add(new FastXP());
         Modules.get().add(new HoleFill());
         Modules.get().add(new HoleSnap());
@@ -58,7 +58,6 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new SelfTrapPlus());
         Modules.get().add(new Strafe());
         Modules.get().add(new SprintPlus());
-        Modules.get().add(new CrystalChams());
         Modules.get().add(new WeakAlert());
         Modules.get().add(new WebPlus());
         Modules.get().add(new ScaffoldPlus());
