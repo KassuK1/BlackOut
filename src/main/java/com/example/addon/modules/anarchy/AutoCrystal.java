@@ -575,7 +575,6 @@ public class AutoCrystal extends Module {
         .visible(animation::get)
         .build()
     );
-
     private final Setting<Double> animationSpeed = sgRender.add(new DoubleSetting.Builder()
         .name("Animation Speed")
         .description(".")

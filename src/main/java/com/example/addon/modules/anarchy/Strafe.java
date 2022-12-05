@@ -123,29 +123,13 @@ public class Strafe extends Module {
         double yaw = mc.player.getYaw();
         if (f > 0) {
             move = true;
-            if (s > 0){
-                yaw -= 45;
-            } else if (s < 0) {
-                yaw += 45;
-            }
+            yaw += s > 0 ? -45 : s < 0 ? 45 : 0;
         } else if (f < 0) {
             move = true;
-            if (s > 0){
-                yaw -= 135;
-            } else if (s < 0) {
-                yaw += 135;
-            } else {
-                yaw += 180;
-            }
+            yaw += s > 0 ? -135 : s < 0 ? 135 : 180;
         } else {
-            move = true;
-            if (s > 0){
-                yaw -= 90;
-            } else if (s < 0) {
-                yaw += 90;
-            } else {
-                move = false;
-            }
+            move = s != 0;
+            yaw += s > 0 ? -90 : s < 0 ? 90 : 0;
         }
         return yaw;
     }
