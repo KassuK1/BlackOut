@@ -752,7 +752,7 @@ public class AutoCrystalPlus extends Module {
                 if (!pausedCheck()) {
                     if (packet.getEntityTypeId() == EntityType.END_CRYSTAL) {
                         Vec3d pos = new Vec3d(packet.getX(), packet.getY(), packet.getZ());
-                        if (canBreak(pos, packet.getId())) {
+                        if (canBreak(pos, packet.getId()) && !attacked(packet.getId())) {
                             explode(packet.getId(), null, pos, true);
                         }
                     }
@@ -824,7 +824,9 @@ public class AutoCrystalPlus extends Module {
                 }
             }
             if (expEntity != null) {
-                explode(expEntity.getId(), expEntity, expEntity.getPos(), true);
+                if (!attacked(expEntity.getId())) {
+                    explode(expEntity.getId(), expEntity, expEntity.getPos(), true);
+                }
             }
             if (placePos != null && handToUse != null) {
                 if (!pausedCheck()) {
@@ -837,6 +839,10 @@ public class AutoCrystalPlus extends Module {
                 lastPos = null;
             }
         }
+    }
+
+    private boolean attacked(int id) {
+        return isAttacked(id);
     }
 
     private boolean blocked(BlockPos pos) {
@@ -1131,7 +1137,6 @@ public class AutoCrystalPlus extends Module {
 
     private boolean canBreak(Vec3d pos, int id) {
         if (!explode.get()) {return false;}
-        if (isAttacked(id)) {return false;}
         double self = getSelfDamage(pos ,new BlockPos(Math.floor(pos.x), Math.floor(pos.y) - 1, Math.floor(pos.z)));
         if (onlyExplodeWhenHolding.get() && getHand(Items.END_CRYSTAL, preferMainHand.get(), false) == null) {return false;}
         double[] dmg = highestDmg(new BlockPos(Math.floor(pos.x), Math.floor(pos.y) - 1, Math.floor(pos.z)));

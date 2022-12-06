@@ -4,15 +4,18 @@ import com.example.addon.BlackOut;
 import com.example.addon.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
+import meteordevelopment.meteorclient.mixininterface.IVec3d;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.world.Timer;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Blocks;
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
@@ -34,6 +37,20 @@ public class HoleSnap extends Module {
         .defaultValue(true)
         .build()
     );
+    private final Setting<Boolean> jump = sgGeneral.add(new BoolSetting.Builder()
+        .name("Jump")
+        .description("Jumps to the hole (very useful)")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Integer> jumpCoolDown = sgGeneral.add(new IntSetting.Builder()
+        .name("Jump Cooldown")
+        .description("Ticks between jumps")
+        .defaultValue(5)
+        .range(0, 100)
+        .sliderMax(100)
+        .build()
+    );
     private final Setting<Integer> speed = sgGeneral.add(new IntSetting.Builder()
         .name("Speed")
         .description("Speed")
@@ -52,15 +69,15 @@ public class HoleSnap extends Module {
     );
     private final Setting<Integer> range = sgGeneral.add(new IntSetting.Builder()
         .name("Range")
-        .description("Range")
+        .description("Horizontal range for finding holes")
         .defaultValue(3)
         .range(0, 10)
         .sliderMax(10)
         .build()
     );
     private final Setting<Integer> downRange = sgGeneral.add(new IntSetting.Builder()
-        .name("DownRange")
-        .description(".")
+        .name("Down Range")
+        .description("Vertical range for finding holes")
         .defaultValue(3)
         .range(0, 10)
         .sliderMax(10)
@@ -89,6 +106,7 @@ public class HoleSnap extends Module {
     BlockPos singleHole;
     private int collisions;
     private int rubberbands;
+    private int ticks;
 
 
     public HoleSnap() {
@@ -100,6 +118,7 @@ public class HoleSnap extends Module {
         super.onActivate();
         singleHole = findHole();
         rubberbands = 0;
+        ticks = 0;
     }
 
     @Override
@@ -127,36 +146,42 @@ public class HoleSnap extends Module {
                 Modules.get().get(Timer.class).setOverride(timer.get());
                 double yaw =
                     Math.cos(Math.toRadians(
-                        getAngle(new Vec3d(hole.getX(), hole.getY(), hole.getZ()))  + 90.0f));
+                        getAngle(new Vec3d(hole.getX() + 0.5, hole.getY(), hole.getZ() + 0.5)) + 90.0f));
                 double pit =
                     Math.sin(Math.toRadians(
-                        getAngle(new Vec3d(hole.getX(), hole.getY(), hole.getZ())) + 90.0f));
-                if (Math.abs(mc.player.getX() - hole.getX() - 0.5) < 0.200 && Math.abs(mc.player.getZ() - hole.getZ() - 0.5) < 0.200) {
-                    if (Math.floor(mc.player.getY()) == hole.getY()) {
+                        getAngle(new Vec3d(hole.getX() + 0.5, hole.getY(), hole.getZ() + 0.5)) + 90.0f));
+
+                if (mc.player.getX() == hole.getX() + 0.5 && mc.player.getZ() == hole.getZ() + 0.5) {
+                    if (mc.player.getY() == hole.getY()) {
                         this.toggle();
                         info("Toggled: In hole");
                     } else if (OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox().offset(0, -0.05, 0))){
                         this.toggle();
                         info("Toggled: Hole unreachable");
                     } else {
-                        mc.player.addVelocity(-mc.player.getVelocity().x, 0, -mc.player.getVelocity().z);
+                        ((IVec3d) event.movement).setXZ(0, 0);
                     }
                 } else {
                     double x = speed.get() * yaw / 100;
-                    double dX = Math.abs(hole.getX() + 0.5 - mc.player.getX());
+                    double dX = hole.getX() + 0.5 - mc.player.getX();
                     double z = speed.get() * pit / 100;
-                    double dZ = Math.abs(hole.getZ() + 0.5 - mc.player.getZ());
-                    if (OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox().offset(Math.min(x, dX), 0, Math.min(z, dZ)))) {
+                    double dZ = hole.getZ() + 0.5 - mc.player.getZ();
+                    if (OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox().offset(x, 0, z))) {
                         collisions++;
+                        if (collisions >= coll.get() && coll.get() > 0) {
+                            this.toggle();
+                            info("Toggled: Collided");
+                        }
                     } else {
                         collisions = 0;
                     }
-                    if (collisions >= coll.get() && coll.get() > 0) {
-                        this.toggle();
-                        info("Toggled: too many collisions");
+                    if (ticks > 0) {
+                        ticks--;
+                    } else if (OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox().offset(0, -0.05, 0)) && jump.get()) {
+                        ticks = jumpCoolDown.get();
+                        ((IVec3d) event.movement).setY(0.42);
                     }
-                    mc.player.addVelocity(-mc.player.getVelocity().x, 0, -mc.player.getVelocity().z);
-                    mc.player.addVelocity(Math.min(x, dX), 0, Math.min(z, dZ));
+                    ((IVec3d) event.movement).setXZ(Math.abs(x) < Math.abs(dX) ? x : dX, Math.abs(z) < Math.abs(dZ) ? z : dZ);
                 }
             } else {
                 this.toggle();
@@ -208,6 +233,6 @@ public class HoleSnap extends Module {
 
     private float getAngle(Vec3d pos)
     {
-        return (float) Rotations.getYaw(new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5));
+        return (float) Rotations.getYaw(pos);
     }
 }
