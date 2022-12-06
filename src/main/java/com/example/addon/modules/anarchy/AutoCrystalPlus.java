@@ -11,6 +11,7 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.DamageUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.render.color.Color;
@@ -23,11 +24,15 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
+import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
+import net.minecraft.network.packet.s2c.play.UpdateSelectedSlotS2CPacket;
+import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
@@ -109,12 +114,12 @@ public class AutoCrystalPlus extends Module {
         .sliderRange(0, 1000)
         .build()
     );
-    private final Setting<Double> slowDelay = sgPlace.add(new DoubleSetting.Builder()
+    private final Setting<Double> slowSpeed = sgPlace.add(new DoubleSetting.Builder()
         .name("Slow Speed")
         .description(".")
-        .defaultValue(500)
-        .range(0, 1000)
-        .sliderRange(0, 1000)
+        .defaultValue(2)
+        .range(0, 20)
+        .sliderRange(0, 20)
         .build()
     );
     private final Setting<Double> placeRange = sgPlace.add(new DoubleSetting.Builder()
@@ -236,19 +241,19 @@ public class AutoCrystalPlus extends Module {
     );
 
     //  Closest Page
-    private final Setting<Boolean> closestPlace = sgExplode.add(new BoolSetting.Builder()
+    private final Setting<Boolean> closestPlace = sgClosest.add(new BoolSetting.Builder()
         .name("Closest Place")
         .description(".")
         .defaultValue(false)
         .build()
     );
-    private final Setting<Boolean> closestPlaceRange = sgExplode.add(new BoolSetting.Builder()
+    private final Setting<Boolean> closestPlaceRange = sgClosest.add(new BoolSetting.Builder()
         .name("Closest Place Range")
         .description(".")
         .defaultValue(false)
         .build()
     );
-    private final Setting<Boolean> closestExpRange = sgExplode.add(new BoolSetting.Builder()
+    private final Setting<Boolean> closestExpRange = sgClosest.add(new BoolSetting.Builder()
         .name("Closest Explode Range")
         .description(".")
         .defaultValue(false)
@@ -634,6 +639,7 @@ public class AutoCrystalPlus extends Module {
     private float placeTimer = 0;
     private List<AttackTimer> attacked = new ArrayList<>();
     private List<Box> blocked = new ArrayList<>();
+    private Holding holding = new Holding();
     public AutoCrystalPlus() {
         super(BlackOut.ANARCHY, "Auto Crystal+", "Breaks and places crystals automatically.");
     }
@@ -741,6 +747,12 @@ public class AutoCrystalPlus extends Module {
             EntitySpawnS2CPacket packet = (EntitySpawnS2CPacket) event.packet;
             lowest = packet.getId();
         }
+        if (event.packet instanceof UpdateSelectedSlotC2SPacket) {
+            holding.read((UpdateSelectedSlotC2SPacket) event.packet);
+        }
+        if (event.packet instanceof UpdateSelectedSlotS2CPacket) {
+            holding.read((UpdateSelectedSlotS2CPacket) event.packet);
+        }
     }
 
 
@@ -752,7 +764,7 @@ public class AutoCrystalPlus extends Module {
                 if (!pausedCheck()) {
                     if (packet.getEntityTypeId() == EntityType.END_CRYSTAL) {
                         Vec3d pos = new Vec3d(packet.getX(), packet.getY(), packet.getZ());
-                        if (canBreak(pos, packet.getId()) && !attacked(packet.getId())) {
+                        if (canBreak(pos) && !attacked(packet.getId())) {
                             explode(packet.getId(), null, pos, true);
                         }
                     }
@@ -774,7 +786,7 @@ public class AutoCrystalPlus extends Module {
             if (placePos != null) {
                 if (animation.get()) {
                     renderPos = smoothMove(renderPos,
-                        new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ()), (float) (renderMoveSpeed.get() * event.tickDelta / 10));
+                        new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ()), (float) (renderMoveSpeed.get() * event.tickDelta / 100));
                 } else {
                     renderPos = new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ());
                 }
@@ -813,7 +825,7 @@ public class AutoCrystalPlus extends Module {
             if (!pausedCheck()) {
                 for (Entity en : mc.world.getEntities()) {
                     if (en.getType().equals(EntityType.END_CRYSTAL)) {
-                        if (canBreak(en.getPos(), en.getId())) {
+                        if (canBreak(en.getPos())) {
                             double[] dmg = highestDmg(en.getBlockPos().down());
                             if (expEntity == null || dmg[0] > highest) {
                                 expEntity = en;
@@ -829,10 +841,14 @@ public class AutoCrystalPlus extends Module {
                 }
             }
             if (placePos != null && handToUse != null) {
+                if (!placePos.equals(lastPos)) {
+                    lastPos = placePos;
+                    placeTimer = 0;
+                }
                 if (!pausedCheck()) {
                     if ((!blocked(placePos) || !strictPlace.get()) && place.get() && (placeTimer <= 0 || (instantPlace.get() && !blocked(placePos)))) {
                         placeTimer = 1;
-                        placeAt(placePos);
+                        placeCrystal(placePos);
                     }
                 }
             } else {
@@ -940,18 +956,15 @@ public class AutoCrystalPlus extends Module {
         return mc.world.getBlockCollisions(en, bb).iterator().hasNext();
     }
 
-    private boolean shouldSlow(double damage) {
-        return damage <= slowDamage.get();
-    }
-
-    private void placeAt(BlockPos pos) {
-        placeCrystal(pos);
+    private boolean shouldSlow(BlockPos pos) {
+        if (pos == null) {return false;}
+        return highestDmg(pos)[0] <= slowDamage.get();
     }
 
     private void placeCrystal(BlockPos pos) {
-        Hand swingHand = getHand(Items.END_CRYSTAL, preferMainHand.get(), true);
         Hand handToUse = getHand(Items.END_CRYSTAL, preferMainHand.get(), false);
         if (handToUse != null && !pausedCheck()) {
+            Hand swingHand = getHand(Items.END_CRYSTAL, preferMainHand.get(), true);
             swing(swingHand, placeSwingMode.get(), placeSwing.get(), prePlaceSwing.get(), true);
             own.add(pos.up());
             blocked.add(new Box(pos.getX() - 0.5, pos.getY(), pos.getZ() - 0.5, pos.getX() + 1.5, pos.getY() + 2, pos.getZ() + 1.5));
@@ -1064,7 +1077,7 @@ public class AutoCrystalPlus extends Module {
 
     protected boolean canBePlaced(BlockPos pos) {
         if (mc.player != null && mc.world != null) {
-            if (mc.world.getBlockState(pos.down()).getBlock() != Blocks.OBSIDIAN &&
+            if (mc.world.getBlockState(pos).getBlock() != Blocks.OBSIDIAN &&
                 mc.world.getBlockState(pos).getBlock() != Blocks.BEDROCK) {
                 return false;
             }
@@ -1108,16 +1121,16 @@ public class AutoCrystalPlus extends Module {
     }
 
     private Hand getHand(Item item, boolean preferMain, boolean swing) {
-        if (!mc.player.isHolding(item) && !swing) {
+        if (!holding.isHolding(item) && !mc.player.getOffHandStack().getItem().equals(item) && !swing) {
             return null;
         }
-        if (allowOffhand.get() && mc.player.getOffHandStack().getItem() == item) {
-            if (preferMain && mc.player.getMainHandStack().getItem() == item) {
+        if (allowOffhand.get() && mc.player.getOffHandStack().getItem().equals(item)) {
+            if (preferMain && holding.isHolding(item)) {
                 return Hand.MAIN_HAND;
             } else {
                 return Hand.OFF_HAND;
             }
-        } else if (mc.player.getMainHandStack().getItem() == item) {
+        } else if (holding.isHolding(item)) {
             return Hand.MAIN_HAND;
         }
         return swing ? Hand.MAIN_HAND : null;
@@ -1135,7 +1148,7 @@ public class AutoCrystalPlus extends Module {
         }
     }
 
-    private boolean canBreak(Vec3d pos, int id) {
+    private boolean canBreak(Vec3d pos) {
         if (!explode.get()) {return false;}
         double self = getSelfDamage(pos ,new BlockPos(Math.floor(pos.x), Math.floor(pos.y) - 1, Math.floor(pos.z)));
         if (onlyExplodeWhenHolding.get() && getHand(Items.END_CRYSTAL, preferMainHand.get(), false) == null) {return false;}
@@ -1256,16 +1269,6 @@ public class AutoCrystalPlus extends Module {
                     target.z);
     }
 
-    public Direction getDirectionToEnemy(BlockPos block) {
-        for (PlayerEntity pl : mc.world.getPlayers()) {
-            Direction dir = nextTo(pl, block);
-            if (dir != null) {
-                return dir;
-            }
-        }
-        return null;
-    }
-
     public Direction nextTo(PlayerEntity pl, BlockPos block) {
         for (Direction dir : horizontals) {
             if (pl.getBlockPos().offset(dir) == block) {
@@ -1308,6 +1311,30 @@ public class AutoCrystalPlus extends Module {
         }
         public boolean isValid() {
             return time >= 0;
+        }
+    }
+
+    private class Holding {
+        public int slot;
+        public Holding() {slot = 0;}
+
+        public void read(UpdateSelectedSlotC2SPacket packet) {
+            slot = packet.getSelectedSlot();
+        }
+        public void read(UpdateSelectedSlotS2CPacket packet) {
+            slot = packet.getSlot();
+        }
+        public ItemStack getStack() {
+            if (mc.player == null) {return null;}
+            return mc.player.getInventory().getStack(slot);
+        }
+        public int getSlot() {
+            return slot;
+        }
+        public boolean isHolding(Item item) {
+            ItemStack stack = getStack();
+            if (stack == null) {return false;}
+            return stack.getItem().equals(item);
         }
     }
 }
