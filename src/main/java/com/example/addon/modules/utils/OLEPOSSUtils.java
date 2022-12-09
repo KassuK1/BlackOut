@@ -219,5 +219,7 @@ public class OLEPOSSUtils extends Utils {
         if (mc.world == null) {return false;}
         return mc.world.getBlockCollisions(en, bb).iterator().hasNext();
     }
-
+    public static Box getBox(BlockPos pos) {
+        return new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1);
+    }
 }

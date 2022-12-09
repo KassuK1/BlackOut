@@ -704,7 +704,7 @@ public class AutoCrystalPlus extends Module {
 
     @EventHandler(priority = EventPriority.HIGHEST + 1)
     private void onRender3D(Render3DEvent event) {
-        float d = event.tickDelta / 80;
+        double d = event.frameTime;
         placeTimer = (float) Math.max(placeTimer - d * placeSpeed.get(), 0);
         List<AttackTimer> toRemove2 = new ArrayList<>();
         attacked.forEach(item -> {
