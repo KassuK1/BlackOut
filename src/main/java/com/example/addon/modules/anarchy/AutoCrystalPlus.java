@@ -1,6 +1,7 @@
 package com.example.addon.modules.anarchy;
 
 import com.example.addon.BlackOut;
+import com.example.addon.managers.Managers;
 import com.example.addon.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
@@ -639,7 +640,6 @@ public class AutoCrystalPlus extends Module {
     private float placeTimer = 0;
     private List<AttackTimer> attacked = new ArrayList<>();
     private List<Box> blocked = new ArrayList<>();
-    private Holding holding = new Holding();
     public AutoCrystalPlus() {
         super(BlackOut.ANARCHY, "Auto Crystal+", "Breaks and places crystals automatically.");
     }
@@ -746,12 +746,6 @@ public class AutoCrystalPlus extends Module {
         if (event.packet instanceof EntitySpawnS2CPacket) {
             EntitySpawnS2CPacket packet = (EntitySpawnS2CPacket) event.packet;
             lowest = packet.getId();
-        }
-        if (event.packet instanceof UpdateSelectedSlotC2SPacket) {
-            holding.read((UpdateSelectedSlotC2SPacket) event.packet);
-        }
-        if (event.packet instanceof UpdateSelectedSlotS2CPacket) {
-            holding.read((UpdateSelectedSlotS2CPacket) event.packet);
         }
     }
 
@@ -1121,16 +1115,16 @@ public class AutoCrystalPlus extends Module {
     }
 
     private Hand getHand(Item item, boolean preferMain, boolean swing) {
-        if (!holding.isHolding(item) && !mc.player.getOffHandStack().getItem().equals(item) && !swing) {
+        if (!Managers.HOLDING.isHolding(item) && !mc.player.getOffHandStack().getItem().equals(item) && !swing) {
             return null;
         }
         if (allowOffhand.get() && mc.player.getOffHandStack().getItem().equals(item)) {
-            if (preferMain && holding.isHolding(item)) {
+            if (preferMain && Managers.HOLDING.isHolding(item)) {
                 return Hand.MAIN_HAND;
             } else {
                 return Hand.OFF_HAND;
             }
-        } else if (holding.isHolding(item)) {
+        } else if (Managers.HOLDING.isHolding(item)) {
             return Hand.MAIN_HAND;
         }
         return swing ? Hand.MAIN_HAND : null;
@@ -1311,30 +1305,6 @@ public class AutoCrystalPlus extends Module {
         }
         public boolean isValid() {
             return time >= 0;
-        }
-    }
-
-    private class Holding {
-        public int slot;
-        public Holding() {slot = 0;}
-
-        public void read(UpdateSelectedSlotC2SPacket packet) {
-            slot = packet.getSelectedSlot();
-        }
-        public void read(UpdateSelectedSlotS2CPacket packet) {
-            slot = packet.getSlot();
-        }
-        public ItemStack getStack() {
-            if (mc.player == null) {return null;}
-            return mc.player.getInventory().getStack(slot);
-        }
-        public int getSlot() {
-            return slot;
-        }
-        public boolean isHolding(Item item) {
-            ItemStack stack = getStack();
-            if (stack == null) {return false;}
-            return stack.getItem().equals(item);
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.example.addon.modules.anarchy;
 
 import com.example.addon.BlackOut;
+import com.example.addon.managers.Managers;
 import com.example.addon.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -9,18 +10,24 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
+import meteordevelopment.meteorclient.utils.entity.fakeplayer.FakePlayerManager;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
+import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
+import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -41,6 +48,60 @@ public class HoleFill extends Module {
         .name("Swing")
         .description("Swing")
         .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
+        .name("Pause Eat")
+        .description("Pauses when you are eating")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> silent = sgGeneral.add(new BoolSetting.Builder()
+        .name("Silent")
+        .description("Places even when you arent holding")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> efficient = sgGeneral.add(new BoolSetting.Builder()
+        .name("Efficient")
+        .description("Only places if the hole is closer to target")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> above = sgGeneral.add(new BoolSetting.Builder()
+        .name("Above")
+        .description("Only places if target is above the hole")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> iHole = sgGeneral.add(new BoolSetting.Builder()
+        .name("Ignore Hole")
+        .description("Doesn't place if enemy is sitting in a hole")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Double> placeDelay = sgGeneral.add(new DoubleSetting.Builder()
+        .name("Place Delay")
+        .description(".")
+        .defaultValue(0)
+        .range(0, 10)
+        .sliderRange(0, 10)
+        .build()
+    );
+    private final Setting<Integer> places = sgGeneral.add(new IntSetting.Builder()
+        .name("Places")
+        .description("Blocks placed per place")
+        .defaultValue(1)
+        .range(1, 10)
+        .sliderRange(1, 10)
+        .build()
+    );
+    private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
+        .name("Delay")
+        .description(".")
+        .defaultValue(0.3)
+        .range(0, 10)
+        .sliderRange(0, 10)
         .build()
     );
     private final Setting<Double> placeRange = sgGeneral.add(new DoubleSetting.Builder()
@@ -74,11 +135,12 @@ public class HoleFill extends Module {
         .build()
     );
     private List<BlockPos> holes = new ArrayList<>();
-    private List<BlockPos> toRender = new ArrayList<>();
-    private List<Double> renderProgress = new ArrayList<>();
+    private List<Render> toRender = new ArrayList<>();
+    List<PlacedTimer> timers = new ArrayList<>();
+    private double placeTimer = 0;
 
     public HoleFill() {
-        super(BlackOut.ANARCHY, "Hole Filler", "Automatically is an cunt to your enemies");
+        super(BlackOut.ANARCHY, "Hole Filler+", "Automatically is an cunt to your enemies");
     }
 
     @Override
@@ -87,43 +149,50 @@ public class HoleFill extends Module {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
-    private void onTick(TickEvent.Pre event) {
+    private void onRender(Render3DEvent event) {
         if (mc.player != null && mc.world != null) {
-            updateHoles(placeRange.get());
-            List<BlockPos> toPlace = getValid(holes);
-            if (!toPlace.isEmpty()) {
-                place(toPlace);
+            placeTimer = Math.min(placeTimer + event.frameTime, placeDelay.get());
+            List<PlacedTimer> toRemove = new ArrayList<>();
+            timers.forEach(item -> {
+                item.update((float) event.frameTime);
+                if (!item.isValid()) {
+                    toRemove.add(item);
+                }
+            });
+            toRemove.forEach(timers::remove);
+            update();
+
+            List<Render> toRemove2 = new ArrayList<>();
+            if (!toRender.isEmpty()) {
+                toRender.forEach(item -> {
+                    if (item.isValid()) {
+                        item.render(event);
+                        item.update(event.frameTime * 20 / renderTicks.get());
+                    } else {
+                        toRemove2.add(item);
+                    }
+                });
             }
+            toRemove2.forEach(toRender::remove);
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
-    private void onRender(Render3DEvent event) {
-        if (mc.player != null && mc.world != null) {
-            if (!toRender.isEmpty()) {
-                for (int i = 0; i < toRender.size(); i++) {
-                    if (toRender.get(i) != null) {
-                        BlockPos pos = toRender.get(i);
-                        double progress = renderProgress.get(i);
-                        double progress2 = event.frameTime;
-                        render(event, new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), progress / renderTicks.get() / 2);
-                        if (progress <= progress2) {
-                            renderProgress.set(i, -1.0);
-                            toRender.set(i, null);
-                        } else {
-                            renderProgress.set(i, progress - progress2);
-                        }
-                    } else {
-                        renderProgress.set(i, -1.0);
-                    }
+    private void update() {
+        updateHoles(placeRange.get());
+        List<BlockPos> toPlace = getValid(holes);
+        int[] obsidian = findBlock(Items.OBSIDIAN);
+        if (!toPlace.isEmpty() && obsidian[1] > 0 && (!pauseEat.get() || !mc.player.isUsingItem()) && placeTimer >= placeDelay.get()) {
+            if (Managers.HOLDING.isHolding(Items.OBSIDIAN) || silent.get()) {
+                boolean swapped = false;
+                if (!Managers.HOLDING.isHolding(Items.OBSIDIAN)) {
+                    InvUtils.swap(obsidian[0], true);
+                    swapped = true;
                 }
-                for (int i = 0; i < toRender.size(); i++) {
-                    if (renderProgress.contains(-1.0)) {
-                        int p = renderProgress.indexOf(-1.0);
-                        renderProgress.remove(p);
-                        toRender.remove(p);
-                    }
+                for (int i = 0; i < Math.min(Math.min(toPlace.size(), places.get()), obsidian[1]); i++) {
+                    placeTimer = 0;
+                    place(toPlace.get(i));
                 }
+                if (swapped) {InvUtils.swapBack();}
             }
         }
     }
@@ -131,17 +200,11 @@ public class HoleFill extends Module {
     private List<BlockPos> getValid(List<BlockPos> positions) {
         List<BlockPos> list = new ArrayList<>();
         for (BlockPos pos : positions) {
-            if (!toRender.contains(pos)) {
+            if (!isPlaced(pos)) {
                 list.add(pos);
             }
         }
         return list;
-    }
-
-    private void render(Render3DEvent event,Vec3d v, double progress) {
-        Box toRender = new Box(v.x - progress, v.y - progress, v.z - progress, v.x + progress, v.y + progress, v.z + progress);
-        event.renderer.box(toRender, new Color(color.get().r, color.get().g, color.get().b,
-            (int) Math.floor(color.get().a / 10f)), color.get(), ShapeMode.Both, 0);
     }
 
     private void updateHoles(double range) {
@@ -152,12 +215,34 @@ public class HoleFill extends Module {
                     int x = x1 + mc.player.getBlockPos().getX();
                     int y = y1 + mc.player.getBlockPos().getY();
                     int z = z1 + mc.player.getBlockPos().getZ();
-                    if (isHole(x, y, z) && OLEPOSSUtils.distance(new Vec3d(x + 0.5, y + 0.5, z + 0.5), mc.player.getEyePos()) < range) {
+                    if (isHole(x, y, z) && OLEPOSSUtils.distance(new Vec3d(x + 0.5, y + 0.5, z + 0.5), mc.player.getEyePos()) < range &&
+                    (!efficient.get() || closestDist(new BlockPos(x, y, z)) <
+                        OLEPOSSUtils.distance(new Vec3d(x + 0.5, y + 0.5, z + 0.5), mc.player.getEyePos()))) {
                         holes.add(new BlockPos(x, y, z));
                     }
                 }
             }
         }
+    }
+
+    private double closestDist(BlockPos pos) {
+        double closest = -1;
+        for (PlayerEntity pl : mc.world.getPlayers()) {
+            double dist = OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(pos), pl.getPos());
+            if ((closest < 0 || dist < closest) && inHoleCheck(pl)) {
+                closest = dist;
+            }
+        }
+        return closest;
+    }
+
+    private boolean inHole(PlayerEntity pl) {
+        for (Direction dir : OLEPOSSUtils.horizontals) {
+            if (mc.world.getBlockState(pl.getBlockPos().offset(dir)).getBlock().equals(Blocks.AIR)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private boolean isHole(int x, int y, int z) {
@@ -173,7 +258,7 @@ public class HoleFill extends Module {
         for (Direction dir : OLEPOSSUtils.horizontals) {
             if (mc.world.getBlockState(pos.offset(dir)).getBlock().equals(Blocks.AIR)) {return false;}
         }
-        if (!inRange(new Vec3d(x + 0.5, y + 0.5, z + 0.5))) {return false;}
+        if (!inRange(new BlockPos(x, y, z))) {return false;}
         for (int i = 1; i <= (int) Math.ceil(holeRange.get()); i++) {
             for (Direction dir : OLEPOSSUtils.horizontals) {
                 if (isHoleInWall(pos.offset(dir).up(i), dir)) {return true;}
@@ -182,14 +267,17 @@ public class HoleFill extends Module {
         return false;
     }
 
-    private boolean inRange(Vec3d pos) {
+    private boolean inRange(BlockPos pos) {
         for (PlayerEntity pl : mc.world.getPlayers()) {
-            if (pl != mc.player && !Friends.get().isFriend(pl)) {
-                if (OLEPOSSUtils.distance(pos, pl.getPos()) < holeRange.get()) {return true;}
+            if (pl != mc.player && !Friends.get().isFriend(pl) && inHoleCheck(pl) && aboveCheck(pl, pos.getY() + 1)) {
+                if (OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(pos), pl.getPos()) < holeRange.get()) {return true;}
             }
         }
         return false;
     }
+
+    private boolean inHoleCheck(PlayerEntity pl) {return !iHole.get() || !inHole(pl);}
+    private boolean aboveCheck(PlayerEntity pl, double y) {return !above.get() || pl.getY() >= y;}
 
     private boolean isHoleInWall(BlockPos pos, Direction dir) {
         return mc.world.getBlockState(pos).getBlock() == Blocks.AIR && (
@@ -198,18 +286,69 @@ public class HoleFill extends Module {
             mc.world.getBlockState(pos.down()).getBlock() == Blocks.AIR);
     }
 
-    private void place(List<BlockPos> pos) {
-        FindItemResult res = InvUtils.findInHotbar(itemStack -> itemStack.getItem().equals(Items.OBSIDIAN));
-        if (res.count() > 0) {
-            InvUtils.swap(res.slot(), true);
-            for (BlockPos position : pos) {
-                mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
-                    new BlockHitResult(new Vec3d(position.getX(), position.getY(), position.getZ()), Direction.UP, position, false), 0));
-                mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
-                toRender.add(position);
-                renderProgress.add(renderTicks.get());
+    private void place(BlockPos pos) {
+        timers.add(new PlacedTimer(pos, delay.get()));
+        mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
+            new BlockHitResult(new Vec3d(pos.getX(), pos.getY(), pos.getZ()), Direction.UP, pos, false), 0));
+        mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
+        toRender.add(new Render(pos));
+    }
+
+    private int[] findBlock(Item item) {
+        int num = 0;
+        int slot = 0;
+        if (mc.player != null) {
+            for (int i = 0; i < 9; i++) {
+                ItemStack stack = mc.player.getInventory().getStack(i);
+                if (stack.getCount() > num && stack.getItem().equals(item)) {
+                    num = stack.getCount();
+                    slot = i;
+                }
             }
-            InvUtils.swapBack();
+        }
+        return new int[] {slot, num};
+    }
+
+    private boolean isPlaced(BlockPos pos) {
+        for (PlacedTimer pt : timers) {
+            if (pt.pos.equals(pos)) {return true;}
+        }
+        return false;
+    }
+
+    private static class PlacedTimer {
+        public BlockPos pos;
+        public double time;
+
+        public PlacedTimer(BlockPos pos, double time) {
+            this.pos = pos;
+            this.time = time;
+        }
+
+        public void update(float delta) {time -= delta;}
+        public boolean isValid() {return time > 0;}
+    }
+
+    private class Render {
+        public final BlockPos pos;
+        public float time;
+
+        public Render(BlockPos pos) {
+            this.pos = pos;
+            this.time = 1;
+        }
+        public void update(double delta) {
+            time -= delta;
+        }
+        public boolean isValid() {
+            return time >= 0;
+        }
+        public void render(Render3DEvent event) {
+            float progress = time / 2;
+            Vec3d v = new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
+            Box toRender = new Box(v.x - progress, v.y - progress, v.z - progress, v.x + progress, v.y + progress, v.z + progress);
+            event.renderer.box(toRender, new Color(color.get().r, color.get().g, color.get().b,
+                (int) Math.floor(color.get().a / 10f)), color.get(), ShapeMode.Both, 0);
         }
     }
 }

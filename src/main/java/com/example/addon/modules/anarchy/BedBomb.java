@@ -1,6 +1,7 @@
 package com.example.addon.modules.anarchy;
 
 import com.example.addon.BlackOut;
+import com.example.addon.managers.Managers;
 import com.example.addon.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.world.BlockUpdateEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -49,6 +50,12 @@ public class BedBomb extends Module {
         .visible(() -> mode.get() == LogicMode.PlaceBreak)
         .build()
     );
+    private final Setting<Boolean> silent = sgGeneral.add(new BoolSetting.Builder()
+        .name("Silent")
+        .description("Places even when you arent holding")
+        .defaultValue(true)
+        .build()
+    );
     private final Setting<Integer> delay = sgGeneral.add(new IntSetting.Builder()
         .name("Delay")
         .description("Speed")
@@ -89,7 +96,7 @@ public class BedBomb extends Module {
         if (mc.player != null && mc.world != null) {
             PlayerEntity target = findTarget();
             ticks++;
-            if (target != null && isHolding()) {
+            if (target != null && hasBeds() && (!silent.get() || OLEPOSSUtils.isBedItem(Managers.HOLDING.getStack().getItem()))) {
                 Direction direction = findSide(target);
                 if (direction != null) {
                     if (ticks >= delay.get()) {
@@ -197,9 +204,9 @@ public class BedBomb extends Module {
         }
     }
 
-    private boolean isHolding() {
-        for (Item item : OLEPOSSUtils.bedItems) {
-            if (mc.player.getMainHandStack().getItem() == item) {
+    private boolean hasBeds() {
+        for (int i = 0; i < 9; i++) {
+            if (OLEPOSSUtils.isBedItem(mc.player.getInventory().getStack(i).getItem())) {
                 return true;
             }
         }

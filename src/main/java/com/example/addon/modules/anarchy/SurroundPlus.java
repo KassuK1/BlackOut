@@ -1,6 +1,7 @@
 package com.example.addon.modules.anarchy;
 
 import com.example.addon.BlackOut;
+import com.example.addon.managers.Managers;
 import com.example.addon.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
@@ -48,6 +49,12 @@ public class SurroundPlus extends Module {
         .defaultValue(true)
         .build()
     );
+    private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
+        .name("Pause Eat")
+        .description("Pauses when you are eating")
+        .defaultValue(true)
+        .build()
+    );
     private final Setting<Boolean> swing = sgGeneral.add(new BoolSetting.Builder()
         .name("Swing")
         .description(".")
@@ -69,7 +76,7 @@ public class SurroundPlus extends Module {
     private final Setting<Double> placeDelay = sgGeneral.add(new DoubleSetting.Builder()
         .name("Place Delay")
         .description(".")
-        .defaultValue(0.3)
+        .defaultValue(0)
         .range(0, 10)
         .sliderRange(0, 10)
         .build()
@@ -77,7 +84,7 @@ public class SurroundPlus extends Module {
     private final Setting<Integer> places = sgGeneral.add(new IntSetting.Builder()
         .name("Places")
         .description("Blocks placed per place")
-        .defaultValue(4)
+        .defaultValue(1)
         .range(1, 10)
         .sliderRange(1, 10)
         .build()
@@ -97,7 +104,6 @@ public class SurroundPlus extends Module {
         .build()
     );
 
-    Holding holding = new Holding();
     List<PlacedTimer> timers = new ArrayList<>();
     private BlockPos startPos = null;
     double placeTimer = 0;
@@ -154,9 +160,10 @@ public class SurroundPlus extends Module {
                 List<BlockPos> placements = blocks[0];
                 FindItemResult result = InvUtils.findInHotbar(Items.OBSIDIAN);
                 int[] obsidian = findObby();
-                if (obsidian[1] > 0 && (holding.isHolding(Items.OBSIDIAN) || itemSwitch.get())) {
+                if (obsidian[1] > 0 && (Managers.HOLDING.isHolding(Items.OBSIDIAN) || itemSwitch.get()) && !placements.isEmpty() &&
+                    (!pauseEat.get() || !mc.player.isUsingItem())) {
                     boolean swapped = false;
-                    if (!holding.isHolding(Items.OBSIDIAN) && itemSwitch.get()) {
+                    if (!Managers.HOLDING.isHolding(Items.OBSIDIAN) && itemSwitch.get()) {
                         InvUtils.swap(result.slot(), true);
                         swapped = true;
                     }
@@ -244,31 +251,6 @@ public class SurroundPlus extends Module {
         return list;
     }
 
-    private class Holding {
-        public int slot;
-        public Holding() {slot = 0;}
-        @EventHandler(priority = EventPriority.HIGHEST)
-        private void onPacket(PacketEvent event) {
-            if (event.packet instanceof UpdateSelectedSlotC2SPacket) {
-                slot = ((UpdateSelectedSlotC2SPacket) event.packet).getSelectedSlot();
-            }
-            if (event.packet instanceof UpdateSelectedSlotS2CPacket) {
-                slot = ((UpdateSelectedSlotS2CPacket) event.packet).getSlot();
-            }
-        }
-        public ItemStack getStack() {
-            if (mc.player == null) {return null;}
-            return mc.player.getInventory().getStack(slot);
-        }
-        public int getSlot() {
-            return slot;
-        }
-        public boolean isHolding(Item item) {
-            ItemStack stack = getStack();
-            if (stack == null) {return false;}
-            return stack.getItem().equals(item);
-        }
-    }
 
     private static class PlacedTimer {
         public BlockPos pos;
