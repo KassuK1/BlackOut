@@ -32,6 +32,7 @@ import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
+import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.network.packet.s2c.play.UpdateSelectedSlotS2CPacket;
 import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
@@ -470,23 +471,9 @@ public class AutoCrystalPlus extends Module {
         .defaultValue(true)
         .build()
     );
-    private final Setting<Double> fallSpeed = sgExtrapolation.add(new DoubleSetting.Builder()
-        .name("Fall Speed")
-        .description(".")
-        .defaultValue(0.1)
-        .range(0, 5)
-        .sliderRange(0, 5)
-        .build()
-    );
 
     //  Raytrace Page
 
-    private final Setting<Boolean> superSmartRangeChecks = sgRaytrace.add(new BoolSetting.Builder()
-        .name("Super Smart Range Checks")
-        .description(".")
-        .defaultValue(true)
-        .build()
-    );
     private final Setting<Boolean> placeRangeFromEyes = sgRaytrace.add(new BoolSetting.Builder()
         .name("Place Range From Eyes")
         .description("Removes crystals Instantly after spawning.")
@@ -747,6 +734,11 @@ public class AutoCrystalPlus extends Module {
             EntitySpawnS2CPacket packet = (EntitySpawnS2CPacket) event.packet;
             lowest = packet.getId();
         }
+        if (event.packet instanceof ExplosionS2CPacket) {
+            if (clearExplode.get()) {
+                blocked.clear();
+            }
+        }
     }
 
 
@@ -754,7 +746,7 @@ public class AutoCrystalPlus extends Module {
     private void onEntity(PacketEvent.Receive event) {
         if (event.packet instanceof EntitySpawnS2CPacket) {
             EntitySpawnS2CPacket packet = (EntitySpawnS2CPacket) event.packet;
-            if (mc.player != null && mc.world != null && explode.get()) {
+            if (mc.player != null && mc.world != null && explode.get() && instantExplode.get()) {
                 if (!pausedCheck()) {
                     if (packet.getEntityTypeId() == EntityType.END_CRYSTAL) {
                         Vec3d pos = new Vec3d(packet.getX(), packet.getY(), packet.getZ());
@@ -913,7 +905,7 @@ public class AutoCrystalPlus extends Module {
                             } else {
                                 if (fallPredict.get()) {
                                     if (!inside(en, box.offset(0, -0.05, 0))) {
-                                        y -= fallSpeed.get();
+                                        y -= 0.08;
                                         box = box.offset(0, y, 0);
                                         if (inside(en, box)) {
                                             box = box.offset(0, -y, 0);
@@ -1104,7 +1096,7 @@ public class AutoCrystalPlus extends Module {
         return (OLEPOSSUtils.distance(playerRangePos(true),
             closestPlaceRange.get() ? closestPoint(new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1)) :
                 new Vec3d(pos.getX() + 0.5, pos.getY() + placeRangeHeight.get(), pos.getZ() + 0.5)) <= placeRange.get()) &&
-            (!superSmartRangeChecks.get() || breakRangeCheck(new Vec3d(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5)));
+            breakRangeCheck(new Vec3d(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5));
     }
 
     private boolean breakRangeCheck(Vec3d pos) {
@@ -1215,7 +1207,7 @@ public class AutoCrystalPlus extends Module {
                 attacked.add(new AttackTimer(en.getId(), (float) (1 / explodeSpeed.get())));
                 mc.player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(en, mc.player.isSneaking()));
                 if (swing) {swing(handToUse, explodeSwingMode.get(), explodeSwing.get(), preExplodeSwing.get(), false);}
-                if (confirm) {blocked.clear();}
+                if (confirm && clearSend.get()) {blocked.clear();}
                 if (setDead.get() && checkSD) {
                     if (instantSetDead.get()) {
                         setEntityDead(en);

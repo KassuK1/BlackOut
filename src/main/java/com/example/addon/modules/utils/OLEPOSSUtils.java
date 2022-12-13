@@ -222,4 +222,5 @@ public class OLEPOSSUtils extends Utils {
     public static Box getBox(BlockPos pos) {
         return new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1);
     }
+    public static int closerToZero(int x) {return x - Math.round((float) x / Math.abs(x));}
 }

@@ -1,24 +1,20 @@
 package com.example.addon.modules.anarchy;
 
 import com.example.addon.BlackOut;
+import com.example.addon.managers.BlockTimerList;
 import com.example.addon.managers.Managers;
 import com.example.addon.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
-import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
-import meteordevelopment.meteorclient.utils.entity.fakeplayer.FakePlayerManager;
-import meteordevelopment.meteorclient.utils.player.ChatUtils;
-import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
-import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
@@ -27,7 +23,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
-import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -136,7 +131,7 @@ public class HoleFill extends Module {
     );
     private List<BlockPos> holes = new ArrayList<>();
     private List<Render> toRender = new ArrayList<>();
-    List<PlacedTimer> timers = new ArrayList<>();
+    private BlockTimerList timers = new BlockTimerList();
     private double placeTimer = 0;
 
     public HoleFill() {
@@ -152,14 +147,8 @@ public class HoleFill extends Module {
     private void onRender(Render3DEvent event) {
         if (mc.player != null && mc.world != null) {
             placeTimer = Math.min(placeTimer + event.frameTime, placeDelay.get());
-            List<PlacedTimer> toRemove = new ArrayList<>();
-            timers.forEach(item -> {
-                item.update((float) event.frameTime);
-                if (!item.isValid()) {
-                    toRemove.add(item);
-                }
-            });
-            toRemove.forEach(timers::remove);
+            List<BlockTimerList> toRemove = new ArrayList<>();
+            timers.update((float) event.frameTime);
             update();
 
             List<Render> toRemove2 = new ArrayList<>();
@@ -200,7 +189,7 @@ public class HoleFill extends Module {
     private List<BlockPos> getValid(List<BlockPos> positions) {
         List<BlockPos> list = new ArrayList<>();
         for (BlockPos pos : positions) {
-            if (!isPlaced(pos)) {
+            if (!timers.isPlaced(pos)) {
                 list.add(pos);
             }
         }
@@ -287,7 +276,7 @@ public class HoleFill extends Module {
     }
 
     private void place(BlockPos pos) {
-        timers.add(new PlacedTimer(pos, delay.get()));
+        timers.add(pos, delay.get());
         mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
             new BlockHitResult(new Vec3d(pos.getX(), pos.getY(), pos.getZ()), Direction.UP, pos, false), 0));
         mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
@@ -307,26 +296,6 @@ public class HoleFill extends Module {
             }
         }
         return new int[] {slot, num};
-    }
-
-    private boolean isPlaced(BlockPos pos) {
-        for (PlacedTimer pt : timers) {
-            if (pt.pos.equals(pos)) {return true;}
-        }
-        return false;
-    }
-
-    private static class PlacedTimer {
-        public BlockPos pos;
-        public double time;
-
-        public PlacedTimer(BlockPos pos, double time) {
-            this.pos = pos;
-            this.time = time;
-        }
-
-        public void update(float delta) {time -= delta;}
-        public boolean isValid() {return time > 0;}
     }
 
     private class Render {

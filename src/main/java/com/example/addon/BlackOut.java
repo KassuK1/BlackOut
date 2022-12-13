@@ -5,7 +5,7 @@ import com.example.addon.commands.GearInfo;
 import com.example.addon.commands.Kick;
 import com.example.addon.commands.Panic;
 import com.example.addon.hud.GearHud;
-import com.example.addon.hud.HudExample;
+import com.example.addon.hud.HudWaterMark;
 import com.example.addon.hud.HudHelper;
 import com.example.addon.modules.anarchy.*;
 import com.example.addon.modules.ghost.*;
@@ -26,6 +26,7 @@ public class BlackOut extends MeteorAddon {
     public static final HudGroup HUD_BLACKOUT = new HudGroup("BlackOut");
     public static final String BLACKOUT_NAME = "BlackOut";
     public static final String BLACKOUT_VERSION = "0.1.8";
+    public static final String COLOR_DESCRIPTION = "The color";
 
 
     @Override
@@ -73,7 +74,7 @@ public class BlackOut extends MeteorAddon {
 
         // HUD
         Hud.get().register(GearHud.INFO);
-        Hud.get().register(HudExample.INFO);
+        Hud.get().register(HudWaterMark.INFO);
         Hud.get().register(HudHelper.INFO);
     }
 

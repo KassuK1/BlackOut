@@ -83,6 +83,14 @@ public class HoleSnap extends Module {
         .sliderMax(10)
         .build()
     );
+    private final Setting<Integer> depth = sgGeneral.add(new IntSetting.Builder()
+        .name("Hole Depth")
+        .description("How deep a hole has to be")
+        .defaultValue(3)
+        .range(1, 10)
+        .sliderRange(1, 10)
+        .build()
+    );
     private final Setting<Integer> coll = sgGeneral.add(new IntSetting.Builder()
         .name("Collisions to disable")
         .description("0 = doesn't disable")
@@ -194,11 +202,11 @@ public class HoleSnap extends Module {
         Map<BlockPos, Double> holeMap = new HashMap<>();
         List<BlockPos> holes = new ArrayList<>();
         if (isHole(mc.player.getBlockPos())) {return mc.player.getBlockPos();}
-        for (int y = -downRange.get(); y < 0; y++) {
+        for (int y = -downRange.get(); y <= 0; y++) {
             for (int x = -range.get(); x <= range.get(); x++) {
                 for (int z = -range.get(); z <= range.get(); z++) {
                     BlockPos position = mc.player.getBlockPos().add(x, y, z);
-                    if (isHole(position)) {
+                    if (isHole(position) && ((x == 0 && z == 0 && y == 0) || y < 0)) {
                         holes.add(position);
                         holeMap.put(position, OLEPOSSUtils.distance(new Vec3d(mc.player.getX(), mc.player.getY(), mc.player.getZ()),
                             new Vec3d(position.getX() + 0.5, position.getY(), position.getZ() + 0.5)));
@@ -222,14 +230,18 @@ public class HoleSnap extends Module {
     }
 
     private boolean isHole(BlockPos pos) {
-        if (mc.world.getBlockState(pos).getBlock() != Blocks.AIR) {return false;}
         for (Direction dir : horizontals) {
             if (mc.world.getBlockState(pos.offset(dir)).getBlock() == Blocks.AIR) {return false;}
         }
-        if (mc.world.getBlockState(pos.up(1)).getBlock() != Blocks.AIR ||
-            mc.world.getBlockState(pos.up(2)).getBlock() != Blocks.AIR) {return false;}
+        for (int i = 0; i <= depth.get(); i++) {
+            if (!air(pos.up(i))) {
+                return false;
+            }
+        }
         return mc.world.getBlockState(pos.down()).getBlock() != Blocks.AIR;
     }
+
+    private boolean air(BlockPos pos) {return mc.world.getBlockState(pos).getBlock().equals(Blocks.AIR);}
 
     private float getAngle(Vec3d pos)
     {
