@@ -5,8 +5,8 @@ import com.example.addon.commands.GearInfo;
 import com.example.addon.commands.Kick;
 import com.example.addon.commands.Panic;
 import com.example.addon.hud.GearHud;
-import com.example.addon.hud.HudWaterMark;
 import com.example.addon.hud.HudHelper;
+import com.example.addon.hud.HudWaterMark;
 import com.example.addon.modules.anarchy.*;
 import com.example.addon.modules.ghost.*;
 import com.mojang.logging.LogUtils;
@@ -26,7 +26,6 @@ public class BlackOut extends MeteorAddon {
     public static final HudGroup HUD_BLACKOUT = new HudGroup("BlackOut");
     public static final String BLACKOUT_NAME = "BlackOut";
     public static final String BLACKOUT_VERSION = "0.1.8";
-    public static final String COLOR_DESCRIPTION = "The color";
 
 
     @Override
@@ -43,7 +42,6 @@ public class BlackOut extends MeteorAddon {
         //Anarchy
         Modules.get().add(new AntiAim());
         Modules.get().add(new AutoCraftingTable());
-        Modules.get().add(new AutoCrystal());
         Modules.get().add(new AutoCrystalPlus());
         Modules.get().add(new AutoEz());
         Modules.get().add(new AutoMine());

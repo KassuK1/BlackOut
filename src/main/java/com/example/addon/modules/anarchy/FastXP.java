@@ -58,13 +58,16 @@ public class FastXP extends Module {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onTick(TickEvent.Pre event) {
         if (mc.player != null && mc.world != null) {
-            int Ticks = Math.min(((MinecraftClientAccessor) mc).getItemUseCooldown(), YeetDelay.get());
-            ((MinecraftClientAccessor) mc).setItemUseCooldown(Ticks);
-            if (mc.player.getMainHandStack().getItem() == Items.EXPERIENCE_BOTTLE  && mc.options.useKey.isPressed()){
-                if (rotmode.get().equals(rotationmode.Silent) && Rotate.get()){
-                    Rotations.rotate(mc.player.getYaw(),Pitch.get());
-                }
-                if (rotmode.get().equals(rotationmode.Vanilla) && Rotate.get())
-                    mc.player.setPitch(Pitch.get());}
+        int ticks = Math.min(((MinecraftClientAccessor) mc).getItemUseCooldown(), YeetDelay.get());
+        if (mc.player.getMainHandStack().getItem() == Items.EXPERIENCE_BOTTLE  && mc.options.useKey.isPressed()){
+            ((MinecraftClientAccessor) mc).setItemUseCooldown(ticks);
+
+            if (rotmode.get().equals(rotationmode.Silent) && Rotate.get()){
+                Rotations.rotate(mc.player.getYaw(), Pitch.get());
+            }
+            if (rotmode.get().equals(rotationmode.Vanilla) && Rotate.get()) {
+                mc.player.setPitch(Pitch.get());
+            }
+        }
     }
 }}

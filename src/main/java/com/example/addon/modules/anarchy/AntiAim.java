@@ -1,6 +1,7 @@
 package com.example.addon.modules.anarchy;
 
 import com.example.addon.BlackOut;
+import com.example.addon.managers.BlockTimerList;
 import com.example.addon.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
@@ -12,6 +13,7 @@ import meteordevelopment.orbit.EventPriority;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
+import net.minecraft.util.math.BlockPos;
 
 import java.util.List;
 import java.util.Random;
@@ -96,8 +98,8 @@ public class AntiAim extends Module {
         .build()
     );
     private final Setting<Integer> pitch = sgGeneral.add(new IntSetting.Builder()
-        .name("Yaw")
-        .description("Yaw")
+        .name("Pitch")
+        .description("Pitch")
         .defaultValue(90)
         .range(-90, 90)
         .sliderMin(-90)
@@ -124,8 +126,8 @@ public class AntiAim extends Module {
         .build()
     );
     private final Setting<List<Item>> yItems = sgIgnore.add(new ItemListSetting.Builder()
-        .name("Ignore Yaw when holding")
-        .description(".")
+        .name("Ignore Yaw Items")
+        .description("Ignores yaw rotations when holding.")
         .defaultValue(Items.ENDER_PEARL, Items.BOW, Items.EXPERIENCE_BOTTLE)
         .build()
     );
@@ -136,8 +138,8 @@ public class AntiAim extends Module {
         .build()
     );
     private final Setting<List<Item>> pItems = sgIgnore.add(new ItemListSetting.Builder()
-        .name("Ignore Pitch when holding")
-        .description(".")
+        .name("Ignore Pitch items")
+        .description("Ignores pitch rotations when holding.")
         .defaultValue(Items.ENDER_PEARL, Items.BOW, Items.EXPERIENCE_BOTTLE)
         .build()
     );

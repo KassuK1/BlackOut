@@ -2,7 +2,7 @@ package com.example.addon.modules.anarchy;
 
 import com.example.addon.BlackOut;
 import com.example.addon.managers.BlockTimerList;
-import com.example.addon.managers.Managers;
+import com.example.addon.managers.HoldingManager;
 import com.example.addon.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -103,6 +103,7 @@ public class SurroundPlus extends Module {
     private BlockPos startPos = null;
     double placeTimer = 0;
     private List<BlockPos> render = new ArrayList<>();
+    private HoldingManager HOLDING = new HoldingManager();
     private List<BlockPos>[] check(BlockPos pos) {
         List<BlockPos> list = new ArrayList<>();
         List<BlockPos> renders = new ArrayList<>();
@@ -131,7 +132,6 @@ public class SurroundPlus extends Module {
     @EventHandler
     private void onRender(Render3DEvent event){
         placeTimer = Math.min(placeDelay.get(), placeTimer + event.frameTime);
-        timers.update((float) event.frameTime);
         render.forEach(item -> event.renderer.box(OLEPOSSUtils.getBox(item), new Color(color.get().r, color.get().g, color.get().b,
             (int) Math.floor(color.get().a / 5f)), color.get(), ShapeMode.Both, 0));
         update();
@@ -147,10 +147,10 @@ public class SurroundPlus extends Module {
                 render = blocks[1];
                 List<BlockPos> placements = blocks[0];
                 int[] obsidian = findObby();
-                if (obsidian[1] > 0 && (Managers.HOLDING.isHolding(Items.OBSIDIAN) || silent.get()) && !placements.isEmpty() &&
+                if (obsidian[1] > 0 && (HOLDING.isHolding(Items.OBSIDIAN) || silent.get()) && !placements.isEmpty() &&
                     (!pauseEat.get() || !mc.player.isUsingItem())) {
                     boolean swapped = false;
-                    if (!Managers.HOLDING.isHolding(Items.OBSIDIAN) && silent.get()) {
+                    if (!HOLDING.isHolding(Items.OBSIDIAN) && silent.get()) {
                         InvUtils.swap(obsidian[0], true);
                         swapped = true;
                     }

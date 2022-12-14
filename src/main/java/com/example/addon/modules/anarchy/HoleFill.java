@@ -2,7 +2,8 @@ package com.example.addon.modules.anarchy;
 
 import com.example.addon.BlackOut;
 import com.example.addon.managers.BlockTimerList;
-import com.example.addon.managers.Managers;
+import com.example.addon.managers.DelayManager;
+import com.example.addon.managers.HoldingManager;
 import com.example.addon.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -133,6 +134,7 @@ public class HoleFill extends Module {
     private List<Render> toRender = new ArrayList<>();
     private BlockTimerList timers = new BlockTimerList();
     private double placeTimer = 0;
+    private HoldingManager HOLDING = new HoldingManager();
 
     public HoleFill() {
         super(BlackOut.ANARCHY, "Hole Filler+", "Automatically is an cunt to your enemies");
@@ -148,7 +150,6 @@ public class HoleFill extends Module {
         if (mc.player != null && mc.world != null) {
             placeTimer = Math.min(placeTimer + event.frameTime, placeDelay.get());
             List<BlockTimerList> toRemove = new ArrayList<>();
-            timers.update((float) event.frameTime);
             update();
 
             List<Render> toRemove2 = new ArrayList<>();
@@ -171,9 +172,9 @@ public class HoleFill extends Module {
         List<BlockPos> toPlace = getValid(holes);
         int[] obsidian = findBlock(Items.OBSIDIAN);
         if (!toPlace.isEmpty() && obsidian[1] > 0 && (!pauseEat.get() || !mc.player.isUsingItem()) && placeTimer >= placeDelay.get()) {
-            if (Managers.HOLDING.isHolding(Items.OBSIDIAN) || silent.get()) {
+            if (HOLDING.isHolding(Items.OBSIDIAN) || silent.get()) {
                 boolean swapped = false;
-                if (!Managers.HOLDING.isHolding(Items.OBSIDIAN)) {
+                if (!HOLDING.isHolding(Items.OBSIDIAN)) {
                     InvUtils.swap(obsidian[0], true);
                     swapped = true;
                 }

@@ -1,5 +1,11 @@
 package com.example.addon.managers;
 
+import meteordevelopment.meteorclient.MeteorClient;
+import meteordevelopment.meteorclient.events.render.Render3DEvent;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
+import meteordevelopment.orbit.EventHandler;
+import meteordevelopment.orbit.EventPriority;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 
 import java.util.ArrayList;
@@ -9,15 +15,16 @@ public class BlockTimerList {
     public List<BlockTimer> timers;
 
     public BlockTimerList() {
+        MeteorClient.EVENT_BUS.subscribe(this);
         timers = new ArrayList<>();
     }
 
     public void add(BlockPos pos, double time) {timers.add(new BlockTimer(pos, time));}
-
-    public void update(float delta) {
+    @EventHandler(priority = EventPriority.HIGHEST)
+    private void onRender(Render3DEvent event) {
         List<BlockTimer> toRemove = new ArrayList<>();
         timers.forEach(item -> {
-            item.update(delta);
+            item.update((float) event.frameTime);
             if (!item.isValid()) {
                 toRemove.add(item);
             }

@@ -20,15 +20,29 @@ Made by OLEPOSSU / Raksamies and KassuK
 public class OffHandPlus extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<switchModes> switchMode = sgGeneral.add(new EnumSetting.Builder<switchModes>()
-        .name("Sword Gapple")
-        .description("Holds gapple when trying to eat while sword fagging")
+        .name("Prefer")
+        .description("Where to pick items from")
         .defaultValue(switchModes.Inventory)
         .build()
     );
-    private final Setting<Boolean> onlyTotem = sgGeneral.add(new BoolSetting.Builder()
-        .name("Only Totem")
-        .description("Should we hold a crystal if you are above the totem health")
-        .defaultValue(true)
+    private final Setting<itemModes> itemMode = sgGeneral.add(new EnumSetting.Builder<itemModes>()
+        .name("Item")
+        .description("")
+        .defaultValue(itemModes.Crystal)
+        .build()
+    );
+    private final Setting<swordGapModes> swordGapple = sgGeneral.add(new EnumSetting.Builder<swordGapModes>()
+        .name("Sword Gapple")
+        .description("Holds gapple while sword fagging")
+        .defaultValue(swordGapModes.Pressing)
+        .build()
+    );
+    private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
+        .name("Delay")
+        .description("Delay between 2 switches.")
+        .defaultValue(0.05)
+        .range(0, 1)
+        .sliderRange(0, 1)
         .build()
     );
     private final Setting<Boolean> safety = sgGeneral.add(new BoolSetting.Builder()
@@ -37,10 +51,12 @@ public class OffHandPlus extends Module {
         .defaultValue(true)
         .build()
     );
-    private final Setting<swordGapModes> swordGapple = sgGeneral.add(new EnumSetting.Builder<swordGapModes>()
-        .name("Sword Gapple")
-        .description("Holds gapple when trying to eat while sword fagging")
-        .defaultValue(swordGapModes.Pressing)
+    private final Setting<Integer> safetyHealth = sgGeneral.add(new IntSetting.Builder()
+        .name("Safety Health")
+        .description(".")
+        .defaultValue(0)
+        .range(0, 36)
+        .sliderMax(36)
         .build()
     );
 
@@ -61,6 +77,11 @@ public class OffHandPlus extends Module {
         Always,
         Pressing,
         Smart
+    }
+    public enum itemModes {
+        Crystal,
+        Gapple,
+        Totem
     }
 
     public OffHandPlus() {
@@ -89,29 +110,31 @@ public class OffHandPlus extends Module {
             boolean shouldGap = (swordGapple.get().equals(swordGapModes.Always) && OLEPOSSUtils.isSword(mc.player.getMainHandStack().getItem())) ||
                 (swordGapple.get().equals(swordGapModes.Pressing) && OLEPOSSUtils.isSword(mc.player.getMainHandStack().getItem()) && mc.options.useKey.isPressed()) ||
                 (swordGapple.get().equals(swordGapModes.Smart) && OLEPOSSUtils.isSword(mc.player.getMainHandStack().getItem()) && mc.options.useKey.isPressed());
+            boolean firstAvailable = itemMode.get().equals(itemModes.Crystal) ? crystalAvailable : gapAvailable;
+            boolean secondAvailable = itemMode.get().equals(itemModes.Crystal) ? gapAvailable : crystalAvailable;
 
             double health = mc.player.getHealth() + mc.player.getAbsorptionAmount();
             boolean safe = health > hp.get() && isSafe(health);
-            if (onlyTotem.get() && totemAvailable) {
+            if (itemMode.get().equals(itemModes.Totem) && totemAvailable) {
                 return Items.TOTEM_OF_UNDYING;
             } else if (shouldGap && gapAvailable && !swordGapple.get().equals(swordGapModes.Smart) ||
                 (swordGapple.get().equals(swordGapModes.Smart) && safe && gapAvailable && shouldGap)) {
                 return Items.ENCHANTED_GOLDEN_APPLE;
             } else {
                 if (!totemAvailable) {
-                    if (crystalAvailable) {
-                        return Items.END_CRYSTAL;
-                    } else if (gapAvailable) {
-                        return Items.ENCHANTED_GOLDEN_APPLE;
+                    if (firstAvailable) {
+                        return itemMode.get().equals(itemModes.Crystal) ? Items.END_CRYSTAL : Items.ENCHANTED_GOLDEN_APPLE;
+                    } else if (secondAvailable) {
+                        return itemMode.get().equals(itemModes.Crystal) ? Items.ENCHANTED_GOLDEN_APPLE : Items.END_CRYSTAL;
                     } else {
                         return null;
                     }
                 } else {
                     if (safe) {
-                        if (crystalAvailable) {
-                            return Items.END_CRYSTAL;
-                        } else {
-                            return Items.TOTEM_OF_UNDYING;
+                        if (firstAvailable) {
+                            return itemMode.get().equals(itemModes.Crystal) ? Items.END_CRYSTAL : Items.ENCHANTED_GOLDEN_APPLE;
+                        } else if (secondAvailable) {
+                            return itemMode.get().equals(itemModes.Crystal) ? Items.ENCHANTED_GOLDEN_APPLE : Items.END_CRYSTAL;
                         }
                     } else {
                         return Items.TOTEM_OF_UNDYING;
@@ -127,6 +150,6 @@ public class OffHandPlus extends Module {
     }
 
     private boolean isSafe(double playerHP) {
-        return !safety.get() || PlayerUtils.possibleHealthReductions() < playerHP;
+        return !safety.get() || PlayerUtils.possibleHealthReductions() < playerHP - safetyHealth.get();
     }
 }

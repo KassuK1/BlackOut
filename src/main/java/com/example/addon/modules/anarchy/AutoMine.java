@@ -1,6 +1,8 @@
 package com.example.addon.modules.anarchy;
 
 import com.example.addon.BlackOut;
+import com.example.addon.managers.DelayManager;
+import com.example.addon.managers.HoldingManager;
 import com.example.addon.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.entity.EntityAddedEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
@@ -23,10 +25,7 @@ import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
+import net.minecraft.network.packet.c2s.play.*;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -52,6 +51,18 @@ public class AutoMine extends Module {
     private final Setting<Boolean> swingOnce = sgGeneral.add(new BoolSetting.Builder()
         .name("Swing Once")
         .description("Swing but once")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> silent = sgGeneral.add(new BoolSetting.Builder()
+        .name("Silent")
+        .description(".")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
+        .name("Pause Eat")
+        .description("Pauses when you are eating")
         .defaultValue(true)
         .build()
     );
@@ -103,19 +114,26 @@ public class AutoMine extends Module {
         .sliderRange(0, 100)
         .build()
     );
+    private final Setting<Double> placeDelay = sgGeneral.add(new DoubleSetting.Builder()
+        .name("Place Delay")
+        .description("Delay between crystal places")
+        .defaultValue(0.3)
+        .range(0, 1)
+        .sliderRange(0, 1)
+        .build()
+    );
     private final Setting<Boolean> instant = sgGeneral.add(new BoolSetting.Builder()
-        .name("Instant")
+        .name("Instant Crystal")
         .description(".")
         .defaultValue(true)
         .build()
     );
-
     private final Setting<Double> crystalDelay = sgGeneral.add(new DoubleSetting.Builder()
         .name("Crystal Delay")
-        .description("Delay in ms")
-        .defaultValue(20)
-        .range(0, 1000)
-        .sliderRange(0, 1000)
+        .description(".")
+        .defaultValue(0.02)
+        .range(0, 1)
+        .sliderRange(0, 1)
         .visible(() -> !instant.get())
         .build()
     );
@@ -153,24 +171,15 @@ public class AutoMine extends Module {
         .defaultValue(new SettingColor(0, 255, 0, 255))
         .build()
     );
-    private Direction[] horizontals = new Direction[] {
-        Direction.EAST,
-        Direction.WEST,
-        Direction.NORTH,
-        Direction.SOUTH
-    };
 
     private double tick;
     private BlockPos targetPos;
     private BlockPos crystalPos;
-    private Direction side;
-    private BlockPos lastPos;
     private int targetValue;
     private int lastValue;
-    private double time;
-    private List<Runnable> queue = new ArrayList<>();
-    private List<Double> timeQueue = new ArrayList<>();
-
+    private DelayManager DELAY = new DelayManager();
+    private HoldingManager HOLDING = new HoldingManager();
+    private float timer = 0;
 
     public AutoMine() {
         super(BlackOut.ANARCHY, "AutoMine", "For the times your too lazy or bad to press your break bind");
@@ -179,13 +188,10 @@ public class AutoMine extends Module {
     @Override
     public void onActivate() {
         super.onActivate();
-        queue = new ArrayList<>();
-        timeQueue = new ArrayList<>();
-        time = 0;
+        timer = 0;
         tick = 0;
         targetPos = null;
         crystalPos = null;
-        lastPos = null;
         targetValue = -1;
         lastValue = -1;
     }
@@ -200,19 +206,19 @@ public class AutoMine extends Module {
                 }
                 if (tick > 0) {
                     tick--;
-                } else if (holdingBest(targetPos)) {
+                } else if (holdingBest(targetPos) || (silent.get()) && (!pauseEat.get() || !mc.player.isUsingItem())) {
                     if (crystalPos != null) {
                         Entity at = isAt(crystalPos);
                         Hand hand = getHand(Items.END_CRYSTAL);
                         if (at != null) {
                             end(targetPos);
-                            mc.getNetworkHandler().sendPacket(PlayerInteractEntityC2SPacket.attack(at, mc.player.isSneaking()));
-                            mc.getNetworkHandler().sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
+                            attackID(at.getId(), at.getPos());
                             targetPos = null;
                             crystalPos = null;
-                        } else if (hand != null) {
-                            Box box = new Box(targetPos);
-                            if (!EntityUtils.intersectsWithEntity(box, entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
+                        } else if (hand != null && timer >= placeDelay.get()) {
+                            Box box = new Box(crystalPos);
+                            if (!EntityUtils.intersectsWithEntity(box, entity -> !entity.isSpectator())) {
+                                timer = 0;
                                 mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand,
                                     new BlockHitResult(OLEPOSSUtils.getMiddle(crystalPos.down()), Direction.UP, crystalPos.down(), false), 0));
                             }
@@ -229,7 +235,7 @@ public class AutoMine extends Module {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onBlock(BlockUpdateEvent event) {
-        if (mc.player != null && mc.world != null && targetPos != null && side != null) {
+        if (mc.player != null && mc.world != null && targetPos != null) {
             if (event.newState.getBlock() != Blocks.AIR && event.oldState.getBlock() == Blocks.AIR) {
                 if (event.pos == targetPos) {
                     tick = getMineTicks(event.pos);
@@ -240,28 +246,7 @@ public class AutoMine extends Module {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
-        time += event.frameTime;
-        List<Integer> toRemove = new ArrayList<>();
-        if (!timeQueue.isEmpty()) {
-            for (int i = 0; i < timeQueue.size(); i++) {
-                if (timeQueue.get(i) < time) {
-                    toRemove.add(i);
-                    queue.get(i).run();
-                }
-            }
-        }
-        if (!toRemove.isEmpty()) {
-            List<Runnable> queue2 = new ArrayList<>();
-            List<Double> timeQueue2 = new ArrayList<>();
-            for (int i = 0; i < queue.size(); i++) {
-                if (!toRemove.contains(i)) {
-                    queue2.add(queue.get(i));
-                    timeQueue2.add(timeQueue.get(i));
-                }
-            }
-            queue = queue2;
-            timeQueue = timeQueue2;
-        }
+        timer = (float) Math.min(placeDelay.get(), timer + event.frameTime);
 
         if (mc.player != null && mc.world != null && targetPos != null) {
             Vec3d v = OLEPOSSUtils.getMiddle(targetPos);
@@ -286,7 +271,7 @@ public class AutoMine extends Module {
                 if (instant.get()) {
                     attackID(id, event.entity.getPos());
                 } else {
-                    add(() -> attackID(id, event.entity.getPos()), crystalDelay.get());
+                    DELAY.add(() -> attackID(id, event.entity.getPos()), (float) (crystalDelay.get() * 1f));
                 }
                 crystalPos = null;
                 targetPos = null;
@@ -299,11 +284,6 @@ public class AutoMine extends Module {
         en.setId(id);
         mc.getNetworkHandler().sendPacket(PlayerInteractEntityC2SPacket.attack(en, mc.player.isSneaking()));
         mc.getNetworkHandler().sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
-    }
-
-    private void add(Runnable run, double ms) {
-        queue.add(run);
-        timeQueue.add(time + (ms / 1000));
     }
 
     private Entity isAt(BlockPos pos) {
@@ -348,7 +328,6 @@ public class AutoMine extends Module {
     private void reset() {
         targetPos = null;
         crystalPos = null;
-        lastPos = null;
         lastValue = -1;
         targetValue = -1;
     }
@@ -433,13 +412,16 @@ public class AutoMine extends Module {
         if (mc.world.getBlockState(pos).getBlock().equals(Blocks.AIR)) {
             return 1;
         }
-        return 0;
+        if (mc.world.getBlockState(pos).getBlock().equals(Blocks.OBSIDIAN)) {
+            return 0;
+        }
+        return 2;
     }
 
     private Hand getHand(Item item) {
         if (mc.player.getOffHandStack().getItem() == item) {
             return Hand.OFF_HAND;
-        } else if (mc.player.getMainHandStack().getItem() == item) {
+        } else if (HOLDING.isHolding(Items.END_CRYSTAL)) {
             return Hand.MAIN_HAND;
         }
         return null;
@@ -447,7 +429,7 @@ public class AutoMine extends Module {
 
 
     private boolean holdingBest(BlockPos pos) {
-        return InvUtils.findFastestTool(mc.world.getBlockState(pos)).isMainHand();
+        return HOLDING.slot == InvUtils.findFastestTool(mc.world.getBlockState(pos)).slot();
     }
 
 
@@ -460,8 +442,14 @@ public class AutoMine extends Module {
     }
 
     private void end(BlockPos pos) {
+        if (silent.get()) {
+            InvUtils.swap(fastestSlot(pos), true);
+        }
         mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
             pos, Direction.UP));
+        if (silent.get()) {
+            InvUtils.swapBack();
+        }
     }
 
     private int getMineTicks(BlockPos pos) {
@@ -469,15 +457,15 @@ public class AutoMine extends Module {
         if (fastestSlot(pos) != -1) {
             multi = mc.player.getInventory().getStack(fastestSlot(pos)).getMiningSpeedMultiplier(mc.world.getBlockState(pos));
         }
-        return (int) Math.round(mc.world.getBlockState(pos).getBlock().getHardness() / multi / speed.get());
+        return (int) Math.round(mc.world.getBlockState(pos).getBlock().getHardness() / multi / speed.get() * 20);
     }
 
     private int fastestSlot(BlockPos pos) {
         int slot = -1;
         if (mc.player == null || mc.world == null) {return -1;}
         for (int i = 0; i < 9; i++) {
-            if (mc.player.getInventory().getStack(i).getMiningSpeedMultiplier(mc.world.getBlockState(pos)) >
-                mc.player.getInventory().getStack(i).getMiningSpeedMultiplier(mc.world.getBlockState(pos))) {
+            if (slot == -1 || (mc.player.getInventory().getStack(i).getMiningSpeedMultiplier(mc.world.getBlockState(pos)) >
+                mc.player.getInventory().getStack(slot).getMiningSpeedMultiplier(mc.world.getBlockState(pos)))) {
                 slot = i;
             }
         }

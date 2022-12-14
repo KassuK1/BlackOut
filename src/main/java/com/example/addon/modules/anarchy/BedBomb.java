@@ -1,7 +1,7 @@
 package com.example.addon.modules.anarchy;
 
 import com.example.addon.BlackOut;
-import com.example.addon.managers.Managers;
+import com.example.addon.managers.HoldingManager;
 import com.example.addon.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.world.BlockUpdateEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -14,7 +14,6 @@ import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
@@ -86,8 +85,7 @@ public class BedBomb extends Module {
         BreakPlace
     }
     BlockPos placePos;
-
-
+    private HoldingManager HOLDING = new HoldingManager();
 
     public BedBomb() {super(BlackOut.ANARCHY, "BedBomb", "Automatically places and breaks beds to cause damage to your opponents");}
 
@@ -96,7 +94,7 @@ public class BedBomb extends Module {
         if (mc.player != null && mc.world != null) {
             PlayerEntity target = findTarget();
             ticks++;
-            if (target != null && hasBeds() && (!silent.get() || OLEPOSSUtils.isBedItem(Managers.HOLDING.getStack().getItem()))) {
+            if (target != null && hasBeds() && (!silent.get() || OLEPOSSUtils.isBedItem(HOLDING.getStack().getItem()))) {
                 Direction direction = findSide(target);
                 if (direction != null) {
                     if (ticks >= delay.get()) {

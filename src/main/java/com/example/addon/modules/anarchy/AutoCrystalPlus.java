@@ -1,7 +1,8 @@
 package com.example.addon.modules.anarchy;
 
 import com.example.addon.BlackOut;
-import com.example.addon.managers.Managers;
+import com.example.addon.managers.DelayManager;
+import com.example.addon.managers.HoldingManager;
 import com.example.addon.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
@@ -12,7 +13,6 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
-import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.DamageUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.render.color.Color;
@@ -25,23 +25,25 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
-import net.minecraft.network.packet.s2c.play.UpdateSelectedSlotS2CPacket;
-import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.*;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /*
 Made by OLEPOSSU / Raksamies
@@ -142,12 +144,14 @@ public class AutoCrystalPlus extends Module {
         .name("Pre Place Swing")
         .description(".")
         .defaultValue(true)
+        .visible(placeSwing::get)
         .build()
     );
     private final Setting<SwingMode> placeSwingMode = sgPlace.add(new EnumSetting.Builder<SwingMode>()
         .name("Place Swing Mode")
         .description(".")
         .defaultValue(SwingMode.Full)
+        .visible(placeSwing::get)
         .build()
     );
     private final Setting<Boolean> clearSend = sgPlace.add(new BoolSetting.Builder()
@@ -233,12 +237,14 @@ public class AutoCrystalPlus extends Module {
         .name("Pre Explode Swing")
         .description(".")
         .defaultValue(true)
+        .visible(explodeSwing::get)
         .build()
     );
     private final Setting<SwingMode> explodeSwingMode = sgExplode.add(new EnumSetting.Builder<SwingMode>()
         .name("Explode Swing Mode")
         .description(".")
         .defaultValue(SwingMode.Full)
+        .visible(explodeSwing::get)
         .build()
     );
 
@@ -318,16 +324,10 @@ public class AutoCrystalPlus extends Module {
     );
 
     //  Damage Page
-    private final Setting<Boolean> deadCheck = sgDamage.add(new BoolSetting.Builder()
-        .name("Dead Check")
-        .description("Ignores dead player in calculations")
-        .defaultValue(true)
-        .build()
-    );
 
     private final Setting<Integer> forcePop = sgDamage.add(new IntSetting.Builder()
         .name("Force Pop")
-        .description(".")
+        .description("Ignores damage limits if enemy will pop in x hits")
         .defaultValue(2)
         .range(0, 10)
         .sliderMax(10)
@@ -335,7 +335,7 @@ public class AutoCrystalPlus extends Module {
     );
     private final Setting<Integer> antiPop = sgDamage.add(new IntSetting.Builder()
         .name("Anti Pop")
-        .description(".")
+        .description("Doesn't place or explode if you can pop in x hits.")
         .defaultValue(1)
         .range(0, 10)
         .sliderMax(10)
@@ -378,8 +378,8 @@ public class AutoCrystalPlus extends Module {
         .build()
     );
     private final Setting<Boolean> ignoreBreak = sgDamage.add(new BoolSetting.Builder()
-        .name("Ignore Damage")
-        .description("Ignores Break Damage")
+        .name("Ignore Explode Damage")
+        .description("Ignores explode damage")
         .defaultValue(false)
         .build()
     );
@@ -416,6 +416,7 @@ public class AutoCrystalPlus extends Module {
         .defaultValue(0.3)
         .range(0, 3)
         .sliderMax(3)
+        .visible(rotate::get)
         .build()
     );
 
@@ -427,20 +428,20 @@ public class AutoCrystalPlus extends Module {
         .defaultValue(false)
         .build()
     );
-    private final Setting<Integer> motionTicks = sgExtrapolation.add(new IntSetting.Builder()
-        .name("Motion Smoothening")
-        .description(".")
-        .defaultValue(3)
-        .range(1, 20)
-        .sliderRange(1, 20)
-        .build()
-    );
     private final Setting<Integer> extTicks = sgExtrapolation.add(new IntSetting.Builder()
         .name("Extrapolation Ticks")
         .description(".")
         .defaultValue(10)
         .range(0, 100)
         .sliderMax(100)
+        .build()
+    );
+    private final Setting<Integer> motionTicks = sgExtrapolation.add(new IntSetting.Builder()
+        .name("Motion Smoothening")
+        .description(".")
+        .defaultValue(3)
+        .range(1, 20)
+        .sliderRange(1, 20)
         .build()
     );
     private final Setting<Boolean> stepPredict = sgExtrapolation.add(new BoolSetting.Builder()
@@ -477,7 +478,7 @@ public class AutoCrystalPlus extends Module {
     private final Setting<Boolean> placeRangeFromEyes = sgRaytrace.add(new BoolSetting.Builder()
         .name("Place Range From Eyes")
         .description("Removes crystals Instantly after spawning.")
-        .defaultValue(false)
+        .defaultValue(true)
         .build()
     );
 
@@ -502,7 +503,7 @@ public class AutoCrystalPlus extends Module {
     private final Setting<Boolean> breakRangeFromEyes = sgRaytrace.add(new BoolSetting.Builder()
         .name("Break Range From Eyes")
         .description("Removes crystals Instantly after spawning.")
-        .defaultValue(false)
+        .defaultValue(true)
         .build()
     );
 
@@ -526,7 +527,7 @@ public class AutoCrystalPlus extends Module {
     private final Setting<Boolean> raytraceFromEyes = sgRaytrace.add(new BoolSetting.Builder()
         .name("Raytrace From Eyes")
         .description("Removes crystals Instantly after spawning.")
-        .defaultValue(false)
+        .defaultValue(true)
         .build()
     );
 
@@ -613,13 +614,10 @@ public class AutoCrystalPlus extends Module {
 
     protected BlockPos placePos;
     protected BlockPos lastPos;
-    private boolean lastPaused;
     private double renderAnim;
     private Vec3d renderPos;
     private double height;
     private double activeTime;
-    private List<Runnable> queue = new ArrayList<>();
-    private List<Double> timeQueue = new ArrayList<>();
     private List<Box> extPos = new ArrayList<>();
     private List<PlayerEntity> enemies = new ArrayList<>();
     private Map<String, List<Vec3d>> motions = new HashMap<>();
@@ -627,6 +625,8 @@ public class AutoCrystalPlus extends Module {
     private float placeTimer = 0;
     private List<AttackTimer> attacked = new ArrayList<>();
     private List<Box> blocked = new ArrayList<>();
+    private DelayManager DELAY = new DelayManager();
+    private HoldingManager HOLDING = new HoldingManager();
     public AutoCrystalPlus() {
         super(BlackOut.ANARCHY, "Auto Crystal+", "Breaks and places crystals automatically.");
     }
@@ -636,8 +636,6 @@ public class AutoCrystalPlus extends Module {
     @Override
     public void onActivate() {
         super.onActivate();
-        queue = new ArrayList<>();
-        timeQueue = new ArrayList<>();
         motions = new HashMap<>();
         own = new ArrayList<>();
         activeTime = 0;
@@ -702,28 +700,6 @@ public class AutoCrystalPlus extends Module {
             }
         });
         toRemove2.forEach(attacked::remove);
-        activeTime += event.frameTime;
-        List<Integer> toRemove = new ArrayList<>();
-        if (!timeQueue.isEmpty()) {
-            for (int i = 0; i < timeQueue.size(); i++) {
-                if (timeQueue.get(i) < activeTime) {
-                    toRemove.add(i);
-                    queue.get(i).run();
-                }
-            }
-        }
-        if (!toRemove.isEmpty()) {
-            List<Runnable> queue2 = new ArrayList<>();
-            List<Double> timeQueue2 = new ArrayList<>();
-            for (int i = 0; i < queue.size(); i++) {
-                if (!toRemove.contains(i)) {
-                    queue2.add(queue.get(i));
-                    timeQueue2.add(timeQueue.get(i));
-                }
-            }
-            queue = queue2;
-            timeQueue = timeQueue2;
-        }
 
         if (calcMode.get().equals(ListenerMode.Render)) {update();}
     }
@@ -1039,7 +1015,7 @@ public class AutoCrystalPlus extends Module {
                 PlayerEntity enemy = enemies.get(i);
                 Box ogBB = enemy.getBoundingBox();
                 Vec3d ogPos = enemy.getPos();
-                if (enemy != mc.player && !Friends.get().isFriend(enemy) && (!deadCheck.get() || enemy.getHealth() > 0)) {
+                if (enemy != mc.player && !Friends.get().isFriend(enemy) && enemy.getHealth() > 0 && !enemy.isSpectator()) {
                     Vec3d vec = boxToPos(extPos.get(i));
                     enemy.setBoundingBox(extPos.get(i));
                     enemy.setPos(vec.x, vec.y, vec.z);
@@ -1101,22 +1077,22 @@ public class AutoCrystalPlus extends Module {
 
     private boolean breakRangeCheck(Vec3d pos) {
         return OLEPOSSUtils.distance(playerRangePos(false),
-            closestExpRange.get() ? closestPoint(new Box(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5,
-                pos.getX() + 1.5, pos.getY() + 2, pos.getZ() + 1.5)) :
+            closestExpRange.get() ? closestPoint(new Box(pos.getX() - 1, pos.getY(), pos.getZ() - 1,
+                pos.getX() + 1, pos.getY() + 2, pos.getZ() + 1)) :
                 new Vec3d(pos.getX(), pos.getY() + breakRangeHeight.get(), pos.getZ())) <= getBreakRange(pos);
     }
 
     private Hand getHand(Item item, boolean preferMain, boolean swing) {
-        if (!Managers.HOLDING.isHolding(item) && !mc.player.getOffHandStack().getItem().equals(item) && !swing) {
+        if (!HOLDING.isHolding(item) && !mc.player.getOffHandStack().getItem().equals(item) && !swing) {
             return null;
         }
         if (allowOffhand.get() && mc.player.getOffHandStack().getItem().equals(item)) {
-            if (preferMain && Managers.HOLDING.isHolding(item)) {
+            if (preferMain && HOLDING.isHolding(item)) {
                 return Hand.MAIN_HAND;
             } else {
                 return Hand.OFF_HAND;
             }
-        } else if (Managers.HOLDING.isHolding(item)) {
+        } else if (HOLDING.isHolding(item)) {
             return Hand.MAIN_HAND;
         }
         return swing ? Hand.MAIN_HAND : null;
@@ -1177,7 +1153,7 @@ public class AutoCrystalPlus extends Module {
         }
     }
     private void predictAdd(int id, Vec3d pos, boolean checkSD, double delay) {
-        add(() -> predictAttack(id, pos, checkSD), delay);
+        DELAY.add(() -> predictAttack(id, pos, checkSD), (float) (delay * 1000));
     }
     private void predictAttack(int id, Vec3d pos, boolean checkSD) {
         if (idPackets.get() > 0) {
@@ -1212,7 +1188,7 @@ public class AutoCrystalPlus extends Module {
                     if (instantSetDead.get()) {
                         setEntityDead(en);
                     } else {
-                        add(() -> setEntityDead(en), sdDelay.get());
+                        DELAY.add(() -> setEntityDead(en), (float) (sdDelay.get() * 1000));
                     }
                 }
             }
@@ -1267,11 +1243,6 @@ public class AutoCrystalPlus extends Module {
     private double getSelfDamage(Vec3d vec, BlockPos pos) {
         return DamageUtils.crystalDamage(mc.player, vec,
             false, pos.down(), false);
-    }
-
-    private void add(Runnable run, double ms) {
-        queue.add(run);
-        timeQueue.add(activeTime + (ms / 1000));
     }
 
     private void setEntityDead(Entity en) {

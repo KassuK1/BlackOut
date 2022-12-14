@@ -2,7 +2,7 @@ package com.example.addon.modules.anarchy;
 
 import com.example.addon.BlackOut;
 import com.example.addon.managers.BlockTimerList;
-import com.example.addon.managers.Managers;
+import com.example.addon.managers.HoldingManager;
 import com.example.addon.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -89,6 +89,7 @@ public class SelfTrapPlus extends Module {
 
     private BlockTimerList timers = new BlockTimerList();
     private double placeTimer = 0;
+    private HoldingManager HOLDING = new HoldingManager();
 
 
     public SelfTrapPlus() {
@@ -110,7 +111,6 @@ public class SelfTrapPlus extends Module {
     private void onRender(Render3DEvent event) {
         if (mc.player != null && mc.world != null) {
             List<BlockTimerList> toRemove = new ArrayList<>();
-            timers.update((float) event.frameTime);
             placeTimer = Math.min(placeDelay.get(), placeTimer + event.frameTime);
             List<BlockPos> render = getBlocks(getSize(mc.player.getBlockPos().up()), mc.player.getBoundingBox().intersects(OLEPOSSUtils.getBox(mc.player.getBlockPos().up(2))));
             List<BlockPos> blocks = getValid(render);
@@ -119,9 +119,9 @@ public class SelfTrapPlus extends Module {
 
             int[] obsidian = findObby();
             if ((!pauseEat.get() || !mc.player.isUsingItem()) && obsidian[1] > 0 &&
-                (silent.get() || Managers.HOLDING.isHolding(Items.OBSIDIAN)) && !blocks.isEmpty() && placeTimer >= placeDelay.get()) {
+                (silent.get() || HOLDING.isHolding(Items.OBSIDIAN)) && !blocks.isEmpty() && placeTimer >= placeDelay.get()) {
                 boolean swapped = false;
-                if (!Managers.HOLDING.isHolding(Items.OBSIDIAN) && silent.get()) {
+                if (!HOLDING.isHolding(Items.OBSIDIAN) && silent.get()) {
                     InvUtils.swap(obsidian[0], true);
                     swapped = true;
                 }
