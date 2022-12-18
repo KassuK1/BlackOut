@@ -223,8 +223,8 @@ public class SurroundPlus extends Module {
                 for (int z = size[2] - 1; z <= size[3] + 1; z++) {
                     boolean isX = x == size[0] - 1 || x == size[1] + 1;
                     boolean isZ = z == size[2] - 1 || z == size[3] + 1;
-                    boolean ignore = isX && !isZ ? !air(pPos.add(OLEPOSSUtils.closerToZero(x), 0, z)) :
-                        !isX && isZ && !air(pPos.add(x, 0, OLEPOSSUtils.closerToZero(z)));
+                    boolean ignore = (isX && !isZ ? !air(pPos.add(OLEPOSSUtils.closerToZero(x), 0, z)) :
+                        !isX && isZ && !air(pPos.add(x, 0, OLEPOSSUtils.closerToZero(z)))) && !(x == 0 && z == 0);
                     if (isX != isZ && !ignore) {
                         list.add(pPos.add(x, 0, z));
                     } else if (!isX && !isZ && floor.get() && air(pPos.add(x, 0, z))) {

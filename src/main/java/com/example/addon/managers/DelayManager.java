@@ -33,6 +33,7 @@ public class DelayManager {
     public void add(Runnable run, float delay) {
         tasks.add(new Delayed(run, delay));
     }
+    public void clear() {tasks.clear();}
 
     private class Delayed {
         private final Runnable runnable;

@@ -94,15 +94,13 @@ public class Strafe extends Module {
             if (Modules.get().get(HoleSnap.class).isActive()) {
                 return;
             }
-            double velX = mc.player.getVelocity().x;
-            double velZ = mc.player.getVelocity().z;
             double multiplier = speed.get() * (velocity + 1);
             velocity /= decreaseSpeed.get();
             if (velocity < 0.01) {
                 velocity = 0;
             }
             if (mc.player.hasStatusEffect(StatusEffects.SPEED)) {
-                multiplier += (mc.player.getStatusEffect(StatusEffects.SPEED).getAmplifier() + 1) * 0.2;
+                multiplier += (mc.player.getStatusEffect(StatusEffects.SPEED).getAmplifier() + 1) * effect.get();
             }
             double forward = mc.player.input.movementForward;
             double sideways = mc.player.input.movementSideways;

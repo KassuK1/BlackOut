@@ -191,7 +191,6 @@ public class ScaffoldPlus extends Module {
         List<BlockPos> list = new ArrayList<>();
         double x = motion.x;
         double z = motion.z;
-        ChatUtils.sendMsg(Text.of(x + "  " + z));
         Vec3d vec = mc.player.getPos();
         for (int i = 0; i < extrapolation.get(); i++) {
             vec = vec.add(x, 0, z);

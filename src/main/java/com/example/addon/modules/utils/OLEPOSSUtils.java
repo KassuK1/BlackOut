@@ -2,6 +2,7 @@ package com.example.addon.modules.utils;
 
 import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
+import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.effect.StatusEffect;
@@ -14,6 +15,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
+
+import java.awt.*;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
@@ -223,4 +227,16 @@ public class OLEPOSSUtils extends Utils {
         return new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1);
     }
     public static int closerToZero(int x) {return x - Math.round((float) x / Math.abs(x));}
+    public static boolean isHole(BlockPos pos, World world, int height) {
+        if (world == null) {return false;}
+        for (Direction dir : horizontals) {
+            if (world.getBlockState(pos.offset(dir)).getBlock() == Blocks.AIR) {return false;}
+        }
+        for (int i = 0; i <= height; i++) {
+            if (!world.getBlockState(pos.up(i)).getBlock().equals(Blocks.AIR)) {
+                return false;
+            }
+        }
+        return world.getBlockState(pos.down()).getBlock() != Blocks.AIR;
+    }
 }

@@ -49,6 +49,7 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new BedBomb());
         Modules.get().add(new CevBreaker());
         Modules.get().add(new FastXP());
+        Modules.get().add(new FeetESP());
         Modules.get().add(new HoleFill());
         Modules.get().add(new HoleSnap());
         Modules.get().add(new OffHandPlus());

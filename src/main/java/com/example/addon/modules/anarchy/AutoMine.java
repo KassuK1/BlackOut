@@ -128,6 +128,13 @@ public class AutoMine extends Module {
         .defaultValue(true)
         .build()
     );
+    private final Setting<Boolean> instantPick = sgGeneral.add(new BoolSetting.Builder()
+        .name("Instant Pickaxe")
+        .description(".")
+        .defaultValue(true)
+        .visible(() -> !instant.get())
+        .build()
+    );
     private final Setting<Double> crystalDelay = sgGeneral.add(new DoubleSetting.Builder()
         .name("Crystal Delay")
         .description(".")
@@ -265,10 +272,10 @@ public class AutoMine extends Module {
     private void onSpawn(EntityAddedEvent event) {
         if (mc.player != null && mc.world != null && targetPos != null && crystalPos != null) {
             BlockPos pos = event.entity.getBlockPos();
-            if (event.entity.getType().equals(EntityType.END_CRYSTAL) && pos.equals(crystalPos)) {
+            if (event.entity.getType().equals(EntityType.END_CRYSTAL) && pos.equals(crystalPos) && tick <= 0) {
                 end(targetPos);
                 int id = event.entity.getId();
-                if (instant.get()) {
+                if (instant.get() || (instantPick.get() && holdingBest(targetPos))) {
                     attackID(id, event.entity.getPos());
                 } else {
                     DELAY.add(() -> attackID(id, event.entity.getPos()), (float) (crystalDelay.get() * 1f));

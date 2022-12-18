@@ -76,6 +76,12 @@ public class HoleFill extends Module {
         .defaultValue(true)
         .build()
     );
+    private final Setting<Boolean> autoBurrow = sgGeneral.add(new BoolSetting.Builder()
+        .name("Auto Burrow")
+        .description("Evil")
+        .defaultValue(true)
+        .build()
+    );
     private final Setting<Double> placeDelay = sgGeneral.add(new DoubleSetting.Builder()
         .name("Place Delay")
         .description(".")
@@ -149,7 +155,6 @@ public class HoleFill extends Module {
     private void onRender(Render3DEvent event) {
         if (mc.player != null && mc.world != null) {
             placeTimer = Math.min(placeTimer + event.frameTime, placeDelay.get());
-            List<BlockTimerList> toRemove = new ArrayList<>();
             update();
 
             List<Render> toRemove2 = new ArrayList<>();
@@ -315,10 +320,12 @@ public class HoleFill extends Module {
         }
         public void render(Render3DEvent event) {
             float progress = time / 2;
+            float alpha = (float) Math.max(0, time - 0.5) * 2;
             Vec3d v = new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
             Box toRender = new Box(v.x - progress, v.y - progress, v.z - progress, v.x + progress, v.y + progress, v.z + progress);
-            event.renderer.box(toRender, new Color(color.get().r, color.get().g, color.get().b,
-                (int) Math.floor(color.get().a / 10f)), color.get(), ShapeMode.Both, 0);
+            event.renderer.box(toRender,
+                new Color(color.get().r, color.get().g, color.get().b, (int) Math.floor(color.get().a / 10f * alpha)),
+                new Color(color.get().r, color.get().g, color.get().b, (int) Math.floor(color.get().a * alpha)), ShapeMode.Both, 0);
         }
     }
 }

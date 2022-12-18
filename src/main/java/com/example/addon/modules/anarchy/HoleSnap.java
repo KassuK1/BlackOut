@@ -115,6 +115,7 @@ public class HoleSnap extends Module {
     private int collisions;
     private int rubberbands;
     private int ticks;
+    List<BlockPos> holes = new ArrayList<>();
 
 
     public HoleSnap() {
@@ -199,46 +200,22 @@ public class HoleSnap extends Module {
     }
 
     private BlockPos findHole() {
-        Map<BlockPos, Double> holeMap = new HashMap<>();
-        List<BlockPos> holes = new ArrayList<>();
-        if (isHole(mc.player.getBlockPos())) {return mc.player.getBlockPos();}
+        BlockPos closest = null;
+        if (OLEPOSSUtils.isHole(mc.player.getBlockPos(), mc.world, depth.get())) {return mc.player.getBlockPos();}
         for (int y = -downRange.get(); y <= 0; y++) {
             for (int x = -range.get(); x <= range.get(); x++) {
                 for (int z = -range.get(); z <= range.get(); z++) {
                     BlockPos position = mc.player.getBlockPos().add(x, y, z);
-                    if (isHole(position) && ((x == 0 && z == 0 && y == 0) || y < 0)) {
-                        holes.add(position);
-                        holeMap.put(position, OLEPOSSUtils.distance(new Vec3d(mc.player.getX(), mc.player.getY(), mc.player.getZ()),
-                            new Vec3d(position.getX() + 0.5, position.getY(), position.getZ() + 0.5)));
+                    if (OLEPOSSUtils.isHole(position, mc.world, depth.get()) && y < 0) {
+                        if (closest == null || OLEPOSSUtils.distance(mc.player.getPos(), new Vec3d(position.getX() + 0.5, position.getY(), position.getZ() + 0.5)) <
+                        OLEPOSSUtils.distance(mc.player.getPos(), new Vec3d(closest.getX() + 0.5, closest.getY(), closest.getZ() + 0.5))) {
+                            closest = position;
+                        }
                     }
                 }
             }
         }
-        double closestDist = Integer.MAX_VALUE;
-        BlockPos closestHole = null;
-        if (holes.size() > 0) {
-            for (BlockPos pos : holes) {
-                if (closestHole == null) {
-                    closestHole = pos;
-                } else if (holeMap.get(pos) < closestDist) {
-                    closestDist = holeMap.get(pos);
-                    closestHole = pos;
-                }
-            }
-        }
-        return closestHole;
-    }
-
-    private boolean isHole(BlockPos pos) {
-        for (Direction dir : horizontals) {
-            if (mc.world.getBlockState(pos.offset(dir)).getBlock() == Blocks.AIR) {return false;}
-        }
-        for (int i = 0; i <= depth.get(); i++) {
-            if (!air(pos.up(i))) {
-                return false;
-            }
-        }
-        return mc.world.getBlockState(pos.down()).getBlock() != Blocks.AIR;
+        return closest;
     }
 
     private boolean air(BlockPos pos) {return mc.world.getBlockState(pos).getBlock().equals(Blocks.AIR);}

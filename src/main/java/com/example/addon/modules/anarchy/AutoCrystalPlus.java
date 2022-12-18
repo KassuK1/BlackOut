@@ -31,6 +31,7 @@ import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
+import net.minecraft.network.packet.s2c.play.TeamS2CPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
@@ -736,13 +737,6 @@ public class AutoCrystalPlus extends Module {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
-    private void onBlock(PacketEvent.Send event) {
-        if (mc.player != null && mc.world != null) {
-
-        }
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
         if (mc.player != null && mc.world != null) {
             if (placePos != null) {
@@ -961,7 +955,7 @@ public class AutoCrystalPlus extends Module {
                         BlockPos pos = new BlockPos(x + mc.player.getBlockPos().getX(),
                             y + mc.player.getBlockPos().getY(), z + mc.player.getBlockPos().getZ());
                         if (canBePlaced(pos)) {
-                            double dmg[] = highestDmg(pos);
+                            double[] dmg = highestDmg(pos);
                             double self = getSelfDamage(new Vec3d(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5), pos);
                             double dist = OLEPOSSUtils.distance(new Vec3d(x + mc.player.getBlockPos().getX() + 0.5,
                                     y + mc.player.getBlockPos().getY(), z + mc.player.getBlockPos().getZ() + 0.5),
@@ -1022,6 +1016,9 @@ public class AutoCrystalPlus extends Module {
                     double dmg = DamageUtils.crystalDamage(enemy, new Vec3d(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5),
                         false, pos, false);
                     enemy.setBoundingBox(ogBB);
+                    if (mc.world.getPlayers().contains(enemy)) {
+                        enemy.setPos(ogPos.x, ogPos.y, ogPos.z);
+                    }
                     enemy.setPos(ogPos.x, ogPos.y, ogPos.z);
                     if (dmg > highest) {
                         highest = dmg;
