@@ -210,7 +210,10 @@ public class ScaffoldPlus extends Module {
         }
     }
 
-    private Box getBox(Vec3d vec) {return new Box(vec.x - 0.3, vec.y, vec.z - 0.3, vec.x + 0.3, vec.y + mc.player.getEyeY(), vec.z + 0.3);}
+    private Box getBox(Vec3d vec) {
+        Box box = mc.player.getBoundingBox();
+        return new Box(vec.x - 0.3, vec.y, vec.z - 0.3, vec.x + 0.3, vec.y + (box.maxY - box.minY), vec.z + 0.3);
+    }
 
     private boolean inside(Box bb) {
         return mc.world.getBlockCollisions(mc.player, bb).iterator().hasNext();
