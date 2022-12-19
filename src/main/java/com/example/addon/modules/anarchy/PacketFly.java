@@ -18,7 +18,7 @@ import java.util.List;
 public class PacketFly extends Module {
 
     public PacketFly() {
-        super(BlackOut.ANARCHY, "Flies with packets", "yes");
+        super(BlackOut.ANARCHY, "Packet Fly", "Flies with packets");
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -88,6 +88,13 @@ public class PacketFly extends Module {
         .sliderRange(0, 10)
         .build()
     );
+    private final Setting<Integer> antiKickDelay = sgGeneral.add(new IntSetting.Builder()
+        .name("Anti Kick Delay")
+        .description(".")
+        .defaultValue(10)
+        .sliderRange(0, 100)
+        .build()
+    );
 
     int ticks = 0;
     int id = -1;
@@ -105,8 +112,7 @@ public class PacketFly extends Module {
     private void onMove(PlayerMoveEvent e) {
         ticks++;
         if (mc.player == null || mc.world == null) {return;}
-        mc.player.noClip = true;
-
+        boolean shouldAntiKick = ticks % antiKickDelay.get() == 0;
         double x = 0, y = ticks % 10 == 0 ? -0.04 * antiKick.get() : 0, z = 0;
         double[] result = getYaw(mc.player.input.movementForward, mc.player.input.movementSideways);
 
