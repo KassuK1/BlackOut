@@ -64,6 +64,8 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new NCPDamageFly());
         Modules.get().add(new SurroundPlus());
         Modules.get().add(new AutoTravel());
+        Modules.get().add(new FlightPlus());
+        Modules.get().add(new JumpModify());
 
         // Commands
         Commands.get().add(new BlackoutGit());
