@@ -2,11 +2,13 @@ package com.example.addon.modules.anarchy;
 
 import com.example.addon.BlackOut;
 import com.example.addon.modules.utils.OLEPOSSUtils;
+import meteordevelopment.meteorclient.events.packets.InventoryEvent;
 import meteordevelopment.meteorclient.events.world.BlockUpdateEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
@@ -19,6 +21,10 @@ import net.minecraft.network.packet.c2s.play.CraftRequestC2SPacket;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.recipe.Recipe;
+import net.minecraft.screen.CraftingScreenHandler;
+import net.minecraft.screen.GenericContainerScreenHandler;
+import net.minecraft.screen.ScreenHandler;
+import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -60,15 +66,6 @@ public class AutoCraftingTable extends Module {
         .sliderRange(-6, 12)
         .build()
     );
-    private final Setting<Integer> delay = sgGeneral.add(new IntSetting.Builder()
-        .name("Delay")
-        .description("Delay between opening and crafting")
-        .defaultValue(5)
-        .range(0, 20)
-        .sliderMax(20)
-        .build()
-    );
-    private int packetSent;
 
     BlockPos placePos;
 
@@ -79,32 +76,24 @@ public class AutoCraftingTable extends Module {
         super.onActivate();
         placePos = findPos();
         if (placePos != null) {
-            packetSent = delay.get();
             place(placePos);
         } else {
             this.toggle();
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
-    private void onTick(TickEvent.Pre event) {
-        if (mc.player != null && mc.world != null && placePos != null) {
-            if (mc.currentScreen instanceof CraftingScreen && packetSent == 0) {
-                packetSent = -1;
-                for (RecipeResultCollection res : mc.player.getRecipeBook().getOrderedResults()) {
-                    for (Recipe<?> re : res.getResults(true)) {
-                        if (re.getOutput().getItem() == Items.PURPLE_BED) {
-                            mc.getNetworkHandler().sendPacket(new CraftRequestC2SPacket(mc.player.currentScreenHandler.syncId, re, true));
-                            this.toggle();
-                        }
-                    }
+    @EventHandler
+    private void onInventory(InventoryEvent event) {
+        ScreenHandler handler = mc.player.currentScreenHandler;
+        if (event.packet.getSyncId() == handler.syncId) {
+            if (handler instanceof CraftingScreenHandler) {
+                ChatUtils.sendMsg(Text.of(String.valueOf(handler.slots.size())));
+                for (int i = 0; i < 9; i++) {
+                    InvUtils.move().from(InvUtils.find(itemStack -> itemStack.getItem().equals(Items.END_CRYSTAL)).slot()).to(i);
                 }
-            } else if (mc.currentScreen instanceof CraftingScreen && packetSent > 0) {
-                packetSent--;
             }
         }
     }
-
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onBlock(BlockUpdateEvent event) {

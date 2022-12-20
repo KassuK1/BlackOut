@@ -13,6 +13,7 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
@@ -26,6 +27,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.*;
+import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -219,7 +221,11 @@ public class AutoMine extends Module {
                         Hand hand = getHand(Items.END_CRYSTAL);
                         if (at != null) {
                             end(targetPos);
-                            attackID(at.getId(), at.getPos());
+                            if (instant.get() || (instantPick.get() && holdingBest(targetPos))) {
+                                attackID(at.getId(), at.getPos());
+                            } else {
+                                DELAY.add(() -> attackID(at.getId(), at.getPos()), (float) (crystalDelay.get() * 1f));
+                            }
                             targetPos = null;
                             crystalPos = null;
                         } else if (hand != null && timer >= placeDelay.get()) {
@@ -346,7 +352,6 @@ public class AutoMine extends Module {
         for (PlayerEntity pl : mc.world.getPlayers()) {
             if (pl != mc.player && !Friends.get().isFriend(pl)) {
                 BlockPos pos = pl.getBlockPos();
-                Vec3d vec = new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
                 for (Direction dir : OLEPOSSUtils.horizontals) {
                     // Anti Surround
                     if (valueCheck(value, antiSurround.get(), pos.offset(dir), closest)

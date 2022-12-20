@@ -92,6 +92,7 @@ public class PacketFly extends Module {
         .name("Anti Kick Delay")
         .description(".")
         .defaultValue(10)
+        .min(1)
         .sliderRange(0, 100)
         .build()
     );
@@ -112,13 +113,12 @@ public class PacketFly extends Module {
     private void onMove(PlayerMoveEvent e) {
         ticks++;
         if (mc.player == null || mc.world == null) {return;}
-        boolean shouldAntiKick = ticks % antiKickDelay.get() == 0;
-        double x = 0, y = ticks % 10 == 0 ? -0.04 * antiKick.get() : 0, z = 0;
+        double x = 0, y = ticks % antiKickDelay.get() == 0 ? -0.04 * antiKick.get() : 0, z = 0;
         double[] result = getYaw(mc.player.input.movementForward, mc.player.input.movementSideways);
 
         if (mc.options.jumpKey.isPressed() && y == 0) {y = upSpeed.get() * 0.0625;}
         else if (mc.options.sneakKey.isPressed()) {y = downSpeed.get() * -0.0625;}
-        if (result[1] != 0) {
+        if (result[1] != 0 && y == 0) {
             x = Math.cos(Math.toRadians(result[0] + 90));
             z = Math.sin(Math.toRadians(result[0] + 90));
         }

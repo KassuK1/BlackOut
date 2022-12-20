@@ -2,12 +2,14 @@ package com.example.addon.managers;
 
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 import net.minecraft.network.packet.s2c.play.UpdateSelectedSlotS2CPacket;
+import net.minecraft.text.Text;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
@@ -19,12 +21,11 @@ public class HoldingManager {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
-    private void onPacket(PacketEvent event) {
-        if (event.packet instanceof UpdateSelectedSlotC2SPacket) {
-            slot = ((UpdateSelectedSlotC2SPacket) event.packet).getSelectedSlot();
-        }
-        if (event.packet instanceof UpdateSelectedSlotS2CPacket) {
-            slot = ((UpdateSelectedSlotS2CPacket) event.packet).getSlot();
+    private void onSend(PacketEvent.Send event) {
+        if (event.packet instanceof UpdateSelectedSlotC2SPacket packet) {
+            if (packet.getSelectedSlot() >= 0 && packet.getSelectedSlot() <= 8) {
+                slot = packet.getSelectedSlot();
+            }
         }
     }
 
