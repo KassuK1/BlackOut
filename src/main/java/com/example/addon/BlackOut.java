@@ -38,6 +38,7 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new GhostCrystal());
         Modules.get().add(new LegitTotem());
         Modules.get().add(new LegitScaffold());
+        Modules.get().add(new CustomFOV());
 
         //Anarchy
         Modules.get().add(new AntiAim());
