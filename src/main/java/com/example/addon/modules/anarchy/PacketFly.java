@@ -3,6 +3,7 @@ package com.example.addon.modules.anarchy;
 import com.example.addon.BlackOut;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
+import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.mixininterface.IVec3d;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
@@ -12,8 +13,7 @@ import net.minecraft.network.packet.c2s.play.TeleportConfirmC2SPacket;
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
 import net.minecraft.util.math.Vec3d;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class PacketFly extends Module {
 
@@ -99,14 +99,26 @@ public class PacketFly extends Module {
 
     int ticks = 0;
     int id = -1;
-    List<Vec3d> validPos = new ArrayList<>();
+    int sent = 0;
+    int rur = 0;
+    String info = null;
+    Random r = new Random();
+    Map<Integer, Vec3d> validPos = new HashMap<>();
     List<PlayerMoveC2SPacket> validPackets = new ArrayList<>();
 
     @Override
     public void onActivate() {
         super.onActivate();
         ticks = 0;
-        validPos = new ArrayList<>();
+        validPos = new HashMap<>();
+    }
+    @EventHandler
+    private void onTick(TickEvent.Post e) {
+        rur++;
+        if (rur % 20 == 0) {
+            info = "Packets: " + sent;
+            sent = 0;
+        }
     }
 
     @EventHandler
@@ -124,7 +136,7 @@ public class PacketFly extends Module {
         }
         Vec3d motion = new Vec3d(0, 0, 0);
 
-        for (int i = 0; i <= packets.get(); i++) {
+        for (int i = 0; i < (y == 0 ? packets.get() : 1); i++) {
             motion = motion.add(x * speed.get() * 0.0625, y, z * speed.get() * 0.0625);
             send(motion.add(mc.player.getPos()), new Vec3d(xzBound.get() * Math.cos(Math.toRadians(result[0] + 90)), yBound.get(), xzBound.get() * Math.sin(Math.toRadians(result[0] + 90))),
                 onGroundSpoof.get() ? onGround.get() : mc.player.isOnGround());
@@ -135,29 +147,36 @@ public class PacketFly extends Module {
 
     @EventHandler
     public void onSend(PacketEvent.Send event) {
-
-        // we only cancel CPacketPlayers
         if (event.packet instanceof PlayerMoveC2SPacket) {
             if (!validPackets.contains((PlayerMoveC2SPacket) event.packet)) {
                 event.cancel();
+            } else {
+                sent++;
             }
+        } else {
+            sent++;
         }
     }
 
     @EventHandler
     private void onReceive(PacketEvent.Receive e) {
-        if (e.packet instanceof PlayerPositionLookS2CPacket) {
-            PlayerPositionLookS2CPacket packet = (PlayerPositionLookS2CPacket) e.packet;
-            Vec3d vec = new Vec3d(packet.getX(), packet.getY(), packet.getZ());
-            if (validPos.contains(vec)) {
+        if (e.packet instanceof PlayerPositionLookS2CPacket packet) {
+            if (mc.player != null) {
+                Vec3d vec = new Vec3d(packet.getX(), packet.getY(), packet.getZ());
+                if (validPos.containsKey(packet.getTeleportId()) && validPos.get(packet.getTeleportId()).equals(vec)) {
+                    mc.player.networkHandler.sendPacket(new TeleportConfirmC2SPacket(packet.getTeleportId()));
+                    e.cancel();
+                    validPos.remove(packet.getTeleportId());
+                    return;
+                }
+                id = packet.getTeleportId();
                 mc.player.networkHandler.sendPacket(new TeleportConfirmC2SPacket(packet.getTeleportId()));
-                e.cancel();
-                validPos.remove(vec);
-                return;
             }
-            id = packet.getTeleportId();
-            mc.player.networkHandler.sendPacket(new TeleportConfirmC2SPacket(packet.getTeleportId()));
         }
+    }
+    @Override
+    public String getInfoString() {
+        return info;
     }
 
     private void send(Vec3d pos, Vec3d bounds, boolean onGround) {
@@ -166,10 +185,11 @@ public class PacketFly extends Module {
 
         validPackets.add(normal);
         mc.player.networkHandler.sendPacket(normal);
-        validPos.add(pos);
+        validPos.put(id + 1, pos);
 
         validPackets.add(bound);
         mc.player.networkHandler.sendPacket(bound);
+        if (id < 0) {return;}
 
         id++;
         mc.player.networkHandler.sendPacket(new TeleportConfirmC2SPacket(id));

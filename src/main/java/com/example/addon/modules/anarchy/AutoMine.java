@@ -13,7 +13,6 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
-import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
@@ -26,17 +25,16 @@ import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.*;
-import net.minecraft.text.Text;
+import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /*
 Made by OLEPOSSU / Raksamies
@@ -186,8 +184,8 @@ public class AutoMine extends Module {
     private BlockPos crystalPos;
     private int targetValue;
     private int lastValue;
-    private DelayManager DELAY = new DelayManager();
-    private HoldingManager HOLDING = new HoldingManager();
+    private final DelayManager DELAY = new DelayManager();
+    private final HoldingManager HOLDING = new HoldingManager();
     private float timer = 0;
 
     public AutoMine() {
@@ -237,7 +235,7 @@ public class AutoMine extends Module {
                             }
                         }
                     } else {
-                        end(targetPos);
+                        abort(targetPos);
                         targetPos = null;
                         crystalPos = null;
                     }
@@ -249,6 +247,7 @@ public class AutoMine extends Module {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onBlock(BlockUpdateEvent event) {
         if (mc.player != null && mc.world != null && targetPos != null) {
+            BlackOut.LOG.info("AutoMine: Block Change");
             if (event.newState.getBlock() != Blocks.AIR && event.oldState.getBlock() == Blocks.AIR) {
                 if (event.pos == targetPos) {
                     tick = getMineTicks(event.pos);
@@ -278,7 +277,7 @@ public class AutoMine extends Module {
     private void onSpawn(EntityAddedEvent event) {
         if (mc.player != null && mc.world != null && targetPos != null && crystalPos != null) {
             BlockPos pos = event.entity.getBlockPos();
-            if (event.entity.getType().equals(EntityType.END_CRYSTAL) && pos.equals(crystalPos) && tick <= 0) {
+            if (event.entity.getType().equals(EntityType.END_CRYSTAL) && pos.equals(crystalPos) && fastestSlot(pos) >= 0 && tick <= 0) {
                 end(targetPos);
                 int id = event.entity.getId();
                 if (instant.get() || (instantPick.get() && holdingBest(targetPos))) {
@@ -441,11 +440,13 @@ public class AutoMine extends Module {
 
 
     private boolean holdingBest(BlockPos pos) {
-        return HOLDING.slot == InvUtils.findFastestTool(mc.world.getBlockState(pos)).slot();
+        int slot = fastestSlot(pos);
+        return slot != 1 && HOLDING.slot == slot;
     }
 
 
     private void start(BlockPos pos) {
+        BlackOut.LOG.info("AutoMine: Start");
         mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK,
             pos, Direction.UP));
         if (swing.get() && swingOnce.get()) {
@@ -454,14 +455,23 @@ public class AutoMine extends Module {
     }
 
     private void end(BlockPos pos) {
-        if (silent.get()) {
-            InvUtils.swap(fastestSlot(pos), true);
+        BlackOut.LOG.info("AutoMine: End");
+        int slot = fastestSlot(pos);
+        boolean swapped = false;
+        if (silent.get() && !holdingBest(pos) && slot != -1) {
+            InvUtils.swap(slot, true);
+            swapped = true;
         }
         mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
             pos, Direction.UP));
-        if (silent.get()) {
+        if (swapped) {
             InvUtils.swapBack();
         }
+    }
+    private void abort(BlockPos pos) {
+        BlackOut.LOG.info("AutoMine: Abort");
+        mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK,
+            pos, Direction.UP));
     }
 
     private int getMineTicks(BlockPos pos) {

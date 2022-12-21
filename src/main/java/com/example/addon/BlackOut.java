@@ -4,6 +4,7 @@ import com.example.addon.commands.BlackoutGit;
 import com.example.addon.commands.GearInfo;
 import com.example.addon.commands.Kick;
 import com.example.addon.commands.Panic;
+import com.example.addon.gui.BlackOutGuiTheme;
 import com.example.addon.hud.GearHud;
 import com.example.addon.hud.HudHelper;
 import com.example.addon.hud.HudWaterMark;
@@ -11,6 +12,8 @@ import com.example.addon.modules.anarchy.*;
 import com.example.addon.modules.ghost.*;
 import com.mojang.logging.LogUtils;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
+import meteordevelopment.meteorclient.gui.GuiTheme;
+import meteordevelopment.meteorclient.gui.GuiThemes;
 import meteordevelopment.meteorclient.systems.commands.Commands;
 import meteordevelopment.meteorclient.systems.hud.Hud;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
@@ -49,11 +52,13 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new AutoPearl());
         Modules.get().add(new BedBomb());
         Modules.get().add(new CevBreaker());
+        Modules.get().add(new CrystalBait());
         Modules.get().add(new FastXP());
         Modules.get().add(new FeetESP());
         Modules.get().add(new HoleFill());
         Modules.get().add(new HoleSnap());
         Modules.get().add(new OffHandPlus());
+        Modules.get().add(new PacketCrash());
         Modules.get().add(new PacketFly());
         Modules.get().add(new ResetVL());
         Modules.get().add(new RPC());
@@ -79,6 +84,10 @@ public class BlackOut extends MeteorAddon {
         Hud.get().register(GearHud.INFO);
         Hud.get().register(HudWaterMark.INFO);
         Hud.get().register(HudHelper.INFO);
+
+        // Theme
+        GuiThemes.add(new BlackOutGuiTheme());
+
     }
 
     @Override
