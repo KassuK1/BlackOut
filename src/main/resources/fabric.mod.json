@@ -14,7 +14,7 @@
   "environment": "client",
   "entrypoints": {
     "meteor": [
-      "com.example.addon.BlackOut"
+      "kassuk.addon.blackout.BlackOut"
     ]
   },
   "mixins": [
