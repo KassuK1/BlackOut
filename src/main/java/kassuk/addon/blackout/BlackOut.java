@@ -5,6 +5,7 @@ import kassuk.addon.blackout.commands.BlackoutGit;
 import kassuk.addon.blackout.commands.GearInfo;
 import kassuk.addon.blackout.commands.Kick;
 import kassuk.addon.blackout.commands.Panic;
+import kassuk.addon.blackout.hud.BlackoutArray;
 import kassuk.addon.blackout.hud.GearHud;
 import kassuk.addon.blackout.hud.HudHelper;
 import kassuk.addon.blackout.hud.HudWaterMark;
@@ -70,6 +71,7 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new AutoTravel());
         Modules.get().add(new FlightPlus());
         Modules.get().add(new JumpModify());
+        Modules.get().add(new AnteroTaateli());
 
         // Commands
         Commands.get().add(new BlackoutGit());
@@ -81,6 +83,7 @@ public class BlackOut extends MeteorAddon {
         Hud.get().register(GearHud.INFO);
         Hud.get().register(HudWaterMark.INFO);
         Hud.get().register(HudHelper.INFO);
+        Hud.get().register(BlackoutArray.INFO);
 
         // Theme
 
