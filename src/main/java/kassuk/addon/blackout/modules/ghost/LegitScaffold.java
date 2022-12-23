@@ -15,7 +15,7 @@ public class LegitScaffold extends Module {
     }
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-        if (mc.player != null && mc.world != null){
+        if (mc.player != null && mc.world != null && mc.player.isOnGround()){
             mc.options.sneakKey.setPressed(mc.world.getBlockState(mc.player.getBlockPos().down()).getBlock().equals(Blocks.AIR));
         }
     }
