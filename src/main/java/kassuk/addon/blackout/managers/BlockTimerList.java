@@ -11,6 +11,10 @@ import net.minecraft.util.math.BlockPos;
 import java.util.ArrayList;
 import java.util.List;
 
+/*
+Made by OLEPOSSU / Raksamies
+*/
+
 public class BlockTimerList {
     public List<BlockTimer> timers;
 

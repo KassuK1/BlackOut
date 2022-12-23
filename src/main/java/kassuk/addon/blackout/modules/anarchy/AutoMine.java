@@ -183,7 +183,7 @@ public class AutoMine extends Module {
     private BlockPos crystalPos;
     private int targetValue;
     private int lastValue;
-    private float timer = 0;
+    float timer = 0;
 
     public AutoMine() {
         super(BlackOut.ANARCHY, "AutoMine", "For the times your too lazy or bad to press your break bind");

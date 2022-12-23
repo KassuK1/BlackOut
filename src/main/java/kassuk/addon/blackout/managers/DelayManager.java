@@ -8,6 +8,10 @@ import meteordevelopment.orbit.EventPriority;
 import java.util.ArrayList;
 import java.util.List;
 
+/*
+Made by OLEPOSSU / Raksamies
+*/
+
 public class DelayManager {
 
     private List<Delayed> tasks;

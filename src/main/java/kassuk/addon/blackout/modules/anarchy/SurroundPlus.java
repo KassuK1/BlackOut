@@ -103,7 +103,7 @@ public class SurroundPlus extends Module {
     private BlockPos startPos = null;
     double placeTimer = 0;
     private List<BlockPos> render = new ArrayList<>();
-    private List<BlockPos>[] check(BlockPos pos) {
+    private List<BlockPos> check(BlockPos pos) {
         List<BlockPos> list = new ArrayList<>();
         List<BlockPos> renders = new ArrayList<>();
         List<BlockPos> blocks = getBlocks(getSize(pos));
@@ -117,7 +117,8 @@ public class SurroundPlus extends Module {
                 }
             }
         }
-        return new List[] {list, renders};
+        render = renders;
+        return list;
     }
 
     @Override
@@ -142,9 +143,7 @@ public class SurroundPlus extends Module {
                 toggle();
             }
             else if (placeTimer >= placeDelay.get()) {
-                List<BlockPos>[] blocks = check(mc.player.getBlockPos());
-                render = blocks[1];
-                List<BlockPos> placements = blocks[0];
+                List<BlockPos> placements = check(mc.player.getBlockPos());
                 int[] obsidian = findObby();
                 if (obsidian[1] > 0 && (Managers.HOLDING.isHolding(Items.OBSIDIAN) || silent.get()) && !placements.isEmpty() &&
                     (!pauseEat.get() || !mc.player.isUsingItem())) {

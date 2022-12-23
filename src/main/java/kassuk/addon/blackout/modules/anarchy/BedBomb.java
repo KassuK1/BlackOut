@@ -188,7 +188,7 @@ public class BedBomb extends Module {
     private float renderDir;
     private BlockPos lastPos = null;
     private double timer = 0;
-    private boolean explode = false;
+    boolean explode = false;
     private List<NotHolding> holdings = new ArrayList<>();
 
     public BedBomb() {super(BlackOut.ANARCHY, "BedBomb", "Automatically places and breaks beds to cause damage to your opponents");}

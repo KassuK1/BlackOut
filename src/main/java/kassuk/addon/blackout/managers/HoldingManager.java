@@ -10,6 +10,10 @@ import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
+/*
+Made by OLEPOSSU / Raksamies
+*/
+
 public class HoldingManager {
     public int slot;
     public HoldingManager() {

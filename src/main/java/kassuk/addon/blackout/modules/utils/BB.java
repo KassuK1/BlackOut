@@ -56,4 +56,13 @@ public class BB {
         }
         return false;
     }
+    public boolean intersectsWithAny(BB... bbs) {
+        if (mc.world == null) {return false;}
+        for (BB bb : bbs) {
+            if (intersects(bb)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

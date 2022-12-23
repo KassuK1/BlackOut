@@ -42,56 +42,9 @@ public class WebPlus extends Module {
         .sliderMax(100)
         .build()
     );
-    private final Setting<Integer> first = sgGeneral.add(new IntSetting.Builder()
-        .name("First")
-        .description(".")
-        .defaultValue(100)
-        .range(0, 1000)
-        .sliderMax(1000)
-        .build()
-    );
-    private final Setting<Integer> second = sgGeneral.add(new IntSetting.Builder()
-        .name("Second")
-        .description(".")
-        .defaultValue(100)
-        .range(0, 1000)
-        .sliderMax(1000)
-        .build()
-    );
-    int yees = 0;
-    List<Entity> en = new ArrayList<>();
+
 
     public WebPlus() {
         super(BlackOut.ANARCHY, "Web+", "Places an web inside you automatically");
-    }
-    @Override
-    public void onActivate() {
-        super.onActivate();
-        en.clear();
-        yees = delay.get();
-        if (mc.world != null && mc.player != null) {
-            for (Entity entity : mc.world.getEntities()) {
-                if (entity instanceof EndCrystalEntity) {
-                    en.add(entity);
-                }
-            }
-        }
-
-        en.forEach(it -> {
-            mc.world.removeEntity(it.getId(), Entity.RemovalReason.KILLED);
-        });
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST)
-    private void onTick(TickEvent.Pre event) {
-        if (mc.world != null && mc.player != null) {
-            yees--;
-            if (yees < 0) {
-                en.forEach(it -> {
-                    mc.world.addEntity(it.getId(), it);
-                });
-                this.toggle();
-            }
-        }
     }
 }

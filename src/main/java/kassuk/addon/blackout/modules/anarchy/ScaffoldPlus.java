@@ -113,9 +113,9 @@ public class ScaffoldPlus extends Module {
         .build()
     );
 
-    private BlockTimerList timers = new BlockTimerList();
-    private Vec3d motion = null;
-    private float placeTimer;
+    BlockTimerList timers = new BlockTimerList();
+    Vec3d motion = null;
+    float placeTimer;
 
     @Override
     public void onDeactivate() {

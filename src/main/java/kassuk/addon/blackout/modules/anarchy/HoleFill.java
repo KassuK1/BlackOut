@@ -284,7 +284,7 @@ public class HoleFill extends Module {
         timers.add(pos, delay.get());
         mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
             new BlockHitResult(new Vec3d(pos.getX(), pos.getY(), pos.getZ()), Direction.UP, pos, false), 0));
-        mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
+        if (swing.get()) {mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));}
         toRender.add(new Render(pos));
     }
 

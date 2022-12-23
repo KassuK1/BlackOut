@@ -42,36 +42,37 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new CustomFOV());
 
         //Anarchy
+        Modules.get().add(new AnteroTaateli());
         Modules.get().add(new AntiAim());
         Modules.get().add(new AutoCraftingTable());
         Modules.get().add(new AutoCrystalPlus());
         Modules.get().add(new AutoEz());
         Modules.get().add(new AutoMine());
         Modules.get().add(new AutoPearl());
+        Modules.get().add(new AutoTravel());
         Modules.get().add(new BedBomb());
         Modules.get().add(new CevBreaker());
         Modules.get().add(new CrystalBait());
         Modules.get().add(new FastXP());
         Modules.get().add(new FeetESP());
+        Modules.get().add(new FlightPlus());
         Modules.get().add(new HoleFill());
         Modules.get().add(new HoleSnap());
+        Modules.get().add(new JumpModify());
+        Modules.get().add(new NCPDamageFly());
         Modules.get().add(new OffHandPlus());
         Modules.get().add(new PacketCrash());
         Modules.get().add(new PacketFly());
         Modules.get().add(new ResetVL());
         Modules.get().add(new RPC());
+        Modules.get().add(new ScaffoldPlus());
         Modules.get().add(new SelfTrapPlus());
-        Modules.get().add(new Strafe());
         Modules.get().add(new SprintPlus());
+        Modules.get().add(new Strafe());
+        Modules.get().add(new SurroundPlus());
         Modules.get().add(new WeakAlert());
         Modules.get().add(new WebPlus());
-        Modules.get().add(new ScaffoldPlus());
-        Modules.get().add(new NCPDamageFly());
-        Modules.get().add(new SurroundPlus());
-        Modules.get().add(new AutoTravel());
-        Modules.get().add(new FlightPlus());
-        Modules.get().add(new JumpModify());
-        Modules.get().add(new AnteroTaateli());
+
 
         // Commands
         Commands.get().add(new BlackoutGit());

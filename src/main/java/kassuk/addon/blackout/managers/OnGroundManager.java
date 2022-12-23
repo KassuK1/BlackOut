@@ -7,6 +7,10 @@ import meteordevelopment.orbit.EventPriority;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
 
+/*
+Made by OLEPOSSU / Raksamies
+*/
+
 public class OnGroundManager {
 
     private boolean onGround;
