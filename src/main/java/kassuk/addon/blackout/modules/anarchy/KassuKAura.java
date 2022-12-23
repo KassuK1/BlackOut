@@ -11,6 +11,8 @@ import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.Hand;
 
+//Made by KassuK
+
 public class KassuKAura extends Module {
     public KassuKAura(){super(BlackOut.ANARCHY,"ForceField", "An Killaura made by KassuK probably should not be used");}
 

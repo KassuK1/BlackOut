@@ -58,6 +58,7 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new FlightPlus());
         Modules.get().add(new HoleFill());
         Modules.get().add(new HoleSnap());
+        Modules.get().add(new KassuKAura());
         Modules.get().add(new JumpModify());
         Modules.get().add(new NCPDamageFly());
         Modules.get().add(new OffHandPlus());
