@@ -1,8 +1,7 @@
 package kassuk.addon.blackout.modules.anarchy;
 
-import kassuk.addon.blackout.managers.DelayManager;
 import kassuk.addon.blackout.BlackOut;
-import kassuk.addon.blackout.managers.HoldingManager;
+import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.entity.EntityAddedEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
@@ -184,8 +183,6 @@ public class AutoMine extends Module {
     private BlockPos crystalPos;
     private int targetValue;
     private int lastValue;
-    private final DelayManager DELAY = new DelayManager();
-    private final HoldingManager HOLDING = new HoldingManager();
     private float timer = 0;
 
     public AutoMine() {
@@ -222,7 +219,7 @@ public class AutoMine extends Module {
                             if (instant.get() || (instantPick.get() && holdingBest(targetPos))) {
                                 attackID(at.getId(), at.getPos());
                             } else {
-                                DELAY.add(() -> attackID(at.getId(), at.getPos()), (float) (crystalDelay.get() * 1f));
+                                Managers.DELAY.add(() -> attackID(at.getId(), at.getPos()), (float) (crystalDelay.get() * 1f));
                             }
                             targetPos = null;
                             crystalPos = null;
@@ -283,7 +280,7 @@ public class AutoMine extends Module {
                 if (instant.get() || (instantPick.get() && holdingBest(targetPos))) {
                     attackID(id, event.entity.getPos());
                 } else {
-                    DELAY.add(() -> attackID(id, event.entity.getPos()), (float) (crystalDelay.get() * 1f));
+                    Managers.DELAY.add(() -> attackID(id, event.entity.getPos()), (float) (crystalDelay.get() * 1f));
                 }
                 crystalPos = null;
                 targetPos = null;
@@ -432,7 +429,7 @@ public class AutoMine extends Module {
     private Hand getHand(Item item) {
         if (mc.player.getOffHandStack().getItem() == item) {
             return Hand.OFF_HAND;
-        } else if (HOLDING.isHolding(Items.END_CRYSTAL)) {
+        } else if (Managers.HOLDING.isHolding(Items.END_CRYSTAL)) {
             return Hand.MAIN_HAND;
         }
         return null;
@@ -441,7 +438,7 @@ public class AutoMine extends Module {
 
     private boolean holdingBest(BlockPos pos) {
         int slot = fastestSlot(pos);
-        return slot != 1 && HOLDING.slot == slot;
+        return slot != 1 && Managers.HOLDING.slot == slot;
     }
 
 

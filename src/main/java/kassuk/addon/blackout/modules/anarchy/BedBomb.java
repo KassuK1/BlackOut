@@ -1,10 +1,8 @@
 package kassuk.addon.blackout.modules.anarchy;
 
 import kassuk.addon.blackout.BlackOut;
-import kassuk.addon.blackout.managers.DelayManager;
+import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.modules.utils.OLEPOSSUtils;
-import kassuk.addon.blackout.managers.HoldingManager;
-import kassuk.addon.blackout.managers.OnGroundManager;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -192,9 +190,6 @@ public class BedBomb extends Module {
     private double timer = 0;
     private boolean explode = false;
     private List<NotHolding> holdings = new ArrayList<>();
-    private HoldingManager HOLDING = new HoldingManager();
-    private OnGroundManager ONGROUND = new OnGroundManager();
-    private DelayManager DELAY = new DelayManager();
 
     public BedBomb() {super(BlackOut.ANARCHY, "BedBomb", "Automatically places and breaks beds to cause damage to your opponents");}
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -277,7 +272,7 @@ public class BedBomb extends Module {
         bedPos = findBestPos();
         if (lastPos == null || bedPos == null || lastPos.equals(bedPos)) {
             lastPos = bedPos;
-            DELAY.clear();
+            Managers.DELAY.clear();
         }
         if (explode) {
             explode(bedPos);
@@ -298,13 +293,13 @@ public class BedBomb extends Module {
                 if (instantExp.get()) {
                     explode(bedPos);
                 } else {
-                    DELAY.add(() -> explode = true, (float) (expDelay.get() * 1));
+                    Managers.DELAY.add(() -> explode = true, (float) (expDelay.get() * 1));
                 }
             }
         }
     }
     private void place(BlockPos pos, Direction dir, Hand hand) {
-        mc.getNetworkHandler().sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(dir.asRotation(), 0, ONGROUND.isOnGround()));
+        mc.getNetworkHandler().sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(dir.asRotation(), 0, Managers.ONGROUND.isOnGround()));
         if (air(pos.down())) {
             mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand,
                 new BlockHitResult(OLEPOSSUtils.getMiddle(pos), Direction.UP, pos, false), 0));
@@ -441,7 +436,7 @@ public class BedBomb extends Module {
         return OLEPOSSUtils.isBedBlock(mc.world.getBlockState(pos).getBlock());
     }
     private Hand getHand() {
-        if (OLEPOSSUtils.isBedItem(HOLDING.getStack().getItem())) {
+        if (OLEPOSSUtils.isBedItem(Managers.HOLDING.getStack().getItem())) {
             return Hand.MAIN_HAND;
         } else if (OLEPOSSUtils.isBedItem(mc.player.getOffHandStack().getItem())) {
             return Hand.OFF_HAND;

@@ -16,7 +16,7 @@ public class OnGroundManager {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
-    private void onPacket(PacketEvent event) {
+    private void onPacket(PacketEvent.Send event) {
         if (event.packet instanceof PlayerMoveC2SPacket) {
             onGround = ((PlayerMoveC2SPacket) event.packet).isOnGround();
         }

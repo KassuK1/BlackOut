@@ -1,9 +1,9 @@
 package kassuk.addon.blackout.modules.anarchy;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.modules.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.managers.BlockTimerList;
-import kassuk.addon.blackout.managers.HoldingManager;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
@@ -139,7 +139,6 @@ public class HoleFill extends Module {
     private List<Render> toRender = new ArrayList<>();
     private BlockTimerList timers = new BlockTimerList();
     private double placeTimer = 0;
-    private HoldingManager HOLDING = new HoldingManager();
 
     public HoleFill() {
         super(BlackOut.ANARCHY, "Hole Filler+", "Automatically is an cunt to your enemies");
@@ -176,9 +175,9 @@ public class HoleFill extends Module {
         List<BlockPos> toPlace = getValid(holes);
         int[] obsidian = findBlock(Items.OBSIDIAN);
         if (!toPlace.isEmpty() && obsidian[1] > 0 && (!pauseEat.get() || !mc.player.isUsingItem()) && placeTimer >= placeDelay.get()) {
-            if (HOLDING.isHolding(Items.OBSIDIAN) || silent.get()) {
+            if (Managers.HOLDING.isHolding(Items.OBSIDIAN) || silent.get()) {
                 boolean swapped = false;
-                if (!HOLDING.isHolding(Items.OBSIDIAN)) {
+                if (!Managers.HOLDING.isHolding(Items.OBSIDIAN)) {
                     InvUtils.swap(obsidian[0], true);
                     swapped = true;
                 }

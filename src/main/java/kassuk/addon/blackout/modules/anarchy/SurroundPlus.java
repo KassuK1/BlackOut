@@ -3,7 +3,7 @@ package kassuk.addon.blackout.modules.anarchy;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.modules.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.managers.BlockTimerList;
-import kassuk.addon.blackout.managers.HoldingManager;
+import kassuk.addon.blackout.managers.Managers;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
@@ -103,7 +103,6 @@ public class SurroundPlus extends Module {
     private BlockPos startPos = null;
     double placeTimer = 0;
     private List<BlockPos> render = new ArrayList<>();
-    private HoldingManager HOLDING = new HoldingManager();
     private List<BlockPos>[] check(BlockPos pos) {
         List<BlockPos> list = new ArrayList<>();
         List<BlockPos> renders = new ArrayList<>();
@@ -147,10 +146,10 @@ public class SurroundPlus extends Module {
                 render = blocks[1];
                 List<BlockPos> placements = blocks[0];
                 int[] obsidian = findObby();
-                if (obsidian[1] > 0 && (HOLDING.isHolding(Items.OBSIDIAN) || silent.get()) && !placements.isEmpty() &&
+                if (obsidian[1] > 0 && (Managers.HOLDING.isHolding(Items.OBSIDIAN) || silent.get()) && !placements.isEmpty() &&
                     (!pauseEat.get() || !mc.player.isUsingItem())) {
                     boolean swapped = false;
-                    if (!HOLDING.isHolding(Items.OBSIDIAN) && silent.get()) {
+                    if (!Managers.HOLDING.isHolding(Items.OBSIDIAN) && silent.get()) {
                         InvUtils.swap(obsidian[0], true);
                         swapped = true;
                     }

@@ -2,8 +2,7 @@ package kassuk.addon.blackout.modules.anarchy;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.managers.BlockTimerList;
-import kassuk.addon.blackout.managers.DelayManager;
-import kassuk.addon.blackout.managers.HoldingManager;
+import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
@@ -117,8 +116,6 @@ public class ScaffoldPlus extends Module {
     private BlockTimerList timers = new BlockTimerList();
     private Vec3d motion = null;
     private float placeTimer;
-    private DelayManager DELAY = new DelayManager();
-    private HoldingManager HOLDING = new HoldingManager();
 
     @Override
     public void onDeactivate() {
@@ -137,7 +134,7 @@ public class ScaffoldPlus extends Module {
     private void onMove(PlayerMoveEvent event) {
         if (mc.player != null && mc.world != null) {
             int[] obsidian = findBlocks();
-            if (obsidian[1] > 0 && (silent.get() || validItem(HOLDING.getStack().getItem()))) {
+            if (obsidian[1] > 0 && (silent.get() || validItem(Managers.HOLDING.getStack().getItem()))) {
                 if (safeWalk.get() && !Modules.get().get(SafeWalk.class).isActive()) {
                     Modules.get().get(SafeWalk.class).toggle();
                 }
@@ -147,7 +144,7 @@ public class ScaffoldPlus extends Module {
                 List<BlockPos> placements = getBlocks();
                 if (!placements.isEmpty()) {
                     boolean swapped = false;
-                    if (!HOLDING.isHolding(Items.OBSIDIAN) && silent.get()) {
+                    if (!Managers.HOLDING.isHolding(Items.OBSIDIAN) && silent.get()) {
                         InvUtils.swap(obsidian[0], true);
                         swapped = true;
                     }

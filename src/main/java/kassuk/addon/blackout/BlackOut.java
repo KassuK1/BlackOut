@@ -5,12 +5,14 @@ import kassuk.addon.blackout.commands.BlackoutGit;
 import kassuk.addon.blackout.commands.GearInfo;
 import kassuk.addon.blackout.commands.Kick;
 import kassuk.addon.blackout.commands.Panic;
+import kassuk.addon.blackout.gui.BlackOutTheme;
 import kassuk.addon.blackout.hud.GearHud;
 import kassuk.addon.blackout.hud.HudHelper;
 import kassuk.addon.blackout.hud.HudWaterMark;
 import kassuk.addon.blackout.modules.anarchy.*;
 import kassuk.addon.blackout.modules.ghost.*;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
+import meteordevelopment.meteorclient.gui.GuiThemes;
 import meteordevelopment.meteorclient.systems.commands.Commands;
 import meteordevelopment.meteorclient.systems.hud.Hud;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
@@ -83,7 +85,7 @@ public class BlackOut extends MeteorAddon {
         Hud.get().register(HudHelper.INFO);
 
         // Theme
-
+        GuiThemes.add(new BlackOutTheme());
     }
 
     @Override
@@ -95,5 +97,9 @@ public class BlackOut extends MeteorAddon {
     @Override
     public String getPackage() {
         return "kassuk.addon.blackout";
+    }
+    @Override
+    public String getWebsite() {
+        return "https://bigrat.monster";
     }
 }

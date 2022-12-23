@@ -1,8 +1,8 @@
 package kassuk.addon.blackout.modules.anarchy;
 
 import kassuk.addon.blackout.BlackOut;
-import kassuk.addon.blackout.managers.DelayManager;
-import kassuk.addon.blackout.managers.HoldingManager;
+import kassuk.addon.blackout.managers.Managers;
+import kassuk.addon.blackout.modules.utils.BB;
 import kassuk.addon.blackout.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
@@ -116,6 +116,14 @@ public class AutoCrystalPlus extends Module {
         .defaultValue(10)
         .range(0, 20)
         .sliderRange(0, 20)
+        .build()
+    );
+    private final Setting<Double> placeDelay = sgPlace.add(new DoubleSetting.Builder()
+        .name("Place Delay")
+        .description(".")
+        .defaultValue(0.05)
+        .min(0)
+        .sliderRange(0, 1)
         .build()
     );
     private final Setting<Double> slowDamage = sgPlace.add(new DoubleSetting.Builder()
@@ -675,8 +683,7 @@ public class AutoCrystalPlus extends Module {
     private float placeTimer = 0;
     private List<AttackTimer> attacked = new ArrayList<>();
     private List<Box> blocked = new ArrayList<>();
-    private DelayManager DELAY = new DelayManager();
-    private HoldingManager HOLDING = new HoldingManager();
+    private double delayTimer = 0;
     public AutoCrystalPlus() {
         super(BlackOut.ANARCHY, "Auto Crystal+", "Breaks and places crystals automatically.");
     }
@@ -718,11 +725,11 @@ public class AutoCrystalPlus extends Module {
                 }
             }
         }
+
         if (rotate.get() && placePos != null) {
             double yaw = Rotations.getYaw(new Vec3d(placePos.getX() + 0.5, placePos.getY() + rotationHeight.get(), placePos.getZ() + 0.5));
             double pitch = Rotations.getPitch(new Vec3d(placePos.getX() + 0.5, placePos.getY() + rotationHeight.get(), placePos.getZ() + 0.5));
-
-            Rotations.rotate(yaw, pitch);
+            Rotations.rotate(yaw, pitch, 10);
         }
         if (calcMode.get().equals(ListenerMode.Tick) || calcMode.get().equals(ListenerMode.TickPre)) {update();}
     }
@@ -739,6 +746,7 @@ public class AutoCrystalPlus extends Module {
     @EventHandler(priority = EventPriority.HIGHEST + 1)
     private void onRender3D(Render3DEvent event) {
         double d = event.frameTime;
+        delayTimer = Math.min(placeDelay.get(), delayTimer + d);
         placeTimer = (float) Math.max(placeTimer - d * getSpeed(), 0);
         List<AttackTimer> toRemove2 = new ArrayList<>();
         if (attacked != null && !attacked.isEmpty()) {
@@ -786,7 +794,7 @@ public class AutoCrystalPlus extends Module {
                 if (!pausedCheck()) {
                     if (packet.getEntityTypeId() == EntityType.END_CRYSTAL) {
                         Vec3d pos = new Vec3d(packet.getX(), packet.getY(), packet.getZ());
-                        if (canBreak(pos) && !isAttacked(packet.getId())) {
+                        if (canBreak(pos, true) && !isAttacked(packet.getId())) {
                             explode(packet.getId(), null, pos, true);
                         }
                     }
@@ -798,6 +806,7 @@ public class AutoCrystalPlus extends Module {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
         if (mc.player != null && mc.world != null) {
+            Hand hand = getHand(Items.END_CRYSTAL, preferMainHand.get(), false);
             if (placePos != null) {
                 if (animation.get()) {
                     renderPos = smoothMove(event, renderPos,
@@ -812,7 +821,7 @@ public class AutoCrystalPlus extends Module {
                     (int) Math.floor(color.get().a / 5f)), color.get(), ShapeMode.Both, 0);
             }
             if (animation.get()) {
-                renderAnim = placePos != null && !pausedCheck() ?
+                renderAnim = placePos != null && hand != null && !pausedCheck() ?
                     (renderAnim + animationSpeed.get() > 100 ? 100 : renderAnim + animationSpeed.get())
                     :
                     (renderAnim - animationSpeed.get() < 0 ? 0 : renderAnim - animationSpeed.get());
@@ -845,7 +854,7 @@ public class AutoCrystalPlus extends Module {
             if (!pausedCheck()) {
                 for (Entity en : mc.world.getEntities()) {
                     if (en.getType().equals(EntityType.END_CRYSTAL)) {
-                        if (canBreak(en.getPos())) {
+                        if (canBreak(en.getPos(), true)) {
                             double[] dmg = highestDmg(en.getBlockPos().down());
                             if (expEntity == null || dmg[0] > highest) {
                                 expEntity = en;
@@ -868,7 +877,7 @@ public class AutoCrystalPlus extends Module {
                         placeTimer = 0;
                     }
                     if (!pausedCheck()) {
-                        if ((!blocked(placePos) || !strictPlace.get()) && place.get() && (placeTimer <= 0 || (instantPlace.get() && !shouldSlow(placePos) && !blocked(placePos)))) {
+                        if ((!blocked(placePos) || !strictPlace.get()) && delayTimer >= placeDelay.get() && place.get() && (placeTimer <= 0 || (instantPlace.get() && !shouldSlow(placePos) && !blocked(placePos)))) {
                             placeTimer = 1;
                             placeCrystal(placePos);
                         }
@@ -1017,7 +1026,7 @@ public class AutoCrystalPlus extends Module {
             if (handToUse != null) {
                 if (!pausedCheck()) {
                     BlackOut.LOG.info("AutoCrystal: MultiPlace");
-                    DELAY.add(() -> placeCrystal(multiPos), (float) (multiDelay.get() * 1f));
+                    Managers.DELAY.add(() -> placeCrystal(multiPos), (float) (multiDelay.get() * 1f));
                 }
             }
         }
@@ -1121,12 +1130,12 @@ public class AutoCrystalPlus extends Module {
     }
 
     protected boolean canBePlaced(BlockPos pos, BlockPos blockedPos) {
-        if (mc.player != null && mc.world != null) {
+        if (mc.player != null && mc.world != null && pos != null) {
             if (mc.world.getBlockState(pos).getBlock() != Blocks.OBSIDIAN &&
                 mc.world.getBlockState(pos).getBlock() != Blocks.BEDROCK) {
                 return false;
             }
-            Box box = new Box(pos.getX(), pos.getY() + 1, pos.getZ(), pos.getX() + 1, pos.getY() + 3, pos.getZ() + 1);
+            BB box = new BB(pos.getX(), pos.getY() + 1, pos.getZ(), pos.getX() + 1, pos.getY() + 3, pos.getZ() + 1);
             if (blockedPos != null && box.intersects(new Box(blockedPos.getX() - 0.5, blockedPos.getY(), blockedPos.getZ() - 0.5,
                 blockedPos.getX() + 1.5, blockedPos.getY() + 2, blockedPos.getZ() + 1.5))) {return false;}
             if (!mc.world.getBlockState(pos.offset(Direction.UP)).getBlock().equals(Blocks.AIR)) {
@@ -1135,7 +1144,7 @@ public class AutoCrystalPlus extends Module {
             if (!placeRangeCheck(pos)) {
                 return false;
             }
-            return !EntityUtils.intersectsWithEntity(box, entity -> !entity.isSpectator() && !(entity instanceof EndCrystalEntity && canBreak(entity.getPos())));
+            return !box.intersectsWithEntity(entity -> !entity.isSpectator() && !(entity instanceof EndCrystalEntity && canBreak(entity.getPos(), false)));
         }
         return false;
     }
@@ -1165,19 +1174,20 @@ public class AutoCrystalPlus extends Module {
     }
 
     private Hand getHand(Item item, boolean preferMain, boolean swing) {
-        if (!HOLDING.isHolding(item) && !mc.player.getOffHandStack().getItem().equals(item) && !swing) {
+        if (!Managers.HOLDING.isHolding(item) && !mc.player.getOffHandStack().getItem().equals(item) && !swing) {
             return null;
         }
         if (allowOffhand.get() && mc.player.getOffHandStack().getItem().equals(item)) {
-            if (preferMain && HOLDING.isHolding(item)) {
+            if (preferMain && Managers.HOLDING.isHolding(item)) {
                 return Hand.MAIN_HAND;
             } else {
                 return Hand.OFF_HAND;
             }
-        } else if (HOLDING.isHolding(item)) {
+        } else if (Managers.HOLDING.isHolding(item)) {
             return Hand.MAIN_HAND;
         }
         return swing ? Hand.MAIN_HAND : null;
+
     }
 
     private double getBreakRange(Vec3d pos) {
@@ -1192,10 +1202,10 @@ public class AutoCrystalPlus extends Module {
         }
     }
 
-    private boolean canBreak(Vec3d pos) {
+    private boolean canBreak(Vec3d pos, boolean holdingCheck) {
         if (!explode.get()) {return false;}
         double self = getSelfDamage(pos ,new BlockPos(Math.floor(pos.x), Math.floor(pos.y) - 1, Math.floor(pos.z)));
-        if (onlyExplodeWhenHolding.get() && getHand(Items.END_CRYSTAL, preferMainHand.get(), false) == null) {return false;}
+        if (onlyExplodeWhenHolding.get() && holdingCheck && getHand(Items.END_CRYSTAL, preferMainHand.get(), false) == null) {return false;}
         double[] dmg = highestDmg(new BlockPos(Math.floor(pos.x), Math.floor(pos.y) - 1, Math.floor(pos.z)));
         if (!breakDamageCheck(dmg[0], self, dmg[1], new BlockPos(Math.floor(pos.x), Math.floor(pos.y), Math.floor(pos.z)))) {return false;}
         return breakRangeCheck(new Vec3d(pos.x, pos.y, pos.z));
@@ -1235,7 +1245,7 @@ public class AutoCrystalPlus extends Module {
         }
     }
     private void predictAdd(int id, Vec3d pos, boolean checkSD, double delay) {
-        DELAY.add(() -> predictAttack(id, pos, checkSD), (float) (delay / 1000));
+        Managers.DELAY.add(() -> predictAttack(id, pos, checkSD), (float) (delay / 1000));
     }
     private void predictAttack(int id, Vec3d pos, boolean checkSD) {
         if (idPackets.get() > 0) {
@@ -1263,6 +1273,7 @@ public class AutoCrystalPlus extends Module {
             if (handToUse != null) {
                 if (swing) {swing(handToUse, explodeSwingMode.get(), explodeSwing.get(), preExplodeSwing.get(), true);}
                 attacked.add(new AttackTimer(en.getId(), (float) (1 / explodeSpeed.get())));
+                delayTimer = 0;
                 mc.player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(en, mc.player.isSneaking()));
                 if (swing) {swing(handToUse, explodeSwingMode.get(), explodeSwing.get(), preExplodeSwing.get(), false);}
                 if (confirm && clearSend.get()) {blocked.clear();}
@@ -1270,7 +1281,7 @@ public class AutoCrystalPlus extends Module {
                     if (instantSetDead.get()) {
                         setEntityDead(en);
                     } else {
-                        DELAY.add(() -> setEntityDead(en), (float) (sdDelay.get() * 1000));
+                        Managers.DELAY.add(() -> setEntityDead(en), (float) (sdDelay.get() / 1000));
                     }
                 }
             }
@@ -1321,7 +1332,7 @@ public class AutoCrystalPlus extends Module {
 
     private void setEntityDead(Entity en) {
         if (mc.world != null) {
-            en.kill();
+            en.shouldRender(0);
         }
     }
 
