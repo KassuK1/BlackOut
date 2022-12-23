@@ -36,10 +36,10 @@ public class AnteroTaateli extends Module {
     @EventHandler
     private void onTick(TickEvent.Pre event){
         if (mc.player != null && mc.world != null){
-            String balls = getClosest();
-            if (timer >=delay.get() && balls != null){
+            String bugatti = getClosest();
+            if (timer >=delay.get() && bugatti != null){
                 timer = 0;
-                ChatUtils.sendPlayerMsg(balls + " What colour is your Bugatti");
+                ChatUtils.sendPlayerMsg(bugatti + " What colour is your Bugatti");
             }
         }
     }
