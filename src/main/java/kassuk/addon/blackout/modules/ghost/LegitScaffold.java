@@ -13,6 +13,7 @@ public class LegitScaffold extends Module {
     public void onDeactivate() {
         mc.options.sneakKey.setPressed(false);
     }
+
     @EventHandler
     private void onTick(TickEvent.Pre event) {
         if (mc.player != null && mc.world != null && mc.player.isOnGround()){
