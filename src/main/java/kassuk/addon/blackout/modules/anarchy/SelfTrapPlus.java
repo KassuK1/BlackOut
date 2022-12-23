@@ -149,7 +149,7 @@ public class SelfTrapPlus extends Module {
     private List<BlockPos> getValid(List<BlockPos> blocks) {
         List<BlockPos> list = new ArrayList<>();
         blocks.forEach(item -> {
-            if (!timers.isPlaced(item) &&
+            if (!timers.contains(item) &&
                 !EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(item), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
                 list.add(item);
             }

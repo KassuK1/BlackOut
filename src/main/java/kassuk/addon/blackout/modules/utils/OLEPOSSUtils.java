@@ -239,4 +239,17 @@ public class OLEPOSSUtils extends Utils {
         }
         return world.getBlockState(pos.down()).getBlock() != Blocks.AIR;
     }
+    public static Direction closestDir(BlockPos pos, Vec3d vec) {
+        Direction closest = null;
+        double closestDist = -1;
+        for (Direction dir : Direction.values()) {
+            double dist = distance(new Vec3d(pos.getX() + 0.5 + dir.getOffsetX() / 2f, pos.getY() + 0.5 + dir.getOffsetY() / 2f, pos.getZ() + 0.5 + dir.getOffsetZ() / 2f), vec);
+
+            if (closest == null || dist < closestDist) {
+                closest = dir;
+                closestDist = dist;
+            }
+        }
+        return closest;
+    }
 }

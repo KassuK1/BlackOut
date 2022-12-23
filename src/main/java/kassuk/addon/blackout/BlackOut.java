@@ -9,6 +9,7 @@ import kassuk.addon.blackout.hud.BlackoutArray;
 import kassuk.addon.blackout.hud.GearHud;
 import kassuk.addon.blackout.hud.HudHelper;
 import kassuk.addon.blackout.hud.HudWaterMark;
+import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.modules.anarchy.*;
 import kassuk.addon.blackout.modules.ghost.*;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
@@ -51,6 +52,7 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new AutoPearl());
         Modules.get().add(new AutoTravel());
         Modules.get().add(new BedBomb());
+        Modules.get().add(new ButtonAura());
         Modules.get().add(new CevBreaker());
         Modules.get().add(new CrystalBait());
         Modules.get().add(new FastXP());
@@ -95,6 +97,11 @@ public class BlackOut extends MeteorAddon {
     public void onRegisterCategories() {
         Modules.registerCategory(GHOST);
         Modules.registerCategory(ANARCHY);
+    }
+
+    @Override
+    public String getWebsite() {
+        return "https://bigrat.monster";
     }
 
     @Override

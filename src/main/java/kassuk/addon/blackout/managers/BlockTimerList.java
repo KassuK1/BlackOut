@@ -2,14 +2,14 @@ package kassuk.addon.blackout.managers;
 
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
-import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
-import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /*
 Made by OLEPOSSU / Raksamies
@@ -36,7 +36,15 @@ public class BlockTimerList {
         toRemove.forEach(timers::remove);
     }
 
-    public boolean isPlaced(BlockPos pos) {
+    public Map<BlockPos, Double[]> get() {
+        Map<BlockPos, Double[]> map = new HashMap<>();
+        for (BlockTimer timer : timers) {
+            map.put(timer.pos, new Double[]{timer.time, timer.ogTime});
+        }
+        return map;
+    }
+
+    public boolean contains(BlockPos pos) {
         for (BlockTimer timer : timers) {
             if (timer.pos.equals(pos)) {return true;}
         }
@@ -46,10 +54,12 @@ public class BlockTimerList {
     private class BlockTimer {
         public BlockPos pos;
         public double time;
+        public double ogTime;
 
         public BlockTimer(BlockPos pos, double time) {
             this.pos = pos;
             this.time = time;
+            this.ogTime = time;
         }
 
         public void update(float delta) {time -= delta;}

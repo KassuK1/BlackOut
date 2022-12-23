@@ -110,7 +110,7 @@ public class SurroundPlus extends Module {
         if (mc.player != null && mc.world != null) {
             for (BlockPos position : blocks) {
                 if (mc.world.getBlockState(position).getBlock().equals(Blocks.AIR)) {
-                    if (!timers.isPlaced(position) && !EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
+                    if (!timers.contains(position) && !EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
                         list.add(position);
                     }
                     renders.add(position);

@@ -193,7 +193,7 @@ public class HoleFill extends Module {
     private List<BlockPos> getValid(List<BlockPos> positions) {
         List<BlockPos> list = new ArrayList<>();
         for (BlockPos pos : positions) {
-            if (!timers.isPlaced(pos)) {
+            if (!timers.contains(pos)) {
                 list.add(pos);
             }
         }
