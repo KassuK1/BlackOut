@@ -26,7 +26,7 @@ public class BlackOut extends MeteorAddon {
 
     public static final HudGroup HUD_BLACKOUT = new HudGroup("BlackOut");
     public static final String BLACKOUT_NAME = "BlackOut";
-    public static final String BLACKOUT_VERSION = "0.2.0";
+    public static final String BLACKOUT_VERSION = "0.2.1";
 
 
     @Override
@@ -91,7 +91,7 @@ public class BlackOut extends MeteorAddon {
         Hud.get().register(TargetHud.INFO);
 
         // Theme
-
+        // add a fucking theme
     }
 
     @Override
