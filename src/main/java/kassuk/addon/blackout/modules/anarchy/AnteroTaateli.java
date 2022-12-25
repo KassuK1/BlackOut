@@ -4,9 +4,11 @@ import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.modules.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.DoubleSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
@@ -17,6 +19,12 @@ public class AnteroTaateli extends Module {
     public AnteroTaateli() {super(BlackOut.ANARCHY, "AutoAndrewTate", "What colour is your bugatti?");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
+    private final Setting<Boolean> iFriends = sgGeneral.add(new BoolSetting.Builder()
+        .name("Ignore Friends")
+        .description(".")
+        .defaultValue(true)
+        .build()
+    );
     private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
         .name("Delay")
         .description("Delay.")
@@ -39,7 +47,7 @@ public class AnteroTaateli extends Module {
             String bugatti = getClosest();
             if (timer >=delay.get() && bugatti != null){
                 timer = 0;
-                ChatUtils.sendPlayerMsg(bugatti + " What colour is your Bugatti");
+                ChatUtils.sendPlayerMsg(bugatti + ", what colour is your Bugatti?");
             }
         }
     }
@@ -48,7 +56,7 @@ public class AnteroTaateli extends Module {
         float distance = -1;
         if (!mc.world.getPlayers().isEmpty()) {
             for (PlayerEntity player : mc.world.getPlayers()) {
-                if (player != mc.player) {
+                if (player != mc.player && (!iFriends.get() || !Friends.get().isFriend(player))) {
                     if (closest == null || OLEPOSSUtils.distance(mc.player.getPos(), player.getPos()) < distance) {
                         closest = player.getName().getString();
                         distance = (float) OLEPOSSUtils.distance(mc.player.getPos(), player.getPos());

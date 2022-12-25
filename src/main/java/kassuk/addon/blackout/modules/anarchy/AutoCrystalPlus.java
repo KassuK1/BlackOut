@@ -28,6 +28,7 @@ import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.util.Hand;
@@ -475,6 +476,18 @@ public class AutoCrystalPlus extends Module {
         .defaultValue(false)
         .build()
     );
+    private final Setting<Boolean> instantPlaceRot = sgRotate.add(new BoolSetting.Builder()
+        .name("Instant Place Rotate")
+        .description(".")
+        .defaultValue(false)
+        .build()
+    );
+    private final Setting<Boolean> instantExpRot = sgRotate.add(new BoolSetting.Builder()
+        .name("Instant Explode Rotate")
+        .description(".")
+        .defaultValue(false)
+        .build()
+    );
     private final Setting<Double> rotationHeight = sgRotate.add(new DoubleSetting.Builder()
         .name("Rotation Height")
         .description(".")
@@ -487,12 +500,6 @@ public class AutoCrystalPlus extends Module {
 
     //  Extrapolation Page
 
-    private final Setting<Boolean> extrapolate = sgExtrapolation.add(new BoolSetting.Builder()
-        .name("Extrapolate")
-        .description(".")
-        .defaultValue(false)
-        .build()
-    );
     private final Setting<Integer> extTicks = sgExtrapolation.add(new IntSetting.Builder()
         .name("Extrapolation Ticks")
         .description(".")
@@ -726,8 +733,8 @@ public class AutoCrystalPlus extends Module {
         }
 
         if (rotate.get() && placePos != null) {
-            double yaw = Rotations.getYaw(new Vec3d(placePos.getX() + 0.5, placePos.getY() + rotationHeight.get(), placePos.getZ() + 0.5));
-            double pitch = Rotations.getPitch(new Vec3d(placePos.getX() + 0.5, placePos.getY() + rotationHeight.get(), placePos.getZ() + 0.5));
+            double yaw = Rotations.getYaw(rotationPos(placePos));
+            double pitch = Rotations.getPitch(rotationPos(placePos));
             Rotations.rotate(yaw, pitch, 10);
         }
         if (calcMode.get().equals(ListenerMode.Tick) || calcMode.get().equals(ListenerMode.TickPre)) {update();}
@@ -896,7 +903,7 @@ public class AutoCrystalPlus extends Module {
 
     private boolean blocked(BlockPos pos) {
         for (Box box : blocked) {
-            if (new Box(pos.getX() - 0.5, pos.getY(), pos.getZ() - 0.5,
+            if (box != null && pos != null && new Box(pos.getX() - 0.5, pos.getY(), pos.getZ() - 0.5,
                 pos.getX() + 1.5, pos.getY() + 2, pos.getZ() + 1.5).intersects(box)) {
                 return true;
             }
@@ -915,10 +922,6 @@ public class AutoCrystalPlus extends Module {
             for (int p = 0; p < mc.world.getPlayers().size(); p++) {
                 PlayerEntity en = mc.world.getPlayers().get(p);
                 if (en != mc.player && !Friends.get().isFriend(en)) {
-                    if (!extrapolate.get()) {
-                        list.add(en.getBoundingBox());
-                        continue;
-                    }
                     if (!motions.isEmpty()) {
                         Vec3d motion = average(motions.get(en.getName().getString()));
                         double x = motion.x;
@@ -996,12 +999,14 @@ public class AutoCrystalPlus extends Module {
 
     private void placeCrystal(BlockPos pos) {
         Hand handToUse = getHand(Items.END_CRYSTAL, preferMainHand.get(), false);
-        if (handToUse != null && !pausedCheck() && pos != null) {
-            BlackOut.LOG.info("AutoCrystal: Place");
+        if (handToUse != null && !pausedCheck() && pos != null && mc.player != null) {
             Hand swingHand = getHand(Items.END_CRYSTAL, preferMainHand.get(), true);
             swing(swingHand, placeSwingMode.get(), placeSwing.get(), prePlaceSwing.get(), true);
             own.add(pos.up());
             blocked.add(new Box(pos.getX() - 0.5, pos.getY(), pos.getZ() - 0.5, pos.getX() + 1.5, pos.getY() + 2, pos.getZ() + 1.5));
+            if (instantPlaceRot.get()) {
+                mc.player.networkHandler.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround((float) Rotations.getYaw(rotationPos(placePos)), (float) Rotations.getPitch(rotationPos(placePos)), Managers.ONGROUND.isOnGround()));
+            }
             mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(handToUse,
                 new BlockHitResult(closestPlace.get() ? closestPoint(new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1)) :
                     new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), Direction.UP, pos, false), 0));
@@ -1273,6 +1278,9 @@ public class AutoCrystalPlus extends Module {
                 if (swing) {swing(handToUse, explodeSwingMode.get(), explodeSwing.get(), preExplodeSwing.get(), true);}
                 attacked.add(new AttackTimer(en.getId(), (float) (1 / explodeSpeed.get())));
                 delayTimer = 0;
+                if (instantExpRot.get()) {
+                    mc.player.networkHandler.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround((float) Rotations.getYaw(rotationPos(en.getPos())), (float) Rotations.getPitch(rotationPos(en.getPos())), Managers.ONGROUND.isOnGround()));
+                }
                 mc.player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(en, mc.player.isSneaking()));
                 if (swing) {swing(handToUse, explodeSwingMode.get(), explodeSwing.get(), preExplodeSwing.get(), false);}
                 if (confirm && clearSend.get()) {blocked.clear();}
@@ -1340,6 +1348,13 @@ public class AutoCrystalPlus extends Module {
         return new Vec3d(pos.x <= box.minX ? box.minX : Math.min(pos.x, box.maxX),
             pos.y <= box.minY ? box.minY : Math.min(pos.y, box.maxY),
             pos.z <= box.minZ ? box.minZ : Math.min(pos.z, box.maxZ));
+    }
+
+    private Vec3d rotationPos(BlockPos pos) {
+        return new Vec3d(pos.getX() + 0.5, pos.getY() + rotationHeight.get(), pos.getZ() + 0.5);
+    }
+    private Vec3d rotationPos(Vec3d vec) {
+        return new Vec3d(vec.x, vec.y - 1 + rotationHeight.get(), vec.z);
     }
 
     private class AttackTimer {

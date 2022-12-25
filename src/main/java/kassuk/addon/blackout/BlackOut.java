@@ -9,6 +9,8 @@ import kassuk.addon.blackout.hud.*;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.modules.anarchy.*;
 import kassuk.addon.blackout.modules.ghost.*;
+import meteordevelopment.meteorclient.MeteorClient;
+import meteordevelopment.meteorclient.MixinPlugin;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
 import meteordevelopment.meteorclient.systems.commands.Commands;
 import meteordevelopment.meteorclient.systems.hud.Hud;
@@ -52,6 +54,7 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new ButtonAura());
         Modules.get().add(new CevBreaker());
         Modules.get().add(new CrystalBait());
+        Modules.get().add(new ESPPlus());
         Modules.get().add(new FastXP());
         Modules.get().add(new FeetESP());
         Modules.get().add(new FlightPlus());

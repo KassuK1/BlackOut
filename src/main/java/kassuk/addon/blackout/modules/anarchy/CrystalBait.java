@@ -83,7 +83,9 @@ public class CrystalBait extends Module {
     }
 
     private void send(float y, int playerY) {
-        mc.player.networkHandler.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.getX(), playerY + y, mc.player.getZ(), y == 0));
+        PlayerMoveC2SPacket packet = new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.getX(), playerY + y, mc.player.getZ(), y == 0);
+        allowed.add(packet);
+        mc.player.networkHandler.sendPacket(packet);
     }
     private void up() {
         send(0.42f, y);
