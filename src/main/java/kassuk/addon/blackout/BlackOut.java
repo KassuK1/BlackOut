@@ -5,10 +5,7 @@ import kassuk.addon.blackout.commands.BlackoutGit;
 import kassuk.addon.blackout.commands.GearInfo;
 import kassuk.addon.blackout.commands.Kick;
 import kassuk.addon.blackout.commands.Panic;
-import kassuk.addon.blackout.hud.BlackoutArray;
-import kassuk.addon.blackout.hud.GearHud;
-import kassuk.addon.blackout.hud.HudHelper;
-import kassuk.addon.blackout.hud.HudWaterMark;
+import kassuk.addon.blackout.hud.*;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.modules.anarchy.*;
 import kassuk.addon.blackout.modules.ghost.*;
@@ -27,7 +24,7 @@ public class BlackOut extends MeteorAddon {
 
     public static final HudGroup HUD_BLACKOUT = new HudGroup("BlackOut");
     public static final String BLACKOUT_NAME = "BlackOut";
-    public static final String BLACKOUT_VERSION = "0.1.9";
+    public static final String BLACKOUT_VERSION = "0.2.0";
 
 
     @Override
@@ -88,6 +85,7 @@ public class BlackOut extends MeteorAddon {
         Hud.get().register(HudWaterMark.INFO);
         Hud.get().register(HudHelper.INFO);
         Hud.get().register(BlackoutArray.INFO);
+        Hud.get().register(TargetHud.INFO);
 
         // Theme
 
