@@ -64,7 +64,7 @@ public class TargetHud extends HudElement {
         setSize(200 * scale.get(),65 * scale.get());
         PlayerEntity playerEntity = getClosest();
         if (playerEntity != null){
-            double health = playerEntity.getHealth() + playerEntity.getAbsorptionAmount();
+            int health = (int) (playerEntity.getHealth() + playerEntity.getAbsorptionAmount());
             renderer.quad(x,y,200 * scale.get() *scale.get(),65 * scale.get() * scale.get(), color.get());
             renderer.text(playerEntity.getName().getString(),x + 10, y + 5, textcolor.get(),shadow.get(), scale.get());
             renderer.text(String.valueOf(health),x + 10, y + 30, textcolor.get(),shadow.get(), scale.get());
