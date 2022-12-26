@@ -35,8 +35,8 @@ public class HudWaterMark extends HudElement {
 
     @Override
     public void render(HudRenderer renderer) {
-        setSize(renderer.textWidth("Blackout", true) * scale.get() * scale.get(), renderer.textHeight(true) * scale.get() * scale.get());
+        setSize(renderer.textWidth(BlackOut.BLACKOUT_NAME + " v" + BlackOut.BLACKOUT_VERSION, true) * scale.get() * scale.get(), renderer.textHeight(true) * scale.get() * scale.get());
 
-        renderer.text("Blackout", x, y, color.get(), true, scale.get());
+        renderer.text(BlackOut.BLACKOUT_NAME + " v" + BlackOut.BLACKOUT_VERSION, x, y, color.get(), true, scale.get());
     }
 }
