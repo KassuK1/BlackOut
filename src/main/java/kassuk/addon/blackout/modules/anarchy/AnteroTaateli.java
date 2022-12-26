@@ -43,7 +43,7 @@ public class AnteroTaateli extends Module {
         "I hate dead people all you do is fucking laying down like pussies",
         "Get up and do some push-ups",
         "Top G is never late time is just running ahead of schedule",
-        "<NAME>, what colour is your Bugatti?"
+        "<NAME>, what color is your Bugatti?"
     };
     Random r = new Random();
 

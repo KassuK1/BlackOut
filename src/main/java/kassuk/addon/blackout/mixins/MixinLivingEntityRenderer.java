@@ -26,17 +26,11 @@ public abstract class MixinLivingEntityRenderer<T extends LivingEntity, M extend
     private void renderHead(T livingEntity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo ci) {
         ESPPlus espPlus = Modules.get().get(ESPPlus.class);
 
-        if (livingEntity instanceof PlayerEntity && espPlus.isActive() && espPlus.players.get() && espPlus.renderer != null && matrixStack != null && !matrixStack.isEmpty() && mc.player != null) {
-
-        }
     }
 
     @Inject(method = "render(Lnet/minecraft/entity/LivingEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At("TAIL"))
     private void renderTail(T livingEntity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo ci) {
         ESPPlus espPlus = Modules.get().get(ESPPlus.class);
 
-        if (livingEntity instanceof PlayerEntity && espPlus.isActive() && espPlus.players.get() && espPlus.renderer != null && matrixStack != null && !matrixStack.isEmpty() && mc.player != null) {
-
-        }
     }
 }

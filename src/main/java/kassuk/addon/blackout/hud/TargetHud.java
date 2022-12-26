@@ -12,7 +12,7 @@ import net.minecraft.entity.player.PlayerEntity;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
-//Made By KassuK
+//Made By KassuK & OLEPOSSU
 
 public class TargetHud extends HudElement {
 
