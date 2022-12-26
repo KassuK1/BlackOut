@@ -14,6 +14,8 @@ import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.player.PlayerEntity;
 
+import java.util.Random;
+
 //Made by KassuK
 public class AnteroTaateli extends Module {
     public AnteroTaateli() {super(BlackOut.ANARCHY, "AutoAndrewTate", "What colour is your bugatti?");}
@@ -35,30 +37,46 @@ public class AnteroTaateli extends Module {
     );
 
     double timer = 0;
+    String[] messages = new String[] {
+        "Hey brokies top G here",
+        "Top G eats raw meat and breathes air",
+        "I hate dead people all you do is fucking laying down like pussies",
+        "Get up and do some push-ups",
+        "Top G is never late time is just running ahead of schedule",
+        "<NAME>, what colour is your Bugatti?"
+    };
+    Random r = new Random();
 
     @EventHandler
     private void onRender(Render3DEvent event){
-        timer = Math.min(delay.get(),timer + event.frameTime);
+        timer = Math.min(delay.get(), timer + event.frameTime);
     }
 
     @EventHandler
     private void onTick(TickEvent.Pre event){
         if (mc.player != null && mc.world != null){
-            String bugatti = getClosest();
+            PlayerEntity bugatti = getClosest();
             if (timer >=delay.get() && bugatti != null){
                 timer = 0;
-                ChatUtils.sendPlayerMsg(bugatti + ", what colour is your Bugatti?");
+                ChatUtils.sendPlayerMsg(getMessage(bugatti));
             }
         }
     }
-    private String getClosest() {
-        String closest = null;
+    private String getMessage(PlayerEntity pl) {
+        int index = r.nextInt(0, messages.length - 1);
+        String msg = messages[index];
+        index = r.nextInt(0, mc.world.getServer().getPlayerNames().length - 1);
+        String target = pl != null ? pl.getName().getString() : mc.world.getServer().getPlayerNames()[index];
+        return msg.replace("<NAME>", target);
+    }
+    private PlayerEntity getClosest() {
+        PlayerEntity closest = null;
         float distance = -1;
         if (!mc.world.getPlayers().isEmpty()) {
             for (PlayerEntity player : mc.world.getPlayers()) {
                 if (player != mc.player && (!iFriends.get() || !Friends.get().isFriend(player))) {
                     if (closest == null || OLEPOSSUtils.distance(mc.player.getPos(), player.getPos()) < distance) {
-                        closest = player.getName().getString();
+                        closest = player;
                         distance = (float) OLEPOSSUtils.distance(mc.player.getPos(), player.getPos());
                     }
                 }

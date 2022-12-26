@@ -74,22 +74,35 @@ public class TargetHud extends HudElement {
     public TargetHud() {
         super(INFO);
     }
+    int outlineWidth = 5;
+    double scaleAnim = 0;
+    int health = 0;
+    String renderName = "Raksamies";
 
     @Override
     public void render(HudRenderer renderer) {
-        setSize(200 * scale.get(),65 * scale.get());
+        double[] size = new double[]{200 * scale.get() * scale.get(), 65 * scale.get() * scale.get()};
+        setSize(size[0], size[1]);
         PlayerEntity playerEntity = getClosest();
         if (playerEntity != null){
-            int health = (int) (playerEntity.getHealth() + playerEntity.getAbsorptionAmount());
-            renderer.quad(x,y,200 * scale.get() *scale.get(),65 * scale.get() * scale.get(), color.get());
-            renderer.text(playerEntity.getName().getString(),x + 10, y + 5, textcolor.get(),shadow.get(), scale.get());
-            renderer.text(String.valueOf(health),x + 10, y + 30, textcolor.get(),shadow.get(), scale.get());
-            renderer.quad(x + 10, y + 50,180/36f * scale.get() * scale.get() * health,10 * scale.get() * scale.get(), bar.get());
-            if (outline.get()){
-                renderer.line(x,y,x + 200,y, outlineColor.get());
-                renderer.line(x + 200,y,x + 200,y + 65, outlineColor.get());
-                renderer.line(x,y,x,y + 65,outlineColor.get());
-                renderer.line(x,y + 65,x + 200,y + 65, outlineColor.get());
+            renderName = playerEntity.getName().getString();
+            health = (int) (playerEntity.getHealth() + playerEntity.getAbsorptionAmount());
+            scaleAnim = Math.min(1, scaleAnim + renderer.delta * (1 - scaleAnim) * 5);
+        } else {
+            scaleAnim = Math.max(0, scaleAnim - renderer.delta * (1.01 - scaleAnim) * 5);
+        }
+        double[] renderSize = new double[]{size[0] * scaleAnim, size[1] * scaleAnim};
+        double[] offsetPos = new double[]{x - renderSize[0] / 2, y - renderSize[1] / 2};
+        if (scaleAnim > 0.01) {
+            renderer.quad(offsetPos[0], offsetPos[1], renderSize[0], renderSize[1], color.get());
+            renderer.text(renderName, offsetPos[0] + renderSize[0] * 0.05, offsetPos[1] + renderSize[1] / 13, textcolor.get(), shadow.get(), scale.get() * Math.sqrt(scaleAnim));
+            renderer.text(String.valueOf(health), offsetPos[0] + renderSize[0] * 0.05, offsetPos[1] + renderSize[1] * 0.5, textcolor.get(), shadow.get(), scale.get() * Math.sqrt(scaleAnim));
+            renderer.quad(offsetPos[0] + renderSize[0] * 0.05, offsetPos[1] + renderSize[1] * 0.8, 180 / 36f * scale.get() * scale.get() * scaleAnim * health, renderSize[1] * 0.1, bar.get());
+            if (outline.get()) {
+                renderer.line(offsetPos[0], offsetPos[1], offsetPos[0] + renderSize[0], offsetPos[1], outlineColor.get());
+                renderer.line(offsetPos[0] + renderSize[0], offsetPos[1], offsetPos[0] + renderSize[0], offsetPos[1] + renderSize[1], outlineColor.get());
+                renderer.line(offsetPos[0], offsetPos[1], offsetPos[0], offsetPos[1] + renderSize[1], outlineColor.get());
+                renderer.line(offsetPos[0], offsetPos[1] + renderSize[1], offsetPos[0] + renderSize[0], offsetPos[1] + renderSize[1], outlineColor.get());
             }
         }
     }

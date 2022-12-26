@@ -1339,7 +1339,6 @@ public class AutoCrystalPlus extends Module {
 
     private void setEntityDead(Entity en) {
         if (mc.world != null) {
-            en.shouldRender(0);
         }
     }
 

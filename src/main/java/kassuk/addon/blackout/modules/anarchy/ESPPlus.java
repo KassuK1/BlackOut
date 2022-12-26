@@ -1,21 +1,32 @@
 package kassuk.addon.blackout.modules.anarchy;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.modules.utils.OLEPOSSUtils;
+import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
+import meteordevelopment.meteorclient.events.render.RenderAfterWorldEvent;
+import meteordevelopment.meteorclient.renderer.PostProcessRenderer;
 import meteordevelopment.meteorclient.renderer.Renderer3D;
+import meteordevelopment.meteorclient.renderer.Shader;
+import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.DoubleSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.misc.Vec3;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
+import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.Tessellator;
-import net.minecraft.client.render.VertexFormat;
-import net.minecraft.client.render.VertexFormats;
+import meteordevelopment.orbit.listeners.ConsumerListener;
+import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.Vec3d;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.lwjgl.opengl.GL11.*;
 
@@ -32,49 +43,33 @@ public class ESPPlus extends Module {
         .defaultValue(true)
         .build()
     );
-    public final Setting<Boolean> playerWalls = sgGeneral.add(new BoolSetting.Builder()
-        .name("Players Trough Walls")
+    public final Setting<Boolean> texture = sgGeneral.add(new BoolSetting.Builder()
+        .name("Texture")
         .description(".")
         .defaultValue(true)
         .build()
     );
-    public final Setting<Double> playerScale = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Player Scale")
+    public final Setting<Boolean> walls = sgGeneral.add(new BoolSetting.Builder()
+        .name("Trough Walls")
         .description(".")
-        .defaultValue(1)
-        .range(0.1, 10)
-        .sliderRange(0.1, 10)
-        .visible(players::get)
-        .sliderMax(20)
+        .defaultValue(true)
+        .build()
+    );
+    public final Setting<Boolean> blend = sgGeneral.add(new BoolSetting.Builder()
+        .name("Blend")
+        .description(".")
+        .defaultValue(true)
         .build()
     );
     public Renderer3D renderer = null;
-    public MatrixStack matrixStack = null;
+    public List<MatrixStack> toRender = new ArrayList<>();
+    public Shader red = new Shader("red.vert", "red.frag");
 
-    public ESPPlus() {super(BlackOut.ANARCHY, "ESP+", ".");}
-
-    /*
-    @EventHandler
-    private void onRender(Render3DEvent event) {
-        renderer = event.renderer;
-
-        if (matrixStack != null && renderer != null && mc.player != null) {
-            Vec3d vec = mc.player.getPos();
-
-
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            glLineWidth(1f);
-            glColor4d(1.0, 1.0, 1.0, 1.0);
-            glEnable(GL_LINE_SMOOTH);
-            glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-            glLineWidth(1f);
-
-            renderer.render(matrixStack);
-
-            glPopAttrib();
-            glPopMatrix();
-        }
+    public ESPPlus() {
+        super(BlackOut.ANARCHY, "ESP+", ".");
     }
 
-     */
+    @EventHandler
+    private void onRender(Render3DEvent event) {
+    }
 }
