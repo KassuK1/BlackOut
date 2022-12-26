@@ -58,6 +58,20 @@ public class Strafe extends Module {
         .visible(knockBack::get)
         .build()
     );
+
+    private final Setting<Boolean> sneakSpeed = sgGeneral.add(new BoolSetting.Builder()
+        .name("Not on sneak")
+        .description(".")
+        .defaultValue(false)
+        .build()
+    );
+
+    private final Setting<Boolean> elytraSpeed = sgGeneral.add(new BoolSetting.Builder()
+        .name("Not on elytra")
+        .description(".")
+        .defaultValue(false)
+        .build()
+    );
     private boolean move = false;
     private double velocity;
 
@@ -92,6 +106,12 @@ public class Strafe extends Module {
     public void onMove(PlayerMoveEvent event) {
         if (mc.player != null && mc.world != null) {
             if (Modules.get().get(HoleSnap.class).isActive()) {
+                return;
+            }
+            if (sneakSpeed.get() && mc.player.isSneaking()) {
+                return;
+            }
+            if (elytraSpeed.get() && mc.player.isFallFlying()) {
                 return;
             }
             double multiplier = speed.get() * (velocity + 1);

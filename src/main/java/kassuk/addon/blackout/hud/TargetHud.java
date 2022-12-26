@@ -6,6 +6,7 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.hud.HudElement;
 import meteordevelopment.meteorclient.systems.hud.HudElementInfo;
 import meteordevelopment.meteorclient.systems.hud.HudRenderer;
+import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import net.minecraft.entity.player.PlayerEntity;
 
@@ -55,6 +56,21 @@ public class TargetHud extends HudElement {
         .build()
     );
 
+    private final Setting<Boolean> outline = sgGeneral.add(new BoolSetting.Builder()
+        .name("Outline")
+        .description("Should we render an outline")
+        .defaultValue(true)
+        .build()
+    );
+
+    private final Setting<SettingColor> outlineColor = sgGeneral.add(new ColorSetting.Builder()
+        .name("Outline color")
+        .description(".")
+        .defaultValue(new SettingColor(255, 255, 255, 255))
+        .visible(outline::get)
+        .build()
+    );
+
     public TargetHud() {
         super(INFO);
     }
@@ -69,6 +85,12 @@ public class TargetHud extends HudElement {
             renderer.text(playerEntity.getName().getString(),x + 10, y + 5, textcolor.get(),shadow.get(), scale.get());
             renderer.text(String.valueOf(health),x + 10, y + 30, textcolor.get(),shadow.get(), scale.get());
             renderer.quad(x + 10, y + 50,180/36f * scale.get() * scale.get() * health,10 * scale.get() * scale.get(), bar.get());
+            if (outline.get()){
+                renderer.line(x,y,x + 200,y, outlineColor.get());
+                renderer.line(x + 200,y,x + 200,y + 65, outlineColor.get());
+                renderer.line(x,y,x,y + 65,outlineColor.get());
+                renderer.line(x,y + 65,x + 200,y + 65, outlineColor.get());
+            }
         }
     }
     private PlayerEntity getClosest() {
