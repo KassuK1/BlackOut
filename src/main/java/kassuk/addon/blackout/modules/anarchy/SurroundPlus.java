@@ -2,7 +2,7 @@ package kassuk.addon.blackout.modules.anarchy;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.modules.utils.OLEPOSSUtils;
-import kassuk.addon.blackout.managers.BlockTimerList;
+import kassuk.addon.blackout.timers.BlockTimerList;
 import kassuk.addon.blackout.managers.Managers;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;

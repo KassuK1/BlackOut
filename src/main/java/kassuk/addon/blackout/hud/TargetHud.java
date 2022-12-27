@@ -89,7 +89,7 @@ public class TargetHud extends HudElement {
             health = (int) (playerEntity.getHealth() + playerEntity.getAbsorptionAmount());
             scaleAnim = Math.min(1, scaleAnim + renderer.delta * (1 - scaleAnim) * 5);
         } else {
-            scaleAnim = Math.max(0, scaleAnim - renderer.delta * (1.01 - scaleAnim) * 5);
+            scaleAnim = Math.max(0, scaleAnim - renderer.delta * (1.001 - scaleAnim) * 5);
         }
         double[] renderSize = new double[]{size[0] * scaleAnim, size[1] * scaleAnim};
         double[] offsetPos = new double[]{x - renderSize[0] / 2, y - renderSize[1] / 2};

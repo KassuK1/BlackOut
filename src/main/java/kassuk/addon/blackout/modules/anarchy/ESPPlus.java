@@ -80,6 +80,7 @@ public class ESPPlus extends Module {
         .build()
     );
     public Renderer3D renderer = null;
+    public List<MatrixStack> stacks = new ArrayList<>();
 
     public ESPPlus() {
         super(BlackOut.ANARCHY, "ESP+", ".");
@@ -87,25 +88,14 @@ public class ESPPlus extends Module {
 
     @EventHandler
     private void onRender(Render3DEvent event) {
+        renderer = event.renderer;
         if (mc.world != null) {
-            if (blend.get()) {
-                GlStateManager._blendFunc(10, 10);
-                GlStateManager._enableBlend();
-            }
-            if (walls.get()) {
-                GlStateManager._disableDepthTest();
-            }
-            mc.world.getEntities().forEach(entity -> {
-                if (entity instanceof EndCrystalEntity) {
-                    WireframeEntityRenderer.render(event, entity, 1, color.get(), lineColor.get(), shapeMode.get());
-                }
+            stacks.forEach(stack -> {
+                stack.push();
+                renderer.render(stack);
+                stack.pop();
             });
-            if (walls.get()) {
-                GlStateManager._enableDepthTest();
-            }
-            if (blend.get()) {
-                GlStateManager._disableBlend();
-            }
+            stacks.clear();
         }
     }
 }

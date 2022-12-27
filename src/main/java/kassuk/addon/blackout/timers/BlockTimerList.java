@@ -1,4 +1,4 @@
-package kassuk.addon.blackout.managers;
+package kassuk.addon.blackout.timers;
 
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
