@@ -16,6 +16,8 @@ import net.minecraft.entity.player.PlayerEntity;
 
 import java.util.Random;
 
+import java.util.Arrays;
+
 //Made by KassuK
 public class AnteroTaateli extends Module {
     public AnteroTaateli() {super(BlackOut.ANARCHY, "AutoAndrewTate", "What colour is your bugatti?");}
