@@ -24,14 +24,17 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
+import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.ArrayList;
@@ -303,12 +306,13 @@ public class AutoCrystalRewrite extends Module {
     private Map<PlayerEntity, Box> extPos = new HashMap<>();
     private Map<String, List<Vec3d>> motions = new HashMap<>();
     private Map<Integer, Box> blocked = new HashMap<>();
-    private enum DmgCheckMode {
+    BlockPos lastPos = null;
+    public enum DmgCheckMode {
         Suicidal,
         Balanced,
         Safe
     }
-    private enum SwingMode {
+    public enum SwingMode {
         Client,
         Packet,
         Full
@@ -439,7 +443,8 @@ public class AutoCrystalRewrite extends Module {
         placePos = getPlacePos((int) Math.ceil(placeRange.get()));
         Entity expEntity = null;
         double[] value = null;
-        if (!pausedCheck()) {
+        Hand handToUse = getHand(Items.END_CRYSTAL);
+        if (!pausedCheck() && handToUse != null) {
             for (Entity en : mc.world.getEntities()) {
                 if (en.getType().equals(EntityType.END_CRYSTAL)) {
                     if (canExplode(en.getPos())) {
@@ -459,6 +464,40 @@ public class AutoCrystalRewrite extends Module {
             if (!isAttacked(expEntity.getId())) {
                 explode(expEntity.getId(), expEntity, expEntity.getPos(), true);
             }
+        }
+        if (placePos != null) {
+            if (handToUse != null) {
+                if (!placePos.equals(lastPos)) {
+                    lastPos = placePos;
+                    placeTimer = 0;
+                }
+                if (!pausedCheck()) {
+                    if (placeTimer <= 0) {
+                        placeTimer = 1;
+                        placeCrystal(placePos, handToUse);
+                    }
+                }
+            }
+        } else {
+            lastPos = null;
+        }
+    }
+
+    boolean blocked(BlockPos pos) {
+        return false;
+    }
+
+    void placeCrystal(BlockPos pos, Hand handToUse) {
+        if (handToUse != null && pos != null && mc.player != null) {
+            //own.add(pos.up());
+            //blocked.add(new Box(pos.getX() - 0.5, pos.getY(), pos.getZ() - 0.5, pos.getX() + 1.5, pos.getY() + 2, pos.getZ() + 1.5));
+            mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(handToUse,
+                new BlockHitResult(new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), Direction.UP, pos, false), 0));
+            swing(handToUse, placeSwingMode.get());
+            //if (idPredict.get()) {
+            //    predictAdd(highestID() + 1, new Vec3d(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5), false,
+            //        idDelay.get());
+            //}
         }
     }
 
