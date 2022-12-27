@@ -92,7 +92,7 @@ public class TargetHud extends HudElement {
             scaleAnim = Math.max(0, scaleAnim - renderer.delta * (1.001 - scaleAnim) * 5);
         }
         double[] renderSize = new double[]{size[0] * scaleAnim, size[1] * scaleAnim};
-        double[] offsetPos = new double[]{x - renderSize[0] / 2, y - renderSize[1] / 2};
+        double[] offsetPos = new double[]{x + renderSize[0] / 2, y + renderSize[1] / 2};
         if (scaleAnim > 0.01) {
             renderer.quad(offsetPos[0], offsetPos[1], renderSize[0], renderSize[1], color.get());
             renderer.text(renderName, offsetPos[0] + renderSize[0] * 0.05, offsetPos[1] + renderSize[1] / 13, textcolor.get(), shadow.get(), scale.get() * Math.sqrt(scaleAnim));
