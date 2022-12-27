@@ -77,7 +77,7 @@ public class TargetHud extends HudElement {
     int outlineWidth = 5;
     double scaleAnim = 0;
     int health = 0;
-    String renderName = "Raksamies";
+    String renderName = "HeavyMan";
 
     @Override
     public void render(HudRenderer renderer) {
