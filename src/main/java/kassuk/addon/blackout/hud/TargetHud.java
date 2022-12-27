@@ -11,8 +11,9 @@ import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import net.minecraft.entity.player.PlayerEntity;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
-
-//Made By KassuK & OLEPOSSU
+/*
+Made By KassuK & OLEPOSSU
+ */
 
 public class TargetHud extends HudElement {
 
