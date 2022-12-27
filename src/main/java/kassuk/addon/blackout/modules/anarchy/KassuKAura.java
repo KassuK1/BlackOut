@@ -21,7 +21,7 @@ public class KassuKAura extends Module {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
-    private final Setting<Integer> range = sgGeneral.add(new IntSetting.Builder()
+    private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
         .name("Range")
         .description("Range to hit in")
         .defaultValue(3)
