@@ -474,7 +474,7 @@ public class AutoCrystalRewrite extends Module {
                 if (!pausedCheck()) {
                     if (placeTimer <= 0) {
                         placeTimer = 1;
-                        placeCrystal(placePos, handToUse);
+                        placeCrystal(placePos.down(), handToUse);
                     }
                 }
             }
