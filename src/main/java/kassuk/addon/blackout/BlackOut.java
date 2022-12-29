@@ -91,6 +91,7 @@ public class BlackOut extends MeteorAddon {
         Hud.get().register(HudHelper.INFO);
         Hud.get().register(BlackoutArray.INFO);
         Hud.get().register(TargetHud.INFO);
+        Hud.get().register(Keys.INFO);
 
         // Theme
         // add a fucking theme
@@ -105,7 +106,7 @@ public class BlackOut extends MeteorAddon {
     @Override
     public String getWebsite() {
         return "https://bigrat.monster";
-    }
+    }//what the fuck is this it is not even funny
 
     @Override
     public String getPackage() {
