@@ -114,8 +114,8 @@ public class TargetHud extends HudElement {
             renderName = playerEntity.getName().getString();
             health = Math.round((playerEntity.getHealth() + playerEntity.getAbsorptionAmount()));
             difference = health - lastHealth;
-            if (difference != 0) {
-                damages.put(new Vec3d(offsetPos[0] + renderSize[0] * r.nextFloat(), offsetPos[1] + renderSize[1] * r.nextFloat(), 230 + r.nextFloat() * 25), difference);
+            if (difference < 0) {
+                damages.put(new Vec3d(offsetPos[0] + renderSize[0] * 0.05 + r.nextFloat() * scale.get() * scale.get() * scaleAnim * 180 / 36f * health, offsetPos[1] + renderSize[1] * 0.7, 230 + r.nextFloat() * 25), difference);
             }
             lastHealth = health;
             scaleAnim = Math.min(1, scaleAnim + renderer.delta * (1 - scaleAnim) * 5);

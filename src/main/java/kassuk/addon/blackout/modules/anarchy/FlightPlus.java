@@ -73,13 +73,13 @@ public class FlightPlus extends Module {
             double[] result = getYaw(mc.player.input.movementForward, mc.player.input.movementSideways);
             float yaw = (float) result[0] + 90;
             double x = 0, y = tick % antiKickDelay.get() == 0 ? antiKickAmount.get() * -0.04 : 0, z = 0;
+            if (mc.options.jumpKey.isPressed() && y == 0){
+                y = ySpeed.get();
+            }
+            else if (mc.options.sneakKey.isPressed()){
+                y = -ySpeed.get();
+            }
             if (result[1] == 1){
-                if (mc.options.jumpKey.isPressed() && y == 0){
-                    y = ySpeed.get();
-                }
-                else if (mc.options.sneakKey.isPressed()){
-                    y = -ySpeed.get();
-                }
                 x = Math.cos(Math.toRadians(yaw)) * speed.get();
                 z = Math.sin(Math.toRadians(yaw)) * speed.get();
 
