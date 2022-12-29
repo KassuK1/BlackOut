@@ -89,7 +89,6 @@ public class Disabler extends Module {
         ignore = true;
         mc.player.networkHandler.sendPacket(bound);
         ignore = false;
-        ChatUtils.sendMsg(Text.of("very"));
         if (id < 0) {return;}
 
         id++;
