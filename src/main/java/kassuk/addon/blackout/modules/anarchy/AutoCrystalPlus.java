@@ -1112,7 +1112,7 @@ public class AutoCrystalPlus extends Module {
                         false, pos, false);
                     //enemy.setBoundingBox(ogBB);
                     //if (mc.world.getPlayers().contains(enemy)) {
-                    //    enemy.setPos(ogPos.x, ogPos.y, ogPos.z);
+                    //    enemy.setPos(ogPos.x, ogPos.y, ogPos.z);et
                     //}
                     //enemy.setPos(ogPos.x, ogPos.y, ogPos.z);
                     if (dmg > highest) {
