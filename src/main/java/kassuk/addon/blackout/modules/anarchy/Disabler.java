@@ -2,21 +2,22 @@ package kassuk.addon.blackout.modules.anarchy;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.modules.utils.OLEPOSSUtils;
+import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
-import meteordevelopment.meteorclient.mixin.PlayerMoveC2SPacketAccessor;
 import meteordevelopment.meteorclient.mixin.PlayerPositionLookS2CPacketAccessor;
-import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.mixininterface.IVec3d;
+import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
-import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.network.packet.c2s.play.TeleportConfirmC2SPacket;
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
-import net.minecraft.text.Text;
 import net.minecraft.util.math.Vec3d;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 
 /*
 Made by OLEPOSSU / Raksamies
@@ -26,7 +27,7 @@ public class Disabler extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     public Disabler() {
-        super(BlackOut.ANARCHY, "Disabler", "Breaks and places crystals automatically.");
+        super(BlackOut.ANARCHY, "Disabler", "Disables anticheat on some servers (mpvp).");
     }
     int id = -1;
     Map<Integer, Vec3d> validPos = new HashMap<>();
@@ -39,6 +40,12 @@ public class Disabler extends Module {
     public void onActivate() {
         super.onActivate();
     }
+    @EventHandler(priority = EventPriority.HIGHEST + 1)
+    private void onMove(PlayerMoveEvent event) {
+        if (event.movement.y < -0.0625) {
+            ((IVec3d) event.movement).setY(-0.0625);
+        }
+    }
 
     @EventHandler(priority = EventPriority.HIGHEST + 1)
     private void onSend(PacketEvent.Send event) {
@@ -46,7 +53,6 @@ public class Disabler extends Module {
             if (event.packet instanceof PlayerMoveC2SPacket packet) {
                 if (packet.changesPosition()) {
                     if (OLEPOSSUtils.distance(new Vec3d(packet.getX(mc.player.getX()), packet.getY(mc.player.getY()), packet.getZ(mc.player.getY())), mc.player.getPos()) < 30){
-
                         if (!ignore) {
                             event.cancel();
                             validPos.put(id + 1, new Vec3d(packet.getX(mc.player.getX()), packet.getY(mc.player.getY()), packet.getZ(mc.player.getZ())));
@@ -58,7 +64,6 @@ public class Disabler extends Module {
                             double z = Math.sin(Math.toRadians(yaw + 90)) * 1337;
                             sendBounds(mc.player.getPos(), new Vec3d(x, 0, z), mc.player.isOnGround());
                         }
-
                     }
                 }
             }
