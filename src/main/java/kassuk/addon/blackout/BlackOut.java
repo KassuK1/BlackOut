@@ -75,7 +75,6 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new SprintPlus());
         Modules.get().add(new Strafe());
         Modules.get().add(new SurroundPlus());
-        Modules.get().add(new Swing());
         Modules.get().add(new WeakAlert());
         Modules.get().add(new WebPlus());
 
