@@ -13,6 +13,7 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.DamageUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
@@ -28,6 +29,7 @@ import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
+import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -408,10 +410,66 @@ public class AutoCrystalRewrite extends Module {
     );
 
     //  Debug Page
-    private final Setting<Boolean> debugRange = sgExplode.add(new BoolSetting.Builder()
-        .name("Explode Swing")
+    private final Setting<Boolean> debugRange = sgDebug.add(new BoolSetting.Builder()
+        .name("Debug Range")
         .description(".")
         .defaultValue(true)
+        .build()
+    );
+    private final Setting<Double> debugRangeX = sgDebug.add(new DoubleSetting.Builder()
+        .name("Range Pos X")
+        .description(".")
+        .defaultValue(0)
+        .sliderRange(-1000, 1000)
+        .build()
+    );
+    private final Setting<Double> debugRangeY = sgDebug.add(new DoubleSetting.Builder()
+        .name("Range Pos Y")
+        .description(".")
+        .defaultValue(0)
+        .sliderRange(-1000, 1000)
+        .build()
+    );
+    private final Setting<Double> debugRangeZ = sgDebug.add(new DoubleSetting.Builder()
+        .name("Range Pos Z")
+        .description(".")
+        .defaultValue(0)
+        .sliderRange(-1000, 1000)
+        .build()
+    );
+    private final Setting<Double> debugRangeHeight1 = sgDebug.add(new DoubleSetting.Builder()
+        .name("Debug Range Height 1")
+        .description(".")
+        .defaultValue(0)
+        .sliderRange(-2, 2)
+        .build()
+    );
+    private final Setting<Double> debugRangeHeight2 = sgDebug.add(new DoubleSetting.Builder()
+        .name("Debug Range Height 2")
+        .description(".")
+        .defaultValue(0)
+        .sliderRange(-2, 2)
+        .build()
+    );
+    private final Setting<Double> debugRangeHeight3 = sgDebug.add(new DoubleSetting.Builder()
+        .name("Debug Range Height 3")
+        .description(".")
+        .defaultValue(0)
+        .sliderRange(-2, 2)
+        .build()
+    );
+    private final Setting<Double> debugRangeHeight4 = sgDebug.add(new DoubleSetting.Builder()
+        .name("Debug Range Height 4")
+        .description(".")
+        .defaultValue(0)
+        .sliderRange(-2, 2)
+        .build()
+    );
+    private final Setting<Double> debugRangeHeight5 = sgDebug.add(new DoubleSetting.Builder()
+        .name("Debug Range Height 5")
+        .description(".")
+        .defaultValue(0)
+        .sliderRange(-2, 2)
         .build()
     );
 
@@ -465,7 +523,13 @@ public class AutoCrystalRewrite extends Module {
     @EventHandler(priority = EventPriority.HIGHEST + 1)
     private void onTickPre(TickEvent.Pre event) {
         if (mc.player != null && mc.world != null) {
-
+            if (debugRange.get()) {
+                ChatUtils.sendMsg(Text.of(debugRangeHeight(1) + "  " + dist(debugRangePos(1)) + "\n" +
+                    debugRangeHeight(2) + "  " + dist(debugRangePos(2)) + "\n" +
+                    debugRangeHeight(3) + "  " + dist(debugRangePos(3)) + "\n" +
+                    debugRangeHeight(4) + "  " + dist(debugRangePos(4)) + "\n" +
+                    debugRangeHeight(5) + "  " + dist(debugRangePos(5))));
+            }
         }
     }
 
@@ -837,6 +901,10 @@ public class AutoCrystalRewrite extends Module {
             closestPlaceWidth.get(), closestPlaceHeight.get()) :
         new Vec3d(pos.getX() + 0.5, pos.getY() + placeHeight.get(), pos.getZ() + 0.5);
     }
+    Vec3d debugRangePos(int id) {
+        return mc.player.getEyePos().add(-debugRangeX.get() - 0.5, -debugRangeY.get() - debugRangeHeight(id), -debugRangeZ.get() - 0.5);
+    }
+    double debugRangeHeight(int id) {return id == 1 ? debugRangeHeight1.get() : id == 2 ? debugRangeHeight2.get() : id == 3 ? debugRangeHeight3.get() : id == 4 ? debugRangeHeight4.get() : debugRangeHeight5.get();}
     double getSpeed() {
         return shouldSlow() ? slowSpeed.get() : placeSpeed.get();
     }
