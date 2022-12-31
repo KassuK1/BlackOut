@@ -252,4 +252,10 @@ public class OLEPOSSUtils extends Utils {
         }
         return closest;
     }
+
+    public static Vec3d getClosest(Vec3d pPos, Vec3d middle, double width, double height) {
+        return new Vec3d(Math.min(Math.max(pPos.x, middle.x - width / 2), middle.x + width / 2),
+            Math.min(Math.max(pPos.y, middle.y), middle.y + height),
+            Math.min(Math.max(pPos.z, middle.z - width / 2), middle.z + width / 2));
+    }
 }

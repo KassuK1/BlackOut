@@ -17,22 +17,32 @@ Made by OLEPOSSU / Raksamies
 
 public class IntTimerList {
     public List<IntTimer> timers;
-
     public IntTimerList() {
         MeteorClient.EVENT_BUS.subscribe(this);
+        timers = new ArrayList<>();
+    }
+    public IntTimerList(boolean autoUpdate) {
+        if (autoUpdate) {
+            MeteorClient.EVENT_BUS.subscribe(this);
+        }
         timers = new ArrayList<>();
     }
 
     public void add(int val, double time) {timers.add(new IntTimer(val, time));}
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
+        update(event.frameTime);
+    }
+
+    public void update(double delta) {
         List<IntTimer> toRemove = new ArrayList<>();
-        timers.forEach(item -> {
-            item.update((float) event.frameTime);
+        for (int i = 0; i < timers.size(); i++) {
+            IntTimer item = timers.get(i);
+            item.update(delta);
             if (!item.isValid()) {
                 toRemove.add(item);
             }
-        });
+        }
         toRemove.forEach(timers::remove);
     }
 
@@ -43,7 +53,7 @@ public class IntTimerList {
         return false;
     }
 
-    private class IntTimer {
+    private static class IntTimer {
         public int value;
         public double time;
         public double ogTime;
@@ -54,7 +64,7 @@ public class IntTimerList {
             this.ogTime = time;
         }
 
-        public void update(float delta) {time -= delta;}
+        public void update(double delta) {time -= delta;}
         public boolean isValid() {return time > 0;}
     }
 }

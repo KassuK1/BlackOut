@@ -75,7 +75,6 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new SprintPlus());
         Modules.get().add(new Strafe());
         Modules.get().add(new SurroundPlus());
-        Modules.get().add(new Swing());
         Modules.get().add(new WeakAlert());
         Modules.get().add(new WebPlus());
 
@@ -87,12 +86,13 @@ public class BlackOut extends MeteorAddon {
         Commands.get().add(new Panic());
 
         // HUD
-        Hud.get().register(GearHud.INFO);
-        Hud.get().register(HudWaterMark.INFO);
-        Hud.get().register(HudHelper.INFO);
         Hud.get().register(BlackoutArray.INFO);
-        Hud.get().register(TargetHud.INFO);
+        Hud.get().register(GearHud.INFO);
+        Hud.get().register(HudHelper.INFO);
+        Hud.get().register(HudWaterMark.INFO);
         Hud.get().register(Keys.INFO);
+        Hud.get().register(PacketCounter.INFO);
+        Hud.get().register(TargetHud.INFO);
 
         // Theme
         // add a fucking theme
