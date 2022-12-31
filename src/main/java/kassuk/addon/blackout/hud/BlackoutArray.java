@@ -40,7 +40,7 @@ public class BlackoutArray extends HudElement {
     private List<Module> getModules() {
         List<Module> list = new ArrayList<>();
         Modules.get().getActive().forEach(it -> {
-            if (it.category.equals(BlackOut.ANARCHY) || (it.category.equals(BlackOut.GHOST))){
+            if (it.category.equals(BlackOut.BLACKOUT)){
                 list.add(it);
             }
         });

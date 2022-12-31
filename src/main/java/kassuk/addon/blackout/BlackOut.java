@@ -6,11 +6,7 @@ import kassuk.addon.blackout.commands.GearInfo;
 import kassuk.addon.blackout.commands.Kick;
 import kassuk.addon.blackout.commands.Panic;
 import kassuk.addon.blackout.hud.*;
-import kassuk.addon.blackout.managers.Managers;
-import kassuk.addon.blackout.modules.anarchy.*;
-import kassuk.addon.blackout.modules.ghost.*;
-import meteordevelopment.meteorclient.MeteorClient;
-import meteordevelopment.meteorclient.MixinPlugin;
+import kassuk.addon.blackout.modules.*;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
 import meteordevelopment.meteorclient.systems.commands.Commands;
 import meteordevelopment.meteorclient.systems.hud.Hud;
@@ -21,8 +17,8 @@ import org.slf4j.Logger;
 
 public class BlackOut extends MeteorAddon {
     public static final Logger LOG = LogUtils.getLogger();
-    public static final Category GHOST = new Category("Ghost");
-    public static final Category ANARCHY = new Category("Anarchy");
+
+    public static final Category BLACKOUT = new Category("BlackOut");
 
     public static final HudGroup HUD_BLACKOUT = new HudGroup("BlackOut");
     public static final String BLACKOUT_NAME = "BlackOut";
@@ -33,15 +29,7 @@ public class BlackOut extends MeteorAddon {
     public void onInitialize() {
         LOG.info("Initializing Blackout");
 
-        // Ghost
-        Modules.get().add(new AutoAnchor());
-        Modules.get().add(new AutoClickerPlus());
-        Modules.get().add(new GhostCrystal());
-        Modules.get().add(new LegitTotem());
-        Modules.get().add(new LegitScaffold());
-        Modules.get().add(new CustomFOV());
-
-        //Anarchy
+        // Modules
         Modules.get().add(new AnteroTaateli());
         Modules.get().add(new AntiAim());
         Modules.get().add(new AutoCraftingTable());
@@ -53,18 +41,16 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new AutoTravel());
         Modules.get().add(new BedBomb());
         Modules.get().add(new ButtonAura());
-        Modules.get().add(new CevBreaker());
-        Modules.get().add(new CrystalBait());
+        Modules.get().add(new CustomFOV());
         Modules.get().add(new Disabler());
-        Modules.get().add(new ESPPlus());
         Modules.get().add(new FastXP());
         Modules.get().add(new FeetESP());
         Modules.get().add(new FlightPlus());
         Modules.get().add(new HoleFill());
         Modules.get().add(new HoleSnap());
         Modules.get().add(new KassuKAura());
+        Modules.get().add(new LegitScaffold());
         Modules.get().add(new JumpModify());
-        Modules.get().add(new NCPDamageFly());
         Modules.get().add(new OffHandPlus());
         Modules.get().add(new PacketCrash());
         Modules.get().add(new PacketFly());
@@ -77,7 +63,6 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new Strafe());
         Modules.get().add(new SurroundPlus());
         Modules.get().add(new WeakAlert());
-        Modules.get().add(new WebPlus());
 
 
         // Commands
@@ -89,7 +74,6 @@ public class BlackOut extends MeteorAddon {
         // HUD
         Hud.get().register(BlackoutArray.INFO);
         Hud.get().register(GearHud.INFO);
-        Hud.get().register(HudHelper.INFO);
         Hud.get().register(HudWaterMark.INFO);
         Hud.get().register(Keys.INFO);
         Hud.get().register(PacketCounter.INFO);
@@ -101,8 +85,7 @@ public class BlackOut extends MeteorAddon {
 
     @Override
     public void onRegisterCategories() {
-        Modules.registerCategory(GHOST);
-        Modules.registerCategory(ANARCHY);
+        Modules.registerCategory(BLACKOUT);
     }
 
     @Override
