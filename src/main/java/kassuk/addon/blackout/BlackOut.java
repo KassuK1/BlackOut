@@ -80,7 +80,7 @@ public class BlackOut extends MeteorAddon {
         Hud.get().register(TargetHud.INFO);
 
         // Theme
-        // add a fucking theme
+        // add a fucking theme  // no
     }
 
     @Override

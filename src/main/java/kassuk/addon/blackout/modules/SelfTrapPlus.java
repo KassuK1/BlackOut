@@ -90,8 +90,8 @@ public class SelfTrapPlus extends Module {
         .build()
     );
 
-    private BlockTimerList timers = new BlockTimerList();
-    private double placeTimer = 0;
+    BlockTimerList timers = new BlockTimerList();
+    double placeTimer = 0;
 
     @Override
     public void onActivate() {
@@ -132,7 +132,7 @@ public class SelfTrapPlus extends Module {
         }
     }
 
-    private void place(BlockPos toPlace) {
+    void place(BlockPos toPlace) {
         timers.add(toPlace, delay.get());
         placeTimer = 0;
         if (mc.player != null) {
@@ -144,7 +144,7 @@ public class SelfTrapPlus extends Module {
         }
     }
 
-    private List<BlockPos> getValid(List<BlockPos> blocks) {
+    List<BlockPos> getValid(List<BlockPos> blocks) {
         List<BlockPos> list = new ArrayList<>();
         blocks.forEach(item -> {
             if (!timers.contains(item) &&
@@ -155,7 +155,7 @@ public class SelfTrapPlus extends Module {
         return list;
     }
 
-    private List<BlockPos> getBlocks(int[] size, boolean higher) {
+    List<BlockPos> getBlocks(int[] size, boolean higher) {
         List<BlockPos> list = new ArrayList<>();
         BlockPos pos = mc.player.getBlockPos().up(higher ? 2 : 1);
         if (mc.player != null && mc.world != null) {
@@ -180,9 +180,9 @@ public class SelfTrapPlus extends Module {
         return list;
     }
 
-    private boolean air(BlockPos pos) {return mc.world.getBlockState(pos).getBlock().equals(Blocks.AIR);}
+    boolean air(BlockPos pos) {return mc.world.getBlockState(pos).getBlock().equals(Blocks.AIR);}
 
-    private int[] getSize(BlockPos pos) {
+    int[] getSize(BlockPos pos) {
         int minX = 0;
         int maxX = 0;
         int minZ = 0;
@@ -205,7 +205,7 @@ public class SelfTrapPlus extends Module {
         return new int[]{minX, maxX, minZ, maxZ};
     }
 
-    private int[] findObby() {
+    int[] findObby() {
         int num = 0;
         int slot = 0;
         if (mc.player != null) {

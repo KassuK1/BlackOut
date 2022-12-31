@@ -73,8 +73,8 @@ public class Strafe extends Module {
         .defaultValue(false)
         .build()
     );
-    private boolean move = false;
-    private double velocity;
+    boolean move = false;
+    double velocity;
 
     @Override
     public void onActivate() {
@@ -136,7 +136,7 @@ public class Strafe extends Module {
         }
     }
 
-    private double getYaw(double f, double s) {
+    double getYaw(double f, double s) {
         double yaw = mc.player.getYaw();
         if (f > 0) {
             move = true;

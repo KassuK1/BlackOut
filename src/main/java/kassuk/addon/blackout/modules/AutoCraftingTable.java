@@ -99,7 +99,7 @@ public class AutoCraftingTable extends Module {
         }
     }
 
-    private BlockPos findPos() {
+    BlockPos findPos() {
         BlockPos bestPos = null;
         int value = minValue.get();
         for (int x = (int) -Math.ceil(range.get()); x <= Math.ceil(range.get()); x++) {
@@ -130,7 +130,7 @@ public class AutoCraftingTable extends Module {
         return bestPos;
     }
 
-    private int getValue(BlockPos pos) {
+    int getValue(BlockPos pos) {
         int value = 0;
         for (Direction dir : Direction.values()) {
             if (mc.world.getBlockState(pos.offset(dir)).getBlock().equals(Blocks.BEDROCK)) {
@@ -143,7 +143,7 @@ public class AutoCraftingTable extends Module {
         return value;
     }
 
-    private void place(BlockPos pos) {
+    void place(BlockPos pos) {
         if (preSwing.get()) {
             mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
         }

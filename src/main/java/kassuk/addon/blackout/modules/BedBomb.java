@@ -183,14 +183,14 @@ public class BedBomb extends Module {
         Render,
         OnPlace
     }
-    private BlockPos bedPos;
-    private Direction bedDir;
-    private Vec3d renderPos;
-    private float renderDir;
-    private BlockPos lastPos = null;
-    private double timer = 0;
+    BlockPos bedPos;
+    Direction bedDir;
+    Vec3d renderPos;
+    float renderDir;
+    BlockPos lastPos = null;
+    double timer = 0;
     boolean explode = false;
-    private List<NotHolding> holdings = new ArrayList<>();
+    List<NotHolding> holdings = new ArrayList<>();
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onTick(TickEvent.Pre event) {if (calcMode.get().equals(CalcMode.Tick)) {update();}}
@@ -265,7 +265,7 @@ public class BedBomb extends Module {
         }
     }
 
-    private void update() {
+    void update() {
         if (mc.player == null || mc.world == null) {return;}
         int slot =  bedSlot();
         Hand hand = getHand();
@@ -298,7 +298,7 @@ public class BedBomb extends Module {
             }
         }
     }
-    private void place(BlockPos pos, Direction dir, Hand hand) {
+    void place(BlockPos pos, Direction dir, Hand hand) {
         mc.getNetworkHandler().sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(dir.asRotation(), 0, Managers.ONGROUND.isOnGround()));
         if (air(pos.down())) {
             mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand,
@@ -311,7 +311,8 @@ public class BedBomb extends Module {
             mc.getNetworkHandler().sendPacket(new HandSwingC2SPacket(hand));
         }
     }
-    private void explode(BlockPos position) {
+
+    void explode(BlockPos position) {
         if (mc.player == null) {return;}
         mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
             new BlockHitResult(OLEPOSSUtils.getMiddle(position), Direction.UP, position, false), 0));
@@ -320,7 +321,7 @@ public class BedBomb extends Module {
         }
     }
 
-    private BlockPos findBestPos() {
+    BlockPos findBestPos() {
         BlockPos position = null;
         if (mc.player != null && mc.world != null) {
             double highestDMG = 0;
@@ -372,10 +373,10 @@ public class BedBomb extends Module {
         }
         return position;
     }
-    private double getSelfDamage(Vec3d vec) {
+    double getSelfDamage(Vec3d vec) {
         return DamageUtils.bedDamage(mc.player, vec);
     }
-    protected double[] highestDmg(BlockPos pos) {
+    double[] highestDmg(BlockPos pos) {
         double highest = 0;
         double highestHP = 0;
         if (mc.player != null && mc.world != null) {
@@ -393,7 +394,7 @@ public class BedBomb extends Module {
         }
         return new double[] {highest, highestHP};
     }
-    protected boolean canBePlaced(BlockPos pos) {
+    boolean canBePlaced(BlockPos pos) {
         if (mc.player != null && mc.world != null) {
             if (air(pos.down())) {
                 return false;
@@ -411,13 +412,13 @@ public class BedBomb extends Module {
         }
         return false;
     }
-    private boolean placeRangeCheck(BlockPos pos) {
+    boolean placeRangeCheck(BlockPos pos) {
         return (OLEPOSSUtils.distance(mc.player.getEyePos(),
                 new Vec3d(pos.getX() + 0.5, pos.getY() + 1.8, pos.getZ() + 0.5)) <= range.get());
     }
 
 
-    private boolean placeDamageCheck(double dmg, double self, double health, double highest, double distance, double highestDist) {
+    boolean placeDamageCheck(double dmg, double self, double health, double highest, double distance, double highestDist) {
         if (dmg < highest) {return false;}
         if (dmg == highest && distance > highestDist) {return false;}
 
@@ -429,13 +430,13 @@ public class BedBomb extends Module {
         if (self > maxDamage.get()) {return false;}
         return self / dmg <= maxDamageRatio.get();
     }
-    private boolean air(BlockPos pos) {
+    boolean air(BlockPos pos) {
         return mc.world.getBlockState(pos).getBlock().equals(Blocks.AIR);
     }
-    private boolean bed(BlockPos pos) {
+    boolean bed(BlockPos pos) {
         return OLEPOSSUtils.isBedBlock(mc.world.getBlockState(pos).getBlock());
     }
-    private Hand getHand() {
+    Hand getHand() {
         if (OLEPOSSUtils.isBedItem(Managers.HOLDING.getStack().getItem())) {
             return Hand.MAIN_HAND;
         } else if (OLEPOSSUtils.isBedItem(mc.player.getOffHandStack().getItem())) {
@@ -443,7 +444,7 @@ public class BedBomb extends Module {
         }
         return null;
     }
-    private int bedSlot() {
+    int bedSlot() {
         for (int i = 0; i < 9; i++) {
             if (OLEPOSSUtils.isBedItem(mc.player.getInventory().getStack(i).getItem())) {
                 return i;
@@ -451,7 +452,7 @@ public class BedBomb extends Module {
         }
         return -1;
     }
-    private NotHolding getHolding(String name) {
+    NotHolding getHolding(String name) {
         for (NotHolding holding : holdings) {
             if (holding.name.equals(name)) {
                 return holding;
@@ -459,7 +460,7 @@ public class BedBomb extends Module {
         }
         return null;
     }
-    public Vec3d smoothMove(Vec3d current, Vec3d target, float speed) {
+    Vec3d smoothMove(Vec3d current, Vec3d target, float speed) {
         if (current == null) {
             return target;
         }
@@ -471,11 +472,11 @@ public class BedBomb extends Module {
             current.y < target.y ? Math.min(target.y, current.y + speed * absY) : Math.max(target.y, current.y - speed * absY),
             current.z < target.z ? Math.min(target.z, current.z + speed * absZ) : Math.max(target.z, current.z - speed * absZ));
     }
-    public float smoothTurn(float current, float target, float speed) {
+    float smoothTurn(float current, float target, float speed) {
         float abs = Math.abs(current - target);
         return current > target ? Math.max(target, current - speed * abs) : Math.min(target, current + speed * abs);
     }
-    private class NotHolding {
+    static class NotHolding {
         private final String name;
         private float timer;
 

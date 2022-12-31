@@ -28,7 +28,7 @@ import java.util.Map;
 public class ButtonAura extends Module {
 
     public ButtonAura() {super(BlackOut.BLACKOUT, "ButtonAura", ".");}
-    private SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<Boolean> swing = sgGeneral.add(new BoolSetting.Builder()
         .name("Swing")
@@ -78,8 +78,8 @@ public class ButtonAura extends Module {
         .defaultValue(new SettingColor(255, 255, 255, 150))
         .build()
     );
-    private BlockTimerList timers = new BlockTimerList();
-    private double timer = 0;
+    BlockTimerList timers = new BlockTimerList();
+    double timer = 0;
 
     @EventHandler
     private void onRender(Render3DEvent event) {
@@ -115,7 +115,7 @@ public class ButtonAura extends Module {
         }
     }
 
-    private BlockPos getButton(Vec3d vec, double r) {
+    BlockPos getButton(Vec3d vec, double r) {
         int c = (int) (Math.ceil(r) + 1);
         BlockPos closest = null;
         float closestDist = -1;

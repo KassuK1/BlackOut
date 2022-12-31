@@ -53,7 +53,7 @@ public class IntTimerList {
         return false;
     }
 
-    private static class IntTimer {
+    static class IntTimer {
         public int value;
         public double time;
         public double ogTime;

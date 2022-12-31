@@ -163,7 +163,7 @@ public class HoleFill extends Module {
         }
     }
 
-    private void update() {
+    void update() {
         updateHoles(placeRange.get());
         List<BlockPos> toPlace = getValid(holes);
         int[] obsidian = findBlock(Items.OBSIDIAN);
@@ -183,7 +183,7 @@ public class HoleFill extends Module {
         }
     }
 
-    private List<BlockPos> getValid(List<BlockPos> positions) {
+    List<BlockPos> getValid(List<BlockPos> positions) {
         List<BlockPos> list = new ArrayList<>();
         for (BlockPos pos : positions) {
             if (!timers.contains(pos)) {
@@ -193,7 +193,7 @@ public class HoleFill extends Module {
         return list;
     }
 
-    private void updateHoles(double range) {
+    void updateHoles(double range) {
         holes = new ArrayList<>();
         for(int x1 = (int) -Math.ceil(range); x1 <= Math.ceil(range); x1++) {
             for(int y1 = (int) -Math.ceil(range); y1 <= Math.ceil(range); y1++) {
@@ -211,7 +211,7 @@ public class HoleFill extends Module {
         }
     }
 
-    private double closestDist(BlockPos pos) {
+    double closestDist(BlockPos pos) {
         double closest = -1;
         for (PlayerEntity pl : mc.world.getPlayers()) {
             double dist = OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(pos), pl.getPos());
@@ -222,7 +222,7 @@ public class HoleFill extends Module {
         return closest;
     }
 
-    private boolean inHole(PlayerEntity pl) {
+    boolean inHole(PlayerEntity pl) {
         for (Direction dir : OLEPOSSUtils.horizontals) {
             if (mc.world.getBlockState(pl.getBlockPos().offset(dir)).getBlock().equals(Blocks.AIR)) {
                 return false;
@@ -231,7 +231,7 @@ public class HoleFill extends Module {
         return true;
     }
 
-    private boolean isHole(int x, int y, int z) {
+    boolean isHole(int x, int y, int z) {
         BlockPos pos = new BlockPos(x, y, z);
         Box box = new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1);
         if (!mc.world.getBlockState(pos).getBlock().equals(Blocks.AIR) ||
@@ -253,7 +253,7 @@ public class HoleFill extends Module {
         return false;
     }
 
-    private boolean inRange(BlockPos pos) {
+    boolean inRange(BlockPos pos) {
         for (PlayerEntity pl : mc.world.getPlayers()) {
             if (pl != mc.player && !Friends.get().isFriend(pl) && inHoleCheck(pl) && aboveCheck(pl, pos.getY() + 1)) {
                 if (OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(pos), pl.getPos()) < holeRange.get()) {return true;}
@@ -262,17 +262,17 @@ public class HoleFill extends Module {
         return false;
     }
 
-    private boolean inHoleCheck(PlayerEntity pl) {return !iHole.get() || !inHole(pl);}
-    private boolean aboveCheck(PlayerEntity pl, double y) {return !above.get() || pl.getY() >= y;}
+    boolean inHoleCheck(PlayerEntity pl) {return !iHole.get() || !inHole(pl);}
+    boolean aboveCheck(PlayerEntity pl, double y) {return !above.get() || pl.getY() >= y;}
 
-    private boolean isHoleInWall(BlockPos pos, Direction dir) {
+    boolean isHoleInWall(BlockPos pos, Direction dir) {
         return mc.world.getBlockState(pos).getBlock() == Blocks.AIR && (
             (mc.world.getBlockState(pos.up()).getBlock() == Blocks.AIR ||
                 mc.world.getBlockState(pos.offset(dir.getOpposite())).getBlock() == Blocks.AIR) ||
             mc.world.getBlockState(pos.down()).getBlock() == Blocks.AIR);
     }
 
-    private void place(BlockPos pos) {
+    void place(BlockPos pos) {
         BlackOut.LOG.info("HoleFill: place");
         timers.add(pos, delay.get());
         mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
@@ -281,7 +281,7 @@ public class HoleFill extends Module {
         toRender.add(new Render(pos));
     }
 
-    private int[] findBlock(Item item) {
+    int[] findBlock(Item item) {
         int num = 0;
         int slot = 0;
         if (mc.player != null) {
@@ -296,7 +296,7 @@ public class HoleFill extends Module {
         return new int[] {slot, num};
     }
 
-    private class Render {
+    class Render {
         public final BlockPos pos;
         public float time;
 

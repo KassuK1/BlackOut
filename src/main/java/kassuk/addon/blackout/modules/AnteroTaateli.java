@@ -63,12 +63,12 @@ public class AnteroTaateli extends Module {
             }
         }
     }
-    private String getMessage(PlayerEntity pl) {
+    String getMessage(PlayerEntity pl) {
         int index = r.nextInt(0, messages.length);
         String msg = messages[index];
         return msg.replace("<NAME>", pl.getName().getString());
     }
-    private PlayerEntity getClosest() {
+    PlayerEntity getClosest() {
         PlayerEntity closest = null;
         float distance = -1;
         if (!mc.world.getPlayers().isEmpty()) {

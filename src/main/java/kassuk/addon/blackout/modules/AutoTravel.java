@@ -41,8 +41,8 @@ public class AutoTravel extends Module {
     );
     @Override
     public void onDeactivate() {
-    mc.options.forwardKey.setPressed(false);
-    mc.options.jumpKey.setPressed(false);
+        mc.options.forwardKey.setPressed(false);
+        mc.options.jumpKey.setPressed(false);
     }
 
     @EventHandler

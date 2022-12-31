@@ -100,26 +100,9 @@ public class SurroundPlus extends Module {
     );
 
     BlockTimerList timers = new BlockTimerList();
-    private BlockPos startPos = null;
+    BlockPos startPos = null;
     double placeTimer = 0;
-    private List<BlockPos> render = new ArrayList<>();
-    private List<BlockPos> check(BlockPos pos) {
-        List<BlockPos> list = new ArrayList<>();
-        List<BlockPos> renders = new ArrayList<>();
-        List<BlockPos> blocks = getBlocks(getSize(pos));
-        if (mc.player != null && mc.world != null) {
-            for (BlockPos position : blocks) {
-                if (mc.world.getBlockState(position).getBlock().equals(Blocks.AIR)) {
-                    if (!timers.contains(position) && !EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
-                        list.add(position);
-                    }
-                    renders.add(position);
-                }
-            }
-        }
-        render = renders;
-        return list;
-    }
+    List<BlockPos> render = new ArrayList<>();
 
     @Override
     public void onActivate() {
@@ -137,7 +120,25 @@ public class SurroundPlus extends Module {
         update();
     }
 
-    private void update() {
+    List<BlockPos> check(BlockPos pos) {
+        List<BlockPos> list = new ArrayList<>();
+        List<BlockPos> renders = new ArrayList<>();
+        List<BlockPos> blocks = getBlocks(getSize(pos));
+        if (mc.player != null && mc.world != null) {
+            for (BlockPos position : blocks) {
+                if (mc.world.getBlockState(position).getBlock().equals(Blocks.AIR)) {
+                    if (!timers.contains(position) && !EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
+                        list.add(position);
+                    }
+                    renders.add(position);
+                }
+            }
+        }
+        render = renders;
+        return list;
+    }
+
+    void update() {
         if (mc.player != null && mc.world != null) {
             if (!mc.player.getBlockPos().equals(startPos)) {
                 toggle();
@@ -173,7 +174,7 @@ public class SurroundPlus extends Module {
         }
     }
 
-    private int[] findObby() {
+    int[] findObby() {
         int num = 0;
         int slot = 0;
         if (mc.player != null) {
@@ -188,7 +189,7 @@ public class SurroundPlus extends Module {
         return new int[] {slot, num};
     }
 
-    private int[] getSize(BlockPos pos) {
+    int[] getSize(BlockPos pos) {
         int minX = 0;
         int maxX = 0;
         int minZ = 0;
@@ -211,9 +212,9 @@ public class SurroundPlus extends Module {
         return new int[]{minX, maxX, minZ, maxZ};
     }
 
-    private boolean air(BlockPos pos) {return mc.world.getBlockState(pos).getBlock().equals(Blocks.AIR);}
+    boolean air(BlockPos pos) {return mc.world.getBlockState(pos).getBlock().equals(Blocks.AIR);}
 
-    private List<BlockPos> getBlocks(int[] size) {
+    List<BlockPos> getBlocks(int[] size) {
         List<BlockPos> list = new ArrayList<>();
         if (mc.player != null && mc.world != null) {
             BlockPos pPos = mc.player.getBlockPos();

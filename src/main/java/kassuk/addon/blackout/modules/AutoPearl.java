@@ -55,7 +55,7 @@ public class AutoPearl extends Module {
         this.toggle();
     }
 
-    private int getYaw(Vec3d pos) {
+    int getYaw(Vec3d pos) {
         int yaw = (int) Math.round(Rotations.getYaw(new Vec3d(Math.floor(pos.x) + 0.5, pos.y,
             Math.floor(pos.z) + 0.5)));
         return yaw > 0 ? yaw - 180 : yaw + 180;

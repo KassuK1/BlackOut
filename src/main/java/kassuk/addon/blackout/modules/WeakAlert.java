@@ -36,8 +36,8 @@ public class WeakAlert extends Module {
         .sliderMax(60)
         .build()
     );
-    private int timer;
-    private boolean last;
+    int timer = 0;
+    boolean last = false;
 
     @EventHandler(priority = EventPriority.HIGH)
     private void onTick(TickEvent.Pre event) {

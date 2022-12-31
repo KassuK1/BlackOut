@@ -14,11 +14,11 @@ public class Kick extends Command {
 
     @Override
     public void build(LiteralArgumentBuilder<CommandSource> builder) {
-        builder.executes(context -> {
-            if (mc.player != null && mc.world != null)
-                mc.world.disconnect();
-            return SINGLE_SUCCESS;
-        });
+            builder.executes(context -> {
+                if (mc.player != null && mc.world != null)
+                    mc.world.disconnect();
+                return SINGLE_SUCCESS;
+            });
         }
     }
 

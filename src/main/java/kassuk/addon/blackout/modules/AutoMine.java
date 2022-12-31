@@ -179,12 +179,12 @@ public class AutoMine extends Module {
         .build()
     );
 
-    private double tick;
-    private BlockPos targetPos;
-    private BlockPos crystalPos;
-    private int targetValue;
-    private int lastValue;
-    float timer = 0;
+    double tick;
+    BlockPos targetPos;
+    BlockPos crystalPos;
+    int targetValue;
+    int lastValue;
+    double timer = 0;
 
     @Override
     public void onActivate() {
@@ -252,7 +252,7 @@ public class AutoMine extends Module {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
-        timer = (float) Math.min(placeDelay.get(), timer + event.frameTime);
+        timer = Math.min(placeDelay.get(), timer + event.frameTime);
 
         if (mc.player != null && mc.world != null && targetPos != null) {
             Vec3d v = OLEPOSSUtils.getMiddle(targetPos);
@@ -285,14 +285,14 @@ public class AutoMine extends Module {
         }
     }
 
-    private void attackID(int id, Vec3d pos) {
+    void attackID(int id, Vec3d pos) {
         EndCrystalEntity en = new EndCrystalEntity(mc.world, pos.x, pos.y, pos.z);
         en.setId(id);
         mc.getNetworkHandler().sendPacket(PlayerInteractEntityC2SPacket.attack(en, mc.player.isSneaking()));
         mc.getNetworkHandler().sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
     }
 
-    private Entity isAt(BlockPos pos) {
+    Entity isAt(BlockPos pos) {
         for (Entity en : mc.world.getEntities()) {
             if (en.getBlockPos().equals(pos) && en.getType().equals(EntityType.END_CRYSTAL)) {
                 return en;
@@ -301,7 +301,7 @@ public class AutoMine extends Module {
         return null;
     }
 
-    private void calc() {
+    void calc() {
         lastValue = targetValue;
         BlockPos[] pos = getPos();
         BlockPos pos1 = pos[0];
@@ -331,14 +331,14 @@ public class AutoMine extends Module {
         }
     }
 
-    private void reset() {
+    void reset() {
         targetPos = null;
         crystalPos = null;
         lastValue = -1;
         targetValue = -1;
     }
 
-    private BlockPos[] getPos() {
+    BlockPos[] getPos() {
         int value = 0;
         BlockPos closest = null;
         BlockPos crystal = null;
@@ -397,7 +397,7 @@ public class AutoMine extends Module {
         return new BlockPos[] {closest, crystal};
     }
 
-    private boolean valueCheck(int currentValue, int value, BlockPos pos, BlockPos closest) {
+    boolean valueCheck(int currentValue, int value, BlockPos pos, BlockPos closest) {
         if (value == 0) {return false;}
         boolean rur;
         if (closest == null) {
@@ -410,7 +410,7 @@ public class AutoMine extends Module {
             OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(pos), mc.player.getEyePos()) < range.get();
     }
 
-    private int is(BlockPos pos) {
+    int is(BlockPos pos) {
         if (mc.world.getBlockState(pos).getBlock().equals(Blocks.BEDROCK)) {
             return -1;
         }
@@ -423,7 +423,7 @@ public class AutoMine extends Module {
         return 2;
     }
 
-    private Hand getHand(Item item) {
+    Hand getHand(Item item) {
         if (mc.player.getOffHandStack().getItem() == item) {
             return Hand.OFF_HAND;
         } else if (Managers.HOLDING.isHolding(Items.END_CRYSTAL)) {
@@ -433,14 +433,13 @@ public class AutoMine extends Module {
     }
 
 
-    private boolean holdingBest(BlockPos pos) {
+    boolean holdingBest(BlockPos pos) {
         int slot = fastestSlot(pos);
         return slot != 1 && Managers.HOLDING.slot == slot;
     }
 
 
-    private void start(BlockPos pos) {
-        BlackOut.LOG.info("AutoMine: Start");
+    void start(BlockPos pos) {
         mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK,
             pos, Direction.UP));
         if (swing.get() && swingOnce.get()) {
@@ -448,8 +447,7 @@ public class AutoMine extends Module {
         }
     }
 
-    private void end(BlockPos pos) {
-        BlackOut.LOG.info("AutoMine: End");
+    void end(BlockPos pos) {
         int slot = fastestSlot(pos);
         boolean swapped = false;
         if (silent.get() && !holdingBest(pos) && slot != -1) {
@@ -462,13 +460,12 @@ public class AutoMine extends Module {
             InvUtils.swapBack();
         }
     }
-    private void abort(BlockPos pos) {
-        BlackOut.LOG.info("AutoMine: Abort");
+    void abort(BlockPos pos) {
         mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK,
             pos, Direction.UP));
     }
 
-    private int getMineTicks(BlockPos pos) {
+    int getMineTicks(BlockPos pos) {
         double multi = 1;
         if (fastestSlot(pos) != -1) {
             multi = mc.player.getInventory().getStack(fastestSlot(pos)).getMiningSpeedMultiplier(mc.world.getBlockState(pos));
@@ -476,7 +473,7 @@ public class AutoMine extends Module {
         return (int) Math.round(mc.world.getBlockState(pos).getBlock().getHardness() / multi / speed.get() * 20);
     }
 
-    private int fastestSlot(BlockPos pos) {
+    int fastestSlot(BlockPos pos) {
         int slot = -1;
         if (mc.player == null || mc.world == null) {return -1;}
         for (int i = 0; i < 9; i++) {
@@ -488,7 +485,7 @@ public class AutoMine extends Module {
         return slot;
     }
 
-    private int[] getColor(Color start, Color end, double progress) {
+    int[] getColor(Color start, Color end, double progress) {
         double r = (end.r - start.r) * progress;
         double g = (end.g - start.g) * progress;
         double b = (end.b - start.b) * progress;

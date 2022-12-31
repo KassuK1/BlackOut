@@ -55,6 +55,7 @@ public class AutoCrystalRewrite extends Module {
     private final SettingGroup sgExtrapolation = settings.createGroup("Extrapolation");
     private final SettingGroup sgRaytrace = settings.createGroup("Raytrace");
     private final SettingGroup sgRender = settings.createGroup("Render");
+    private final SettingGroup sgDebug = settings.createGroup("Debug");
 
     //  General Page
     private final Setting<Boolean> place = sgGeneral.add(new BoolSetting.Builder()
@@ -403,6 +404,14 @@ public class AutoCrystalRewrite extends Module {
         .name("Color")
         .description("U blind?")
         .defaultValue(new SettingColor(255, 0, 0, 150))
+        .build()
+    );
+
+    //  Debug Page
+    private final Setting<Boolean> debugRange = sgExplode.add(new BoolSetting.Builder()
+        .name("Explode Swing")
+        .description(".")
+        .defaultValue(true)
         .build()
     );
 

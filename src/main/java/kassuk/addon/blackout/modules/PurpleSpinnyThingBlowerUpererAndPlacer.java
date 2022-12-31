@@ -143,7 +143,7 @@ public class PurpleSpinnyThingBlowerUpererAndPlacer extends Module {
 
         }
     }
-    private PlayerEntity getClosest() {
+    PlayerEntity getClosest() {
         PlayerEntity closest = null;
         float distance = -1;
         if (!mc.world.getPlayers().isEmpty()) {

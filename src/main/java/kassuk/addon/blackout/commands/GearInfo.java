@@ -14,11 +14,11 @@ import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
 
 public class GearInfo extends Command {
 
-    private int totem;
-    private int crystal;
-    private int obby;
-    private int gapple;
-    private int crapple;
+    int totem;
+    int crystal;
+    int obby;
+    int gapple;
+    int crapple;
     public GearInfo() {
         super("GearInfo", "Tells you how much stuff you have");
     }

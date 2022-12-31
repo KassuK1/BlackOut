@@ -163,11 +163,11 @@ public class ScaffoldPlus extends Module {
         }
     }
 
-    private boolean validItem(Item item) {
+    boolean validItem(Item item) {
         return item instanceof BlockItem && blocks.get().contains(((BlockItem) item).getBlock());
     }
 
-    private int[] findBlocks() {
+    int[] findBlocks() {
         int num = 0;
         int slot = 0;
         if (mc.player != null) {
@@ -182,7 +182,7 @@ public class ScaffoldPlus extends Module {
         return new int[] {slot, num};
     }
 
-    private List<BlockPos> getBlocks() {
+    List<BlockPos> getBlocks() {
         List<BlockPos> list = new ArrayList<>();
         double x = motion.x;
         double z = motion.z;
@@ -198,25 +198,25 @@ public class ScaffoldPlus extends Module {
         return list;
     }
 
-    private void addBlocks(List<BlockPos> list, Vec3d vec) {
+    void addBlocks(List<BlockPos> list, Vec3d vec) {
         BlockPos pos = new BlockPos(Math.floor(vec.x), Math.floor(vec.y), Math.floor(vec.z)).down();
         if (!timers.contains(pos) && air(pos) && !list.contains(pos)) {
             list.add(pos);
         }
     }
 
-    private Box getBox(Vec3d vec) {
+    Box getBox(Vec3d vec) {
         Box box = mc.player.getBoundingBox();
         return new Box(vec.x - 0.3, vec.y, vec.z - 0.3, vec.x + 0.3, vec.y + (box.maxY - box.minY), vec.z + 0.3);
     }
 
-    private boolean inside(Box bb) {
+    boolean inside(Box bb) {
         return mc.world.getBlockCollisions(mc.player, bb).iterator().hasNext();
     }
 
-    private boolean air(BlockPos pos) {return mc.world.getBlockState(pos).getBlock().equals(Blocks.AIR);}
+    boolean air(BlockPos pos) {return mc.world.getBlockState(pos).getBlock().equals(Blocks.AIR);}
 
-    private void place(BlockPos pos) {
+    void place(BlockPos pos) {
         timers.add(pos, delay.get());
         mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
             new BlockHitResult(OLEPOSSUtils.getMiddle(pos), Direction.UP, pos, false), 0));

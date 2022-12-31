@@ -104,16 +104,10 @@ public class HoleSnap extends Module {
         .sliderRange(0, 100)
         .build()
     );
-    private Direction[] horizontals = new Direction[] {
-        Direction.EAST,
-        Direction.WEST,
-        Direction.NORTH,
-        Direction.SOUTH
-    };
     BlockPos singleHole;
-    private int collisions;
-    private int rubberbands;
-    private int ticks;
+    int collisions;
+    int rubberbands;
+    int ticks;
     List<BlockPos> holes = new ArrayList<>();
 
     @Override
@@ -193,7 +187,7 @@ public class HoleSnap extends Module {
         }
     }
 
-    private BlockPos findHole() {
+    BlockPos findHole() {
         BlockPos closest = null;
         if (OLEPOSSUtils.isHole(mc.player.getBlockPos(), mc.world, depth.get())) {return mc.player.getBlockPos();}
         for (int y = -downRange.get(); y <= 0; y++) {
@@ -212,9 +206,9 @@ public class HoleSnap extends Module {
         return closest;
     }
 
-    private boolean air(BlockPos pos) {return mc.world.getBlockState(pos).getBlock().equals(Blocks.AIR);}
+    boolean air(BlockPos pos) {return mc.world.getBlockState(pos).getBlock().equals(Blocks.AIR);}
 
-    private float getAngle(Vec3d pos)
+    float getAngle(Vec3d pos)
     {
         return (float) Rotations.getYaw(pos);
     }

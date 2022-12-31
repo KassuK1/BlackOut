@@ -41,5 +41,5 @@ public class ResetVL extends Module {
     public void onDeactivate() {
         Modules.get().get(Timer.class).setOverride(Timer.OFF);
     }
-    }
+}
 

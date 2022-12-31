@@ -60,7 +60,7 @@ public class AutoEz extends Module {
         }
     }
 
-    private boolean anyDead(double range) {
+    boolean anyDead(double range) {
         for (PlayerEntity pl : mc.world.getPlayers()) {
             if (pl != mc.player && !Friends.get().isFriend(pl) && OLEPOSSUtils.distance(pl.getPos(), mc.player.getPos()) < range) {
                 if (pl.getHealth() <= 0) {
@@ -71,7 +71,7 @@ public class AutoEz extends Module {
         return false;
     }
 
-    private void sendMessage() {
+    void sendMessage() {
         int num = r.nextInt(0, messages.get().size() - 1);
         if (num == lastNum) {
             num = num < messages.get().size() - 1 ? num + 1 : 0;

@@ -101,7 +101,7 @@ public class OffHandPlus extends Module {
         }
     }
 
-    private Item getItem() {
+    Item getItem() {
         if (mc.player != null) {
             boolean crystalAvailable = InvUtils.find(itemStack -> itemStack.getItem().equals(Items.END_CRYSTAL)).count() > 0;
             boolean totemAvailable = InvUtils.find(itemStack -> itemStack.getItem().equals(Items.TOTEM_OF_UNDYING)).count() > 0;
@@ -144,11 +144,11 @@ public class OffHandPlus extends Module {
         return null;
     }
 
-    private FindItemResult find(Item i, boolean hotbar) {
+    FindItemResult find(Item i, boolean hotbar) {
         return InvUtils.find(itemStack -> itemStack.getItem().equals(i), hotbar ? 0 : 9, hotbar ? 8 : mc.player.getInventory().size());
     }
 
-    private boolean isSafe(double playerHP) {
+    boolean isSafe(double playerHP) {
         return !safety.get() || PlayerUtils.possibleHealthReductions() < playerHP - safetyHealth.get();
     }
 }

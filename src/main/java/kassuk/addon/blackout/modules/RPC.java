@@ -49,16 +49,16 @@ public class RPC extends Module {
         .sliderRange(0, 1000)
         .build()
     );
-    private int ticks = 0;
-    private int index1 = 0;
-    private int index2 = 0;
+    int ticks = 0;
+    int index1 = 0;
+    int index2 = 0;
     private static final RichPresence presence = new RichPresence();
 
     @Override
     public void onActivate() {
         DiscordIPC.start(1038168991258136576L, null);
         presence.setStart(System.currentTimeMillis() / 1000L);
-        UpdatePresence();
+        updatePresence();
     }
 
     @Override
@@ -71,11 +71,11 @@ public class RPC extends Module {
         if (ticks > 0) {
             ticks--;
         } else {
-            UpdatePresence();
+            updatePresence();
         }
     }
 
-    public void UpdatePresence() {
+    public void updatePresence() {
         ticks = refreshDelay.get();
         index1 = index1 < l1.get().size() - 1 ? index1 + 1 : 0;
         index2 = index2 < l2.get().size() - 1 ? index2 + 1 : 0;
@@ -85,7 +85,7 @@ public class RPC extends Module {
         DiscordIPC.setActivity(presence);
     }
 
-    private List<String> getMessages(List<String> stateList) {
+    List<String> getMessages(List<String> stateList) {
         List<String> messages = new ArrayList<>();
         for (String msg : stateList) {
             Script script = MeteorStarscript.compile(msg);

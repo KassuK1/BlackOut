@@ -195,7 +195,7 @@ public class PacketFly extends Module {
         mc.player.networkHandler.sendPacket(new TeleportConfirmC2SPacket(id));
     }
 
-    private double[] getYaw(double f, double s) {
+    double[] getYaw(double f, double s) {
         double yaw = mc.player.getYaw();
         double move;
         if (f > 0) {

@@ -53,16 +53,16 @@ public class GearHud extends HudElement {
         }
     }
 
-    public int amountOf(Item item) {
+    int amountOf(Item item) {
         return InvUtils.find(itemStack -> itemStack.getItem().equals(item)).count();
     }
 
-    public String getText(Item item) {
+    String getText(Item item) {
         if (!(item == Items.EXPERIENCE_BOTTLE && armorDur() != 0)) {return String.valueOf(amountOf(item));}
         else {return amountOf(item) + "  (" + Math.round(amountOf(item) * 14 / armorDur() * 100) + "%)";}
     }
 
-    public double armorDur() {
+    double armorDur() {
         double rur = 0;
         if (mc.player != null) {
             for (int i = 0; i < 4; i++) {

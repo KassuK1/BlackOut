@@ -86,7 +86,7 @@ public class FeetESP extends Module {
         });
     }
 
-    private Render getByName(String name) {
+    Render getByName(String name) {
         for (Render render : renders) {
             if (render.getName().equals(name)) {
                 return render;
@@ -95,7 +95,7 @@ public class FeetESP extends Module {
         return null;
     }
 
-    private class Render {
+    class Render {
         private final String name;
         private Vec3d vec;
         public Render(String name, Vec3d vec) {

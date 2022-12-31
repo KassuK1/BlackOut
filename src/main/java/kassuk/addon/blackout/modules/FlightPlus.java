@@ -103,7 +103,7 @@ public class FlightPlus extends Module {
             Modules.get().get(Timer.class).setOverride(1);
         }
     }
-    private double[] getYaw(double f, double s) {
+    double[] getYaw(double f, double s) {
         double yaw = mc.player.getYaw();
         double move;
         if (f > 0) {

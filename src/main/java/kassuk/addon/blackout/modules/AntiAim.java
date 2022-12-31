@@ -219,7 +219,7 @@ public class AntiAim extends Module {
         return mode.get().name();
     }
 
-    private PlayerEntity getClosest() {
+    PlayerEntity getClosest() {
         PlayerEntity closest = null;
         for (PlayerEntity pl : mc.world.getPlayers()) {
             if (pl != mc.player && !Friends.get().isFriend(pl) && OLEPOSSUtils.distance(mc.player.getPos(), pl.getPos()) <= enemyRange.get()) {
@@ -236,7 +236,7 @@ public class AntiAim extends Module {
         return closest;
     }
 
-    private double nextYaw(double current, double speed) {
+    double nextYaw(double current, double speed) {
         if (current + speed > 180) {
             return -360 + current + speed;
         } else {
@@ -244,7 +244,7 @@ public class AntiAim extends Module {
         }
     }
 
-    private boolean contains(List<Item> l, Item item) {
+    boolean contains(List<Item> l, Item item) {
         for (Item i : l) {
             if (i.equals(item)) {
                 return true;

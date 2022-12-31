@@ -117,19 +117,19 @@ public class PacketCrash extends Module {
     public String getInfoString() {
         return info;
     }
-    private void sendBounds(int amount) {
+    void sendBounds(int amount) {
         for (int i = 0; i < amount; i++) {
             float x = (float) Math.cos(Math.toRadians(r.nextFloat() * 360 + 90));
             float z = (float) Math.sin(Math.toRadians(r.nextFloat() * 360 + 90));
             mc.player.networkHandler.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.getX() + x * boundsDist.get(), mc.player.getY(), mc.player.getX() + z * boundsDist.get(), mc.player.isOnGround()));
         }
     }
-    private void sendSwings(int amount) {
+    void sendSwings(int amount) {
         for (int i = 0; i < amount; i++) {
             mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Math.round(r.nextFloat()) == 0 ? Hand.MAIN_HAND : Hand.OFF_HAND));
         }
     }
-    private void sendConfirms(int amount) {
+    void sendConfirms(int amount) {
         for (int i = 0; i < amount; i++) {
             mc.player.networkHandler.sendPacket(new TeleportConfirmC2SPacket(sent));
         }

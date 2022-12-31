@@ -89,7 +89,7 @@ public class Disabler extends Module {
         }
     }
 
-    private void sendBounds(Vec3d pos, Vec3d bounds, boolean onGround) {
+    void sendBounds(Vec3d pos, Vec3d bounds, boolean onGround) {
         PlayerMoveC2SPacket.PositionAndOnGround bound = new PlayerMoveC2SPacket.PositionAndOnGround(pos.x + bounds.x, pos.y + bounds.y, pos.z + bounds.z, onGround);
         ignore = true;
         mc.player.networkHandler.sendPacket(bound);

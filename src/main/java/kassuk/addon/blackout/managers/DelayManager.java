@@ -43,7 +43,7 @@ public class DelayManager {
     }
     public void clear() {tasks.clear();}
 
-    private class Delayed {
+    static class Delayed {
         private final Runnable runnable;
         private double time;
 

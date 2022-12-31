@@ -37,7 +37,7 @@ public class BlackoutArray extends HudElement {
     public static final HudElementInfo<BlackoutArray> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "BlackoutArray", "ArrayList for blackout features",BlackoutArray::new);
 
     public BlackoutArray(){super(INFO);}
-    private List<Module> getModules() {
+    List<Module> getModules() {
         List<Module> list = new ArrayList<>();
         Modules.get().getActive().forEach(it -> {
             if (it.category.equals(BlackOut.BLACKOUT)){

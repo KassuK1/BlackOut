@@ -51,7 +51,7 @@ public class BlockTimerList {
         return false;
     }
 
-    private class BlockTimer {
+    static class BlockTimer {
         public BlockPos pos;
         public double time;
         public double ogTime;
