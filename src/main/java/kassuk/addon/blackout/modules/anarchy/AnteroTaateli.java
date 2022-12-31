@@ -16,7 +16,6 @@ import net.minecraft.entity.player.PlayerEntity;
 
 import java.util.Random;
 
-import java.util.Arrays;
 
 //Made by KassuK
 public class AnteroTaateli extends Module {
@@ -65,7 +64,7 @@ public class AnteroTaateli extends Module {
         }
     }
     private String getMessage(PlayerEntity pl) {
-        int index = r.nextInt(0, messages.length - 1);
+        int index = r.nextInt(0, messages.length);
         String msg = messages[index];
         return msg.replace("<NAME>", pl.getName().getString());
     }

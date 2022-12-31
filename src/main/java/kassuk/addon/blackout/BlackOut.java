@@ -68,6 +68,7 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new OffHandPlus());
         Modules.get().add(new PacketCrash());
         Modules.get().add(new PacketFly());
+        Modules.get().add(new PurpleSpinnyThingBlowerUpererAndPlacer());
         Modules.get().add(new ResetVL());
         Modules.get().add(new RPC());
         Modules.get().add(new ScaffoldPlus());
