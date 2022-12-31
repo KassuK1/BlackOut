@@ -1,5 +1,4 @@
 ![Lines of code](https://img.shields.io/tokei/lines/github/KassuK1/BlackOut?color=blue&label=lines%20of%20code&style=for-the-badge)
-[![Discord](https://img.shields.io/discord/936976249300086854?color=blueviolet&label=Discord&logo=Discord&style=for-the-badge)](https://discord.gg/mmWz9Dz4Y9)
 # Blackout
 An addon for Meteor client that adds a variety of new/improved features to the Meteor client
 such as a new and improved CrystalAura an BedAura and PacketFly and a lot more of new things to push you above the competition.
