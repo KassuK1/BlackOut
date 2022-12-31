@@ -1,6 +1,6 @@
 [![Downloads](https://img.shields.io/github/downloads/KassuK1/BlackOut/total?color=blue&style=for-the-badge)](https://github.com/KassuK1/BlackOut/releases)
-[Lines of code](https://img.shields.io/tokei/lines/github/KassuK1/BlackOut?color=blue&label=lines%20of%20code&style=for-the-badge)
-[[Discord](https://discord.gg/mmWz9Dz4Y9)
+[!Lines of code](https://img.shields.io/tokei/lines/github/KassuK1/BlackOut?color=blue&label=lines%20of%20code&style=for-the-badge)
+[!Discord](https://discord.gg/mmWz9Dz4Y9)
 
 # Blackout
 An addon for Meteor client that adds a variety of new/improved features to the Meteor client
