@@ -104,7 +104,7 @@ public class AutoCrystalRewrite extends Module {
         .build()
     );
     private final Setting<Double> slowDamage = sgPlace.add(new DoubleSetting.Builder()
-        .name("Place Speed")
+        .name("Slow Damage")
         .description(".")
         .defaultValue(3)
         .range(0, 20)
@@ -210,7 +210,7 @@ public class AutoCrystalRewrite extends Module {
     private final Setting<RangeMode> expRangeMode = sgExplode.add(new EnumSetting.Builder<RangeMode>()
         .name("Explode Range Mode")
         .description(".")
-        .defaultValue(RangeMode.Closest)
+        .defaultValue(RangeMode.Normal)
         .build()
     );
     private final Setting<Double> closestExpWidth = sgExplode.add(new DoubleSetting.Builder()
@@ -219,7 +219,7 @@ public class AutoCrystalRewrite extends Module {
         .defaultValue(1)
         .min(0)
         .sliderRange(0, 3)
-        .visible(() -> placeRangeMode.get().equals(RangeMode.Closest))
+        .visible(() -> expRangeMode.get().equals(RangeMode.Closest))
         .build()
     );
     private final Setting<Double> closestExpHeight = sgExplode.add(new DoubleSetting.Builder()
@@ -228,7 +228,7 @@ public class AutoCrystalRewrite extends Module {
         .defaultValue(1)
         .min(0)
         .sliderRange(0, 3)
-        .visible(() -> placeRangeMode.get().equals(RangeMode.Closest))
+        .visible(() -> expRangeMode.get().equals(RangeMode.Closest))
         .build()
     );
     private final Setting<Double> expHeight = sgExplode.add(new DoubleSetting.Builder()
@@ -581,7 +581,7 @@ public class AutoCrystalRewrite extends Module {
                     placeTimer = 0;
                 }
                 if (!pausedCheck()) {
-                    if (placeTimer <= 0 || (instantPlace.get() && !isBlocked(placePos))) {
+                    if (placeTimer <= 0 || (instantPlace.get() && !shouldSlow() && !isBlocked(placePos))) {
                         placeTimer = 1;
                         placeCrystal(placePos.down(), handToUse);
                     }
@@ -829,9 +829,9 @@ public class AutoCrystalRewrite extends Module {
         new Vec3d(pos.getX() + 0.5, pos.getY() + placeHeight.get(), pos.getZ() + 0.5);
     }
     double getSpeed() {
-        double dmg = placePos == null ? -1 : getDmg(new Vec3d(placePos.getX() + 0.5, placePos.getY(), placePos.getZ() + 0.5))[0][0];
-        return dmg <= slowDamage.get() && dmg >= 0 ? slowSpeed.get() : placeSpeed.get();
+        return shouldSlow() ? slowSpeed.get() : placeSpeed.get();
     }
+    boolean shouldSlow() {return placePos != null && getDmg(new Vec3d(placePos.getX() + 0.5, placePos.getY(), placePos.getZ() + 0.5))[0][0] <= slowDamage.get();}
 
     Vec3d smoothMove(Vec3d current, Vec3d target, double delta) {
         if (current == null) {return target;}
