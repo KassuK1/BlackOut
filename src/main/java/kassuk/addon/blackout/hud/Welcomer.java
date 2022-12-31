@@ -1,10 +1,12 @@
 package kassuk.addon.blackout.hud;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.modules.WeakAlert;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.hud.HudElement;
 import meteordevelopment.meteorclient.systems.hud.HudElementInfo;
 import meteordevelopment.meteorclient.systems.hud.HudRenderer;
+import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
@@ -33,6 +35,12 @@ public class Welcomer extends HudElement {
     private final Setting<Boolean> shadow = sgGeneral.add(new BoolSetting.Builder()
         .name("Text shadow")
         .description("Should the text have a shadow")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> autoEnable = sgGeneral.add(new BoolSetting.Builder()
+        .name("Auto enable on start up")
+        .description("Should the welcomer be actived when BlackOut is launched")
         .defaultValue(true)
         .build()
     );

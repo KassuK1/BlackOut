@@ -29,6 +29,7 @@ public class BlackOut extends MeteorAddon {
     public void onInitialize() {
         LOG.info("Initializing Blackout");
 
+
         // Modules
         Modules.get().add(new AnteroTaateli());
         Modules.get().add(new AntiAim());
