@@ -29,7 +29,6 @@ public class BlackOut extends MeteorAddon {
     public void onInitialize() {
         LOG.info("Initializing Blackout");
 
-
         // Modules
         Modules.get().add(new AnteroTaateli());
         Modules.get().add(new AntiAim());
@@ -64,7 +63,6 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new Strafe());
         Modules.get().add(new SurroundPlus());
         Modules.get().add(new WeakAlert());
-
 
         // Commands
         Commands.get().add(new BlackoutGit());
