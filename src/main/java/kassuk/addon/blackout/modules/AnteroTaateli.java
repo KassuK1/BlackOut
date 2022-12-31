@@ -24,14 +24,14 @@ public class AnteroTaateli extends Module {
 
     private final Setting<Boolean> iFriends = sgGeneral.add(new BoolSetting.Builder()
         .name("Ignore Friends")
-        .description(".")
+        .description("Doesn't send messages when there is only friends nearby.")
         .defaultValue(true)
         .build()
     );
     private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
         .name("Delay")
-        .description("Delay.")
-        .defaultValue(20)
+        .description("Tick delay between messages.")
+        .defaultValue(10)
         .range(0, 60)
         .sliderRange(0, 60)
         .build()

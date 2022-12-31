@@ -62,19 +62,19 @@ public class AutoCrystalRewrite extends Module {
     //  General Page
     private final Setting<Boolean> place = sgGeneral.add(new BoolSetting.Builder()
         .name("Place")
-        .description(".")
+        .description("Places crystals.")
         .defaultValue(true)
         .build()
     );
     private final Setting<Boolean> explode = sgGeneral.add(new BoolSetting.Builder()
         .name("Explode")
-        .description(".")
+        .description("Explodes crystals.")
         .defaultValue(true)
         .build()
     );
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
         .name("Pause Eat")
-        .description(".")
+        .description("Pauses while eating.")
         .defaultValue(true)
         .build()
     );
@@ -82,25 +82,25 @@ public class AutoCrystalRewrite extends Module {
     //  Place Page
     private final Setting<Boolean> oldVerPlacements = sgPlace.add(new BoolSetting.Builder()
         .name("1.12 Placements")
-        .description(".")
+        .description("Uses 1.12 crystal mechanics.")
         .defaultValue(false)
         .build()
     );
     private final Setting<Boolean> instantPlace = sgPlace.add(new BoolSetting.Builder()
         .name("Instant Non-Blocked")
-        .description(".")
+        .description("Ignores delay after crystal hitbox has disappeared.")
         .defaultValue(true)
         .build()
     );
     private final Setting<Boolean> instant = sgPlace.add(new BoolSetting.Builder()
         .name("Instant Place")
-        .description(".")
+        .description("Places after exploding a crystal.")
         .defaultValue(true)
         .build()
     );
     private final Setting<Double> placeSpeed = sgPlace.add(new DoubleSetting.Builder()
         .name("Place Speed")
-        .description(".")
+        .description("How many times should the module place per second.")
         .defaultValue(10)
         .range(0, 20)
         .sliderRange(0, 20)
@@ -108,7 +108,7 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<Double> slowDamage = sgPlace.add(new DoubleSetting.Builder()
         .name("Slow Damage")
-        .description(".")
+        .description("Switches to slow speed when the target would take low damage.")
         .defaultValue(3)
         .range(0, 20)
         .sliderRange(0, 20)
@@ -116,7 +116,7 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<Double> slowSpeed = sgPlace.add(new DoubleSetting.Builder()
         .name("Slow Speed")
-        .description(".")
+        .description("How many times should the module place per second when damage is under slow damage.")
         .defaultValue(2)
         .range(0, 20)
         .sliderRange(0, 20)
@@ -124,7 +124,7 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<Double> placeRange = sgPlace.add(new DoubleSetting.Builder()
         .name("Place Range")
-        .description(".")
+        .description("Range for placing.")
         .defaultValue(5)
         .range(0, 10)
         .sliderRange(0, 10)
@@ -132,7 +132,7 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<RangeMode> placeRangeMode = sgPlace.add(new EnumSetting.Builder<RangeMode>()
         .name("Place Range Mode")
-        .description(".")
+        .description("Where to calculate ranges from.")
         .defaultValue(RangeMode.Closest)
         .build()
     );
@@ -145,8 +145,8 @@ public class AutoCrystalRewrite extends Module {
         .build()
     );
     private final Setting<Double> closestPlaceWidth = sgPlace.add(new DoubleSetting.Builder()
-        .name("Closest Place Box Size Width")
-        .description(".")
+        .name("Closest Place Width")
+        .description("Width of the closest range box.")
         .defaultValue(1)
         .min(0)
         .sliderRange(0, 3)
@@ -154,8 +154,8 @@ public class AutoCrystalRewrite extends Module {
         .build()
     );
     private final Setting<Double> closestPlaceHeight = sgPlace.add(new DoubleSetting.Builder()
-        .name("Closest Place Box Height")
-        .description(".")
+        .name("Closest Place Height")
+        .description("Height of the closest range box.")
         .defaultValue(1)
         .min(0)
         .sliderRange(0, 3)
