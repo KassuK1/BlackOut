@@ -133,7 +133,7 @@ public class AutoCrystalRewrite extends Module {
     private final Setting<RangeMode> placeRangeMode = sgPlace.add(new EnumSetting.Builder<RangeMode>()
         .name("Place Range Mode")
         .description("Where to calculate ranges from.")
-        .defaultValue(RangeMode.Closest)
+        .defaultValue(RangeMode.Automatic)
         .build()
     );
     private final Setting<Double> placeHeight = sgPlace.add(new DoubleSetting.Builder()
@@ -141,25 +141,7 @@ public class AutoCrystalRewrite extends Module {
         .description(".")
         .defaultValue(-0.5)
         .sliderRange(-1, 2)
-        .visible(() -> placeRangeMode.get().equals(RangeMode.Normal))
-        .build()
-    );
-    private final Setting<Double> closestPlaceWidth = sgPlace.add(new DoubleSetting.Builder()
-        .name("Closest Place Width")
-        .description("Width of the closest range box.")
-        .defaultValue(1)
-        .min(0)
-        .sliderRange(0, 3)
-        .visible(() -> placeRangeMode.get().equals(RangeMode.Closest))
-        .build()
-    );
-    private final Setting<Double> closestPlaceHeight = sgPlace.add(new DoubleSetting.Builder()
-        .name("Closest Place Height")
-        .description("Height of the closest range box.")
-        .defaultValue(1)
-        .min(0)
-        .sliderRange(0, 3)
-        .visible(() -> placeRangeMode.get().equals(RangeMode.Closest))
+        .visible(() -> placeRangeMode.get().equals(RangeMode.Height))
         .build()
     );
     private final Setting<Boolean> placeSwing = sgPlace.add(new BoolSetting.Builder()
@@ -196,6 +178,12 @@ public class AutoCrystalRewrite extends Module {
         .sliderRange(0, 10)
         .build()
     );
+    private final Setting<Boolean> ncpRange = sgExplode.add(new BoolSetting.Builder()
+        .name("NCP Range")
+        .description("Reduces explode range when the crystal.")
+        .defaultValue(true)
+        .build()
+    );
     private final Setting<Boolean> instantExp = sgExplode.add(new BoolSetting.Builder()
         .name("Instant Explode")
         .description(".")
@@ -213,33 +201,15 @@ public class AutoCrystalRewrite extends Module {
     private final Setting<RangeMode> expRangeMode = sgExplode.add(new EnumSetting.Builder<RangeMode>()
         .name("Explode Range Mode")
         .description(".")
-        .defaultValue(RangeMode.Normal)
-        .build()
-    );
-    private final Setting<Double> closestExpWidth = sgExplode.add(new DoubleSetting.Builder()
-        .name("Closest Place Box Size Width")
-        .description(".")
-        .defaultValue(1)
-        .min(0)
-        .sliderRange(0, 3)
-        .visible(() -> expRangeMode.get().equals(RangeMode.Closest))
-        .build()
-    );
-    private final Setting<Double> closestExpHeight = sgExplode.add(new DoubleSetting.Builder()
-        .name("Closest Place Box Height")
-        .description(".")
-        .defaultValue(1)
-        .min(0)
-        .sliderRange(0, 3)
-        .visible(() -> expRangeMode.get().equals(RangeMode.Closest))
+        .defaultValue(RangeMode.Automatic)
         .build()
     );
     private final Setting<Double> expHeight = sgExplode.add(new DoubleSetting.Builder()
         .name("Explode Height")
         .description(".")
-        .defaultValue(0.5)
+        .defaultValue(1)
         .sliderRange(-1, 2)
-        .visible(() -> expRangeMode.get().equals(RangeMode.Normal))
+        .visible(() -> expRangeMode.get().equals(RangeMode.Height))
         .build()
     );
     private final Setting<Boolean> setDead = sgExplode.add(new BoolSetting.Builder()
@@ -395,15 +365,47 @@ public class AutoCrystalRewrite extends Module {
         .defaultValue(RenderMode.BlackOut)
         .build()
     );
+    private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
+        .name("Shape Mode")
+        .description(".")
+        .defaultValue(ShapeMode.Both)
+        .build()
+    );
+    private final Setting<Double> renderTime = sgRender.add(new DoubleSetting.Builder()
+        .name("Render Time")
+        .description("How long the box should remain in full alpha.")
+        .defaultValue(0.3)
+        .min(0)
+        .sliderRange(0, 10)
+        .visible(() -> renderMode.get().equals(RenderMode.Earthhack) || renderMode.get().equals(RenderMode.Future))
+        .build()
+    );
+    private final Setting<Double> fadeTime = sgRender.add(new DoubleSetting.Builder()
+        .name("Fade Time")
+        .description("How long the fading should take.")
+        .defaultValue(1)
+        .min(0)
+        .sliderRange(0, 10)
+        .visible(() -> renderMode.get().equals(RenderMode.Earthhack) || renderMode.get().equals(RenderMode.Future))
+        .build()
+    );
     private final Setting<Double> animationSpeed = sgRender.add(new DoubleSetting.Builder()
         .name("Animation Speed")
         .description(".")
         .defaultValue(1)
+        .min(0)
         .sliderRange(0, 10)
+        .visible(() -> renderMode.get().equals(RenderMode.BlackOut))
+        .build()
+    );
+    private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder()
+        .name("Line Color")
+        .description("U blind?")
+        .defaultValue(new SettingColor(255, 0, 0, 255))
         .build()
     );
     private final Setting<SettingColor> color = sgRender.add(new ColorSetting.Builder()
-        .name("Color")
+        .name("Side Color")
         .description("U blind?")
         .defaultValue(new SettingColor(255, 0, 0, 150))
         .build()
@@ -421,6 +423,7 @@ public class AutoCrystalRewrite extends Module {
         .description(".")
         .defaultValue(0)
         .sliderRange(-1000, 1000)
+        .visible(debugRange::get)
         .build()
     );
     private final Setting<Double> debugRangeY = sgDebug.add(new DoubleSetting.Builder()
@@ -428,6 +431,7 @@ public class AutoCrystalRewrite extends Module {
         .description(".")
         .defaultValue(0)
         .sliderRange(-1000, 1000)
+        .visible(debugRange::get)
         .build()
     );
     private final Setting<Double> debugRangeZ = sgDebug.add(new DoubleSetting.Builder()
@@ -435,6 +439,7 @@ public class AutoCrystalRewrite extends Module {
         .description(".")
         .defaultValue(0)
         .sliderRange(-1000, 1000)
+        .visible(debugRange::get)
         .build()
     );
     private final Setting<Double> debugRangeHeight1 = sgDebug.add(new DoubleSetting.Builder()
@@ -442,6 +447,7 @@ public class AutoCrystalRewrite extends Module {
         .description(".")
         .defaultValue(0)
         .sliderRange(-2, 2)
+        .visible(debugRange::get)
         .build()
     );
     private final Setting<Double> debugRangeHeight2 = sgDebug.add(new DoubleSetting.Builder()
@@ -449,6 +455,7 @@ public class AutoCrystalRewrite extends Module {
         .description(".")
         .defaultValue(0)
         .sliderRange(-2, 2)
+        .visible(debugRange::get)
         .build()
     );
     private final Setting<Double> debugRangeHeight3 = sgDebug.add(new DoubleSetting.Builder()
@@ -456,6 +463,7 @@ public class AutoCrystalRewrite extends Module {
         .description(".")
         .defaultValue(0)
         .sliderRange(-2, 2)
+        .visible(debugRange::get)
         .build()
     );
     private final Setting<Double> debugRangeHeight4 = sgDebug.add(new DoubleSetting.Builder()
@@ -463,6 +471,7 @@ public class AutoCrystalRewrite extends Module {
         .description(".")
         .defaultValue(0)
         .sliderRange(-2, 2)
+        .visible(debugRange::get)
         .build()
     );
     private final Setting<Double> debugRangeHeight5 = sgDebug.add(new DoubleSetting.Builder()
@@ -470,6 +479,7 @@ public class AutoCrystalRewrite extends Module {
         .description(".")
         .defaultValue(0)
         .sliderRange(-2, 2)
+        .visible(debugRange::get)
         .build()
     );
 
@@ -487,7 +497,7 @@ public class AutoCrystalRewrite extends Module {
     List<Box> blocked = new ArrayList<>();
     Map<Vec3d, double[][]> dmgCache = new HashMap<>();
     BlockPos lastPos = null;
-    Map<BlockPos, Double> earthMap = new HashMap<>();
+    Map<BlockPos, Double[]> earthMap = new HashMap<>();
 
     //BlackOut Render
     Vec3d renderPos = null;
@@ -505,8 +515,9 @@ public class AutoCrystalRewrite extends Module {
         Full
     }
     public enum RangeMode {
-        Normal,
-        Closest
+        Automatic,
+        Height,
+        Vanilla
     }
     public enum RenderMode {
         BlackOut,
@@ -541,49 +552,51 @@ public class AutoCrystalRewrite extends Module {
         update();
 
         //Rendering
-        switch (renderMode.get()) {
-            case BlackOut -> {
-                if (placePos != null && !pausedCheck()) {
-                    renderProgress = Math.min(1, renderProgress + event.frameTime);
-                    renderPos = smoothMove(renderPos, new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ()), event.frameTime * animationSpeed.get());
-                } else {
-                    renderProgress = Math.max(0, renderProgress - event.frameTime);
-                }
-                if (renderPos != null) {
-                    Box box = new Box(renderPos.getX() + 0.5 - renderProgress / 2, renderPos.getY() - 0.5 - renderProgress / 2, renderPos.getZ() + 0.5 - renderProgress / 2,
-                        renderPos.getX()  + 0.5 + renderProgress / 2, renderPos.getY() - 0.5 + renderProgress / 2, renderPos.getZ() + 0.5 + renderProgress / 2);
-                    event.renderer.box(box, new Color(color.get().r, color.get().g, color.get().b, Math.round(color.get().a / 5f)), color.get(), ShapeMode.Both, 0);
-                }
-            }
-            case Future -> {
-                if (placePos != null && !pausedCheck()) {
-                    renderPos = new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ());
-                    renderProgress = 1.3;
-                } else {
-                    renderProgress = Math.max(0, renderProgress - event.frameTime);
-                }
-                if (renderProgress > 0 && renderPos != null) {
-                    event.renderer.box(new Box(renderPos.getX(), renderPos.getY() - 1, renderPos.getZ(),
-                        renderPos.getX() + 1, renderPos.getY(), renderPos.getZ() + 1),
-                        new Color(color.get().r, color.get().g, color.get().b, (int) Math.round(color.get().a / 5f * Math.min(1, renderProgress))),
-                        new Color(color.get().r, color.get().g, color.get().b, (int) Math.round(color.get().a * Math.min(1, renderProgress))), ShapeMode.Both, 0);
-                }
-            }
-            case Earthhack -> {
-                List<BlockPos> toRemove = new ArrayList<>();
-                for (Map.Entry<BlockPos, Double> entry : earthMap.entrySet()) {
-                    BlockPos pos = entry.getKey();
-                    Double alpha = entry.getValue();
-                    if (alpha <= d) {
-                        toRemove.add(pos);
+        if (render.get()) {
+            switch (renderMode.get()) {
+                case BlackOut -> {
+                    if (placePos != null && !pausedCheck()) {
+                        renderProgress = Math.min(1, renderProgress + event.frameTime);
+                        renderPos = smoothMove(renderPos, new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ()), event.frameTime * animationSpeed.get());
                     } else {
-                        event.renderer.box(OLEPOSSUtils.getBox(pos),
-                            new Color(color.get().r, color.get().g, color.get().b, (int) Math.round(color.get().a / 5f * Math.min(1, alpha))),
-                            new Color(color.get().r, color.get().g, color.get().b, (int) Math.round(color.get().a * Math.min(1, alpha))), ShapeMode.Both, 0);
-                        entry.setValue(alpha - d);
+                        renderProgress = Math.max(0, renderProgress - event.frameTime);
+                    }
+                    if (renderPos != null) {
+                        Box box = new Box(renderPos.getX() + 0.5 - renderProgress / 2, renderPos.getY() - 0.5 - renderProgress / 2, renderPos.getZ() + 0.5 - renderProgress / 2,
+                            renderPos.getX() + 0.5 + renderProgress / 2, renderPos.getY() - 0.5 + renderProgress / 2, renderPos.getZ() + 0.5 + renderProgress / 2);
+                        event.renderer.box(box, new Color(color.get().r, color.get().g, color.get().b, Math.round(color.get().a / 5f)), color.get(), shapeMode.get(), 0);
                     }
                 }
-                toRemove.forEach(earthMap::remove);
+                case Future -> {
+                    if (placePos != null && !pausedCheck()) {
+                        renderPos = new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ());
+                        renderProgress = fadeTime.get() + renderTime.get();
+                    } else {
+                        renderProgress = Math.max(0, renderProgress - event.frameTime);
+                    }
+                    if (renderProgress > 0 && renderPos != null) {
+                        event.renderer.box(new Box(renderPos.getX(), renderPos.getY() - 1, renderPos.getZ(),
+                                renderPos.getX() + 1, renderPos.getY(), renderPos.getZ() + 1),
+                            new Color(color.get().r, color.get().g, color.get().b, (int) Math.round(color.get().a * Math.min(1, renderProgress / fadeTime.get()))),
+                            new Color(lineColor.get().r, lineColor.get().g, lineColor.get().b, (int) Math.round(lineColor.get().a * Math.min(1, renderProgress / fadeTime.get()))), shapeMode.get(), 0);
+                    }
+                }
+                case Earthhack -> {
+                    List<BlockPos> toRemove = new ArrayList<>();
+                    for (Map.Entry<BlockPos, Double[]> entry : earthMap.entrySet()) {
+                        BlockPos pos = entry.getKey();
+                        Double[] alpha = entry.getValue();
+                        if (alpha[0] <= d) {
+                            toRemove.add(pos);
+                        } else {
+                            event.renderer.box(OLEPOSSUtils.getBox(pos),
+                                new Color(color.get().r, color.get().g, color.get().b, (int) Math.round(color.get().a / 5f * Math.min(1, alpha[0] / alpha[1]))),
+                                new Color(lineColor.get().r, lineColor.get().g, lineColor.get().b, (int) Math.round(lineColor.get().a * Math.min(1, alpha[0] / alpha[1]))), shapeMode.get(), 0);
+                            entry.setValue(new Double[]{alpha[0] - d, alpha[1]});
+                        }
+                    }
+                    toRemove.forEach(earthMap::remove);
+                }
             }
         }
     }
@@ -669,9 +682,9 @@ public class AutoCrystalRewrite extends Module {
         if (handToUse != null && pos != null && mc.player != null) {
             if (renderMode.get().equals(RenderMode.Earthhack)) {
                 if (!earthMap.containsKey(pos)) {
-                    earthMap.put(pos, 1.2);
+                    earthMap.put(pos, new Double[]{fadeTime.get() + renderTime.get(), fadeTime.get()});
                 } else {
-                    earthMap.replace(pos, 1.2);
+                    earthMap.replace(pos, new Double[]{fadeTime.get() + renderTime.get(), fadeTime.get()});
                 }
             }
 
@@ -717,7 +730,7 @@ public class AutoCrystalRewrite extends Module {
         if (mc.player != null) {
             Hand handToUse = getHand(Items.END_CRYSTAL);
             if (handToUse != null) {
-                attacked.add(en.getId(), expSpeed.get());
+                attacked.add(en.getId(), 1 / expSpeed.get());
                 delayTimer = 0;
                 mc.player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(en, mc.player.isSneaking()));
                 if (swing && explodeSwing.get()) {swing(handToUse, explodeSwingMode.get());}
@@ -893,12 +906,12 @@ public class AutoCrystalRewrite extends Module {
         return Math.sqrt(distances.x * distances.x + distances.y * distances.y + distances.z * distances.z);
     }
     Vec3d expRangePos(Vec3d vec) {
-        return expRangeMode.get().equals(RangeMode.Closest) ? OLEPOSSUtils.getClosest(mc.player.getEyePos(), vec,
-            closestExpWidth.get(), closestExpHeight.get()) : vec.add(0, expHeight.get(), 0);
+        return expRangeMode.get().equals(RangeMode.Vanilla) ? OLEPOSSUtils.getClosest(mc.player.getEyePos(), vec,
+            2, 2) : vec.add(0, expHeight.get(), 0);
     }
     Vec3d placeRangePos(BlockPos pos) {
-        return placeRangeMode.get().equals(RangeMode.Closest) ? OLEPOSSUtils.getClosest(mc.player.getEyePos(), new Vec3d(pos.getX() + 0.5, pos.getY() - 1, pos.getZ() + 0.5),
-            closestPlaceWidth.get(), closestPlaceHeight.get()) :
+        return placeRangeMode.get().equals(RangeMode.Vanilla) ? OLEPOSSUtils.getClosest(mc.player.getEyePos(), new Vec3d(pos.getX() + 0.5, pos.getY() - 1, pos.getZ() + 0.5),
+            1, 1) :
         new Vec3d(pos.getX() + 0.5, pos.getY() + placeHeight.get(), pos.getZ() + 0.5);
     }
     Vec3d debugRangePos(int id) {
