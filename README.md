@@ -14,3 +14,5 @@ The development of the addon might not be super active due to us having our own 
  - Put Blackout in your mods folder with them
  - Run Fabric.
  - Enjoy the addon and go get some kills with it(If your bad it wont help tho)
+
+latest build: https://github.com/KassuK1/BlackOut/releases/download/latest/blackout-0.3.0.jar
