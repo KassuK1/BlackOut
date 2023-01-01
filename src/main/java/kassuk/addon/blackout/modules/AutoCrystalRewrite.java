@@ -51,7 +51,7 @@ public class AutoCrystalRewrite extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgPlace = settings.createGroup("Place");
     private final SettingGroup sgExplode = settings.createGroup("Explode");
-    private final SettingGroup sgMisc = settings.createGroup("Misc");
+    private final SettingGroup sgRange = settings.createGroup("Range");
     private final SettingGroup sgDamage = settings.createGroup("Damage");
     private final SettingGroup sgRotate = settings.createGroup("Rotate");
     private final SettingGroup sgExtrapolation = settings.createGroup("Extrapolation");
@@ -122,28 +122,6 @@ public class AutoCrystalRewrite extends Module {
         .sliderRange(0, 20)
         .build()
     );
-    private final Setting<Double> placeRange = sgPlace.add(new DoubleSetting.Builder()
-        .name("Place Range")
-        .description("Range for placing.")
-        .defaultValue(5)
-        .range(0, 10)
-        .sliderRange(0, 10)
-        .build()
-    );
-    private final Setting<RangeMode> placeRangeMode = sgPlace.add(new EnumSetting.Builder<RangeMode>()
-        .name("Place Range Mode")
-        .description("Where to calculate ranges from.")
-        .defaultValue(RangeMode.Automatic)
-        .build()
-    );
-    private final Setting<Double> placeHeight = sgPlace.add(new DoubleSetting.Builder()
-        .name("Place Height")
-        .description(".")
-        .defaultValue(-0.5)
-        .sliderRange(-1, 2)
-        .visible(() -> placeRangeMode.get().equals(RangeMode.Height))
-        .build()
-    );
     private final Setting<Boolean> placeSwing = sgPlace.add(new BoolSetting.Builder()
         .name("Place Swing")
         .description(".")
@@ -170,20 +148,6 @@ public class AutoCrystalRewrite extends Module {
     );
 
     //  Explode Page
-    private final Setting<Double> expRange = sgExplode.add(new DoubleSetting.Builder()
-        .name("Explode Range")
-        .description(".")
-        .defaultValue(5)
-        .range(0, 10)
-        .sliderRange(0, 10)
-        .build()
-    );
-    private final Setting<Boolean> ncpRange = sgExplode.add(new BoolSetting.Builder()
-        .name("NCP Range")
-        .description("Reduces explode range when the crystal.")
-        .defaultValue(true)
-        .build()
-    );
     private final Setting<Boolean> instantExp = sgExplode.add(new BoolSetting.Builder()
         .name("Instant Explode")
         .description(".")
@@ -196,20 +160,6 @@ public class AutoCrystalRewrite extends Module {
         .defaultValue(2)
         .range(0.01, 20)
         .sliderRange(0.01, 20)
-        .build()
-    );
-    private final Setting<RangeMode> expRangeMode = sgExplode.add(new EnumSetting.Builder<RangeMode>()
-        .name("Explode Range Mode")
-        .description(".")
-        .defaultValue(RangeMode.Automatic)
-        .build()
-    );
-    private final Setting<Double> expHeight = sgExplode.add(new DoubleSetting.Builder()
-        .name("Explode Height")
-        .description(".")
-        .defaultValue(1)
-        .sliderRange(-1, 2)
-        .visible(() -> expRangeMode.get().equals(RangeMode.Height))
         .build()
     );
     private final Setting<Boolean> setDead = sgExplode.add(new BoolSetting.Builder()
@@ -237,6 +187,88 @@ public class AutoCrystalRewrite extends Module {
         .name("Explode Swing Mode")
         .description(".")
         .defaultValue(SwingMode.Full)
+        .build()
+    );
+
+    //  Range Page
+    private final Setting<Double> placeRange = sgRange.add(new DoubleSetting.Builder()
+        .name("Place Range")
+        .description("Range for placing.")
+        .defaultValue(5)
+        .range(0, 10)
+        .sliderRange(0, 10)
+        .build()
+    );
+    private final Setting<RangeMode> placeRangeMode = sgRange.add(new EnumSetting.Builder<RangeMode>()
+        .name("Place Range Mode")
+        .description("Where to calculate ranges from.")
+        .defaultValue(RangeMode.Automatic)
+        .build()
+    );
+    private final Setting<Double> blockWidth = sgRange.add(new DoubleSetting.Builder()
+        .name("Block Width")
+        .description(".")
+        .defaultValue(2)
+        .range(0, 3)
+        .sliderRange(0, 3)
+        .visible(() -> placeRangeMode.get().equals(RangeMode.CustomBox))
+        .build()
+    );
+    private final Setting<Double> blockHeight = sgRange.add(new DoubleSetting.Builder()
+        .name("Block Height")
+        .description(".")
+        .defaultValue(2)
+        .range(0, 3)
+        .sliderRange(0, 3)
+        .visible(() -> placeRangeMode.get().equals(RangeMode.CustomBox))
+        .build()
+    );
+    private final Setting<Double> placeHeight = sgRange.add(new DoubleSetting.Builder()
+        .name("Place Height")
+        .description(".")
+        .defaultValue(-0.5)
+        .sliderRange(-1, 2)
+        .visible(() -> placeRangeMode.get().equals(RangeMode.Height))
+        .build()
+    );
+    private final Setting<Double> expRange = sgRange.add(new DoubleSetting.Builder()
+        .name("Explode Range")
+        .description(".")
+        .defaultValue(5)
+        .range(0, 10)
+        .sliderRange(0, 10)
+        .build()
+    );
+    private final Setting<RangeMode> expRangeMode = sgRange.add(new EnumSetting.Builder<RangeMode>()
+        .name("Explode Range Mode")
+        .description(".")
+        .defaultValue(RangeMode.Automatic)
+        .build()
+    );
+    private final Setting<Double> crystalWidth = sgRange.add(new DoubleSetting.Builder()
+        .name("Crystal Width")
+        .description(".")
+        .defaultValue(2)
+        .range(0, 3)
+        .sliderRange(0, 3)
+        .visible(() -> expRangeMode.get().equals(RangeMode.CustomBox))
+        .build()
+    );
+    private final Setting<Double> crystalHeight = sgRange.add(new DoubleSetting.Builder()
+        .name("Crystal Height")
+        .description(".")
+        .defaultValue(2)
+        .range(0, 3)
+        .sliderRange(0, 3)
+        .visible(() -> expRangeMode.get().equals(RangeMode.CustomBox))
+        .build()
+    );
+    private final Setting<Double> expHeight = sgRange.add(new DoubleSetting.Builder()
+        .name("Explode Height")
+        .description(".")
+        .defaultValue(1)
+        .sliderRange(-1, 2)
+        .visible(() -> expRangeMode.get().equals(RangeMode.Height))
         .build()
     );
 
@@ -407,7 +439,7 @@ public class AutoCrystalRewrite extends Module {
     private final Setting<SettingColor> color = sgRender.add(new ColorSetting.Builder()
         .name("Side Color")
         .description("U blind?")
-        .defaultValue(new SettingColor(255, 0, 0, 150))
+        .defaultValue(new SettingColor(255, 0, 0, 50))
         .build()
     );
 
@@ -415,7 +447,7 @@ public class AutoCrystalRewrite extends Module {
     private final Setting<Boolean> debugRange = sgDebug.add(new BoolSetting.Builder()
         .name("Debug Range")
         .description(".")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
     private final Setting<Double> debugRangeX = sgDebug.add(new DoubleSetting.Builder()
@@ -517,7 +549,9 @@ public class AutoCrystalRewrite extends Module {
     public enum RangeMode {
         Automatic,
         Height,
-        Vanilla
+        NCP,
+        Vanilla,
+        CustomBox
     }
     public enum RenderMode {
         BlackOut,
@@ -590,7 +624,7 @@ public class AutoCrystalRewrite extends Module {
                             toRemove.add(pos);
                         } else {
                             event.renderer.box(OLEPOSSUtils.getBox(pos),
-                                new Color(color.get().r, color.get().g, color.get().b, (int) Math.round(color.get().a / 5f * Math.min(1, alpha[0] / alpha[1]))),
+                                new Color(color.get().r, color.get().g, color.get().b, (int) Math.round(color.get().a * Math.min(1, alpha[0] / alpha[1]))),
                                 new Color(lineColor.get().r, lineColor.get().g, lineColor.get().b, (int) Math.round(lineColor.get().a * Math.min(1, alpha[0] / alpha[1]))), shapeMode.get(), 0);
                             entry.setValue(new Double[]{alpha[0] - d, alpha[1]});
                         }
@@ -906,13 +940,41 @@ public class AutoCrystalRewrite extends Module {
         return Math.sqrt(distances.x * distances.x + distances.y * distances.y + distances.z * distances.z);
     }
     Vec3d expRangePos(Vec3d vec) {
-        return expRangeMode.get().equals(RangeMode.Vanilla) ? OLEPOSSUtils.getClosest(mc.player.getEyePos(), vec,
-            2, 2) : vec.add(0, expHeight.get(), 0);
+        switch (expRangeMode.get()) {
+            case Automatic -> {
+                return vec.add(0, 1, 0);
+            }
+            case Height -> {
+                return vec.add(0, expHeight.get(), 0);
+            }
+            case NCP -> {
+                return new Vec3d(vec.x, Math.min(Math.max(mc.player.getEyeY(), vec.y), vec.y + 2), vec.z);
+            }
+            case CustomBox -> {
+                return OLEPOSSUtils.getClosest(mc.player.getEyePos(), vec, crystalWidth.get(),crystalHeight.get());
+            }
+        }
+        // Vanilla mode
+        return OLEPOSSUtils.getClosest(mc.player.getEyePos(), vec, 2, 2);
+
     }
     Vec3d placeRangePos(BlockPos pos) {
-        return placeRangeMode.get().equals(RangeMode.Vanilla) ? OLEPOSSUtils.getClosest(mc.player.getEyePos(), new Vec3d(pos.getX() + 0.5, pos.getY() - 1, pos.getZ() + 0.5),
-            1, 1) :
-        new Vec3d(pos.getX() + 0.5, pos.getY() + placeHeight.get(), pos.getZ() + 0.5);
+        switch (placeRangeMode.get()) {
+            case Automatic -> {
+                return new Vec3d(pos.getX() + 0.5, pos.getY() - 0.5, pos.getZ() + 0.5);
+            }
+            case Height -> {
+                return new Vec3d(pos.getX() + 0.5, pos.getY() + placeHeight.get(), pos.getZ() + 0.5);
+            }
+            case NCP -> {
+                return new Vec3d(pos.getX() + 0.5, Math.min(Math.max(mc.player.getEyeY(), pos.getY() - 1), pos.getY()), pos.getZ() + 0.5);
+            }
+            case CustomBox -> {
+                return OLEPOSSUtils.getClosest(mc.player.getEyePos(), new Vec3d(pos.getX() + 0.5, pos.getY() - 1, pos.getZ() + 0.5), blockWidth.get(), blockHeight.get());
+            }
+        }
+        // Vanilla mode
+        return OLEPOSSUtils.getClosest(mc.player.getEyePos(), new Vec3d(pos.getX() + 0.5, pos.getY() - 1, pos.getZ() + 0.5), 1, 1);
     }
     Vec3d debugRangePos(int id) {
         return mc.player.getEyePos().add(-debugRangeX.get() - 0.5, -debugRangeY.get() - debugRangeHeight(id), -debugRangeZ.get() - 0.5);
