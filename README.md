@@ -18,95 +18,97 @@ The development of the addon might not be super active due to us having our own 
 latest build: https://github.com/KassuK1/BlackOut/releases/download/latest/blackout-0.3.0.jar
 
 <details>
-<summary><b>Modules</b></summary>
+<summary><b>Features</b></summary>
 
-AutoAndrewTate
+## Modules
 
-AntiAim
+#### AutoAndrewTate
 
-AutoCraftingTable
+#### AntiAim
 
-AutoCrystalPlus
+#### AutoCraftingTable
 
-AutoCrystalRewrite
+#### AutoCrystalPlus
 
-AutoEz
+#### AutoCrystalRewrite
 
-AutoMine
+#### AutoEz
 
-AutoPearl
+#### AutoMine
 
-AutoTravel
+#### AutoPearl
 
-BedBomb
+#### AutoTravel
 
-ButtonAura
+#### BedBomb
 
-CustomFOV
+#### ButtonAura
 
-Disabler
+#### CustomFOV
 
-FastXP
+#### Disabler
 
-FeetESP
+#### FastXP
 
-FlightPlus
+#### FeetESP
 
-HoleFill
+#### FlightPlus
 
-HoleSnap
+#### HoleFill
 
-ForceField
+#### HoleSnap
 
-LegitScaffold
+#### ForceField
 
-JumpModify
+#### LegitScaffold
 
-OffHandPlus
+#### JumpModify
 
-PacketCrash
+#### OffHandPlus
 
-NN-Nuker
+#### PacketCrash
 
-ResetVL
+#### NN-Nuker
 
-RPC
+#### ResetVL
 
-ScaffoldPlus
+#### RPC
 
-SelfTrapPlus
+#### ScaffoldPlus
 
-SprintPlus
+#### SelfTrapPlus
 
-Strafe
+#### SprintPlus
 
-SurroundPlus
+#### Strafe
 
-WeakAlert
+#### SurroundPlus
+
+#### WeakAlert
 
 ## Commands
 
-BlackoutGit
+#### BlackoutGit
 
-GearInfo
+#### GearInfo
 
-Kick
+#### Kick
 
-Panic
+#### Panic
 
 ## Hud
 
-BlackoutArray
+#### BlackoutArray
 
-GearHud
+#### GearHud
 
-HudWaterMark
+#### HudWaterMark
 
-Keys
+#### Keys
 
-PacketCounter
+#### PacketCounter
 
-TargetHud
+#### TargetHud
 
-Welcomer
+#### Welcomer
 </details>
