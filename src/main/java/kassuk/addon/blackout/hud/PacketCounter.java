@@ -6,7 +6,9 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.hud.HudElement;
 import meteordevelopment.meteorclient.systems.hud.HudElementInfo;
 import meteordevelopment.meteorclient.systems.hud.HudRenderer;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
+import net.minecraft.text.Text;
 /*
 Made By KassuK & OLEPOSSU
  */
@@ -32,7 +34,7 @@ public class PacketCounter extends HudElement {
         .build()
     );
 
-    int packets = -1;
+    double packets = -1;
     int target = 0;
 
     public PacketCounter() {
@@ -42,8 +44,9 @@ public class PacketCounter extends HudElement {
     @Override
     public void render(HudRenderer renderer) {
         target = Managers.PACKETS.getSent();
-        packets = packets == -1 ? target : packets == target ? target : packets < target ? packets + 1 : packets - 1;
+        double d = renderer.delta * 50 * (1 - Managers.PACKETS.getTimer());
+        packets = packets == -1 ? target : packets == target ? target : packets < target ? packets + d : packets - d;
         setSize(scale.get() * scale.get() * renderer.textWidth("135 Packets/s"), renderer.textHeight(true, scale.get()));
-        renderer.text(packets + " Packets/s", x, y, color.get(), true, scale.get());
+        renderer.text(Math.round(packets) + " Packets/s", x, y, color.get(), true, scale.get());
     }
 }

@@ -20,9 +20,11 @@ import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Blocks;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.EndCrystalEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
@@ -95,7 +97,7 @@ public class AutoCrystalRewrite extends Module {
     private final Setting<Boolean> instant = sgPlace.add(new BoolSetting.Builder()
         .name("Instant Place")
         .description("Places after exploding a crystal.")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
     private final Setting<Double> placeSpeed = sgPlace.add(new DoubleSetting.Builder()
@@ -122,14 +124,8 @@ public class AutoCrystalRewrite extends Module {
         .sliderRange(0, 20)
         .build()
     );
-    private final Setting<Boolean> placeSwing = sgPlace.add(new BoolSetting.Builder()
+    private final Setting<SwingMode> placeSwing = sgPlace.add(new EnumSetting.Builder<SwingMode>()
         .name("Place Swing")
-        .description(".")
-        .defaultValue(false)
-        .build()
-    );
-    private final Setting<SwingMode> placeSwingMode = sgPlace.add(new EnumSetting.Builder<SwingMode>()
-        .name("Place Swing Mode")
         .description(".")
         .defaultValue(SwingMode.Full)
         .build()
@@ -137,13 +133,13 @@ public class AutoCrystalRewrite extends Module {
     private final Setting<Boolean> clearSend = sgPlace.add(new BoolSetting.Builder()
         .name("Clear Send")
         .description(".")
-        .defaultValue(false)
+        .defaultValue(true)
         .build()
     );
     private final Setting<Boolean> clearReceive = sgPlace.add(new BoolSetting.Builder()
         .name("Clear Receive")
         .description(".")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
 
@@ -177,14 +173,8 @@ public class AutoCrystalRewrite extends Module {
         .visible(setDead::get)
         .build()
     );
-    private final Setting<Boolean> explodeSwing = sgExplode.add(new BoolSetting.Builder()
+    private final Setting<SwingMode> explodeSwing = sgExplode.add(new EnumSetting.Builder<SwingMode>()
         .name("Explode Swing")
-        .description(".")
-        .defaultValue(true)
-        .build()
-    );
-    private final Setting<SwingMode> explodeSwingMode = sgExplode.add(new EnumSetting.Builder<SwingMode>()
-        .name("Explode Swing Mode")
         .description(".")
         .defaultValue(SwingMode.Full)
         .build()
@@ -194,7 +184,7 @@ public class AutoCrystalRewrite extends Module {
     private final Setting<Double> placeRange = sgRange.add(new DoubleSetting.Builder()
         .name("Place Range")
         .description("Range for placing.")
-        .defaultValue(5)
+        .defaultValue(5.2)
         .range(0, 10)
         .sliderRange(0, 10)
         .build()
@@ -234,7 +224,7 @@ public class AutoCrystalRewrite extends Module {
     private final Setting<Double> expRange = sgRange.add(new DoubleSetting.Builder()
         .name("Explode Range")
         .description(".")
-        .defaultValue(5)
+        .defaultValue(4.8)
         .range(0, 10)
         .sliderRange(0, 10)
         .build()
@@ -242,7 +232,7 @@ public class AutoCrystalRewrite extends Module {
     private final Setting<RangeMode> expRangeMode = sgRange.add(new EnumSetting.Builder<RangeMode>()
         .name("Explode Range Mode")
         .description(".")
-        .defaultValue(RangeMode.Automatic)
+        .defaultValue(RangeMode.NCP)
         .build()
     );
     private final Setting<Double> crystalWidth = sgRange.add(new DoubleSetting.Builder()
@@ -276,7 +266,7 @@ public class AutoCrystalRewrite extends Module {
     private final Setting<DmgCheckMode> dmgCheckMode = sgDamage.add(new EnumSetting.Builder<DmgCheckMode>()
         .name("Dmg Check Mode")
         .description(".")
-        .defaultValue(DmgCheckMode.Balanced)
+        .defaultValue(DmgCheckMode.Normal)
         .build()
     );
     private final Setting<Double> minPlace = sgDamage.add(new DoubleSetting.Builder()
@@ -323,8 +313,8 @@ public class AutoCrystalRewrite extends Module {
         .name("Min Explode")
         .description(".")
         .defaultValue(2.5)
-        .range(0, 2)
-        .sliderRange(0, 2)
+        .range(0, 20)
+        .sliderRange(0, 20)
         .build()
     );
     private final Setting<Double> maxSelfExp = sgDamage.add(new DoubleSetting.Builder()
@@ -381,6 +371,24 @@ public class AutoCrystalRewrite extends Module {
         .defaultValue(2)
         .range(0, 10)
         .sliderRange(0, 10)
+        .build()
+    );
+
+    //  Extrapolation Page
+    private final Setting<Integer> extrapolation = sgExtrapolation.add(new IntSetting.Builder()
+        .name("Extrapolation")
+        .description(".")
+        .defaultValue(0)
+        .range(0, 100)
+        .sliderMax(100)
+        .build()
+    );
+    private final Setting<Integer> extSmoothness = sgExtrapolation.add(new IntSetting.Builder()
+        .name("Extrapolation Smoothening")
+        .description(".")
+        .defaultValue(5)
+        .range(1, 20)
+        .sliderRange(1, 20)
         .build()
     );
 
@@ -524,7 +532,8 @@ public class AutoCrystalRewrite extends Module {
     double delayTimer = 0;
     BlockPos placePos = null;
     IntTimerList attacked = new IntTimerList(false);
-
+    Map<String, Box> extPos = new HashMap<>();
+    List<PlayerEntity> enemies = new ArrayList<>();
     Map<String, List<Vec3d>> motions = new HashMap<>();
     List<Box> blocked = new ArrayList<>();
     Map<Vec3d, double[][]> dmgCache = new HashMap<>();
@@ -537,12 +546,11 @@ public class AutoCrystalRewrite extends Module {
 
 
     public enum DmgCheckMode {
-        Suicidal,
-        Balanced,
+        Normal,
         Safe
     }
     public enum SwingMode {
-        Client,
+        Disabled,
         Packet,
         Full
     }
@@ -568,6 +576,29 @@ public class AutoCrystalRewrite extends Module {
     @EventHandler(priority = EventPriority.HIGHEST + 1)
     private void onTickPre(TickEvent.Pre event) {
         if (mc.player != null && mc.world != null) {
+            for (PlayerEntity pl : mc.world.getPlayers()) {
+                String key = pl.getName().getString();
+                if (motions.containsKey(key)) {
+                    List<Vec3d> vec = motions.get(key);
+                    if (vec != null) {
+                        if (vec.size() >= extSmoothness.get()) {
+                            for (int i = vec.size() - extSmoothness.get(); i <= 0; i++) {
+                                vec.remove(0);
+                            }
+                        }
+                        vec.add(motionCalc(pl));
+                    } else {
+                        List<Vec3d> list = new ArrayList<>();
+                        list.add(motionCalc(pl));
+                        motions.put(key, list);
+                    }
+                } else {
+                    List<Vec3d> list = new ArrayList<>();
+                    list.add(motionCalc(pl));
+                    motions.put(key, list);
+                }
+            }
+            extPos = getExtPos();
             if (debugRange.get()) {
                 ChatUtils.sendMsg(Text.of(debugRangeHeight(1) + "  " + dist(debugRangePos(1)) + "\n" +
                     debugRangeHeight(2) + "  " + dist(debugRangePos(2)) + "\n" +
@@ -679,9 +710,8 @@ public class AutoCrystalRewrite extends Module {
                     if (canExplode(en.getPos())) {
                         double[] dmg = getDmg(en.getPos())[0];
                         if ((expEntity == null || value == null) ||
-                            (dmgCheckMode.get().equals(DmgCheckMode.Suicidal) && dmg[0] > value[0]) ||
-                            (dmgCheckMode.get().equals(DmgCheckMode.Balanced) && dmg[2] / dmg[0] < value[2] / dmg[0]) ||
-                            (dmgCheckMode.get().equals(DmgCheckMode.Safe) && dmg[2] < value[2])) {
+                            (dmgCheckMode.get().equals(DmgCheckMode.Normal) && dmg[0] > value[0]) ||
+                            (dmgCheckMode.get().equals(DmgCheckMode.Safe) && dmg[2] / dmg[0] < value[2] / dmg[0])) {
                             expEntity = en;
                             value = dmg;
                         }
@@ -725,7 +755,7 @@ public class AutoCrystalRewrite extends Module {
             blocked.add(new Box(pos.getX() - 0.5, pos.getY() + 1, pos.getZ() - 0.5, pos.getX() + 1.5, pos.getY() + 2, pos.getZ() + 1.5));
             mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(handToUse,
                 new BlockHitResult(new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), Direction.UP, pos, false), 0));
-            if (placeSwing.get()) {swing(handToUse, placeSwingMode.get());}
+            if (!placeSwing.get().equals(SwingMode.Disabled)) {swing(handToUse, placeSwing.get());}
         }
     }
 
@@ -767,7 +797,7 @@ public class AutoCrystalRewrite extends Module {
                 attacked.add(en.getId(), 1 / expSpeed.get());
                 delayTimer = 0;
                 mc.player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(en, mc.player.isSneaking()));
-                if (swing && explodeSwing.get()) {swing(handToUse, explodeSwingMode.get());}
+                if (swing && !explodeSwing.get().equals(SwingMode.Disabled)) {swing(handToUse, explodeSwing.get());}
                 if (confirm && clearSend.get()) {blocked.clear();}
                 if (setDead.get() && checkSD) {
                     Managers.DELAY.add(() -> setEntityDead(en), setDeadDelay.get());
@@ -798,10 +828,10 @@ public class AutoCrystalRewrite extends Module {
     }
 
     void swing(Hand hand, SwingMode mode) {
-        if (mode == SwingMode.Full || mode == SwingMode.Packet) {
+        if (mode == SwingMode.Packet) {
             mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(hand));
         }
-        if (mode == SwingMode.Full || mode == SwingMode.Client) {
+        if (mode == SwingMode.Full) {
             mc.player.swingHand(hand);
         }
     }
@@ -850,9 +880,8 @@ public class AutoCrystalRewrite extends Module {
 
         //  Dmg Check
         if (highest != null) {
-            if (dmgCheckMode.get().equals(DmgCheckMode.Suicidal) && dmg[0] < highest[0]) {return false;}
-            if (dmgCheckMode.get().equals(DmgCheckMode.Balanced) && dmg[2] / dmg[0] > highest[2] / highest[0]) {return false;}
-            if (dmgCheckMode.get().equals(DmgCheckMode.Safe) && dmg[2] > highest[2]) {return false;}
+            if (dmgCheckMode.get().equals(DmgCheckMode.Normal) && dmg[0] < highest[0]) {return false;}
+            if (dmgCheckMode.get().equals(DmgCheckMode.Safe) && dmg[2] / dmg[0] > highest[2] / highest[0]) {return false;}
         }
 
         //  Force/anti-pop check
@@ -893,15 +922,29 @@ public class AutoCrystalRewrite extends Module {
     }
 
     double[][] getDmg(Vec3d vec) {
-        if (dmgCache.containsKey(vec)) {return dmgCache.get(vec);}
+        if (dmgCache.containsKey(vec)) {
+            return dmgCache.get(vec);
+        }
         highestEnemy = -1;
         highestFriend = -1;
         self = -1;
         enemyHP = -1;
         friendHP = -1;
-        mc.world.getPlayers().forEach(player -> {
-            if (player.getHealth() <= 0 || player.isSpectator() || player == mc.player) {return;}
+        List<AbstractClientPlayerEntity> players = mc.world.getPlayers();
+        for (int i = 0; i < players.size(); i++) {
+            AbstractClientPlayerEntity player = players.get(i);
+            if (player.getHealth() <= 0 || player.isSpectator() || player == mc.player) {
+                continue;
+            }
+            Box ogBB = null;
+            if (extrapolation.get() != 0) {
+                ogBB = player.getBoundingBox();
+                player.setBoundingBox(extPos.get(player.getName().getString()));
+            }
             double dmg = DamageUtils.crystalDamage(player, vec);
+            if (extrapolation.get() != 0) {
+                player.setBoundingBox(ogBB);
+            }
             double hp = player.getHealth() + player.getAbsorptionAmount();
 
             //  friend
@@ -916,7 +959,7 @@ public class AutoCrystalRewrite extends Module {
                 highestEnemy = dmg;
                 enemyHP = hp;
             }
-        });
+        }
         self = DamageUtils.crystalDamage(mc.player, vec);
         double[][] result = new double[][]{new double[] {highestEnemy, highestFriend, self}, new double[]{enemyHP, friendHP}};
         dmgCache.put(vec, result);
@@ -984,7 +1027,6 @@ public class AutoCrystalRewrite extends Module {
         return shouldSlow() ? slowSpeed.get() : placeSpeed.get();
     }
     boolean shouldSlow() {return placePos != null && getDmg(new Vec3d(placePos.getX() + 0.5, placePos.getY(), placePos.getZ() + 0.5))[0][0] <= slowDamage.get();}
-
     Vec3d smoothMove(Vec3d current, Vec3d target, double delta) {
         if (current == null) {return target;}
         double absX = Math.abs(current.x - target.x);
@@ -997,5 +1039,70 @@ public class AutoCrystalRewrite extends Module {
         return new Vec3d(current.x > target.x ? Math.max(target.x, current.x - x) : Math.min(target.x, current.x + x),
             current.y > target.y ? Math.max(target.y, current.y - y) : Math.min(target.y, current.y + y),
             current.z > target.z ? Math.max(target.z, current.z - z) : Math.min(target.z, current.z + z));
+    }
+
+    Vec3d motionCalc(PlayerEntity en) {
+        return new Vec3d(en.getX() - en.prevX, en.getY() - en.prevY, en.getZ() - en.prevZ);
+    }
+
+    Map<String, Box> getExtPos() {
+        Map<String, Box> map = new HashMap<>();
+        enemies = new ArrayList<>();
+        if (!mc.world.getPlayers().isEmpty()) {
+            for (int p = 0; p < mc.world.getPlayers().size(); p++) {
+                PlayerEntity en = mc.world.getPlayers().get(p);
+                if (en != mc.player && !Friends.get().isFriend(en)) {
+                    if (!motions.isEmpty()) {
+                        Vec3d motion = average(motions.get(en.getName().getString()));
+                        double x = motion.x;
+                        double y = motion.y;
+                        double z = motion.z;
+                        Box box = en.getBoundingBox();
+                        if (!inside(en, box)) {
+                            for (int i = 0; i < extrapolation.get(); i++) {
+                                //x
+                                if (!inside(en, box.offset(x, 0, 0))) {
+                                    box = box.offset(x, 0, z);
+                                }
+
+                                //z
+                                if (!inside(en, box.offset(0, 0, z))) {
+                                    box = box.offset(0, 0, z);
+                                }
+
+                                //y
+                                if (inside(en, box.offset(0, -0.04, 0))) {
+                                    y = -0.08;
+                                } else {
+                                    if (!inside(en, box.offset(0, y, 0))) {
+                                        box = box.offset(0, y, 0);
+                                        y -= 0.08;
+                                    }
+                                }
+                            }
+                        }
+                        map.put(en.getName().getString(), box);
+                    }
+                }
+            }
+        }
+        return map;
+    }
+
+    Vec3d average(List<Vec3d> vec) {
+        Vec3d total = new Vec3d(0, 0, 0);
+        if (vec != null) {
+            if (!vec.isEmpty()) {
+                for (Vec3d vec3d : vec) {
+                    total = total.add(vec3d);
+                }
+                return new Vec3d(total.x / vec.size(), total.y / vec.size(), total.z / vec.size());
+            }
+        }
+        return total;
+    }
+
+    boolean inside(PlayerEntity en, Box bb) {
+        return mc.world.getBlockCollisions(en, bb).iterator().hasNext();
     }
 }

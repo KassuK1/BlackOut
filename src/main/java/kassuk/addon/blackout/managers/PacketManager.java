@@ -28,8 +28,9 @@ public class PacketManager {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
         timer += event.frameTime;
-        if (timer >= 1) {
-            packets = Math.round(sent / timer);
+        if (timer >= 0.25) {
+            packets = Math.round(sent * 5 / timer);
+            timer = 0;
             sent = 0;
         }
     }
@@ -40,6 +41,7 @@ public class PacketManager {
     }
 
     public int getSent() {return packets;}
+    public double getTimer() {return timer;}
 }
 
 

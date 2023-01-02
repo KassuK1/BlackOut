@@ -2,6 +2,7 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
+import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
@@ -87,14 +88,18 @@ public class OffHandPlus extends Module {
         Totem
     }
 
+    double timer = 0;
+
     @EventHandler(priority = EventPriority.HIGHEST)
-    private void onTick(TickEvent.Pre event) {
+    private void onRender(Render3DEvent event) {
+        timer = Math.min(delay.get(), timer + event.frameTime);
         if (mc.player != null && mc.world != null) {
             Item item = getItem();
             if (!mc.player.getOffHandStack().getItem().equals(item) && item != null) {
                 FindItemResult slot = find(item, switchMode.get().equals(switchModes.Hotbar));
                 slot = slot.count() > 0 ? slot : find(item, !switchMode.get().equals(switchModes.Hotbar));
-                if (slot.count() > 0) {
+                if (slot.count() > 0 && timer >= delay.get()) {
+                    timer = 0;
                     InvUtils.move().from(slot.slot()).toOffhand();
                 }
             }
