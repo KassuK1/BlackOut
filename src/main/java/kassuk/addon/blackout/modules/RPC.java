@@ -77,10 +77,12 @@ public class RPC extends Module {
 
     public void updatePresence() {
         ticks = refreshDelay.get();
-        index1 = index1 < l1.get().size() - 1 ? index1 + 1 : 0;
-        index2 = index2 < l2.get().size() - 1 ? index2 + 1 : 0;
-        presence.setState(mc.player == null ? "In Main Menu" : getMessages(l2.get()).get(index2));
-        presence.setDetails(mc.player == null ? "In Main Menu" : getMessages(l1.get()).get(index1));
+        List<String> messages1 = getMessages(l1.get());
+        List<String> messages2 = getMessages(l2.get());
+        index1 = index1 < messages1.size() - 1 ? index1 + 1 : 0;
+        index2 = index2 < messages2.size() - 1 ? index2 + 1 : 0;
+        presence.setDetails(mc.player == null ? "In Main Menu" : messages1.get(index1));
+        presence.setState(mc.player == null ? "In Main Menu" : messages2.get(index2));
         presence.setLargeImage("logo1", "v." + BlackOut.BLACKOUT_VERSION);
         DiscordIPC.setActivity(presence);
     }
