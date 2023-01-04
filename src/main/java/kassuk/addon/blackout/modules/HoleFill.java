@@ -1,5 +1,6 @@
 package kassuk.addon.blackout.modules;
 
+import com.ibm.icu.impl.breakiter.DictionaryBreakEngine;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
@@ -102,10 +103,15 @@ public class HoleFill extends Module {
         .sliderRange(0, 10)
         .build()
     );
+    private final Setting<FaceMode> facing = sgGeneral.add(new EnumSetting.Builder<FaceMode>()
+        .description("Facing")
+        .defaultValue(FaceMode.Range)
+        .build()
+    );
     private final Setting<Double> placeRange = sgGeneral.add(new DoubleSetting.Builder()
         .name("Place Range")
         .description("Range for placing")
-        .defaultValue(5)
+        .defaultValue(5.2)
         .range(0, 10)
         .sliderMax(10)
         .build()
@@ -136,6 +142,15 @@ public class HoleFill extends Module {
     List<Render> toRender = new ArrayList<>();
     BlockTimerList timers = new BlockTimerList();
     double placeTimer = 0;
+    Direction[] directions = new Direction[]{
+        Direction.DOWN, Direction.EAST, Direction.WEST, Direction.NORTH, Direction.SOUTH
+    };
+
+    public enum FaceMode {
+        Normal,
+        Strict,
+        Range
+    }
 
     @Override
     public void onActivate() {
@@ -201,14 +216,50 @@ public class HoleFill extends Module {
                     int x = x1 + mc.player.getBlockPos().getX();
                     int y = y1 + mc.player.getBlockPos().getY();
                     int z = z1 + mc.player.getBlockPos().getZ();
-                    if (isHole(x, y, z) && OLEPOSSUtils.distance(new Vec3d(x + 0.5, y + 0.5, z + 0.5), mc.player.getEyePos()) < range &&
-                    (!efficient.get() || closestDist(new BlockPos(x, y, z)) <
-                        OLEPOSSUtils.distance(new Vec3d(x + 0.5, y + 0.5, z + 0.5), mc.player.getEyePos()))) {
+                    if (isHole(x, y, z) && getDistance(new BlockPos(x, y, z)) < range &&
+                    (!efficient.get() || (closestDist(new BlockPos(x, y, z)) <
+                        OLEPOSSUtils.distance(new Vec3d(x + 0.5, y + 0.5, z + 0.5), mc.player.getPos()) && (!above.get() || mc.player.getY() >= y)))) {
                         holes.add(new BlockPos(x, y, z));
                     }
                 }
             }
         }
+    }
+
+    public double getDistance(BlockPos pos) {
+        Vec3d vec = OLEPOSSUtils.getMiddle(pos.offset(closestDir(pos)));
+        return OLEPOSSUtils.distance(vec, mc.player.getEyePos());
+    }
+
+    public Direction closestDir(BlockPos pos) {
+        double closest = -1;
+        Direction cDir = null;
+        switch (facing.get()) {
+            case Normal -> {
+                return Direction.UP;
+            }
+            case Strict -> {
+                for (Direction dir : directions) {
+                    double dist = OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(pos.offset(dir)), mc.player.getEyePos());
+                    if ((closest == -1 || dist < closest) && OLEPOSSUtils.strictDir(pos, dir)) {
+                        cDir = dir;
+                        closest = dist;
+                    }
+                }
+                return cDir;
+            }
+            case Range -> {
+                for (Direction dir : directions) {
+                    double dist = OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(pos.offset(dir)), mc.player.getEyePos());
+                    if (closest == -1 || dist < closest) {
+                        cDir = dir;
+                        closest = dist;
+                    }
+                }
+                return cDir;
+            }
+        }
+        return null;
     }
 
     double closestDist(BlockPos pos) {
@@ -275,8 +326,11 @@ public class HoleFill extends Module {
     void place(BlockPos pos) {
         BlackOut.LOG.info("HoleFill: place");
         timers.add(pos, delay.get());
-        mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
-            new BlockHitResult(new Vec3d(pos.getX(), pos.getY(), pos.getZ()), Direction.UP, pos, false), 0));
+        Direction dir = closestDir(pos);
+        if (dir != null) {
+            mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
+                new BlockHitResult(OLEPOSSUtils.getMiddle(pos.offset(dir)), dir.getOpposite(), pos.offset(dir), false), 0));
+        }
         if (swing.get()) {mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));}
         toRender.add(new Render(pos));
     }

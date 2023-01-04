@@ -119,11 +119,11 @@ public class OffHandPlus extends Module {
 
             double health = mc.player.getHealth() + mc.player.getAbsorptionAmount();
             boolean safe = health > hp.get() && isSafe(health);
-            if (itemMode.get().equals(itemModes.Totem) && totemAvailable) {
-                return Items.TOTEM_OF_UNDYING;
-            } else if (shouldGap && gapAvailable && !swordGapple.get().equals(swordGapModes.Smart) ||
+            if (shouldGap && gapAvailable && !swordGapple.get().equals(swordGapModes.Smart) ||
                 (swordGapple.get().equals(swordGapModes.Smart) && safe && gapAvailable && shouldGap)) {
                 return Items.ENCHANTED_GOLDEN_APPLE;
+            } else if (itemMode.get().equals(itemModes.Totem) && totemAvailable) {
+                return Items.TOTEM_OF_UNDYING;
             } else {
                 if (!totemAvailable) {
                     if (firstAvailable) {

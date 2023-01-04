@@ -197,6 +197,13 @@ public class AutoCrystalRewrite extends Module {
         .visible(() -> switchMode.get().equals(SwitchMode.Smart))
         .build()
     );
+    private final Setting<Boolean> onlyCrystal = sgSwitch.add(new BoolSetting.Builder()
+        .name("Only On Crystal")
+        .description("Only switches to gapple when holding crystal.")
+        .defaultValue(true)
+        .visible(() -> !alwaysGap.get() && switchMode.get().equals(SwitchMode.Smart))
+        .build()
+    );
     private final Setting<Double> afterSwitchDelay = sgSwitch.add(new DoubleSetting.Builder()
         .name("After Switch Delay")
         .description("Time to wait after switching before hitting crystals.")
@@ -783,7 +790,7 @@ public class AutoCrystalRewrite extends Module {
             }
             case Smart -> {
                 int gapSlot = InvUtils.findInHotbar(itemStack -> itemStack.getItem().equals(Items.ENCHANTED_GOLDEN_APPLE)).slot();
-                boolean shouldGap = mc.options.useKey.isPressed() && (alwaysGap.get() || placePos != null) && gapSlot >= 0 &&
+                boolean shouldGap = mc.options.useKey.isPressed() && (alwaysGap.get() || (placePos != null && (!onlyCrystal.get() || Managers.HOLDING.isHolding(Items.END_CRYSTAL)))) && gapSlot >= 0 &&
                     (alwaysGap.get() || !mc.player.getOffHandStack().getItem().equals(Items.END_CRYSTAL));
                 if (shouldGap) {
                     if (getHand(Items.ENCHANTED_GOLDEN_APPLE) == null) {

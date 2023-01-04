@@ -255,4 +255,14 @@ public class OLEPOSSUtils extends Utils {
             Math.min(Math.max(pPos.y, middle.y), middle.y + height),
             Math.min(Math.max(pPos.z, middle.z - width / 2), middle.z + width / 2));
     }
+
+    public static boolean strictDir(BlockPos pos, Direction dir) {
+        if (dir == Direction.UP && mc.player.getEyeY() >= pos.getY() + 0.5) {return true;}
+        if (dir == Direction.DOWN && mc.player.getEyeY() <= pos.getY() + 0.5) {return true;}
+        if (dir.getOffsetX() >= 0 && mc.player.getX() >= pos.getX() + 0.5 + dir.getOffsetX() / 2f) {return true;}
+        if (dir.getOffsetX() < 0 && mc.player.getX() < pos.getX() + 0.5 - dir.getOffsetX() / 2f) {return true;}
+        if (dir.getOffsetZ() >= 0 && mc.player.getZ() >= pos.getZ() + 0.5 + dir.getOffsetZ() / 2f) {return true;}
+        if (dir.getOffsetZ() < 0 && mc.player.getZ() < pos.getZ() + 0.5 - dir.getOffsetZ() / 2f) {return true;}
+        return false;
+    }
 }
