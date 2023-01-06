@@ -4,10 +4,7 @@ import kassuk.addon.blackout.BlackOut;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.mixininterface.IVec3d;
-import meteordevelopment.meteorclient.settings.BoolSetting;
-import meteordevelopment.meteorclient.settings.DoubleSetting;
-import meteordevelopment.meteorclient.settings.Setting;
-import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.world.Timer;
@@ -16,6 +13,13 @@ import meteordevelopment.orbit.EventHandler;
 public class FlightPlus extends Module {
     public FlightPlus() {super(BlackOut.BLACKOUT, "Flight+", "KasumsSoft Flight");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+
+    private final Setting<FlightMode> flyMode = sgGeneral.add(new EnumSetting.Builder<FlightMode>()
+        .name("Rotation mode")
+        .description(".")
+        .defaultValue(FlightMode.Momentum)
+        .build()
+    );
     private final Setting<Boolean> useTimer = sgGeneral.add(new BoolSetting.Builder()
         .name("Use Timer")
         .description("Should we use timer")
@@ -48,7 +52,7 @@ public class FlightPlus extends Module {
         .build()
     );
     private final Setting<Double> antiKickDelay = sgGeneral.add(new DoubleSetting.Builder()
-        .name("AntiKickDelay")
+        .name("Antikick delay")
         .description("How long of an delay should be used")
         .defaultValue(10)
         .min(0)
@@ -56,47 +60,95 @@ public class FlightPlus extends Module {
         .build()
     );
     private final Setting<Double> antiKickAmount = sgGeneral.add(new DoubleSetting.Builder()
-        .name("AntiKickAmount")
+        .name("Antikick amount")
         .description("How much to move")
         .defaultValue(1)
         .min(0)
         .sliderMax(10)
         .build()
     );
+    private final Setting<Boolean> keepY = sgGeneral.add(new BoolSetting.Builder()
+        .name("KeepY")
+        .description("Should we try to keep the same y level when jump flying")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Double> glideAmount = sgGeneral.add(new DoubleSetting.Builder()
+        .name("Glide amount")
+        .description("How much to move")
+        .defaultValue(0.2)
+        .min(0)
+        .sliderMax(1)
+        .build()
+    );
 
 
+    public enum FlightMode {
+        Momentum,
+        Jump,
+        Glide,
+    }
+    double startY = 0.0;
     int tick = 0;
-
+    @Override
+    public void onActivate() {
+        if (mc.player != null && mc.world != null){
+            startY = mc.player.getY();
+            Modules.get().get(Timer.class).setOverride(timer.get());
+        }
+    }
     @EventHandler
     private void onMove(PlayerMoveEvent event){
         if (mc.player != null && mc.world != null){
             double[] result = getYaw(mc.player.input.movementForward, mc.player.input.movementSideways);
             float yaw = (float) result[0] + 90;
             double x = 0, y = tick % antiKickDelay.get() == 0 ? antiKickAmount.get() * -0.04 : 0, z = 0;
-            if (mc.options.jumpKey.isPressed() && y == 0){
-                y = ySpeed.get();
+            if (flyMode.get().equals(FlightMode.Momentum)){
+                if (mc.options.jumpKey.isPressed() && y == 0){
+                    y = ySpeed.get();
+                }
+                else if (mc.options.sneakKey.isPressed()){
+                    y = -ySpeed.get();
+                }
+                if (result[1] == 1){
+                    x = Math.cos(Math.toRadians(yaw)) * speed.get();
+                    z = Math.sin(Math.toRadians(yaw)) * speed.get();
+
+                }
+                ((IVec3d) event.movement).set(x, y, z);
             }
-            else if (mc.options.sneakKey.isPressed()){
-                y = -ySpeed.get();
+            if (flyMode.get().equals(FlightMode.Jump)){
+                if (mc.options.jumpKey.wasPressed()){
+                    mc.player.jump();
+                    startY += 0.4;
+                }
+                if (mc.options.sneakKey.wasPressed() && !mc.options.sneakKey.isPressed()){
+                    startY = mc.player.getY();
+                }
+
+                if (keepY.get() && mc.player.getY() <= startY && !mc.options.sneakKey.isPressed())
+                    mc.player.jump();
+                if (result[1] == 1){
+                    x = Math.cos(Math.toRadians(yaw)) * speed.get();
+                    z = Math.sin(Math.toRadians(yaw)) * speed.get();
+
+                }
+                ((IVec3d) event.movement).setXZ(x, z);
             }
-            if (result[1] == 1){
-                x = Math.cos(Math.toRadians(yaw)) * speed.get();
-                z = Math.sin(Math.toRadians(yaw)) * speed.get();
+            if (flyMode.get().equals(FlightMode.Glide)){
+                if (!mc.player.isOnGround())
+                    ((IVec3d) event.movement).set(mc.player.getVelocity().getX(),-glideAmount.get(), mc.player.getVelocity().getZ());
 
             }
-            ((IVec3d) event.movement).set(x, y, z);
         }
     }
+
     @EventHandler
     private void onTick(TickEvent.Pre event){
         tick++;
+
     }
-    @Override
-    public void onActivate() {
-        if (mc.player != null && mc.world != null){
-        Modules.get().get(Timer.class).setOverride(timer.get());
-        }
-    }
+
     @Override
     public void onDeactivate(){
         if (mc.player != null && mc.world != null){
