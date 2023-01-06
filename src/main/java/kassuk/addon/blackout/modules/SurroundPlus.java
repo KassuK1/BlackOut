@@ -1,5 +1,6 @@
 package kassuk.addon.blackout.modules;
 
+import io.netty.util.internal.MathUtil;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.timers.BlockTimerList;
@@ -22,10 +23,7 @@ import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +36,11 @@ Updated by OLEPOSSU
 public class SurroundPlus extends Module {
     public SurroundPlus() {super(BlackOut.BLACKOUT, "Surround+", "KasumsSoft surround");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final Setting<OrderMode> placeOrder = sgGeneral.add(new EnumSetting.Builder<OrderMode>()
+        .description("Place Order")
+        .defaultValue(OrderMode.Angle)
+        .build()
+    );
     private final Setting<Boolean> silent = sgGeneral.add(new BoolSetting.Builder()
         .name("Silent")
         .description("Silently switch to obby when placing")
@@ -99,9 +102,16 @@ public class SurroundPlus extends Module {
         .build()
     );
 
+    public enum OrderMode {
+        Enemy,
+        Angle,
+        Dist
+    }
+
     BlockTimerList timers = new BlockTimerList();
     BlockPos startPos = null;
     double placeTimer = 0;
+    int placesLeft = 0;
     List<BlockPos> render = new ArrayList<>();
 
     @Override
@@ -115,15 +125,59 @@ public class SurroundPlus extends Module {
     @EventHandler
     private void onRender(Render3DEvent event){
         placeTimer = Math.min(placeDelay.get(), placeTimer + event.frameTime);
+        if (placeTimer >= placeDelay.get()) {
+            placesLeft = places.get();
+            placeTimer = 0;
+        }
         render.forEach(item -> event.renderer.box(OLEPOSSUtils.getBox(item), new Color(color.get().r, color.get().g, color.get().b,
             (int) Math.floor(color.get().a / 5f)), color.get(), ShapeMode.Both, 0));
         update();
     }
 
-    List<BlockPos> check(BlockPos pos) {
+    void update() {
+        if (mc.player != null && mc.world != null) {
+            //Check if player has moved
+            if (!mc.player.getBlockPos().equals(startPos)) {
+                toggle();
+                return;
+            }
+
+
+            List<BlockPos> placements = check();
+            int[] obsidian = findObby();
+            if (obsidian[1] > 0 && (Managers.HOLDING.isHolding(Items.OBSIDIAN) || silent.get()) && !placements.isEmpty() &&
+                (!pauseEat.get() || !mc.player.isUsingItem()) && placesLeft > 0) {
+                boolean swapped = false;
+                if (!Managers.HOLDING.isHolding(Items.OBSIDIAN) && silent.get()) {
+                    InvUtils.swap(obsidian[0], true);
+                    swapped = true;
+                }
+                if (center.get()) {
+                    PlayerUtils.centerPlayer();
+                }
+                int p = Math.min(Math.min(obsidian[1], placesLeft), placements.size());
+                for (int i = 0; i < p; i++) {
+                    BlockPos toPlace = placements.get(i);
+                    timers.add(toPlace, delay.get());
+                    placeTimer = 0;
+                    placesLeft--;
+                    mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
+                        new BlockHitResult(new Vec3d(toPlace.getX() + 0.5, toPlace.getY() + 0.5, toPlace.getZ() + 0.5), Direction.UP, toPlace, false), 0));
+                    if (swing.get()) {
+                        mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
+                    }
+                }
+                if (swapped) {
+                    InvUtils.swapBack();
+                }
+            }
+        }
+    }
+
+    List<BlockPos> check() {
         List<BlockPos> list = new ArrayList<>();
         List<BlockPos> renders = new ArrayList<>();
-        List<BlockPos> blocks = getBlocks(getSize(pos));
+        List<BlockPos> blocks = getBlocks(getSize());
         if (mc.player != null && mc.world != null) {
             for (BlockPos position : blocks) {
                 if (mc.world.getBlockState(position).getBlock().equals(Blocks.AIR)) {
@@ -138,81 +192,12 @@ public class SurroundPlus extends Module {
         return list;
     }
 
-    void update() {
-        if (mc.player != null && mc.world != null) {
-            if (!mc.player.getBlockPos().equals(startPos)) {
-                toggle();
-            }
-            else if (placeTimer >= placeDelay.get()) {
-                List<BlockPos> placements = check(mc.player.getBlockPos());
-                int[] obsidian = findObby();
-                if (obsidian[1] > 0 && (Managers.HOLDING.isHolding(Items.OBSIDIAN) || silent.get()) && !placements.isEmpty() &&
-                    (!pauseEat.get() || !mc.player.isUsingItem())) {
-                    boolean swapped = false;
-                    if (!Managers.HOLDING.isHolding(Items.OBSIDIAN) && silent.get()) {
-                        InvUtils.swap(obsidian[0], true);
-                        swapped = true;
-                    }
-                    if (center.get()) {
-                        PlayerUtils.centerPlayer();
-                    }
-                    for (int i = 0; i < Math.min(Math.min(obsidian[1], places.get()), placements.size()); i++) {
-                        BlockPos toPlace = placements.get(i);
-                        timers.add(toPlace, delay.get());
-                        placeTimer = 0;
-                        mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
-                            new BlockHitResult(new Vec3d(toPlace.getX() + 0.5, toPlace.getY() + 0.5, toPlace.getZ() + 0.5), Direction.UP, toPlace, false), 0));
-                        if (swing.get()) {
-                            mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
-                        }
-                    }
-                    if (swapped) {
-                        InvUtils.swapBack();
-                    }
-                }
-            }
-        }
-    }
+    int[] getSize() {
+        if (mc.player == null || mc.world == null) {return new int[]{0, 0, 0, 0};}
 
-    int[] findObby() {
-        int num = 0;
-        int slot = 0;
-        if (mc.player != null) {
-            for (int i = 0; i < 9; i++) {
-                ItemStack stack = mc.player.getInventory().getStack(i);
-                if (stack.getCount() > num && stack.getItem().equals(Items.OBSIDIAN)) {
-                    num = stack.getCount();
-                    slot = i;
-                }
-            }
-        }
-        return new int[] {slot, num};
+        Vec3d offset = mc.player.getPos().add(-mc.player.getBlockX(), -mc.player.getBlockY(), -mc.player.getBlockZ());
+        return new int[]{offset.x < 0.3 ? -1 : 0, offset.x > 0.7 ? 1 : 0, offset.z < 0.3 ? -1 : 0, offset.z > 0.7 ? 1 : 0};
     }
-
-    int[] getSize(BlockPos pos) {
-        int minX = 0;
-        int maxX = 0;
-        int minZ = 0;
-        int maxZ = 0;
-        if (mc.player != null && mc.world != null) {
-            Box box = mc.player.getBoundingBox();
-            if (box.intersects(OLEPOSSUtils.getBox(pos.north()))) {
-                minZ--;
-            }
-            if (box.intersects(OLEPOSSUtils.getBox(pos.south()))) {
-                maxZ++;
-            }
-            if (box.intersects(OLEPOSSUtils.getBox(pos.west()))) {
-                minX--;
-            }
-            if (box.intersects(OLEPOSSUtils.getBox(pos.east()))) {
-                maxX++;
-            }
-        }
-        return new int[]{minX, maxX, minZ, maxZ};
-    }
-
-    boolean air(BlockPos pos) {return mc.world.getBlockState(pos).getBlock().equals(Blocks.AIR);}
 
     List<BlockPos> getBlocks(int[] size) {
         List<BlockPos> list = new ArrayList<>();
@@ -233,5 +218,22 @@ public class SurroundPlus extends Module {
             }
         }
         return list;
+    }
+
+    boolean air(BlockPos pos) {return mc.world.getBlockState(pos).getBlock().equals(Blocks.AIR);}
+
+    int[] findObby() {
+        int num = 0;
+        int slot = 0;
+        if (mc.player != null) {
+            for (int i = 0; i < 9; i++) {
+                ItemStack stack = mc.player.getInventory().getStack(i);
+                if (stack.getCount() > num && stack.getItem().equals(Items.OBSIDIAN)) {
+                    num = stack.getCount();
+                    slot = i;
+                }
+            }
+        }
+        return new int[] {slot, num};
     }
 }

@@ -7,6 +7,7 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
+import net.minecraft.client.render.FogShape;
 import net.minecraft.entity.effect.StatusEffect;
 
 /*
@@ -19,8 +20,13 @@ public class Fog extends Module {
         super(BlackOut.BLACKOUT, "Fog", "Customizable fog");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    public final Setting<FogShape> shape = sgGeneral.add(new EnumSetting.Builder<FogShape>()
+        .description(".")
+        .defaultValue(FogShape.SPHERE)
+        .build()
+    );
     public final Setting<Double> distance = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Terrain Distance")
+        .name("Distance")
         .description(".")
         .defaultValue(25)
         .min(0)
@@ -29,7 +35,7 @@ public class Fog extends Module {
     );
 
     public final Setting<Integer> smoothness = sgGeneral.add(new IntSetting.Builder()
-        .name("Terrain Smoothness")
+        .name("Smoothness")
         .description(".")
         .defaultValue(5)
         .min(0)
