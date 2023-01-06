@@ -44,7 +44,7 @@ public class PacketCounter extends HudElement {
     @Override
     public void render(HudRenderer renderer) {
         target = Managers.PACKETS.getSent();
-        double d = renderer.delta * 50 * (1 - Managers.PACKETS.getTimer());
+        double d = renderer.delta * 50 * (1 - Managers.PACKETS.getTimer()) * Math.abs(packets - target) / 5;
         packets = packets == -1 ? target : packets == target ? target : packets < target ? packets + d : packets - d;
         setSize(scale.get() * scale.get() * renderer.textWidth("135 Packets/s"), renderer.textHeight(true, scale.get()));
         renderer.text(Math.round(packets) + " Packets/s", x, y, color.get(), true, scale.get());

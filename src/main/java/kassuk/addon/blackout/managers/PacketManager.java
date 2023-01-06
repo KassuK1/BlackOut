@@ -29,7 +29,7 @@ public class PacketManager {
     private void onRender(Render3DEvent event) {
         timer += event.frameTime;
         if (timer >= 0.25) {
-            packets = Math.round(sent * 5 / timer);
+            packets = Math.round(sent * 4 / timer);
             timer = 0;
             sent = 0;
         }

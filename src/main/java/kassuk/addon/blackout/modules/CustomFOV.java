@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import meteordevelopment.meteorclient.events.render.GetFovEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.IntSetting;
 import meteordevelopment.meteorclient.settings.Setting;
@@ -22,22 +23,9 @@ public class CustomFOV extends Module {
         .build()
     );
 
-    int original = 0;
-
-    @Override
-    public void onActivate() {
-        var original = mc.options.getFov();
-    }
-
     @EventHandler
-    private void onTick(TickEvent.Pre event) {
-        if (mc.player != null && mc.world != null){
-            mc.options.getFov().setValue(FOV.get());
-        }
-    }
-
-    @Override
-    public void onDeactivate() {
-        mc.options.getFov().setValue(FOV.get());
+    private void onFov(GetFovEvent event) {
+        event.fov = FOV.get();
     }
 }
+
