@@ -130,19 +130,19 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<SwingMode> placeSwing = sgPlace.add(new EnumSetting.Builder<SwingMode>()
         .name("Place Swing")
-        .description(".")
+        .description("Swings after placing.")
         .defaultValue(SwingMode.Full)
         .build()
     );
     private final Setting<Boolean> clearSend = sgPlace.add(new BoolSetting.Builder()
         .name("Clear Send")
-        .description(".")
+        .description("Clears blocked positions when sending explode packet.")
         .defaultValue(true)
         .build()
     );
     private final Setting<Boolean> clearReceive = sgPlace.add(new BoolSetting.Builder()
         .name("Clear Receive")
-        .description(".")
+        .description("Clears blocked positions when receiving explode packet.")
         .defaultValue(false)
         .build()
     );
@@ -150,13 +150,13 @@ public class AutoCrystalRewrite extends Module {
     //  Explode Page
     private final Setting<Boolean> instantExp = sgExplode.add(new BoolSetting.Builder()
         .name("Instant Explode")
-        .description(".")
+        .description("Instantly sends attack packet after end crystal has spawned.")
         .defaultValue(false)
         .build()
     );
     private final Setting<Double> expSpeed = sgExplode.add(new DoubleSetting.Builder()
         .name("Explode Speed")
-        .description(".")
+        .description("How many times to hit crystal each second.")
         .defaultValue(2)
         .range(0.01, 20)
         .sliderRange(0.01, 20)
@@ -164,13 +164,13 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<Boolean> setDead = sgExplode.add(new BoolSetting.Builder()
         .name("Set Dead")
-        .description(".")
+        .description("Hides the crystal after hitting it.")
         .defaultValue(false)
         .build()
     );
     private final Setting<Double> setDeadDelay = sgExplode.add(new DoubleSetting.Builder()
         .name("Set Dead Delay")
-        .description(".")
+        .description("How long after hitting should the crystal disappear.")
         .defaultValue(0.05)
         .range(0, 1)
         .sliderRange(0, 1)
@@ -179,7 +179,7 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<SwingMode> explodeSwing = sgExplode.add(new EnumSetting.Builder<SwingMode>()
         .name("Explode Swing")
-        .description(".")
+        .description("Swings after attacking a crystal.")
         .defaultValue(SwingMode.Full)
         .build()
     );
@@ -187,7 +187,7 @@ public class AutoCrystalRewrite extends Module {
     //  Switch Page
     private final Setting<SwitchMode> switchMode = sgSwitch.add(new EnumSetting.Builder<SwitchMode>()
         .name("Switch Mode")
-        .description(".")
+        .description("Mode for switching to crystal in mainhand.")
         .defaultValue(SwitchMode.Disabled)
         .build()
     );
@@ -231,7 +231,7 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<Double> blockWidth = sgRange.add(new DoubleSetting.Builder()
         .name("Block Width")
-        .description(".")
+        .description("How wide should the box be for closest range.")
         .defaultValue(2)
         .range(0, 3)
         .sliderRange(0, 3)
@@ -240,7 +240,7 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<Double> blockHeight = sgRange.add(new DoubleSetting.Builder()
         .name("Block Height")
-        .description(".")
+        .description("How tall should the box be for closest range.")
         .defaultValue(2)
         .range(0, 3)
         .sliderRange(0, 3)
@@ -249,7 +249,7 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<Double> placeHeight = sgRange.add(new DoubleSetting.Builder()
         .name("Place Height")
-        .description(".")
+        .description("The height to calculate ranges from.")
         .defaultValue(-0.5)
         .sliderRange(-1, 2)
         .visible(() -> placeRangeMode.get().equals(RangeMode.Height))
@@ -257,7 +257,7 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<Double> expRange = sgRange.add(new DoubleSetting.Builder()
         .name("Explode Range")
-        .description(".")
+        .description("Range for exploding crystals.")
         .defaultValue(4.8)
         .range(0, 10)
         .sliderRange(0, 10)
@@ -265,13 +265,13 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<RangeMode> expRangeMode = sgRange.add(new EnumSetting.Builder<RangeMode>()
         .name("Explode Range Mode")
-        .description(".")
+        .description("Where to calculate ranges from.")
         .defaultValue(RangeMode.NCP)
         .build()
     );
     private final Setting<Double> crystalWidth = sgRange.add(new DoubleSetting.Builder()
         .name("Crystal Width")
-        .description(".")
+        .description("How wide should the box be for closest range.")
         .defaultValue(2)
         .range(0, 3)
         .sliderRange(0, 3)
@@ -280,7 +280,7 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<Double> crystalHeight = sgRange.add(new DoubleSetting.Builder()
         .name("Crystal Height")
-        .description(".")
+        .description("How tall should the box be for closest range.")
         .defaultValue(2)
         .range(0, 3)
         .sliderRange(0, 3)
@@ -289,7 +289,7 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<Double> expHeight = sgRange.add(new DoubleSetting.Builder()
         .name("Explode Height")
-        .description(".")
+        .description("The height to calculate ranges from.")
         .defaultValue(1)
         .sliderRange(-1, 2)
         .visible(() -> expRangeMode.get().equals(RangeMode.Height))
@@ -305,7 +305,7 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<Double> minPlace = sgDamage.add(new DoubleSetting.Builder()
         .name("Min Place")
-        .description(".")
+        .description("Minimum enemy damage for placing.")
         .defaultValue(4)
         .range(0, 20)
         .sliderRange(0, 20)
@@ -313,7 +313,7 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<Double> maxSelfPlace = sgDamage.add(new DoubleSetting.Builder()
         .name("Max Self Place")
-        .description(".")
+        .description("Max self damage for placing.")
         .defaultValue(8)
         .range(0, 20)
         .sliderRange(0, 20)
@@ -321,7 +321,7 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<Double> maxSelfPlaceRatio = sgDamage.add(new DoubleSetting.Builder()
         .name("Max Self Place Ratio")
-        .description(".")
+        .description("Max self damage ratio for placing (self damage / enemy damage).")
         .defaultValue(0.3)
         .range(0, 5)
         .sliderRange(0, 5)
@@ -329,7 +329,7 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<Double> maxFriendPlace = sgDamage.add(new DoubleSetting.Builder()
         .name("Max Friend Place")
-        .description(".")
+        .description("Max friend damage for placing.")
         .defaultValue(8)
         .range(0, 20)
         .sliderRange(0, 20)
@@ -337,7 +337,7 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<Double> maxFriendPlaceRatio = sgDamage.add(new DoubleSetting.Builder()
         .name("Max Friend Place Ratio")
-        .description(".")
+        .description("Max friend damage ratio for placing (friend damage / enemy damage)..")
         .defaultValue(0.5)
         .range(0, 5)
         .sliderRange(0, 5)
@@ -345,7 +345,7 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<Double> minExplode = sgDamage.add(new DoubleSetting.Builder()
         .name("Min Explode")
-        .description(".")
+        .description("Minimum enemy damage for exploding a crystal.")
         .defaultValue(2.5)
         .range(0, 20)
         .sliderRange(0, 20)
@@ -353,7 +353,7 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<Double> maxSelfExp = sgDamage.add(new DoubleSetting.Builder()
         .name("Max Self Explode")
-        .description(".")
+        .description("Max self damage for exploding a crystal.")
         .defaultValue(9)
         .range(0, 20)
         .sliderRange(0, 20)
@@ -361,7 +361,7 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<Double> maxSelfExpRatio = sgDamage.add(new DoubleSetting.Builder()
         .name("Max Self Explode Ratio")
-        .description(".")
+        .description("Max self damage ratio for exploding a crystal (self damage / enemy damage).")
         .defaultValue(0.4)
         .range(0, 5)
         .sliderRange(0, 5)
@@ -369,7 +369,7 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<Double> maxFriendExp = sgDamage.add(new DoubleSetting.Builder()
         .name("Max Friend Explode")
-        .description(".")
+        .description("Max friend damage for exploding a crystal.")
         .defaultValue(12)
         .range(0, 20)
         .sliderRange(0, 20)
@@ -377,7 +377,7 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<Double> maxFriendExpRatio = sgDamage.add(new DoubleSetting.Builder()
         .name("Max Friend Explode Ratio")
-        .description(".")
+        .description("Max friend damage ratio for exploding a crystal (friend damage / enemy damage).")
         .defaultValue(0.5)
         .range(0, 5)
         .sliderRange(0, 5)
@@ -385,7 +385,7 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<Double> forcePop = sgDamage.add(new DoubleSetting.Builder()
         .name("Force Pop")
-        .description(".")
+        .description("Ignores damage checks if any enemy will be popped in x hits.")
         .defaultValue(2)
         .range(0, 10)
         .sliderRange(0, 10)
@@ -393,7 +393,7 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<Double> antiFriendPop = sgDamage.add(new DoubleSetting.Builder()
         .name("Anti Friend Pop")
-        .description(".")
+        .description("Cancels any action if any friend will be popped in x hits.")
         .defaultValue(2)
         .range(0, 10)
         .sliderRange(0, 10)
@@ -401,7 +401,7 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<Double> antiSelfPop = sgDamage.add(new DoubleSetting.Builder()
         .name("Anti Self Pop")
-        .description(".")
+        .description("Cancels any action if you will be popped in x hits.")
         .defaultValue(2)
         .range(0, 10)
         .sliderRange(0, 10)
@@ -411,25 +411,25 @@ public class AutoCrystalRewrite extends Module {
     //  Extrapolation Page
     private final Setting<Boolean> enemyExt = sgExtrapolation.add(new BoolSetting.Builder()
         .name("Enemy Extrapolation")
-        .description(".")
+        .description("Predicts enemy motion.")
         .defaultValue(true)
         .build()
     );
     private final Setting<Boolean> selfExt = sgExtrapolation.add(new BoolSetting.Builder()
         .name("Self Extrapolation")
-        .description(".")
+        .description("Predicts own motion.")
         .defaultValue(true)
         .build()
     );
     private final Setting<Boolean> friendExt = sgExtrapolation.add(new BoolSetting.Builder()
         .name("Friend Extrapolation")
-        .description(".")
+        .description("Predicts friend motion.")
         .defaultValue(true)
         .build()
     );
     private final Setting<Integer> extrapolation = sgExtrapolation.add(new IntSetting.Builder()
         .name("Extrapolation")
-        .description("Broken rn dont use.")
+        .description("How many ticks of movement should be predicted.")
         .defaultValue(0)
         .range(0, 100)
         .sliderMax(100)
@@ -437,7 +437,7 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<Integer> extSmoothness = sgExtrapolation.add(new IntSetting.Builder()
         .name("Extrapolation Smoothening")
-        .description(".")
+        .description("How many earlier ticks should be used in average calculation for extrapolation motion.")
         .defaultValue(5)
         .range(1, 20)
         .sliderRange(1, 20)
@@ -447,7 +447,7 @@ public class AutoCrystalRewrite extends Module {
     //  Render Page
     private final Setting<Boolean> render = sgRender.add(new BoolSetting.Builder()
         .name("Render")
-        .description(".")
+        .description("Renders stuff when placing crystals.")
         .defaultValue(true)
         .build()
     );
@@ -483,7 +483,7 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<Double> animationSpeed = sgRender.add(new DoubleSetting.Builder()
         .name("Animation Speed")
-        .description(".")
+        .description("How fast should blackout mode box move.")
         .defaultValue(1)
         .min(0)
         .sliderRange(0, 10)
@@ -492,13 +492,13 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder()
         .name("Line Color")
-        .description("U blind?")
+        .description("Line color of rendered stuff")
         .defaultValue(new SettingColor(255, 0, 0, 255))
         .build()
     );
     private final Setting<SettingColor> color = sgRender.add(new ColorSetting.Builder()
         .name("Side Color")
-        .description("U blind?")
+        .description("Side color of rendered stuff")
         .defaultValue(new SettingColor(255, 0, 0, 50))
         .build()
     );
@@ -506,13 +506,13 @@ public class AutoCrystalRewrite extends Module {
     //  Debug Page
     private final Setting<Boolean> renderExt = sgDebug.add(new BoolSetting.Builder()
         .name("Render Extrapolation")
-        .description(".")
+        .description("Renders box at players' predicted positions.")
         .defaultValue(false)
         .build()
     );
     private final Setting<Boolean> renderSelfExt = sgDebug.add(new BoolSetting.Builder()
         .name("Render Self Extrapolation")
-        .description(".")
+        .description("Renders box at your predicted position.")
         .defaultValue(false)
         .build()
     );
