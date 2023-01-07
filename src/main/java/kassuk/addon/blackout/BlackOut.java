@@ -41,6 +41,7 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new AutoTravel());
         Modules.get().add(new BedBomb());
         Modules.get().add(new ButtonAura());
+        Modules.get().add(new CrystalBait());
         Modules.get().add(new CustomFOV());
         Modules.get().add(new Disabler());
         Modules.get().add(new FastXP());

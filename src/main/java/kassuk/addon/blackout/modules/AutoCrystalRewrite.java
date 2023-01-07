@@ -2,6 +2,7 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.managers.Managers;
+import kassuk.addon.blackout.utils.BODamageUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.timers.IntTimerList;
 import meteordevelopment.meteorclient.events.entity.EntityAddedEvent;
@@ -408,6 +409,24 @@ public class AutoCrystalRewrite extends Module {
     );
 
     //  Extrapolation Page
+    private final Setting<Boolean> enemyExt = sgDebug.add(new BoolSetting.Builder()
+        .name("Enemy Extrapolation")
+        .description(".")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> selfExt = sgDebug.add(new BoolSetting.Builder()
+        .name("Self Extrapolation")
+        .description(".")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> friendExt = sgDebug.add(new BoolSetting.Builder()
+        .name("Friend Extrapolation")
+        .description(".")
+        .defaultValue(true)
+        .build()
+    );
     private final Setting<Integer> extrapolation = sgExtrapolation.add(new IntSetting.Builder()
         .name("Extrapolation")
         .description("Broken rn dont use.")
@@ -487,6 +506,12 @@ public class AutoCrystalRewrite extends Module {
     //  Debug Page
     private final Setting<Boolean> renderExt = sgDebug.add(new BoolSetting.Builder()
         .name("Render Extrapolation")
+        .description(".")
+        .defaultValue(false)
+        .build()
+    );
+    private final Setting<Boolean> renderSelfExt = sgDebug.add(new BoolSetting.Builder()
+        .name("Render Self Extrapolation")
         .description(".")
         .defaultValue(false)
         .build()
@@ -627,7 +652,8 @@ public class AutoCrystalRewrite extends Module {
                     List<Vec3d> vec = motions.get(key);
                     if (vec != null) {
                         if (vec.size() >= extSmoothness.get()) {
-                            for (int i = vec.size() - extSmoothness.get(); i <= 0; i++) {
+                            int p = vec.size() - extSmoothness.get();
+                            for (int i = 0; i < p; i++) {
                                 vec.remove(0);
                             }
                         }
@@ -711,11 +737,14 @@ public class AutoCrystalRewrite extends Module {
             }
         }
 
-        //Render extrapolation
-        if (renderExt.get()) {
-            extPos.forEach((name, bb) -> {
-                event.renderer.box(bb, color.get(), lineColor.get(), shapeMode.get(), 0);
-            });
+        if (mc.player != null) {
+            //Render extrapolation
+            if (renderExt.get()) {
+                extPos.forEach((name, bb) -> {
+                    if (!renderSelfExt.get() || !name.equals(mc.player.getName().getString()))
+                        event.renderer.box(bb, color.get(), lineColor.get(), shapeMode.get(), 0);
+                });
+            }
         }
     }
 
@@ -1010,20 +1039,9 @@ public class AutoCrystalRewrite extends Module {
             if (player.getHealth() <= 0 || player.isSpectator() || player == mc.player) {
                 continue;
             }
-            Vec3d ogBB = null;
-            if (extrapolation.get() != 0) {
-                ogBB = player.getPos();
-                Box box = extPos.get(player.getName().getString());
-                if (box != null) {
-                    Vec3d middle = new Vec3d((box.minX + box.maxX) / 2, box.minY, (box.minZ + box.maxZ) / 2);
-                    player.setPos(middle.x, middle.y, middle.z);
-                }
-            }
 
-            double dmg = DamageUtils.crystalDamage(player, vec);
-            if (extrapolation.get() != 0) {
-                player.setPos(ogBB.x, ogBB.y, ogBB.z);
-            }
+            String key = player.getName().getString();
+            double dmg = BODamageUtils.crystalDamage(player, extPos.containsKey(key) && shouldExt(player) ? extPos.get(key) : player.getBoundingBox(),vec);
             double hp = player.getHealth() + player.getAbsorptionAmount();
 
             //  friend
@@ -1039,11 +1057,13 @@ public class AutoCrystalRewrite extends Module {
                 enemyHP = hp;
             }
         }
-        self = DamageUtils.crystalDamage(mc.player, vec);
+        self = BODamageUtils.crystalDamage(mc.player, selfExt.get() && extPos.containsKey(mc.player.getName().getString()) ? extPos.get(mc.player.getName().getString()) : mc.player.getBoundingBox(),vec);
         double[][] result = new double[][]{new double[] {highestEnemy, highestFriend, self}, new double[]{enemyHP, friendHP}};
         dmgCache.put(vec, result);
         return result;
     }
+
+    boolean shouldExt(PlayerEntity pl) {return (enemyExt.get() && !Friends.get().isFriend(pl)) || (friendExt.get() && Friends.get().isFriend(pl));}
 
     boolean air(BlockPos pos) {
         return mc.world.getBlockState(pos).getBlock().equals(Blocks.AIR);
@@ -1130,38 +1150,36 @@ public class AutoCrystalRewrite extends Module {
         if (!mc.world.getPlayers().isEmpty()) {
             for (int p = 0; p < mc.world.getPlayers().size(); p++) {
                 PlayerEntity en = mc.world.getPlayers().get(p);
-                if (en != mc.player && !Friends.get().isFriend(en)) {
-                    if (!motions.isEmpty()) {
-                        Vec3d motion = average(motions.get(en.getName().getString()));
-                        double x = motion.x;
-                        double y = motion.y;
-                        double z = motion.z;
-                        Box box = en.getBoundingBox();
-                        if (!inside(en, box)) {
-                            for (int i = 0; i < extrapolation.get(); i++) {
-                                //x
-                                if (!inside(en, box.offset(x, 0, 0))) {
-                                    box = box.offset(x, 0, z);
-                                }
+                if (!motions.isEmpty()) {
+                    Vec3d motion = average(motions.get(en.getName().getString()));
+                    double x = motion.x;
+                    double y = motion.y;
+                    double z = motion.z;
+                    Box box = en.getBoundingBox();
+                    if (!inside(en, box)) {
+                        for (int i = 0; i < extrapolation.get(); i++) {
 
-                                //z
-                                if (!inside(en, box.offset(0, 0, z))) {
-                                    box = box.offset(0, 0, z);
-                                }
+                            //x
+                            if (!inside(en, box.offset(x, 0, 0))) {
+                                box = box.offset(x, 0, 0);
+                            }
 
-                                //y
-                                if (inside(en, box.offset(0, -0.04, 0))) {
-                                    y = -0.08;
-                                } else {
-                                    if (!inside(en, box.offset(0, y, 0))) {
-                                        box = box.offset(0, y, 0);
-                                        y -= 0.08;
-                                    }
+                            //z
+                            if (!inside(en, box.offset(0, 0, z))) {
+                                box = box.offset(0, 0, z);
+                            }
+
+                            if (!inside(en, box.offset(0, -0.05, 0))) {
+                                y -= 0.08;
+                                if (!inside(en, box.offset(0, y, 0))) {
+                                    box = box.offset(0, y, 0);
                                 }
+                            } else {
+                                y = 0;
                             }
                         }
-                        map.put(en.getName().getString(), box);
                     }
+                    map.put(en.getName().getString(), box);
                 }
             }
         }

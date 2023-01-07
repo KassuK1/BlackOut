@@ -205,9 +205,7 @@ public class AutoMine extends Module {
                 if (OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(targetPos), mc.player.getEyePos()) > range.get()) {
                     calc();
                 }
-                if (tick > 0) {
-                    tick--;
-                } else if (holdingBest(targetPos) || (silent.get()) && (!pauseEat.get() || !mc.player.isUsingItem())) {
+                if (tick <= 0 && (holdingBest(targetPos) || (silent.get()) && (!pauseEat.get() || !mc.player.isUsingItem()))) {
                     if (crystalPos != null) {
                         Entity at = isAt(crystalPos);
                         Hand hand = getHand(Items.END_CRYSTAL);
@@ -241,7 +239,6 @@ public class AutoMine extends Module {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onBlock(BlockUpdateEvent event) {
         if (mc.player != null && mc.world != null && targetPos != null) {
-            BlackOut.LOG.info("AutoMine: Block Change");
             if (event.newState.getBlock() != Blocks.AIR && event.oldState.getBlock() == Blocks.AIR) {
                 if (event.pos == targetPos) {
                     tick = getMineTicks(event.pos);
@@ -252,11 +249,13 @@ public class AutoMine extends Module {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
+        tick = Math.max(0, tick - event.frameTime * 20);
         timer = Math.min(placeDelay.get(), timer + event.frameTime);
 
         if (mc.player != null && mc.world != null && targetPos != null) {
             Vec3d v = OLEPOSSUtils.getMiddle(targetPos);
-            double progress = 0.5 - (tick / getMineTicks(targetPos) / 2);
+            double d = tick / getMineTicks(targetPos);
+            double progress = 0.5 - (d * d * d / 2);
             double p = tick / getMineTicks(targetPos);
             int[] c = getColor(startColor.get(), endColor.get(), smooth.get() ? 1 - p : Math.floor(1 - p));
 
