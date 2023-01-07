@@ -409,19 +409,19 @@ public class AutoCrystalRewrite extends Module {
     );
 
     //  Extrapolation Page
-    private final Setting<Boolean> enemyExt = sgDebug.add(new BoolSetting.Builder()
+    private final Setting<Boolean> enemyExt = sgExtrapolation.add(new BoolSetting.Builder()
         .name("Enemy Extrapolation")
         .description(".")
         .defaultValue(true)
         .build()
     );
-    private final Setting<Boolean> selfExt = sgDebug.add(new BoolSetting.Builder()
+    private final Setting<Boolean> selfExt = sgExtrapolation.add(new BoolSetting.Builder()
         .name("Self Extrapolation")
         .description(".")
         .defaultValue(true)
         .build()
     );
-    private final Setting<Boolean> friendExt = sgDebug.add(new BoolSetting.Builder()
+    private final Setting<Boolean> friendExt = sgExtrapolation.add(new BoolSetting.Builder()
         .name("Friend Extrapolation")
         .description(".")
         .defaultValue(true)
