@@ -1,10 +1,9 @@
 package kassuk.addon.blackout.modules;
 
-import com.ibm.icu.impl.breakiter.DictionaryBreakEngine;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.managers.Managers;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.timers.BlockTimerList;
+import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -41,7 +40,7 @@ Made by OLEPOSSU / Raksamies
 
 public class HoleFill extends Module {
     public HoleFill() {
-        super(BlackOut.BLACKOUT, "Hole Filler+", "Automatically is an cunt to your enemies");
+        super(BlackOut.BLACKOUT, "Hole Filler+", "Automatically is a cunt to your enemies");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Boolean> swing = sgGeneral.add(new BoolSetting.Builder()
@@ -259,7 +258,7 @@ public class HoleFill extends Module {
         double closest = -1;
         for (PlayerEntity pl : mc.world.getPlayers()) {
             double dist = OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(pos), pl.getPos());
-            if ((closest < 0 || dist < closest) && inHoleCheck(pl)) {
+            if (pl != mc.player && !Friends.get().isFriend(pl) && (closest < 0 || dist < closest) && inHoleCheck(pl)) {
                 closest = dist;
             }
         }
@@ -317,7 +316,6 @@ public class HoleFill extends Module {
     }
 
     void place(BlockPos pos) {
-        BlackOut.LOG.info("HoleFill: place");
         timers.add(pos, delay.get());
         Direction dir = closestDir(pos);
         if (dir != null) {
