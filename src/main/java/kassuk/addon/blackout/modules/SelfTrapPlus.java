@@ -41,6 +41,12 @@ public class SelfTrapPlus extends Module {
         super(BlackOut.BLACKOUT, "Self Trap+", "Traps yourself");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final Setting<Boolean> onlyTop = sgGeneral.add(new BoolSetting.Builder()
+        .name("Only Top")
+        .description(".")
+        .defaultValue(true)
+        .build()
+    );
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
         .name("Pause Eat")
         .description("Pauses when you are eating")
@@ -92,6 +98,7 @@ public class SelfTrapPlus extends Module {
 
     BlockTimerList timers = new BlockTimerList();
     double placeTimer = 0;
+    int placesLeft = 0;
 
     @Override
     public void onActivate() {
@@ -101,14 +108,20 @@ public class SelfTrapPlus extends Module {
     @Override
     public void onDeactivate() {
         super.onDeactivate();
+        placesLeft = places.get();
+        placeTimer = 0;
         Modules.get().get(Timer.class).setOverride(1);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
+        placeTimer = Math.min(placeDelay.get(), placeTimer + event.frameTime);
+        if (placeTimer >= placeDelay.get()) {
+            placesLeft = places.get();
+            placeTimer = 0;
+        }
+
         if (mc.player != null && mc.world != null) {
-            List<BlockTimerList> toRemove = new ArrayList<>();
-            placeTimer = Math.min(placeDelay.get(), placeTimer + event.frameTime);
             List<BlockPos> render = getBlocks(getSize(mc.player.getBlockPos().up()), mc.player.getBoundingBox().intersects(OLEPOSSUtils.getBox(mc.player.getBlockPos().up(2))));
             List<BlockPos> blocks = getValid(render);
             render.forEach(item -> event.renderer.box(OLEPOSSUtils.getBox(item), new Color(color.get().r, color.get().g, color.get().b,
@@ -116,13 +129,14 @@ public class SelfTrapPlus extends Module {
 
             int[] obsidian = findObby();
             if ((!pauseEat.get() || !mc.player.isUsingItem()) && obsidian[1] > 0 &&
-                (silent.get() || Managers.HOLDING.isHolding(Items.OBSIDIAN)) && !blocks.isEmpty() && placeTimer >= placeDelay.get()) {
+                (silent.get() || Managers.HOLDING.isHolding(Items.OBSIDIAN)) && !blocks.isEmpty()) {
                 boolean swapped = false;
                 if (!Managers.HOLDING.isHolding(Items.OBSIDIAN) && silent.get()) {
                     InvUtils.swap(obsidian[0], true);
                     swapped = true;
                 }
-                for (int i = 0; i < Math.min(Math.min(blocks.size(), obsidian[1]), places.get()); i++) {
+                int p = Math.min(Math.min(obsidian[1], placesLeft), blocks.size());
+                for (int i = 0; i < p; i++) {
                     place(blocks.get(i));
                 }
                 if (swapped) {
@@ -136,6 +150,7 @@ public class SelfTrapPlus extends Module {
         timers.add(toPlace, delay.get());
         placeTimer = 0;
         if (mc.player != null) {
+            placesLeft--;
             mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
                 new BlockHitResult(new Vec3d(toPlace.getX() + 0.5, toPlace.getY() + 0.5, toPlace.getZ() + 0.5), Direction.UP, toPlace, false), 0));
             if (swing.get()) {
@@ -166,7 +181,7 @@ public class SelfTrapPlus extends Module {
                     boolean ignore = isX && !isZ ? !air(pos.add(OLEPOSSUtils.closerToZero(x), 0, z)) :
                         !isX && isZ && !air(pos.add(x, 0, OLEPOSSUtils.closerToZero(z)));
                     BlockPos bPos = null;
-                    if (isX != isZ && !ignore) {
+                    if (!onlyTop.get() && isX != isZ && !ignore) {
                         bPos = new BlockPos(x, pos.getY() ,z).add(pos.getX(), 0, pos.getZ());
                     } else if (!isX && !isZ && air(pos.add(x, 0, z))) {
                         bPos = new BlockPos(x, pos.getY() ,z).add(pos.getX(), 1, pos.getZ());

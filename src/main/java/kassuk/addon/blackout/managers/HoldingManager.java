@@ -38,6 +38,16 @@ public class HoldingManager {
     public int getSlot() {
         return slot;
     }
+    public boolean isHolding(Item... items) {
+        ItemStack stack = getStack();
+        if (stack == null) {return false;}
+        for (Item item : items) {
+            if (item.equals(stack.getItem())) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public boolean isHolding(Item item) {
         ItemStack stack = getStack();

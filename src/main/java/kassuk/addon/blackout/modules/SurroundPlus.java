@@ -119,6 +119,8 @@ public class SurroundPlus extends Module {
         super.onActivate();
         if (mc.player == null || mc.world == null) {toggle();}
         startPos = mc.player.getBlockPos();
+        placesLeft = places.get();
+        placeTimer = 0;
         render = new ArrayList<>();
     }
 
@@ -136,12 +138,12 @@ public class SurroundPlus extends Module {
 
     void update() {
         if (mc.player != null && mc.world != null) {
+
             //Check if player has moved
             if (!mc.player.getBlockPos().equals(startPos)) {
                 toggle();
                 return;
             }
-
 
             List<BlockPos> placements = check();
             int[] obsidian = findObby();

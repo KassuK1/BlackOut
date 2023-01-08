@@ -33,15 +33,6 @@ public class Fog extends Module {
         .sliderRange(0, 100)
         .build()
     );
-
-    public final Setting<Integer> smoothness = sgGeneral.add(new IntSetting.Builder()
-        .name("Smoothness")
-        .description(".")
-        .defaultValue(5)
-        .min(0)
-        .sliderMax(10)
-        .build()
-    );
     public final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
         .name("Side Color")
         .description("The color")

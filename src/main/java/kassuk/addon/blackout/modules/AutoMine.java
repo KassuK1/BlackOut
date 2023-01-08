@@ -3,6 +3,7 @@ package kassuk.addon.blackout.modules;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
+import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.entity.EntityAddedEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.BlockUpdateEvent;
@@ -202,7 +203,7 @@ public class AutoMine extends Module {
         if (mc.player != null && mc.world != null) {
             calc();
             if (targetPos != null) {
-                if (OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(targetPos), mc.player.getEyePos()) > range.get()) {
+                if (SettingUtils.inPlaceRange(targetPos)) {
                     calc();
                 }
                 if (tick <= 0 && (holdingBest(targetPos) || (silent.get()) && (!pauseEat.get() || !mc.player.isUsingItem()))) {
@@ -317,8 +318,7 @@ public class AutoMine extends Module {
             }
         }
         if (pos1 != null) {
-            if ((!pos1.equals(targetPos) && (targetValue == -1 || (targetValue > lastValue)) &&
-                OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(pos1), mc.player.getEyePos()) <= range.get()) ||
+            if ((!pos1.equals(targetPos) && (targetValue == -1 || (targetValue > lastValue)) && SettingUtils.inPlaceRange(pos1)) ||
                 valid) {
                 tick = getMineTicks(pos1);
                 targetPos = pos1;
@@ -405,8 +405,7 @@ public class AutoMine extends Module {
             rur = OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(pos), mc.player.getEyePos()) <
                 OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(closest), mc.player.getEyePos());
         }
-        return ((currentValue <= value && rur) || currentValue < value) &&
-            OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(pos), mc.player.getEyePos()) < range.get();
+        return ((currentValue <= value && rur) || currentValue < value) && SettingUtils.inPlaceRange(pos);
     }
 
     int is(BlockPos pos) {

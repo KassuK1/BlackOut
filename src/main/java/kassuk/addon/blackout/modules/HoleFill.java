@@ -5,6 +5,7 @@ import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.timers.BlockTimerList;
+import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
@@ -108,14 +109,6 @@ public class HoleFill extends Module {
         .defaultValue(FaceMode.Range)
         .build()
     );
-    private final Setting<Double> placeRange = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Place Range")
-        .description("Range for placing")
-        .defaultValue(5.2)
-        .range(0, 10)
-        .sliderMax(10)
-        .build()
-    );
     private final Setting<Double> holeRange = sgGeneral.add(new DoubleSetting.Builder()
         .name("Hole Range")
         .description("Places when enemy is close enough to target hole")
@@ -179,7 +172,7 @@ public class HoleFill extends Module {
     }
 
     void update() {
-        updateHoles(placeRange.get());
+        updateHoles(SettingUtils.getPlaceRange() + 1);
         List<BlockPos> toPlace = getValid(holes);
         int[] obsidian = findBlock(Items.OBSIDIAN);
         if (!toPlace.isEmpty() && obsidian[1] > 0 && (!pauseEat.get() || !mc.player.isUsingItem()) && placeTimer >= placeDelay.get()) {
@@ -307,7 +300,7 @@ public class HoleFill extends Module {
     boolean inRange(BlockPos pos) {
         for (PlayerEntity pl : mc.world.getPlayers()) {
             if (pl != mc.player && !Friends.get().isFriend(pl) && inHoleCheck(pl) && aboveCheck(pl, pos.getY() + 1)) {
-                if (OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(pos), pl.getPos()) < holeRange.get()) {return true;}
+                if (SettingUtils.inPlaceRange(pos)) {return true;}
             }
         }
         return false;

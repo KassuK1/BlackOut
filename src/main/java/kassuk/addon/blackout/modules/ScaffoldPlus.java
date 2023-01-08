@@ -115,10 +115,13 @@ public class ScaffoldPlus extends Module {
 
     BlockTimerList timers = new BlockTimerList();
     Vec3d motion = null;
-    float placeTimer;
+    double placeTimer;
+    int placesLeft = 0;
 
     @Override
     public void onDeactivate() {
+        placeTimer = 0;
+        placesLeft = places.get();
         Modules.get().get(Timer.class).setOverride(1);
         if (Modules.get().get(SafeWalk.class).isActive()) {
             Modules.get().get(SafeWalk.class).toggle();
@@ -127,7 +130,11 @@ public class ScaffoldPlus extends Module {
 
     @EventHandler
     private void onRender(Render3DEvent event) {
-        placeTimer = (float) Math.min(placeDelay.get(), placeTimer + event.frameTime);
+        placeTimer = Math.min(placeDelay.get(), placeTimer + event.frameTime);
+        if (placeTimer >= placeDelay.get()) {
+            placesLeft = places.get();
+            placeTimer = 0;
+        }
     }
 
     @EventHandler
@@ -148,7 +155,8 @@ public class ScaffoldPlus extends Module {
                         InvUtils.swap(obsidian[0], true);
                         swapped = true;
                     }
-                    for (int i = 0; i < Math.min(Math.min(placements.size(), places.get()), obsidian[1]); i++) {
+                    int p = Math.min(Math.min(obsidian[1], placesLeft), placements.size());
+                    for (int i = 0; i < p; i++) {
                         place(placements.get(i));
                     }
                     if (swapped) {
@@ -218,6 +226,7 @@ public class ScaffoldPlus extends Module {
 
     void place(BlockPos pos) {
         timers.add(pos, delay.get());
+        placesLeft--;
         mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
             new BlockHitResult(OLEPOSSUtils.getMiddle(pos), Direction.UP, pos, false), 0));
         mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));

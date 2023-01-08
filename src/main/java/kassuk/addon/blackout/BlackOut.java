@@ -5,6 +5,7 @@ import kassuk.addon.blackout.commands.BlackoutGit;
 import kassuk.addon.blackout.commands.GearInfo;
 import kassuk.addon.blackout.commands.Kick;
 import kassuk.addon.blackout.commands.Panic;
+import kassuk.addon.blackout.globalsettings.RangeSettings;
 import kassuk.addon.blackout.hud.*;
 import kassuk.addon.blackout.modules.*;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
@@ -19,7 +20,7 @@ public class BlackOut extends MeteorAddon {
     public static final Logger LOG = LogUtils.getLogger();
 
     public static final Category BLACKOUT = new Category("BlackOut");
-
+    public static final Category SETTINGS = new Category("Settings");
     public static final HudGroup HUD_BLACKOUT = new HudGroup("BlackOut");
     public static final String BLACKOUT_NAME = "BlackOut";
     public static final String BLACKOUT_VERSION = "0.3.0";
@@ -66,6 +67,9 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new SurroundPlus());
         Modules.get().add(new WeakAlert());
 
+        // Global Settings
+        Modules.get().add(new RangeSettings());
+
         // Commands
         Commands.get().add(new BlackoutGit());
         Commands.get().add(new GearInfo());
@@ -88,6 +92,7 @@ public class BlackOut extends MeteorAddon {
     @Override
     public void onRegisterCategories() {
         Modules.registerCategory(BLACKOUT);
+        Modules.registerCategory(SETTINGS);
     }
 
     @Override

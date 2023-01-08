@@ -5,6 +5,7 @@ import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.utils.BODamageUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.timers.IntTimerList;
+import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.entity.EntityAddedEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
@@ -57,7 +58,6 @@ public class AutoCrystalRewrite extends Module {
     private final SettingGroup sgPlace = settings.createGroup("Place");
     private final SettingGroup sgExplode = settings.createGroup("Explode");
     private final SettingGroup sgSwitch = settings.createGroup("Switch");
-    private final SettingGroup sgRange = settings.createGroup("Range");
     private final SettingGroup sgDamage = settings.createGroup("Damage");
     private final SettingGroup sgRotate = settings.createGroup("Rotate");
     private final SettingGroup sgExtrapolation = settings.createGroup("Extrapolation");
@@ -92,6 +92,12 @@ public class AutoCrystalRewrite extends Module {
         .defaultValue(false)
         .build()
     );
+    private final Setting<Boolean> ccPlacements = sgPlace.add(new BoolSetting.Builder()
+        .name("CC Placements")
+        .description("Uses crystalpvp.cc hitboxes.")
+        .defaultValue(false)
+        .build()
+    );
     private final Setting<Boolean> instantPlace = sgPlace.add(new BoolSetting.Builder()
         .name("Instant Non-Blocked")
         .description("Ignores delay after crystal hitbox has disappeared.")
@@ -110,6 +116,14 @@ public class AutoCrystalRewrite extends Module {
         .defaultValue(10)
         .range(0, 20)
         .sliderRange(0, 20)
+        .build()
+    );
+    private final Setting<Double> placeDelay = sgPlace.add(new DoubleSetting.Builder()
+        .name("Place Delay")
+        .description("How many seconds after attacking a crystal should we place.")
+        .defaultValue(0)
+        .min(0)
+        .sliderRange(0, 1)
         .build()
     );
     private final Setting<Double> slowDamage = sgPlace.add(new DoubleSetting.Builder()
@@ -187,8 +201,15 @@ public class AutoCrystalRewrite extends Module {
     //  Switch Page
     private final Setting<SwitchMode> switchMode = sgSwitch.add(new EnumSetting.Builder<SwitchMode>()
         .name("Switch Mode")
-        .description("Mode for switching to crystal in mainhand.")
+        .description("Mode for switching to crystal in mainhand. \nSimple - Switches to crystal when placing\nSmart - Switches to gapple (complicated)\nGapple - Switches to crystal when holding gapple and gapple when holding use key and crystals")
         .defaultValue(SwitchMode.Disabled)
+        .build()
+    );
+    private final Setting<Boolean> expFriendly = sgSwitch.add(new BoolSetting.Builder()
+        .name("Exp Friendly")
+        .description("Doesn't switch to crystals when using any item.")
+        .defaultValue(false)
+        .visible(() -> switchMode.get().equals(SwitchMode.Smart))
         .build()
     );
     private final Setting<Boolean> alwaysGap = sgSwitch.add(new BoolSetting.Builder()
@@ -211,88 +232,6 @@ public class AutoCrystalRewrite extends Module {
         .defaultValue(0.1)
         .min(0)
         .sliderRange(0, 1)
-        .build()
-    );
-
-    //  Range Page
-    private final Setting<Double> placeRange = sgRange.add(new DoubleSetting.Builder()
-        .name("Place Range")
-        .description("Range for placing.")
-        .defaultValue(5.2)
-        .range(0, 10)
-        .sliderRange(0, 10)
-        .build()
-    );
-    private final Setting<RangeMode> placeRangeMode = sgRange.add(new EnumSetting.Builder<RangeMode>()
-        .name("Place Range Mode")
-        .description("Where to calculate ranges from.")
-        .defaultValue(RangeMode.Automatic)
-        .build()
-    );
-    private final Setting<Double> blockWidth = sgRange.add(new DoubleSetting.Builder()
-        .name("Block Width")
-        .description("How wide should the box be for closest range.")
-        .defaultValue(2)
-        .range(0, 3)
-        .sliderRange(0, 3)
-        .visible(() -> placeRangeMode.get().equals(RangeMode.CustomBox))
-        .build()
-    );
-    private final Setting<Double> blockHeight = sgRange.add(new DoubleSetting.Builder()
-        .name("Block Height")
-        .description("How tall should the box be for closest range.")
-        .defaultValue(2)
-        .range(0, 3)
-        .sliderRange(0, 3)
-        .visible(() -> placeRangeMode.get().equals(RangeMode.CustomBox))
-        .build()
-    );
-    private final Setting<Double> placeHeight = sgRange.add(new DoubleSetting.Builder()
-        .name("Place Height")
-        .description("The height to calculate ranges from.")
-        .defaultValue(-0.5)
-        .sliderRange(-1, 2)
-        .visible(() -> placeRangeMode.get().equals(RangeMode.Height))
-        .build()
-    );
-    private final Setting<Double> expRange = sgRange.add(new DoubleSetting.Builder()
-        .name("Explode Range")
-        .description("Range for exploding crystals.")
-        .defaultValue(4.8)
-        .range(0, 10)
-        .sliderRange(0, 10)
-        .build()
-    );
-    private final Setting<RangeMode> expRangeMode = sgRange.add(new EnumSetting.Builder<RangeMode>()
-        .name("Explode Range Mode")
-        .description("Where to calculate ranges from.")
-        .defaultValue(RangeMode.NCP)
-        .build()
-    );
-    private final Setting<Double> crystalWidth = sgRange.add(new DoubleSetting.Builder()
-        .name("Crystal Width")
-        .description("How wide should the box be for closest range.")
-        .defaultValue(2)
-        .range(0, 3)
-        .sliderRange(0, 3)
-        .visible(() -> expRangeMode.get().equals(RangeMode.CustomBox))
-        .build()
-    );
-    private final Setting<Double> crystalHeight = sgRange.add(new DoubleSetting.Builder()
-        .name("Crystal Height")
-        .description("How tall should the box be for closest range.")
-        .defaultValue(2)
-        .range(0, 3)
-        .sliderRange(0, 3)
-        .visible(() -> expRangeMode.get().equals(RangeMode.CustomBox))
-        .build()
-    );
-    private final Setting<Double> expHeight = sgRange.add(new DoubleSetting.Builder()
-        .name("Explode Height")
-        .description("The height to calculate ranges from.")
-        .defaultValue(1)
-        .sliderRange(-1, 2)
-        .visible(() -> expRangeMode.get().equals(RangeMode.Height))
         .build()
     );
 
@@ -594,6 +533,7 @@ public class AutoCrystalRewrite extends Module {
     double self = 0;
     double placeTimer = 0;
     double delayTimer = 0;
+
     BlockPos placePos = null;
     IntTimerList attacked = new IntTimerList(false);
     Map<String, Box> extPos = new HashMap<>();
@@ -619,13 +559,6 @@ public class AutoCrystalRewrite extends Module {
         Packet,
         Full
     }
-    public enum RangeMode {
-        Automatic,
-        Height,
-        NCP,
-        Vanilla,
-        CustomBox
-    }
     public enum RenderMode {
         BlackOut,
         Future,
@@ -634,7 +567,8 @@ public class AutoCrystalRewrite extends Module {
     public enum SwitchMode {
         Disabled,
         Simple,
-        Smart
+        Smart,
+        Gapple
     }
 
     @Override
@@ -685,6 +619,7 @@ public class AutoCrystalRewrite extends Module {
         double d = event.frameTime;
         attacked.update(d);
         placeTimer = Math.max(placeTimer - d * getSpeed(), 0);
+        delayTimer += d;
         switchTimer = Math.max(0, switchTimer - d);
         update();
 
@@ -808,7 +743,7 @@ public class AutoCrystalRewrite extends Module {
             }
         }
         Hand handToUse = hand;
-        placePos = place.get() ? getPlacePos((int) Math.ceil(placeRange.get())) : null;
+        placePos = place.get() ? getPlacePos((int) Math.ceil(SettingUtils.getPlaceRange())) : null;
         switch (switchMode.get()) {
             case Simple -> {
                 int slot = InvUtils.findInHotbar(itemStack -> itemStack.getItem().equals(Items.END_CRYSTAL)).slot();
@@ -819,14 +754,27 @@ public class AutoCrystalRewrite extends Module {
             }
             case Smart -> {
                 int gapSlot = InvUtils.findInHotbar(itemStack -> itemStack.getItem().equals(Items.ENCHANTED_GOLDEN_APPLE)).slot();
-                boolean shouldGap = mc.options.useKey.isPressed() && (alwaysGap.get() || (placePos != null && (!onlyCrystal.get() || Managers.HOLDING.isHolding(Items.END_CRYSTAL)))) && gapSlot >= 0 &&
-                    (alwaysGap.get() || !mc.player.getOffHandStack().getItem().equals(Items.END_CRYSTAL));
-                if (shouldGap) {
+                if (shouldGap(gapSlot)) {
                     if (getHand(Items.ENCHANTED_GOLDEN_APPLE) == null) {
                         InvUtils.swap(gapSlot, false);
-                        handToUse = null;
                     }
-                } else {
+                    handToUse = null;
+                } else if (!expFriendly.get() || !mc.player.isUsingItem()) {
+                    int slot = InvUtils.findInHotbar(itemStack -> itemStack.getItem().equals(Items.END_CRYSTAL)).slot();
+                    if (placePos != null && hand == null && slot >= 0) {
+                        InvUtils.swap(slot, false);
+                        handToUse = Hand.MAIN_HAND;
+                    }
+                }
+            }
+            case Gapple -> {
+                int gapSlot = InvUtils.findInHotbar(itemStack -> itemStack.getItem().equals(Items.ENCHANTED_GOLDEN_APPLE)).slot();
+                if (mc.options.useKey.isPressed() && Managers.HOLDING.isHolding(Items.END_CRYSTAL, Items.ENCHANTED_GOLDEN_APPLE) && gapSlot >= 0) {
+                    if (getHand(Items.ENCHANTED_GOLDEN_APPLE) == null) {
+                        InvUtils.swap(gapSlot, false);
+                    }
+                    handToUse = null;
+                } else if (Managers.HOLDING.isHolding(Items.END_CRYSTAL, Items.ENCHANTED_GOLDEN_APPLE)) {
                     int slot = InvUtils.findInHotbar(itemStack -> itemStack.getItem().equals(Items.END_CRYSTAL)).slot();
                     if (placePos != null && hand == null && slot >= 0) {
                         InvUtils.swap(slot, false);
@@ -843,7 +791,7 @@ public class AutoCrystalRewrite extends Module {
                     placeTimer = 0;
                 }
                 if (!pausedCheck()) {
-                    if (placeTimer <= 0 || (instantPlace.get() && !shouldSlow() && !isBlocked(placePos))) {
+                    if ((placeTimer <= 0 || (instantPlace.get() && !shouldSlow() && !isBlocked(placePos))) && delayTimer >= placeDelay.get()) {
                         placeTimer = 1;
                         placeCrystal(placePos.down(), handToUse);
                     }
@@ -852,6 +800,14 @@ public class AutoCrystalRewrite extends Module {
         } else {
             lastPos = null;
         }
+    }
+
+    boolean shouldGap(int slot) {
+        if (slot < 0) {return false;}
+        if (!mc.options.useKey.isPressed()) {return false;}
+        if (placePos == null && !alwaysGap.get()) {return false;}
+        if (!Managers.HOLDING.isHolding(Items.END_CRYSTAL) && !Managers.HOLDING.isHolding(Items.ENCHANTED_GOLDEN_APPLE) && onlyCrystal.get()) {return false;}
+        return true;
     }
 
     void placeCrystal(BlockPos pos, Hand handToUse) {
@@ -919,7 +875,7 @@ public class AutoCrystalRewrite extends Module {
     }
 
     boolean canExplode(Vec3d vec, boolean onlyCache) {
-        if (!inExplodeRange(expRangePos(vec))) {return false;}
+        if (!inExplodeRange(vec)) {return false;}
         if (!dmgCache.containsKey(vec) && onlyCache) {return true;}
         double[][] result = onlyCache ? dmgCache.get(vec) : getDmg(vec);
         return explodeDamageCheck(result[0], result[1]);
@@ -958,8 +914,8 @@ public class AutoCrystalRewrite extends Module {
                 for (int z = -r; z <= r; z++) {
                     BlockPos pos = mc.player.getBlockPos().add(x, y, z);
                     // Checks if crystal can be placed
-                    if (!air(pos) || !(!oldVerPlacements.get() || air(pos.up())) || !inPlaceRange(placeRangePos(pos)) ||
-                        !crystalBlock(pos.down()) || !inExplodeRange(expRangePos(new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5)))) {continue;}
+                    if (!air(pos) || !(!oldVerPlacements.get() || air(pos.up())) || !inPlaceRange(pos.down()) ||
+                        !crystalBlock(pos.down()) || !inExplodeRange(new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5))) {continue;}
 
                     // Calculates damages and healths
                     double[][] result = getDmg(new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5));
@@ -968,7 +924,7 @@ public class AutoCrystalRewrite extends Module {
                     if (!placeDamageCheck(result[0], result[1], highest)) {continue;}
 
                     // Checks if placement is blocked by other entities
-                    Box box = new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 2, pos.getZ() + 1);
+                    Box box = new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + (ccPlacements.get() ? 1 : 2), pos.getZ() + 1);
                     if (EntityUtils.intersectsWithEntity(box, entity -> !(entity.getType().equals(EntityType.END_CRYSTAL) && canExplode(entity.getPos(), true)))) {continue;}
                     bestPos = pos;
                     highest = result[0];
@@ -1072,51 +1028,14 @@ public class AutoCrystalRewrite extends Module {
         return mc.world.getBlockState(pos).getBlock().equals(Blocks.OBSIDIAN) ||
             mc.world.getBlockState(pos).getBlock().equals(Blocks.BEDROCK);
     }
-    boolean inPlaceRange(Vec3d vec) {
-        return dist(mc.player.getEyePos().add(-vec.x, -vec.y, -vec.z)) <= placeRange.get();
+    boolean inPlaceRange(BlockPos pos) {
+        return SettingUtils.inPlaceRange(pos);
     }
     boolean inExplodeRange(Vec3d vec) {
-        return dist(mc.player.getEyePos().add(-vec.x, -vec.y, -vec.z)) <= expRange.get();
+        return SettingUtils.inAttackRange(new Box(vec.getX() - 1, vec.getY(), vec.getZ() - 1, vec.getX() + 1, vec.getY() + 2, vec.getZ() + 1), vec);
     }
     double dist(Vec3d distances) {
         return Math.sqrt(distances.x * distances.x + distances.y * distances.y + distances.z * distances.z);
-    }
-    Vec3d expRangePos(Vec3d vec) {
-        switch (expRangeMode.get()) {
-            case Automatic -> {
-                return vec.add(0, 1, 0);
-            }
-            case Height -> {
-                return vec.add(0, expHeight.get(), 0);
-            }
-            case NCP -> {
-                return new Vec3d(vec.x, Math.min(Math.max(mc.player.getEyeY(), vec.y), vec.y + 2), vec.z);
-            }
-            case CustomBox -> {
-                return OLEPOSSUtils.getClosest(mc.player.getEyePos(), vec, crystalWidth.get(),crystalHeight.get());
-            }
-        }
-        // Vanilla mode
-        return OLEPOSSUtils.getClosest(mc.player.getEyePos(), vec, 2, 2);
-
-    }
-    Vec3d placeRangePos(BlockPos pos) {
-        switch (placeRangeMode.get()) {
-            case Automatic -> {
-                return new Vec3d(pos.getX() + 0.5, pos.getY() - 0.5, pos.getZ() + 0.5);
-            }
-            case Height -> {
-                return new Vec3d(pos.getX() + 0.5, pos.getY() + placeHeight.get(), pos.getZ() + 0.5);
-            }
-            case NCP -> {
-                return new Vec3d(pos.getX() + 0.5, Math.min(Math.max(mc.player.getEyeY(), pos.getY() - 1), pos.getY()), pos.getZ() + 0.5);
-            }
-            case CustomBox -> {
-                return OLEPOSSUtils.getClosest(mc.player.getEyePos(), new Vec3d(pos.getX() + 0.5, pos.getY() - 1, pos.getZ() + 0.5), blockWidth.get(), blockHeight.get());
-            }
-        }
-        // Vanilla mode
-        return OLEPOSSUtils.getClosest(mc.player.getEyePos(), new Vec3d(pos.getX() + 0.5, pos.getY() - 1, pos.getZ() + 0.5), 1, 1);
     }
     Vec3d debugRangePos(int id) {
         return mc.player.getEyePos().add(-debugRangeX.get() - 0.5, -debugRangeY.get() - debugRangeHeight(id), -debugRangeZ.get() - 0.5);
