@@ -1,6 +1,8 @@
 package kassuk.addon.blackout.utils;
 
 import kassuk.addon.blackout.globalsettings.RangeSettings;
+import kassuk.addon.blackout.globalsettings.RotationSettings;
+import kassuk.addon.blackout.globalsettings.SwingSettings;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.Utils;
 import net.minecraft.util.math.BlockPos;
@@ -19,10 +21,23 @@ public class SettingUtils extends Utils {
     public static boolean inPlaceRange(BlockPos pos) {
         return Modules.get().get(RangeSettings.class).inPlaceRange(pos);
     }
-    public static boolean inAttackRange(Box bb) {
-        return Modules.get().get(RangeSettings.class).inAttackRange(bb);
+    public static boolean inAttackRange(Box bb, double eyeHeight) {
+        return Modules.get().get(RangeSettings.class).inAttackRange(bb, eyeHeight);
     }
-    public static boolean inAttackRange(Box bb, Vec3d feet) {
-        return Modules.get().get(RangeSettings.class).inAttackRange(bb, feet);
+    public static boolean inAttackRange(Box bb, double eyeHeight, Vec3d feet) {
+        return Modules.get().get(RangeSettings.class).inAttackRange(bb, eyeHeight, feet);
+    }
+
+    //  Rotate
+    public static boolean rotationCheck(Vec3d pPos, double yaw, double pitch, Box box) {
+        return Modules.get().get(RotationSettings.class).rotationCheck(pPos, yaw, pitch, box);
+    }
+    public static boolean rotationCheck(double yaw, double pitch, Box box) {
+        return Modules.get().get(RotationSettings.class).rotationCheck(yaw, pitch, box);
+    }
+
+    //  Swing
+    public static void swing(SwingSettings.SwingState state, SwingSettings.SwingType type) {
+        Modules.get().get(SwingSettings.class).swing(state, type);
     }
 }

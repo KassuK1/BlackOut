@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.globalsettings.SwingSettings;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.timers.BlockTimerList;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
@@ -11,44 +12,39 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
+import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
+import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
-import net.minecraft.entity.EntityType;
+import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
+import net.minecraft.item.BlockItem;
 import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /*
 Made by OLEPOSSU / Raksamies
 */
 
-public class HoleFill extends Module {
-    public HoleFill() {
-        super(BlackOut.BLACKOUT, "Hole Filler+", "Automatically is a cunt to your enemies");
+public class HoleFillRewrite extends Module {
+    public HoleFillRewrite() {
+        super(BlackOut.BLACKOUT, "Hole Fill+", "Automatically is a cunt to your enemies");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private final Setting<Boolean> swing = sgGeneral.add(new BoolSetting.Builder()
-        .name("Swing")
-        .description("Swing")
-        .defaultValue(true)
-        .build()
-    );
+    private final SettingGroup sgPlacing = settings.getDefaultGroup();
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
         .name("Pause Eat")
         .description("Pauses when you are eating")
@@ -67,6 +63,11 @@ public class HoleFill extends Module {
         .defaultValue(true)
         .build()
     );
+    private final Setting<List<Block>> blocks = sgGeneral.add(new BlockListSetting.Builder()
+        .name("Blocks")
+        .description("Blocks to use.")
+        .build()
+    );
     private final Setting<Boolean> above = sgGeneral.add(new BoolSetting.Builder()
         .name("Above")
         .description("Only places if target is above the hole")
@@ -77,6 +78,14 @@ public class HoleFill extends Module {
         .name("Ignore Hole")
         .description("Doesn't place if enemy is sitting in a hole")
         .defaultValue(true)
+        .build()
+    );
+    private final Setting<Integer> holeDepth = sgGeneral.add(new IntSetting.Builder()
+        .name("Hole Depth")
+        .description(".")
+        .defaultValue(3)
+        .min(1)
+        .sliderRange(1, 10)
         .build()
     );
     private final Setting<Double> placeDelay = sgGeneral.add(new DoubleSetting.Builder()
@@ -116,24 +125,44 @@ public class HoleFill extends Module {
         .sliderMax(10)
         .build()
     );
-    private final Setting<Double> renderTicks = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Render Ticks")
+    private final Setting<ShapeMode> shapeMode = sgGeneral.add(new EnumSetting.Builder<ShapeMode>()
+        .name("Shape Mode")
         .description(".")
-        .defaultValue(20)
-        .range(0, 100)
-        .sliderRange(0, 100)
+        .defaultValue(ShapeMode.Both)
+        .build()
+    );
+    private final Setting<Double> renderTime = sgGeneral.add(new DoubleSetting.Builder()
+        .name("Render Time")
+        .description("How long the box should remain in full alpha.")
+        .defaultValue(0.3)
+        .min(0)
+        .sliderRange(0, 10)
+        .build()
+    );
+    private final Setting<Double> fadeTime = sgGeneral.add(new DoubleSetting.Builder()
+        .name("Fade Time")
+        .description("How long the fading should take.")
+        .defaultValue(1)
+        .min(0)
+        .sliderRange(0, 10)
+        .build()
+    );
+    public final Setting<SettingColor> lineColor = sgGeneral.add(new ColorSetting.Builder()
+        .name("Line Color")
+        .description("U blind?")
+        .defaultValue(new SettingColor(255, 255, 255, 255))
         .build()
     );
     public final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
         .name("Color")
         .description("U blind?")
-        .defaultValue(new SettingColor(255, 255, 255, 255))
+        .defaultValue(new SettingColor(255, 255, 255, 50))
         .build()
     );
     List<BlockPos> holes = new ArrayList<>();
-    List<Render> toRender = new ArrayList<>();
     BlockTimerList timers = new BlockTimerList();
     double placeTimer = 0;
+    Map<BlockPos, Double[]> toRender = new HashMap<>();
     Direction[] directions = new Direction[]{
         Direction.DOWN, Direction.EAST, Direction.WEST, Direction.NORTH, Direction.SOUTH
     };
@@ -151,29 +180,33 @@ public class HoleFill extends Module {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
+        double d = event.frameTime;
         if (mc.player != null && mc.world != null) {
             placeTimer = Math.min(placeTimer + event.frameTime, placeDelay.get());
             update();
 
-            List<Render> toRemove2 = new ArrayList<>();
-            if (!toRender.isEmpty()) {
-                toRender.forEach(item -> {
-                    if (item.isValid()) {
-                        item.render(event);
-                        item.update(event.frameTime * 20 / renderTicks.get());
-                    } else {
-                        toRemove2.add(item);
-                    }
-                });
+            List<BlockPos> toRemove = new ArrayList<>();
+            for (Map.Entry<BlockPos, Double[]> entry : toRender.entrySet()) {
+                BlockPos pos = entry.getKey();
+                Double[] alpha = entry.getValue();
+                if (alpha[0] <= d) {
+                    toRemove.add(pos);
+                } else {
+                    event.renderer.box(OLEPOSSUtils.getBox(pos),
+                        new Color(color.get().r, color.get().g, color.get().b, (int) Math.round(color.get().a * Math.min(1, alpha[0] / alpha[1]))),
+                        new Color(lineColor.get().r, lineColor.get().g, lineColor.get().b, (int) Math.round(lineColor.get().a * Math.min(1, alpha[0] / alpha[1]))), shapeMode.get(), 0);
+                    entry.setValue(new Double[]{alpha[0] - d, alpha[1]});
+                }
             }
-            toRemove2.forEach(toRender::remove);
+            toRemove.forEach(toRender::remove);
         }
     }
 
     void update() {
         updateHoles(SettingUtils.getPlaceRange() + 1);
         List<BlockPos> toPlace = getValid(holes);
-        int[] obsidian = findBlock(Items.OBSIDIAN);
+        FindItemResult result = InvUtils.find(itemStack -> itemStack.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) itemStack.getItem()).getBlock()));
+        int[] obsidian = new int[]{result.slot(), result.count()};
         if (!toPlace.isEmpty() && obsidian[1] > 0 && (!pauseEat.get() || !mc.player.isUsingItem()) && placeTimer >= placeDelay.get()) {
             if (Managers.HOLDING.isHolding(Items.OBSIDIAN) || silent.get()) {
                 boolean swapped = false;
@@ -202,25 +235,23 @@ public class HoleFill extends Module {
 
     void updateHoles(double range) {
         holes = new ArrayList<>();
-        for(int x1 = (int) -Math.ceil(range); x1 <= Math.ceil(range); x1++) {
-            for(int y1 = (int) -Math.ceil(range); y1 <= Math.ceil(range); y1++) {
-                for(int z1 = (int) -Math.ceil(range); z1 <= Math.ceil(range); z1++) {
-                    int x = x1 + mc.player.getBlockPos().getX();
-                    int y = y1 + mc.player.getBlockPos().getY();
-                    int z = z1 + mc.player.getBlockPos().getZ();
-                    if (isHole(x, y, z) && getDistance(new BlockPos(x, y, z)) < range &&
-                    (!efficient.get() || (closestDist(new BlockPos(x, y, z)) <
-                        OLEPOSSUtils.distance(new Vec3d(x + 0.5, y + 0.5, z + 0.5), mc.player.getPos()) && (!above.get() || mc.player.getY() >= y)))) {
-                        holes.add(new BlockPos(x, y, z));
+        for(int x = (int) -Math.ceil(range); x <= Math.ceil(range); x++) {
+            for(int y = (int) -Math.ceil(range); y <= Math.ceil(range); y++) {
+                for(int z = (int) -Math.ceil(range); z <= Math.ceil(range); z++) {
+                    BlockPos pos = mc.player.getBlockPos().add(x, y, z);
+
+                    if (OLEPOSSUtils.isHole(pos, mc.world, holeDepth.get()) && !EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(pos), entity -> !entity.isSpectator() && !(entity instanceof ItemEntity))) {
+                        double closest = closestDist(pos);
+                        Direction dir = closestDir(pos);
+                        if (closest >= 0 && closest <= holeRange.get() && (!efficient.get() || OLEPOSSUtils.distance(mc.player.getPos(), OLEPOSSUtils.getMiddle(pos)) > closest)) {
+                            if (SettingUtils.inPlaceRange(pos.offset(dir))) {
+                                holes.add(pos);
+                            }
+                        }
                     }
                 }
             }
         }
-    }
-
-    public double getDistance(BlockPos pos) {
-        Vec3d vec = OLEPOSSUtils.getMiddle(pos.offset(closestDir(pos)));
-        return OLEPOSSUtils.distance(vec, mc.player.getEyePos());
     }
 
     public Direction closestDir(BlockPos pos) {
@@ -258,7 +289,10 @@ public class HoleFill extends Module {
         double closest = -1;
         for (PlayerEntity pl : mc.world.getPlayers()) {
             double dist = OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(pos), pl.getPos());
-            if (pl != mc.player && !Friends.get().isFriend(pl) && (closest < 0 || dist < closest) && inHoleCheck(pl)) {
+
+            if (/* In hole check */ (!iHole.get() || !inHole(pl)) &&
+                /* Above Check */ (!above.get() || pl.getY() > pos.getY()) &&
+                pl != mc.player && !Friends.get().isFriend(pl) && (closest < 0 || dist < closest)) {
                 closest = dist;
             }
         }
@@ -274,95 +308,20 @@ public class HoleFill extends Module {
         return true;
     }
 
-    boolean isHole(int x, int y, int z) {
-        BlockPos pos = new BlockPos(x, y, z);
-        Box box = new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1);
-        if (!mc.world.getBlockState(pos).getBlock().equals(Blocks.AIR) ||
-            !mc.world.getBlockState(pos.up()).getBlock().equals(Blocks.AIR)||
-            !mc.world.getBlockState(pos.up(2)).getBlock().equals(Blocks.AIR) ||
-            mc.world.getBlockState(pos.down()).getBlock().equals(Blocks.AIR) ||
-            EntityUtils.intersectsWithEntity(box, entity -> !entity.isSpectator() && !(
-                entity.getBlockPos().equals(pos.up()) && entity.getType() != EntityType.ITEM))) {return false;}
-
-        for (Direction dir : OLEPOSSUtils.horizontals) {
-            if (mc.world.getBlockState(pos.offset(dir)).getBlock().equals(Blocks.AIR)) {return false;}
-        }
-        if (!inRange(new BlockPos(x, y, z))) {return false;}
-        for (int i = 1; i <= (int) Math.ceil(holeRange.get()); i++) {
-            for (Direction dir : OLEPOSSUtils.horizontals) {
-                if (isHoleInWall(pos.offset(dir).up(i), dir)) {return true;}
-            }
-        }
-        return false;
-    }
-
-    boolean inRange(BlockPos pos) {
-        for (PlayerEntity pl : mc.world.getPlayers()) {
-            if (pl != mc.player && !Friends.get().isFriend(pl) && inHoleCheck(pl) && aboveCheck(pl, pos.getY() + 1)) {
-                if (SettingUtils.inPlaceRange(pos)) {return true;}
-            }
-        }
-        return false;
-    }
-
-    boolean inHoleCheck(PlayerEntity pl) {return !iHole.get() || !inHole(pl);}
-    boolean aboveCheck(PlayerEntity pl, double y) {return !above.get() || pl.getY() >= y;}
-
-    boolean isHoleInWall(BlockPos pos, Direction dir) {
-        return mc.world.getBlockState(pos).getBlock() == Blocks.AIR && (
-            (mc.world.getBlockState(pos.up()).getBlock() == Blocks.AIR ||
-                mc.world.getBlockState(pos.offset(dir.getOpposite())).getBlock() == Blocks.AIR) ||
-            mc.world.getBlockState(pos.down()).getBlock() == Blocks.AIR);
-    }
-
     void place(BlockPos pos) {
-        timers.add(pos, delay.get());
         Direction dir = closestDir(pos);
-        if (dir != null) {
-            mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
-                new BlockHitResult(OLEPOSSUtils.getMiddle(pos.offset(dir)), dir.getOpposite(), pos.offset(dir), false), 0));
-        }
-        if (swing.get()) {mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));}
-        toRender.add(new Render(pos));
-    }
+        if (dir == null) {return;}
 
-    int[] findBlock(Item item) {
-        int num = 0;
-        int slot = 0;
-        if (mc.player != null) {
-            for (int i = 0; i < 9; i++) {
-                ItemStack stack = mc.player.getInventory().getStack(i);
-                if (stack.getCount() > num && stack.getItem().equals(item)) {
-                    num = stack.getCount();
-                    slot = i;
-                }
-            }
-        }
-        return new int[] {slot, num};
-    }
+        timers.add(pos, delay.get());
+        SettingUtils.swing(SwingSettings.SwingState.Pre, SwingSettings.SwingType.Placing);
+        mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
+            new BlockHitResult(OLEPOSSUtils.getMiddle(pos.offset(dir)), dir.getOpposite(), pos.offset(dir), false), 0));
+        SettingUtils.swing(SwingSettings.SwingState.Post, SwingSettings.SwingType.Placing);
 
-    class Render {
-        public final BlockPos pos;
-        public float time;
-
-        public Render(BlockPos pos) {
-            this.pos = pos;
-            this.time = 1;
-        }
-        public void update(double delta) {
-            time -= delta;
-        }
-        public boolean isValid() {
-            return time >= 0;
-        }
-        public void render(Render3DEvent event) {
-            float progress = time / 2;
-            float alpha = (float) Math.max(0, time - 0.5) * 2;
-            Vec3d v = new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
-            Box toRender = new Box(v.x - progress, v.y - progress, v.z - progress, v.x + progress, v.y + progress, v.z + progress);
-            event.renderer.box(toRender,
-                new Color(color.get().r, color.get().g, color.get().b, (int) Math.floor(color.get().a / 10f * alpha)),
-                new Color(color.get().r, color.get().g, color.get().b, (int) Math.floor(color.get().a * alpha)), ShapeMode.Both, 0);
+        if (!toRender.containsKey(pos)) {
+            toRender.put(pos, new Double[]{fadeTime.get() + renderTime.get(), fadeTime.get()});
+        } else {
+            toRender.replace(pos, new Double[]{fadeTime.get() + renderTime.get(), fadeTime.get()});
         }
     }
 }

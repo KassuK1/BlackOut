@@ -6,6 +6,8 @@ import kassuk.addon.blackout.commands.GearInfo;
 import kassuk.addon.blackout.commands.Kick;
 import kassuk.addon.blackout.commands.Panic;
 import kassuk.addon.blackout.globalsettings.RangeSettings;
+import kassuk.addon.blackout.globalsettings.RotationSettings;
+import kassuk.addon.blackout.globalsettings.SwingSettings;
 import kassuk.addon.blackout.hud.*;
 import kassuk.addon.blackout.modules.*;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
@@ -49,7 +51,7 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new FeetESP());
         Modules.get().add(new FlightPlus());
         Modules.get().add(new Fog());
-        Modules.get().add(new HoleFill());
+        Modules.get().add(new HoleFillRewrite());
         Modules.get().add(new HoleSnap());
         Modules.get().add(new KassuKAura());
         Modules.get().add(new LegitScaffold());
@@ -69,6 +71,8 @@ public class BlackOut extends MeteorAddon {
 
         // Global Settings
         Modules.get().add(new RangeSettings());
+        Modules.get().add(new RotationSettings());
+        Modules.get().add(new SwingSettings());
 
         // Commands
         Commands.get().add(new BlackoutGit());

@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.globalsettings.SwingSettings;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.utils.BODamageUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
@@ -142,12 +143,6 @@ public class AutoCrystalRewrite extends Module {
         .sliderRange(0, 20)
         .build()
     );
-    private final Setting<SwingMode> placeSwing = sgPlace.add(new EnumSetting.Builder<SwingMode>()
-        .name("Place Swing")
-        .description("Swings after placing.")
-        .defaultValue(SwingMode.Full)
-        .build()
-    );
     private final Setting<Boolean> clearSend = sgPlace.add(new BoolSetting.Builder()
         .name("Clear Send")
         .description("Clears blocked positions when sending explode packet.")
@@ -189,12 +184,6 @@ public class AutoCrystalRewrite extends Module {
         .range(0, 1)
         .sliderRange(0, 1)
         .visible(setDead::get)
-        .build()
-    );
-    private final Setting<SwingMode> explodeSwing = sgExplode.add(new EnumSetting.Builder<SwingMode>()
-        .name("Explode Swing")
-        .description("Swings after attacking a crystal.")
-        .defaultValue(SwingMode.Full)
         .build()
     );
 
@@ -344,6 +333,14 @@ public class AutoCrystalRewrite extends Module {
         .defaultValue(2)
         .range(0, 10)
         .sliderRange(0, 10)
+        .build()
+    );
+
+    //  Rotation Page
+    private final Setting<Boolean> rotate = sgRotate.add(new BoolSetting.Builder()
+        .name("Rotate")
+        .description("Very simple.")
+        .defaultValue(true)
         .build()
     );
 
@@ -553,11 +550,6 @@ public class AutoCrystalRewrite extends Module {
     public enum DmgCheckMode {
         Normal,
         Safe
-    }
-    public enum SwingMode {
-        Disabled,
-        Packet,
-        Full
     }
     public enum RenderMode {
         BlackOut,
@@ -791,9 +783,16 @@ public class AutoCrystalRewrite extends Module {
                     placeTimer = 0;
                 }
                 if (!pausedCheck()) {
+                    if (rotate.get()) {
+                        Managers.ROTATION.start(OLEPOSSUtils.getBox(placePos.down()));
+                    }
                     if ((placeTimer <= 0 || (instantPlace.get() && !shouldSlow() && !isBlocked(placePos))) && delayTimer >= placeDelay.get()) {
                         placeTimer = 1;
                         placeCrystal(placePos.down(), handToUse);
+                    }
+                } else {
+                    if (rotate.get()) {
+                        Managers.ROTATION.end(OLEPOSSUtils.getBox(placePos.down()));
                     }
                 }
             }
@@ -821,9 +820,10 @@ public class AutoCrystalRewrite extends Module {
             }
 
             blocked.add(new Box(pos.getX() - 0.5, pos.getY() + 1, pos.getZ() - 0.5, pos.getX() + 1.5, pos.getY() + 2, pos.getZ() + 1.5));
+            SettingUtils.swing(SwingSettings.SwingState.Pre, SwingSettings.SwingType.AutoCrystalPlace);
             mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(handToUse,
                 new BlockHitResult(new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), Direction.UP, pos, false), 0));
-            if (!placeSwing.get().equals(SwingMode.Disabled)) {swing(handToUse, placeSwing.get());}
+            SettingUtils.swing(SwingSettings.SwingState.Post, SwingSettings.SwingType.AutoCrystalPlace);
         }
     }
 
@@ -843,31 +843,33 @@ public class AutoCrystalRewrite extends Module {
 
     void explode(int id, Entity en, Vec3d vec) {
         if (en != null) {
-            attackEntity(en, true, true, true);
+            attackEntity(en);
         } else {
-            attackID(id, vec, true, true, true);
+            attackID(id, vec);
         }
     }
 
-    void attackID(int id, Vec3d pos, boolean checkSD, boolean swing, boolean confirm) {
+    void attackID(int id, Vec3d pos) {
         Hand handToUse = getHand(Items.END_CRYSTAL);
         if (handToUse != null && !pausedCheck()) {
             EndCrystalEntity en = new EndCrystalEntity(mc.world, pos.x, pos.y, pos.z);
             en.setId(id);
-            attackEntity(en, checkSD, swing, confirm);
+            attackEntity(en);
         }
     }
 
-    void attackEntity(Entity en, boolean checkSD, boolean swing, boolean confirm) {
+    void attackEntity(Entity en) {
         if (mc.player != null) {
             Hand handToUse = getHand(Items.END_CRYSTAL);
             if (handToUse != null) {
                 attacked.add(en.getId(), 1 / expSpeed.get());
                 delayTimer = 0;
+
+                SettingUtils.swing(SwingSettings.SwingState.Pre, SwingSettings.SwingType.AutoCrystalExplode);
                 mc.player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(en, mc.player.isSneaking()));
-                if (swing && !explodeSwing.get().equals(SwingMode.Disabled)) {swing(handToUse, explodeSwing.get());}
-                if (confirm && clearSend.get()) {blocked.clear();}
-                if (setDead.get() && checkSD) {
+                SettingUtils.swing(SwingSettings.SwingState.Post, SwingSettings.SwingType.AutoCrystalExplode);
+                if (clearSend.get()) {blocked.clear();}
+                if (setDead.get()) {
                     Managers.DELAY.add(() -> setEntityDead(en), setDeadDelay.get());
                 }
             }
@@ -884,15 +886,6 @@ public class AutoCrystalRewrite extends Module {
     Hand getHand(Item item) {
         return Managers.HOLDING.isHolding(item) ? Hand.MAIN_HAND:
             mc.player.getOffHandStack().getItem().equals(item) ? Hand.OFF_HAND : null;
-    }
-
-    void swing(Hand hand, SwingMode mode) {
-        if (mode == SwingMode.Packet) {
-            mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(hand));
-        }
-        if (mode == SwingMode.Full) {
-            mc.player.swingHand(hand);
-        }
     }
 
     boolean pausedCheck() {
@@ -1032,7 +1025,7 @@ public class AutoCrystalRewrite extends Module {
         return SettingUtils.inPlaceRange(pos);
     }
     boolean inExplodeRange(Vec3d vec) {
-        return SettingUtils.inAttackRange(new Box(vec.getX() - 1, vec.getY(), vec.getZ() - 1, vec.getX() + 1, vec.getY() + 2, vec.getZ() + 1), vec);
+        return SettingUtils.inAttackRange(new Box(vec.getX() - 1, vec.getY(), vec.getZ() - 1, vec.getX() + 1, vec.getY() + 2, vec.getZ() + 1), 1.75, vec);
     }
     double dist(Vec3d distances) {
         return Math.sqrt(distances.x * distances.x + distances.y * distances.y + distances.z * distances.z);
@@ -1069,6 +1062,7 @@ public class AutoCrystalRewrite extends Module {
         if (!mc.world.getPlayers().isEmpty()) {
             for (int p = 0; p < mc.world.getPlayers().size(); p++) {
                 PlayerEntity en = mc.world.getPlayers().get(p);
+                if (en.getHealth() <= 0) {continue;}
                 if (!motions.isEmpty()) {
                     Vec3d motion = average(motions.get(en.getName().getString()));
                     double x = motion.x;

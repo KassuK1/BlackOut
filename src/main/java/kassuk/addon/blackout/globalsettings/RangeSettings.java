@@ -175,10 +175,10 @@ public class RangeSettings extends Module {
 
 
     // Attack Range Chesks
-    public boolean inAttackRange(Box bb) {
-        return inAttackRange(bb, getFeet(bb));
+    public boolean inAttackRange(Box bb, double eyeHeight) {
+        return inAttackRange(bb, eyeHeight, getFeet(bb));
     }
-    public boolean inAttackRange(Box bb, Vec3d feet) {
+    public boolean inAttackRange(Box bb, double eyeHeight, Vec3d feet) {
         if (mc.player == null) {return false;}
 
         Box pBB = mc.player.getBoundingBox();
@@ -194,7 +194,7 @@ public class RangeSettings extends Module {
                     <= attackRange.get();
             }
             case NCP -> {
-                return getRange(from, new Vec3d(feet.x, Math.min(Math.max(from.getY(), bb.minY), bb.maxY), feet.z))
+                return getRange(from, new Vec3d(feet.x, Math.min(Math.max(from.getY(), bb.minY), bb.minY + eyeHeight), feet.z))
                     <= attackRange.get();
             }
             case Vanilla -> {

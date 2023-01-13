@@ -212,6 +212,9 @@ public class OLEPOSSUtils extends Utils {
     public static Vec3d getMiddle(BlockPos pos) {
         return new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
     }
+    public static Vec3d getMiddle(Box box) {
+        return new Vec3d((box.minX + box.maxX) / 2, (box.minY + box.maxY) / 2, (box.minZ + box.maxZ) / 2);
+    }
 
     public static void sendBlockPos(BlockPos pos) {
         ChatUtils.sendMsg(Text.of("x" + pos.getX() + "  y" + pos.getY() + "  z" + pos.getZ()));

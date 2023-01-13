@@ -50,12 +50,11 @@ public class HoleSnap extends Module {
         .sliderMax(100)
         .build()
     );
-    private final Setting<Integer> speed = sgGeneral.add(new IntSetting.Builder()
-        .name("Speed")
-        .description("Speed")
-        .defaultValue(27)
-        .range(0, 100)
-        .sliderMax(100)
+    private final Setting<Double> speed = sgGeneral.add(new DoubleSetting.Builder()
+        .description("Movement Speed")
+        .defaultValue(0.2873)
+        .min(0)
+        .sliderMax(1)
         .build()
     );
     private final Setting<Double> timer = sgGeneral.add(new DoubleSetting.Builder()
@@ -159,9 +158,9 @@ public class HoleSnap extends Module {
                         ((IVec3d) event.movement).setXZ(0, 0);
                     }
                 } else {
-                    double x = speed.get() * yaw / 100;
+                    double x = speed.get() * yaw;
                     double dX = hole.getX() + 0.5 - mc.player.getX();
-                    double z = speed.get() * pit / 100;
+                    double z = speed.get() * pit;
                     double dZ = hole.getZ() + 0.5 - mc.player.getZ();
                     if (OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox().offset(x, 0, z))) {
                         collisions++;
@@ -195,8 +194,8 @@ public class HoleSnap extends Module {
                 for (int z = -range.get(); z <= range.get(); z++) {
                     BlockPos position = mc.player.getBlockPos().add(x, y, z);
                     if (OLEPOSSUtils.isHole(position, mc.world, depth.get()) && y < 0) {
-                        if (closest == null || OLEPOSSUtils.distance(mc.player.getPos(), new Vec3d(position.getX() + 0.5, position.getY(), position.getZ() + 0.5)) <
-                        OLEPOSSUtils.distance(mc.player.getPos(), new Vec3d(closest.getX() + 0.5, closest.getY(), closest.getZ() + 0.5))) {
+                        if (closest == null || OLEPOSSUtils.distance(mc.player.getPos(), new Vec3d(position.getX() + 0.5, mc.player.getY(), position.getZ() + 0.5)) <
+                        OLEPOSSUtils.distance(mc.player.getPos(), new Vec3d(closest.getX() + 0.5, mc.player.getY(), closest.getZ() + 0.5))) {
                             closest = position;
                         }
                     }
