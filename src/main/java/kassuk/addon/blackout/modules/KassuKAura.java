@@ -12,6 +12,7 @@ import meteordevelopment.meteorclient.systems.modules.combat.CrystalAura;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
 
 //Made by KassuK
@@ -40,7 +41,7 @@ public class KassuKAura extends Module {
     private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
         .name("Delay")
         .description("Delay that will be used for hits")
-        .defaultValue(0.420)
+        .defaultValue(0.500)
         .range(0, 2)
         .sliderMax(2)
         .build()
@@ -82,6 +83,20 @@ public class KassuKAura extends Module {
         .build()
     );
 
+    private final Setting<Boolean> autoBlock = sgGeneral.add(new BoolSetting.Builder()
+        .name("AutoBlock")
+        .description("1.8 module on 1.9+ wow")
+        .defaultValue(false)
+        .build()
+    );
+    private final Setting<BlockMode> blockMode = sgGeneral.add(new EnumSetting.Builder<BlockMode>()
+        .name("Rotation mode")
+        .description(".")
+        .defaultValue(BlockMode.Constant)
+        .visible(autoBlock::get)
+        .build()
+    );
+
     private final Setting<Boolean> onlyHurt = sgGeneral.add(new BoolSetting.Builder()
         .name("Only hit damaged")
         .description("Only hits enemies whose health is below the set threshold ")
@@ -101,6 +116,10 @@ public class KassuKAura extends Module {
     public enum RotationMode {
         Snap,
         Constant,
+    }
+    public enum BlockMode{
+        Constant,
+        NotOnHit,
     }
 
     double timer = 0;
@@ -124,6 +143,11 @@ public class KassuKAura extends Module {
                 if (rotate.get() && rotMode.get().equals(RotationMode.Constant)){
                     Rotations.rotate(rotYaw, rotPitch);
                 }
+                if (autoBlock.get()){
+                    if (mc.player.getOffHandStack().getItem().equals(Items.SHIELD)){
+                        mc.options.useKey.setPressed(true);
+                    }
+                }
                 if (timer >= delay.get()) {
                     if (noMenu.get() && mc.currentScreen != null) {
                         return;
@@ -145,6 +169,8 @@ public class KassuKAura extends Module {
                             info("Tried to rotate to target!");
                         }
                     }
+                    if (blockMode.get().equals(BlockMode.NotOnHit))
+                        mc.options.useKey.setPressed(false);
                     mc.interactionManager.attackEntity(mc.player, target);
                     mc.player.swingHand(Hand.MAIN_HAND);
                     if (debug.get()) {
@@ -154,6 +180,15 @@ public class KassuKAura extends Module {
             }
         }
     }
+    @Override
+    public void onDeactivate() {
+        if (mc.player != null && mc.world != null){
+            if (autoBlock.get())
+                mc.options.useKey.setPressed(false);
+        }
+    }
+
+
     PlayerEntity getClosest() {
         PlayerEntity closest = null;
         float distance = -1;
