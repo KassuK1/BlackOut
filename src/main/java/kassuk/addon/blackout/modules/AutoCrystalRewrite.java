@@ -1106,7 +1106,7 @@ public class AutoCrystalRewrite extends Module {
                 for (Vec3d vec3d : vec) {
                     total = total.add(vec3d);
                 }
-                return new Vec3d(total.x / vec.size(), total.y / vec.size(), total.z / vec.size());
+                return new Vec3d(total.x / vec.size(), vec.get(vec.size() - 1).y, total.z / vec.size());
             }
         }
         return total;
