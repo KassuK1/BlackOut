@@ -1015,7 +1015,6 @@ public class AutoCrystalPlus extends Module {
     }
 
     void explode(int id, Entity en, Vec3d pos) {
-        BlackOut.LOG.info("AutoCrystal: Explode");
         if (en != null) {
             attackEntity(en, true, true);
         } else {
@@ -1025,7 +1024,6 @@ public class AutoCrystalPlus extends Module {
             Hand handToUse = getHand(preferMainHand.get(), false);
             if (handToUse != null) {
                 if (!pausedCheck()) {
-                    BlackOut.LOG.info("AutoCrystal: MultiPlace");
                     Managers.DELAY.add(() -> placeCrystal(multiPos), (float) (multiDelay.get() * 1f));
                 }
             }

@@ -61,6 +61,7 @@ public class AutoCrystalRewrite extends Module {
     private final SettingGroup sgSwitch = settings.createGroup("Switch");
     private final SettingGroup sgDamage = settings.createGroup("Damage");
     private final SettingGroup sgRotate = settings.createGroup("Rotate");
+    private final SettingGroup sgID = settings.createGroup("ID-Predict");
     private final SettingGroup sgExtrapolation = settings.createGroup("Extrapolation");
     private final SettingGroup sgRaytrace = settings.createGroup("Raytrace");
     private final SettingGroup sgRender = settings.createGroup("Render");
@@ -344,6 +345,30 @@ public class AutoCrystalRewrite extends Module {
         .build()
     );
 
+    //  ID-Predict Page
+    private final Setting<Boolean> idPredict = sgRotate.add(new BoolSetting.Builder()
+        .name("ID Predict")
+        .description("yes.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Integer> idOffset = sgExtrapolation.add(new IntSetting.Builder()
+        .name("Id Offset")
+        .description(".")
+        .defaultValue(0)
+        .min(0)
+        .sliderMax(10)
+        .build()
+    );
+    private final Setting<Integer> idPackets = sgExtrapolation.add(new IntSetting.Builder()
+        .name("Id Packets")
+        .description(".")
+        .defaultValue(1)
+        .min(1)
+        .sliderMax(10)
+        .build()
+    );
+
     //  Extrapolation Page
     private final Setting<Boolean> enemyExt = sgExtrapolation.add(new BoolSetting.Builder()
         .name("Enemy Extrapolation")
@@ -541,6 +566,7 @@ public class AutoCrystalRewrite extends Module {
     BlockPos lastPos = null;
     Map<BlockPos, Double[]> earthMap = new HashMap<>();
     double switchTimer = 0;
+    int confirmed = Integer.MIN_VALUE;
 
     //BlackOut Render
     Vec3d renderPos = null;
@@ -677,14 +703,19 @@ public class AutoCrystalRewrite extends Module {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onEntity(EntityAddedEvent event) {
-        if (instantExp.get() && event.entity instanceof EndCrystalEntity) {
-            Vec3d vec = event.entity.getPos();
-            if (canExplode(vec, false) && switchTimer <= 0) {
-                explode(event.entity.getId(), null, vec);
-                if (instant.get() && placePos != null && placePos.equals(event.entity.getBlockPos())) {
-                    Hand hand = getHand(Items.END_CRYSTAL);
-                    if (hand != null && !pausedCheck()) {
-                        placeCrystal(placePos.down(), hand);
+        if (event.entity instanceof EndCrystalEntity entity) {
+            if (entity.getId() > confirmed) {
+                confirmed = entity.getId();
+            }
+            if (instantExp.get()) {
+                Vec3d vec = entity.getPos();
+                if (canExplode(vec, false) && switchTimer <= 0) {
+                    explode(entity.getId(), null, vec);
+                    if (instant.get() && placePos != null && placePos.equals(entity.getBlockPos())) {
+                        Hand hand = getHand(Items.END_CRYSTAL);
+                        if (hand != null && !pausedCheck()) {
+                            placeCrystal(placePos.down(), hand);
+                        }
                     }
                 }
             }
@@ -824,7 +855,27 @@ public class AutoCrystalRewrite extends Module {
             mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(handToUse,
                 new BlockHitResult(new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), Direction.UP, pos, false), 0));
             SettingUtils.swing(SwingSettings.SwingState.Post, SwingSettings.SwingType.AutoCrystalPlace);
+
+            if (idPredict.get()) {
+                int id = getHighest() + idOffset.get();
+                for (int i = 0; i < idPackets.get(); i++) {
+                    Entity en = mc.world.getEntityById(id + i);
+                    if (en == null || (en instanceof EndCrystalEntity)) {
+                        explode(id + i, null, new Vec3d(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5));
+                    }
+                }
+            }
         }
+    }
+
+    int getHighest() {
+        int highest = confirmed;
+        for (Entity entity : mc.world.getEntities()) {
+            if (entity.getId() > highest) {
+                highest = entity.getId();
+            }
+        }
+        return highest;
     }
 
     boolean isBlocked(BlockPos pos) {
