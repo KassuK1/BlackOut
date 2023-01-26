@@ -21,6 +21,7 @@ import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
@@ -43,6 +44,8 @@ Made by OLEPOSSU / Raksamies
 public class AutoMine extends Module {
     public AutoMine() {super(BlackOut.BLACKOUT, "AutoMine", "For the times your too lazy or bad to press your break bind");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final SettingGroup sgValue = settings.createGroup("Value");
+    private final SettingGroup sgCrystal = settings.createGroup("Crystal");
     private final Setting<Boolean> swing = sgGeneral.add(new BoolSetting.Builder()
         .name("Swing")
         .description("Swing")
@@ -67,7 +70,9 @@ public class AutoMine extends Module {
         .defaultValue(true)
         .build()
     );
-    private final Setting<Integer> antiSurround = sgGeneral.add(new IntSetting.Builder()
+
+    //  Value Page
+    private final Setting<Integer> antiSurround = sgValue.add(new IntSetting.Builder()
         .name("Anti Surround Value")
         .description("0 = disabled")
         .defaultValue(0)
@@ -75,7 +80,7 @@ public class AutoMine extends Module {
         .sliderRange(0, 100)
         .build()
     );
-    private final Setting<Integer> surroundCev = sgGeneral.add(new IntSetting.Builder()
+    private final Setting<Integer> surroundCev = sgValue.add(new IntSetting.Builder()
         .name("Surround Cev Value")
         .description("0 = disabled")
         .defaultValue(0)
@@ -83,7 +88,7 @@ public class AutoMine extends Module {
         .sliderRange(0, 100)
         .build()
     );
-    private final Setting<Integer> trapCev = sgGeneral.add(new IntSetting.Builder()
+    private final Setting<Integer> trapCev = sgValue.add(new IntSetting.Builder()
         .name("Trap Cev Value")
         .description("0 = disabled")
         .defaultValue(0)
@@ -91,7 +96,7 @@ public class AutoMine extends Module {
         .sliderRange(0, 100)
         .build()
     );
-    private final Setting<Integer> autoCity = sgGeneral.add(new IntSetting.Builder()
+    private final Setting<Integer> autoCity = sgValue.add(new IntSetting.Builder()
         .name("Auto City Value")
         .description("0 = disabled")
         .defaultValue(0)
@@ -99,7 +104,7 @@ public class AutoMine extends Module {
         .sliderRange(0, 100)
         .build()
     );
-    private final Setting<Integer> cev = sgGeneral.add(new IntSetting.Builder()
+    private final Setting<Integer> cev = sgValue.add(new IntSetting.Builder()
         .name("Cev Value")
         .description("0 = disabled")
         .defaultValue(0)
@@ -107,15 +112,27 @@ public class AutoMine extends Module {
         .sliderRange(0, 100)
         .build()
     );
-    private final Setting<Integer> antiBurrow = sgGeneral.add(new IntSetting.Builder()
-        .name("Anti Burrow Value")
-        .description("0 = disabled")
-        .defaultValue(0)
-        .range(0, 100)
-        .sliderRange(0, 100)
+
+    //  Crystal Page
+    private final Setting<Boolean> crystal = sgCrystal.add(new BoolSetting.Builder()
+        .name("Crystal")
+        .description(".")
+        .defaultValue(true)
         .build()
     );
-    private final Setting<Double> placeDelay = sgGeneral.add(new DoubleSetting.Builder()
+    private final Setting<Boolean> placeCrystal = sgCrystal.add(new BoolSetting.Builder()
+        .name("Place Crystal")
+        .description(".")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> expCrystal = sgCrystal.add(new BoolSetting.Builder()
+        .name("Explode Crystal")
+        .description(".")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Double> placeDelay = sgCrystal.add(new DoubleSetting.Builder()
         .name("Place Delay")
         .description("Delay between crystal places")
         .defaultValue(0.3)
@@ -123,26 +140,27 @@ public class AutoMine extends Module {
         .sliderRange(0, 1)
         .build()
     );
-    private final Setting<Boolean> instant = sgGeneral.add(new BoolSetting.Builder()
+    private final Setting<Boolean> instant = sgCrystal.add(new BoolSetting.Builder()
         .name("Instant Crystal")
         .description(".")
         .defaultValue(true)
         .build()
     );
-    private final Setting<Boolean> instantPick = sgGeneral.add(new BoolSetting.Builder()
-        .name("Instant Pickaxe")
-        .description(".")
-        .defaultValue(true)
-        .visible(() -> !instant.get())
-        .build()
-    );
-    private final Setting<Double> crystalDelay = sgGeneral.add(new DoubleSetting.Builder()
+    private final Setting<Double> crystalDelay = sgCrystal.add(new DoubleSetting.Builder()
         .name("Crystal Delay")
         .description(".")
-        .defaultValue(0.02)
+        .defaultValue(0.125)
         .range(0, 1)
         .sliderRange(0, 1)
         .visible(() -> !instant.get())
+        .build()
+    );
+    private final Setting<Integer> antiBurrow = sgValue.add(new IntSetting.Builder()
+        .name("Anti Burrow Value")
+        .description("0 = disabled")
+        .defaultValue(0)
+        .range(0, 100)
+        .sliderRange(0, 100)
         .build()
     );
     private final Setting<Double> speed = sgGeneral.add(new DoubleSetting.Builder()
@@ -150,14 +168,6 @@ public class AutoMine extends Module {
         .description("Ticks")
         .defaultValue(1)
         .range(0.1, 10)
-        .sliderMax(10)
-        .build()
-    );
-    private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Range")
-        .description("Range for mining")
-        .defaultValue(6)
-        .range(0, 10)
         .sliderMax(10)
         .build()
     );
@@ -199,39 +209,55 @@ public class AutoMine extends Module {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
-    private void onTick(TickEvent.Pre event) {
-        if (mc.player != null && mc.world != null) {
-            calc();
-            if (targetPos != null) {
-                if (SettingUtils.inPlaceRange(targetPos)) {
-                    calc();
-                }
-                if (tick <= 0 && (holdingBest(targetPos) || (silent.get()) && (!pauseEat.get() || !mc.player.isUsingItem()))) {
-                    if (crystalPos != null) {
-                        Entity at = isAt(crystalPos);
-                        Hand hand = getHand(Items.END_CRYSTAL);
-                        if (at != null) {
-                            end(targetPos);
-                            if (instant.get() || (instantPick.get() && holdingBest(targetPos))) {
+    private void onRender(Render3DEvent event) {
+        if (mc.player == null || mc.world == null) {return;}
+
+        calc();
+        tick = Math.max(0, tick - event.frameTime * 20);
+        timer = Math.min(placeDelay.get(), timer + event.frameTime);
+
+        if (targetPos != null) {
+            //Render
+            Vec3d v = OLEPOSSUtils.getMiddle(targetPos);
+            double d = tick / getMineTicks(targetPos);
+            double progress = 0.5 - (d * d * d / 2);
+            double p = tick / getMineTicks(targetPos);
+            int[] c = getColor(startColor.get(), endColor.get(), smooth.get() ? 1 - p : Math.floor(1 - p));
+
+            Box toRender = new Box(v.x - progress, v.y - progress, v.z - progress, v.x + progress, v.y + progress, v.z + progress);
+            event.renderer.box(toRender, new Color(c[0], c[1], c[2],
+                    (int) Math.floor(c[3] / 5f)),
+                new Color(c[0], c[1], c[2], c[3]), ShapeMode.Both, 0);
+
+            //Other Stuff
+            if (!SettingUtils.inPlaceRange(targetPos)) {
+                calc();
+            }
+            if (tick <= 0 && (holdingBest(targetPos) || (silent.get()) && (!pauseEat.get() || !mc.player.isUsingItem()))) {
+                if (crystal.get()) {
+                    Entity at = isAt(targetPos, crystalPos);
+                    Hand hand = getHand(Items.END_CRYSTAL);
+                    if (at != null) {
+                        end(targetPos);
+                        if (expCrystal.get()) {
+                            if (instant.get()) {
                                 attackID(at.getId(), at.getPos());
                             } else {
                                 Managers.DELAY.add(() -> attackID(at.getId(), at.getPos()), (float) (crystalDelay.get() * 1f));
                             }
-                            targetPos = null;
-                            crystalPos = null;
-                        } else if (hand != null && timer >= placeDelay.get()) {
-                            Box box = new Box(crystalPos);
-                            if (!EntityUtils.intersectsWithEntity(box, entity -> !entity.isSpectator())) {
-                                timer = 0;
-                                mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand,
-                                    new BlockHitResult(OLEPOSSUtils.getMiddle(crystalPos.down()), Direction.UP, crystalPos.down(), false), 0));
-                            }
                         }
-                    } else {
-                        abort(targetPos);
                         targetPos = null;
                         crystalPos = null;
+                    } else if (hand != null && timer >= placeDelay.get() && placeCrystal.get() &&
+                        crystalPos != null && placeCrystal.get() && !EntityUtils.intersectsWithEntity(new Box(crystalPos), entity -> !entity.isSpectator())) {
+                        timer = 0;
+                        mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand,
+                            new BlockHitResult(OLEPOSSUtils.getMiddle(crystalPos.down()), Direction.UP, crystalPos.down(), false), 0));
                     }
+                } else {
+                    end(targetPos);
+                    targetPos = null;
+                    crystalPos = null;
                 }
             }
         }
@@ -248,25 +274,7 @@ public class AutoMine extends Module {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
-    private void onRender(Render3DEvent event) {
-        tick = Math.max(0, tick - event.frameTime * 20);
-        timer = Math.min(placeDelay.get(), timer + event.frameTime);
-
-        if (mc.player != null && mc.world != null && targetPos != null) {
-            Vec3d v = OLEPOSSUtils.getMiddle(targetPos);
-            double d = tick / getMineTicks(targetPos);
-            double progress = 0.5 - (d * d * d / 2);
-            double p = tick / getMineTicks(targetPos);
-            int[] c = getColor(startColor.get(), endColor.get(), smooth.get() ? 1 - p : Math.floor(1 - p));
-
-            Box toRender = new Box(v.x - progress, v.y - progress, v.z - progress, v.x + progress, v.y + progress, v.z + progress);
-            event.renderer.box(toRender, new Color(c[0], c[1], c[2],
-                (int) Math.floor(c[3] / 5f)),
-                new Color(c[0], c[1], c[2], c[3]), ShapeMode.Both, 0);
-        }
-    }
-
+    /*
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onSpawn(EntityAddedEvent event) {
         if (mc.player != null && mc.world != null && targetPos != null && crystalPos != null) {
@@ -274,7 +282,7 @@ public class AutoMine extends Module {
             if (event.entity.getType().equals(EntityType.END_CRYSTAL) && pos.equals(crystalPos) && fastestSlot(pos) >= 0 && tick <= 0) {
                 end(targetPos);
                 int id = event.entity.getId();
-                if (instant.get() || (instantPick.get() && holdingBest(targetPos))) {
+                if (instant.get()) {
                     attackID(id, event.entity.getPos());
                 } else {
                     Managers.DELAY.add(() -> attackID(id, event.entity.getPos()), (float) (crystalDelay.get() * 1f));
@@ -285,6 +293,8 @@ public class AutoMine extends Module {
         }
     }
 
+     */
+
     void attackID(int id, Vec3d pos) {
         EndCrystalEntity en = new EndCrystalEntity(mc.world, pos.x, pos.y, pos.z);
         en.setId(id);
@@ -292,9 +302,10 @@ public class AutoMine extends Module {
         mc.getNetworkHandler().sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
     }
 
-    Entity isAt(BlockPos pos) {
+    Entity isAt(BlockPos pos, BlockPos crystalPos) {
         for (Entity en : mc.world.getEntities()) {
-            if (en.getBlockPos().equals(pos) && en.getType().equals(EntityType.END_CRYSTAL)) {
+            if ((en.getBlockPos().equals(crystalPos) && en.getType().equals(EntityType.END_CRYSTAL)) ||
+                (!(en instanceof ItemEntity) &&  en.getBoundingBox().intersects(OLEPOSSUtils.getBox(pos)))) {
                 return en;
             }
         }

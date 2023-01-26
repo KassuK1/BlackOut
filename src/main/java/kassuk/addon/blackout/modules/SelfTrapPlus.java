@@ -4,6 +4,7 @@ import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.timers.BlockTimerList;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
+import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
@@ -137,7 +138,11 @@ public class SelfTrapPlus extends Module {
                 }
                 int p = Math.min(Math.min(obsidian[1], placesLeft), blocks.size());
                 for (int i = 0; i < p; i++) {
-                    place(blocks.get(i));
+                    BlockPos toPlace = blocks.get(i);
+                    Direction[] result = SettingUtils.getPlaceDirection(toPlace);
+                    if (result[0] != null || result[1] != null) {
+                        place(blocks.get(i), result);
+                    }
                 }
                 if (swapped) {
                     InvUtils.swapBack();
@@ -146,13 +151,20 @@ public class SelfTrapPlus extends Module {
         }
     }
 
-    void place(BlockPos toPlace) {
+    void place(BlockPos toPlace, Direction[] result) {
         timers.add(toPlace, delay.get());
         placeTimer = 0;
         if (mc.player != null) {
             placesLeft--;
-            mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
-                new BlockHitResult(new Vec3d(toPlace.getX() + 0.5, toPlace.getY() + 0.5, toPlace.getZ() + 0.5), Direction.UP, toPlace, false), 0));
+            if (result[1] != null) {
+                mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
+                    new BlockHitResult(new Vec3d(toPlace.getX() + 0.5, toPlace.getY() + 0.5, toPlace.getZ() + 0.5),
+                        result[1], toPlace, false), 0));
+            } else {
+                mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
+                    new BlockHitResult(new Vec3d(toPlace.offset(result[0]).getX() + 0.5, toPlace.offset(result[0]).getY() + 0.5, toPlace.offset(result[0]).getZ() + 0.5),
+                        result[0].getOpposite(), toPlace.offset(result[0]), false), 0));
+            }
             if (swing.get()) {
                 mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
             }

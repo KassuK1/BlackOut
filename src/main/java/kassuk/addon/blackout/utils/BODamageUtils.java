@@ -166,10 +166,13 @@ public class BODamageUtils {
     // Anchor damage
 
     public static double anchorDamage(LivingEntity player, Vec3d anchor) {
-        mc.world.removeBlock(new BlockPos(anchor), false);
-        double damage = bedDamage(player, anchor);
-        mc.world.setBlockState(new BlockPos(anchor), Blocks.RESPAWN_ANCHOR.getDefaultState());
-        return damage;
+        if (mc.world.getBlockState(new BlockPos(anchor)).getBlock().equals(Blocks.RESPAWN_ANCHOR)) {
+            mc.world.removeBlock(new BlockPos(anchor), false);
+            double damage = bedDamage(player, anchor);
+            mc.world.setBlockState(new BlockPos(anchor), Blocks.RESPAWN_ANCHOR.getDefaultState());
+            return damage;
+        }
+        return bedDamage(player, anchor);
     }
 
     // Utils

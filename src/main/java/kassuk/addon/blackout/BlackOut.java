@@ -5,6 +5,7 @@ import kassuk.addon.blackout.commands.BlackoutGit;
 import kassuk.addon.blackout.commands.GearInfo;
 import kassuk.addon.blackout.commands.Kick;
 import kassuk.addon.blackout.commands.Panic;
+import kassuk.addon.blackout.globalsettings.FacingSettings;
 import kassuk.addon.blackout.globalsettings.RangeSettings;
 import kassuk.addon.blackout.globalsettings.RotationSettings;
 import kassuk.addon.blackout.globalsettings.SwingSettings;
@@ -35,6 +36,7 @@ public class BlackOut extends MeteorAddon {
         // Modules
         Modules.get().add(new AnteroTaateli());
         Modules.get().add(new AntiAim());
+        Modules.get().add(new AutoAnchorPlus());
         Modules.get().add(new AutoCraftingTable());
         Modules.get().add(new AutoCrystalPlus());
         Modules.get().add(new AutoCrystalRewrite());
@@ -70,6 +72,7 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new WeakAlert());
 
         // Global Settings
+        Modules.get().add(new FacingSettings());
         Modules.get().add(new RangeSettings());
         Modules.get().add(new RotationSettings());
         Modules.get().add(new SwingSettings());

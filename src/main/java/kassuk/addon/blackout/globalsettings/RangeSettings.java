@@ -143,6 +143,11 @@ public class RangeSettings extends Module {
     public boolean inPlaceRange(BlockPos pos) {
         if (mc.player == null) {return false;}
 
+        double dist = placeRangeTo(pos);
+        return dist >= 0 && dist <= placeRange.get();
+    }
+
+    public double placeRangeTo(BlockPos pos) {
         Box pBB = mc.player.getBoundingBox();
         Vec3d from = mc.player.getEyePos();
         Vec3d pPos = mc.player.getPos();
@@ -154,23 +159,19 @@ public class RangeSettings extends Module {
         Vec3d feet = new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
         switch (placeRangeMode.get()) {
             case NCP -> {
-                return getRange(from, feet.add(0, 0.5, 0))
-                    <= placeRange.get();
+                return getRange(from, feet.add(0, 0.5, 0));
             }
             case Height -> {
-                return getRange(from, feet.add(0, placeHeight.get(), 0))
-                    <= placeRange.get();
+                return getRange(from, feet.add(0, placeHeight.get(), 0));
             }
             case Vanilla -> {
-                return getRange(from, OLEPOSSUtils.getClosest(mc.player.getEyePos(), feet, 1, 1))
-                    <= placeRange.get();
+                return getRange(from, OLEPOSSUtils.getClosest(mc.player.getEyePos(), feet, 1, 1));
             }
             case CustomBox -> {
-                return getRange(from, OLEPOSSUtils.getClosest(mc.player.getEyePos(), feet, blockWidth.get(), blockHeight.get()))
-                    <= placeRange.get();
+                return getRange(from, OLEPOSSUtils.getClosest(mc.player.getEyePos(), feet, blockWidth.get(), blockHeight.get()));
             }
         }
-        return false;
+        return -1;
     }
 
 

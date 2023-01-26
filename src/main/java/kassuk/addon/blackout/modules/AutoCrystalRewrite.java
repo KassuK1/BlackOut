@@ -116,7 +116,7 @@ public class AutoCrystalRewrite extends Module {
         .name("Place Speed")
         .description("How many times should the module place per second.")
         .defaultValue(10)
-        .range(0, 20)
+        .min(0)
         .sliderRange(0, 20)
         .build()
     );
@@ -346,13 +346,13 @@ public class AutoCrystalRewrite extends Module {
     );
 
     //  ID-Predict Page
-    private final Setting<Boolean> idPredict = sgRotate.add(new BoolSetting.Builder()
+    private final Setting<Boolean> idPredict = sgID.add(new BoolSetting.Builder()
         .name("ID Predict")
         .description("yes.")
         .defaultValue(true)
         .build()
     );
-    private final Setting<Integer> idOffset = sgExtrapolation.add(new IntSetting.Builder()
+    private final Setting<Integer> idOffset = sgID.add(new IntSetting.Builder()
         .name("Id Offset")
         .description(".")
         .defaultValue(0)
@@ -360,7 +360,7 @@ public class AutoCrystalRewrite extends Module {
         .sliderMax(10)
         .build()
     );
-    private final Setting<Integer> idPackets = sgExtrapolation.add(new IntSetting.Builder()
+    private final Setting<Integer> idPackets = sgID.add(new IntSetting.Builder()
         .name("Id Packets")
         .description(".")
         .defaultValue(1)
@@ -457,7 +457,7 @@ public class AutoCrystalRewrite extends Module {
         .defaultValue(new SettingColor(255, 0, 0, 255))
         .build()
     );
-    private final Setting<SettingColor> color = sgRender.add(new ColorSetting.Builder()
+    public final Setting<SettingColor> color = sgRender.add(new ColorSetting.Builder()
         .name("Side Color")
         .description("Side color of rendered stuff")
         .defaultValue(new SettingColor(255, 0, 0, 50))
@@ -704,9 +704,7 @@ public class AutoCrystalRewrite extends Module {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onEntity(EntityAddedEvent event) {
         if (event.entity instanceof EndCrystalEntity entity) {
-            if (entity.getId() > confirmed) {
-                confirmed = entity.getId();
-            }
+            confirmed = entity.getId();
             if (instantExp.get()) {
                 Vec3d vec = entity.getPos();
                 if (canExplode(vec, false) && switchTimer <= 0) {
@@ -864,6 +862,7 @@ public class AutoCrystalRewrite extends Module {
                         explode(id + i, null, new Vec3d(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5));
                     }
                 }
+                confirmed++;
             }
         }
     }
