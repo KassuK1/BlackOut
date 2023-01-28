@@ -3,7 +3,6 @@ package kassuk.addon.blackout.modules;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.timers.BlockTimerList;
 import kassuk.addon.blackout.managers.Managers;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;

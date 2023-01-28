@@ -1,14 +1,10 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
-import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
-import meteordevelopment.orbit.EventHandler;
-import meteordevelopment.orbit.EventPriority;
 import net.minecraft.client.render.FogShape;
-import net.minecraft.entity.effect.StatusEffect;
 
 /*
 Made by OLEPOSSU

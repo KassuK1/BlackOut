@@ -15,7 +15,6 @@ import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Blocks;
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.ArrayList;
