@@ -400,7 +400,7 @@ public class AutoCrystalRewrite extends Module {
     //  Render Page
     private final Setting<Boolean> render = sgRender.add(new BoolSetting.Builder()
         .name("Render")
-        .description("Renders stuff when placing crystals.")
+        .description("Renders stuff when placing on placements.")
         .defaultValue(true)
         .build()
     );
