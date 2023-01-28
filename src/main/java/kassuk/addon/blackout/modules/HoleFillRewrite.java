@@ -1,7 +1,9 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
-import kassuk.addon.blackout.globalsettings.SwingSettings;
+import kassuk.addon.blackout.enums.RotationType;
+import kassuk.addon.blackout.enums.SwingState;
+import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.timers.BlockTimerList;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
@@ -44,7 +46,6 @@ public class HoleFillRewrite extends Module {
         super(BlackOut.BLACKOUT, "Hole Fill+", "Automatically is a cunt to your enemies");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private final SettingGroup sgPlacing = settings.getDefaultGroup();
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
         .name("Pause Eat")
         .description("Pauses when you are eating")
@@ -203,7 +204,7 @@ public class HoleFillRewrite extends Module {
     }
 
     void update() {
-        updateHoles(SettingUtils.getPlaceRange() + 1);
+        updateHoles(Math.max(SettingUtils.getPlaceRange(), SettingUtils.getPlaceWallsRange()) + 1);
         List<BlockPos> toPlace = getValid(holes);
         FindItemResult result = InvUtils.find(itemStack -> itemStack.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) itemStack.getItem()).getBlock()));
         int[] obsidian = new int[]{result.slot(), result.count()};
@@ -264,7 +265,7 @@ public class HoleFillRewrite extends Module {
             case Strict -> {
                 for (Direction dir : directions) {
                     double dist = OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(pos.offset(dir)), mc.player.getEyePos());
-                    if ((closest == -1 || dist < closest) && OLEPOSSUtils.strictDir(pos, dir)) {
+                    if ((closest == -1 || dist < closest) && OLEPOSSUtils.strictDir(pos.offset(dir), dir.getOpposite())) {
                         cDir = dir;
                         closest = dist;
                     }
@@ -313,10 +314,21 @@ public class HoleFillRewrite extends Module {
         if (dir == null) {return;}
 
         timers.add(pos, delay.get());
-        SettingUtils.swing(SwingSettings.SwingState.Pre, SwingSettings.SwingType.Placing);
+
+        if (SettingUtils.shouldRotate(RotationType.Placing)) {
+            Managers.ROTATION.start(pos.offset(dir), 2);
+        }
+
+        SettingUtils.swing(SwingState.Pre, SwingType.Placing);
+
         mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
             new BlockHitResult(OLEPOSSUtils.getMiddle(pos.offset(dir)), dir.getOpposite(), pos.offset(dir), false), 0));
-        SettingUtils.swing(SwingSettings.SwingState.Post, SwingSettings.SwingType.Placing);
+
+        SettingUtils.swing(SwingState.Post, SwingType.Placing);
+
+        if (SettingUtils.shouldRotate(RotationType.Placing)) {
+            Managers.ROTATION.start(pos.offset(dir), 2);
+        }
 
         if (!toRender.containsKey(pos)) {
             toRender.put(pos, new Double[]{fadeTime.get() + renderTime.get(), fadeTime.get()});

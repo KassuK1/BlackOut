@@ -27,6 +27,7 @@ public class PacketCrash extends Module {
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<SendMode> mode = sgGeneral.add(new EnumSetting.Builder<SendMode>()
+        .name("Mode")
         .description("Mode.")
         .defaultValue(SendMode.Spam)
         .build()

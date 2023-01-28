@@ -1,12 +1,10 @@
 package kassuk.addon.blackout.globalsettings;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.mixininterface.IVec3d;
-import meteordevelopment.meteorclient.settings.DoubleSetting;
-import meteordevelopment.meteorclient.settings.EnumSetting;
-import meteordevelopment.meteorclient.settings.Setting;
-import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
@@ -32,11 +30,52 @@ public class RotationSettings extends Module {
         .defaultValue(RotationCheckMode.Raytrace)
         .build()
     );
+    private final Setting<Boolean> crystalRotate = sgPlace.add(new BoolSetting.Builder()
+        .name("Crystal Rotate")
+        .description(".")
+        .defaultValue(false)
+        .build()
+    );
+    private final Setting<Boolean> attackRotate = sgPlace.add(new BoolSetting.Builder()
+        .name("Attack Rotate")
+        .description(".")
+        .defaultValue(false)
+        .build()
+    );
+    private final Setting<Boolean> placeRotate = sgPlace.add(new BoolSetting.Builder()
+        .name("Placing Rotate")
+        .description(".")
+        .defaultValue(false)
+        .build()
+    );
+    private final Setting<Boolean> breakRotate = sgPlace.add(new BoolSetting.Builder()
+        .name("Breaking Rotate")
+        .description(".")
+        .defaultValue(false)
+        .build()
+    );
+    private final Setting<Boolean> interactRotate = sgPlace.add(new BoolSetting.Builder()
+        .name("Interact Rotate")
+        .description(".")
+        .defaultValue(false)
+        .build()
+    );
+
 
     public enum RotationCheckMode {
         Raytrace,
         Angle,
         CustomRaytrace
+    }
+    public boolean shouldRotate(RotationType type) {
+        switch (type) {
+            case Crystal -> {return crystalRotate.get();}
+            case Attacking -> {return attackRotate.get();}
+            case Placing -> {return placeRotate.get();}
+            case Breaking -> {return breakRotate.get();}
+            case Interact -> {return interactRotate.get();}
+        }
+        return false;
     }
     public boolean rotationCheck(double yaw, double pitch, Box box) {
         if (box == null){return false;}
@@ -53,8 +92,9 @@ public class RotationSettings extends Module {
                     range * -Math.sin(Math.toRadians(pitch)),
                     range * Math.sin(Math.toRadians(yaw + 90)) * Math.abs(Math.cos(Math.toRadians(pitch)))).add(pPos);
 
-                for (int i = 0; i < 1; i += 0.01) {
-                    Vec3d vec = new Vec3d(pPos.x + (end.x - pPos.x) * i, pPos.y + (end.y - pPos.y) * i, pPos.z + (end.z - pPos.z) * i);
+                Vec3d vec = new Vec3d(0, 0, 0);
+                for (float i = 0; i < 1; i += 0.01) {
+                    ((IVec3d)vec).set(pPos.x + (end.x - pPos.x) * i, pPos.y + (end.y - pPos.y) * i, pPos.z + (end.z - pPos.z) * i);
 
                     if (vec.x >= box.minX && vec.x <= box.maxX &&
                         vec.y >= box.minY && vec.y <= box.maxY &&

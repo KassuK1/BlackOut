@@ -1,8 +1,11 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.enums.SwingState;
+import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
+import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -23,7 +26,6 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.util.Hand;
@@ -300,6 +302,9 @@ public class BedBomb extends Module {
     }
     void place(BlockPos pos, Direction dir, Hand hand) {
         mc.getNetworkHandler().sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(dir.asRotation(), 0, Managers.ONGROUND.isOnGround()));
+
+        SettingUtils.swing(SwingState.Pre, SwingType.Placing);
+
         if (air(pos.down())) {
             mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand,
                 new BlockHitResult(OLEPOSSUtils.getMiddle(pos), Direction.UP, pos, false), 0));
@@ -307,18 +312,15 @@ public class BedBomb extends Module {
             mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand,
                 new BlockHitResult(OLEPOSSUtils.getMiddle(pos.down()), Direction.UP, pos.down(), false), 0));
         }
-        if (swing.get()) {
-            mc.getNetworkHandler().sendPacket(new HandSwingC2SPacket(hand));
-        }
+        SettingUtils.swing(SwingState.Post, SwingType.Placing);
     }
 
     void explode(BlockPos position) {
         if (mc.player == null) {return;}
+        SettingUtils.swing(SwingState.Pre, SwingType.Interact);
         mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
             new BlockHitResult(OLEPOSSUtils.getMiddle(position), Direction.UP, position, false), 0));
-        if (swing.get()) {
-            mc.getNetworkHandler().sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
-        }
+        SettingUtils.swing(SwingState.Post, SwingType.Interact);
     }
 
     BlockPos findBestPos() {

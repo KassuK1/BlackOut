@@ -24,7 +24,7 @@ Made by OLEPOSSU
 
 public class FacingSettings extends Module {
     public FacingSettings() {
-        super(BlackOut.SETTINGS, "Facing", "Global range settings for every blackout module");
+        super(BlackOut.SETTINGS, "Facing", "Global facing settings for every blackout module");
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -79,12 +79,18 @@ public class FacingSettings extends Module {
             } else {
                 double cDist = -1;
                 for (Direction dir : Direction.values()) {
-                    if (!getBlock(pos.offset(dir)).equals(Blocks.AIR) && predicate.test(mc.world.getBlockState(pos.offset(dir)))) {
-                        double dist = SettingUtils.placeRangeTo(pos.offset(dir));
-                        if (dist >= 0 && (cDist < 0 || dist < cDist)) {
-                            best = dir;
-                            cDist = dist;
-                        }
+
+                    // Test if there is block in the side and if predicate is valid
+                    if (getBlock(pos.offset(dir)).equals(Blocks.AIR) || !predicate.test(mc.world.getBlockState(pos.offset(dir)))) {continue;}
+
+                    // Strict dir check (checks if face is on opposite side of the block to player)
+                    if (strictDir.get() && !OLEPOSSUtils.strictDir(pos.offset(dir), dir.getOpposite())) {continue;}
+
+                    // Only accepts if closer than previous accepted direction
+                    double dist = SettingUtils.placeRangeTo(pos.offset(dir));
+                    if (dist >= 0 && (cDist < 0 || dist < cDist)) {
+                        best = dir;
+                        cDist = dist;
                     }
                 }
             }
@@ -93,17 +99,23 @@ public class FacingSettings extends Module {
     }
 
     public Direction getPlaceOnDirection(BlockPos pos) {
+        if (!strictDir.get()) {return Direction.UP;}
         if (pos == null) {return null;}
         Direction best = null;
         if (mc.world != null && mc.player != null) {
             double cDist = -1;
             for (Direction dir : Direction.values()) {
-                if (!getBlock(pos.offset(dir)).equals(Blocks.AIR)) {
-                    double dist = dist(pos, dir);
-                    if (dist >= 0 && (cDist < 0 || dist < cDist)) {
-                        best = dir;
-                        cDist = dist;
-                    }
+                // Unblocked check (mostly for autocrystal placement facings)
+                if (unblocked.get() && !getBlock(pos.offset(dir)).equals(Blocks.AIR)) {continue;}
+
+                // Strict dir check (checks if face isnt on opposite side of the block to player)
+                if (strictDir.get() && !OLEPOSSUtils.strictDir(pos, dir)) {continue;}
+
+                // Only accepts if closer than last accepted direction
+                double dist = dist(pos, dir);
+                if (dist >= 0 && (cDist < 0 || dist < cDist)) {
+                    best = dir;
+                    cDist = dist;
                 }
             }
         }

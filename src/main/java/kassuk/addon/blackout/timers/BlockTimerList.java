@@ -28,7 +28,6 @@ public class BlockTimerList {
     private void onRender(Render3DEvent event) {
         List<BlockTimer> toRemove = new ArrayList<>();
         timers.forEach(item -> {
-            item.update((float) event.frameTime);
             if (!item.isValid()) {
                 toRemove.add(item);
             }
@@ -53,16 +52,17 @@ public class BlockTimerList {
 
     static class BlockTimer {
         public BlockPos pos;
+        public long startTime;
         public double time;
         public double ogTime;
 
         public BlockTimer(BlockPos pos, double time) {
             this.pos = pos;
+            this.startTime = System.currentTimeMillis();
             this.time = time;
             this.ogTime = time;
         }
 
-        public void update(float delta) {time -= delta;}
-        public boolean isValid() {return time > 0;}
+        public boolean isValid() {return System.currentTimeMillis() <= startTime + time * 1000;}
     }
 }

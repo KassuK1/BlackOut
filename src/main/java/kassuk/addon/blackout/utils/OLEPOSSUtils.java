@@ -260,11 +260,11 @@ public class OLEPOSSUtils extends Utils {
     }
 
     public static boolean strictDir(BlockPos pos, Direction dir) {
-        if (dir == Direction.UP && mc.player.getEyeY() >= pos.getY() + 0.5) {return true;}
-        if (dir == Direction.DOWN && mc.player.getEyeY() <= pos.getY() + 0.5) {return true;}
-        if (dir.getOffsetX() >= 0 && mc.player.getX() >= pos.getX() + 0.5 + dir.getOffsetX() / 2f) {return true;}
+        if (dir.getOffsetY() > 0 && mc.player.getEyePos().y >= pos.getY() + 0.5) {return true;}
+        if (dir.getOffsetY() < 0 && mc.player.getEyePos().y <= pos.getY() + 0.5) {return true;}
+        if (dir.getOffsetX() > 0 && mc.player.getX() >= pos.getX() + 0.5 + dir.getOffsetX() / 2f) {return true;}
         if (dir.getOffsetX() < 0 && mc.player.getX() < pos.getX() + 0.5 - dir.getOffsetX() / 2f) {return true;}
-        if (dir.getOffsetZ() >= 0 && mc.player.getZ() >= pos.getZ() + 0.5 + dir.getOffsetZ() / 2f) {return true;}
+        if (dir.getOffsetZ() > 0 && mc.player.getZ() >= pos.getZ() + 0.5 + dir.getOffsetZ() / 2f) {return true;}
         if (dir.getOffsetZ() < 0 && mc.player.getZ() < pos.getZ() + 0.5 - dir.getOffsetZ() / 2f) {return true;}
         return false;
     }

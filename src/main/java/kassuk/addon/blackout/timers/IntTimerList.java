@@ -36,13 +36,11 @@ public class IntTimerList {
 
     public void update(double delta) {
         List<IntTimer> toRemove = new ArrayList<>();
-        for (int i = 0; i < timers.size(); i++) {
-            IntTimer item = timers.get(i);
-            item.update(delta);
+        timers.forEach(item -> {
             if (!item.isValid()) {
                 toRemove.add(item);
             }
-        }
+        });
         toRemove.forEach(timers::remove);
     }
 
@@ -57,14 +55,14 @@ public class IntTimerList {
         public int value;
         public double time;
         public double ogTime;
+        public long startTime;
 
         public IntTimer(int value, double time) {
             this.value = value;
+            this.startTime = System.currentTimeMillis();
             this.time = time;
             this.ogTime = time;
         }
-
-        public void update(double delta) {time -= delta;}
-        public boolean isValid() {return time > 0;}
+        public boolean isValid() {return System.currentTimeMillis() <= startTime + time * 1000;}
     }
 }

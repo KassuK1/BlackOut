@@ -43,7 +43,7 @@ got permission to use it from seasnail
 public class BODamageUtils {
     private static final Vec3d vec3d = new Vec3d(0, 0, 0);
     private static Explosion explosion;
-    private static RaycastContext raycastContext;
+    public static RaycastContext raycastContext;
 
     @PreInit
     public static void init() {
@@ -211,7 +211,7 @@ public class BODamageUtils {
         return damage < 0 ? 0 : damage;
     }
 
-    private static double getExposure(Vec3d source, Entity entity, Box box, RaycastContext raycastContext, BlockPos obsidianPos, boolean ignoreTerrain) {
+    public static double getExposure(Vec3d source, Entity entity, Box box, RaycastContext raycastContext, BlockPos obsidianPos, boolean ignoreTerrain) {
         double d = 1 / ((box.maxX - box.minX) * 2 + 1);
         double e = 1 / ((box.maxY - box.minY) * 2 + 1);
         double f = 1 / ((box.maxZ - box.minZ) * 2 + 1);
@@ -243,6 +243,87 @@ public class BODamageUtils {
         }
 
         return 0;
+    }
+    public static boolean isExposed(Vec3d source, Box box) {
+        double d = 1 / ((box.maxX - box.minX) * 2 + 1);
+        double e = 1 / ((box.maxY - box.minY) * 2 + 1);
+        double f = 1 / ((box.maxZ - box.minZ) * 2 + 1);
+        double g = (1 - Math.floor(1 / d) * d) / 2;
+        double h = (1 - Math.floor(1 / f) * f) / 2;
+
+        if (!(d < 0) && !(e < 0) && !(f < 0)) {
+            for (double k = 0; k <= 1; k += d) {
+                for (double l = 0; l <= 1; l += e) {
+                    for (double m = 0; m <= 1; m += f) {
+                        double n = MathHelper.lerp(k, box.minX, box.maxX);
+                        double o = MathHelper.lerp(l, box.minY, box.maxY);
+                        double p = MathHelper.lerp(m, box.minZ, box.maxZ);
+
+                        ((IVec3d) vec3d).set(n + g, o, p + h);
+                        ((IRaycastContext) raycastContext).set(vec3d, source, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player);
+
+                        if (raycast(raycastContext).getType() == HitResult.Type.MISS) return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+    public static double getExposure(Vec3d source, Box box) {
+        double d = 1 / ((box.maxX - box.minX) * 2 + 1);
+        double e = 1 / ((box.maxY - box.minY) * 2 + 1);
+        double f = 1 / ((box.maxZ - box.minZ) * 2 + 1);
+        double g = (1 - Math.floor(1 / d) * d) / 2;
+        double h = (1 - Math.floor(1 / f) * f) / 2;
+
+        if (!(d < 0) && !(e < 0) && !(f < 0)) {
+            int i = 0;
+            int j = 0;
+
+            for (double k = 0; k <= 1; k += d) {
+                for (double l = 0; l <= 1; l += e) {
+                    for (double m = 0; m <= 1; m += f) {
+                        double n = MathHelper.lerp(k, box.minX, box.maxX);
+                        double o = MathHelper.lerp(l, box.minY, box.maxY);
+                        double p = MathHelper.lerp(m, box.minZ, box.maxZ);
+
+                        ((IVec3d) vec3d).set(n + g, o, p + h);
+                        ((IRaycastContext) raycastContext).set(vec3d, source, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player);
+
+                        if (raycast(raycastContext).getType() == HitResult.Type.MISS) i++;
+
+                        j++;
+                    }
+                }
+            }
+
+            return (double) i / j;
+        }
+
+        return 0;
+    }
+    public static BlockHitResult raycast(RaycastContext context) {
+        return BlockView.raycast(context.getStart(), context.getEnd(), context, (raycastContext, blockPos) -> {
+            BlockState blockState;
+            blockState = mc.world.getBlockState(blockPos);
+
+            Vec3d vec3d = raycastContext.getStart();
+            Vec3d vec3d2 = raycastContext.getEnd();
+
+            VoxelShape voxelShape = raycastContext.getBlockShape(blockState, mc.world, blockPos);
+            BlockHitResult blockHitResult = mc.world.raycastBlock(vec3d, vec3d2, blockPos, voxelShape, blockState);
+            VoxelShape voxelShape2 = VoxelShapes.empty();
+            BlockHitResult blockHitResult2 = voxelShape2.raycast(vec3d, vec3d2, blockPos);
+
+            double d = blockHitResult == null ? Double.MAX_VALUE : raycastContext.getStart().squaredDistanceTo(blockHitResult.getPos());
+            double e = blockHitResult2 == null ? Double.MAX_VALUE : raycastContext.getStart().squaredDistanceTo(blockHitResult2.getPos());
+
+            return d <= e ? blockHitResult : blockHitResult2;
+        }, (raycastContext) -> {
+            Vec3d vec3d = raycastContext.getStart().subtract(raycastContext.getEnd());
+            return BlockHitResult.createMissed(raycastContext.getEnd(), Direction.getFacing(vec3d.x, vec3d.y, vec3d.z), new BlockPos(raycastContext.getEnd()));
+        });
     }
 
     private static BlockHitResult raycast(RaycastContext context, BlockPos obsidianPos, boolean ignoreTerrain) {

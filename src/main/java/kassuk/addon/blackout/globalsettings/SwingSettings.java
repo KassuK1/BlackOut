@@ -1,6 +1,8 @@
 package kassuk.addon.blackout.globalsettings;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.enums.SwingState;
+import kassuk.addon.blackout.enums.SwingType;
 import meteordevelopment.meteorclient.settings.EnumSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
@@ -18,36 +20,37 @@ public class SwingSettings extends Module {
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private final SettingGroup sgAC = settings.createGroup("Auto Crystal");
+    private final SettingGroup sgCrystal = settings.createGroup("Crystal");
+    private final SettingGroup sgInteract = settings.createGroup("Interact");
     private final SettingGroup sgMining = settings.createGroup("Mining");
     private final SettingGroup sgPlace = settings.createGroup("Placing");
     private final SettingGroup sgAttack = settings.createGroup("Attacking");
-    private final Setting<SwingMode> acPlace = sgAC.add(new EnumSetting.Builder<SwingMode>()
-        .name("AC Place Swing")
+    private final Setting<SwingMode> crystalPlace = sgCrystal.add(new EnumSetting.Builder<SwingMode>()
+        .name("Crystal Place Swing")
         .defaultValue(SwingMode.Disabled)
         .build()
     );
-    private final Setting<SwingHand> acPlaceHand = sgAC.add(new EnumSetting.Builder<SwingHand>()
-        .name("AC Place Hand")
+    private final Setting<SwingHand> crystalHand = sgCrystal.add(new EnumSetting.Builder<SwingHand>()
+        .name("Crystal Hand")
         .defaultValue(SwingHand.MainHand)
         .build()
     );
-    private final Setting<SwingState> acPlaceState = sgAC.add(new EnumSetting.Builder<SwingState>()
-        .name("AC Place Swing State")
+    private final Setting<SwingState> crystalState = sgCrystal.add(new EnumSetting.Builder<SwingState>()
+        .name("Crystal Swing State")
         .defaultValue(SwingState.Post)
         .build()
     );
-    private final Setting<SwingMode> acExplode = sgAC.add(new EnumSetting.Builder<SwingMode>()
-        .name("AC Explode Swing")
+    private final Setting<SwingMode> interact = sgInteract.add(new EnumSetting.Builder<SwingMode>()
+        .name("Interact Swing")
         .defaultValue(SwingMode.Full)
         .build()
-    );private final Setting<SwingHand> acExplodeHand = sgAC.add(new EnumSetting.Builder<SwingHand>()
-        .name("AC Explode Hand")
+    );private final Setting<SwingHand> interactHand = sgInteract.add(new EnumSetting.Builder<SwingHand>()
+        .name("Interact Hand")
         .defaultValue(SwingHand.MainHand)
         .build()
     );
-    private final Setting<SwingState> acExplodeState = sgAC.add(new EnumSetting.Builder<SwingState>()
-        .name("AC Explode Swing State")
+    private final Setting<SwingState> interactState = sgInteract.add(new EnumSetting.Builder<SwingState>()
+        .name("Interact Swing State")
         .defaultValue(SwingState.Post)
         .build()
     );
@@ -96,14 +99,22 @@ public class SwingSettings extends Module {
         .defaultValue(SwingState.Post)
         .build()
     );
+    private final Setting<SwingMode> using = sgAttack.add(new EnumSetting.Builder<SwingMode>()
+        .name("Using Swing")
+        .defaultValue(SwingMode.Full)
+        .build()
+    );
+    private final Setting<SwingHand> usingHand = sgAttack.add(new EnumSetting.Builder<SwingHand>()
+        .name("Using Hand")
+        .defaultValue(SwingHand.MainHand)
+        .build()
+    );
+    private final Setting<SwingState> usingState = sgAttack.add(new EnumSetting.Builder<SwingState>()
+        .name("Using Swing State")
+        .defaultValue(SwingState.Post)
+        .build()
+    );
 
-    public enum SwingType {
-        AutoCrystalPlace,
-        AutoCrystalExplode,
-        Mining,
-        Placing,
-        Attacking
-    }
     public enum SwingMode {
         Disabled,
         Client,
@@ -114,31 +125,29 @@ public class SwingSettings extends Module {
         MainHand,
         OffHand
     }
-    public enum SwingState {
-        Pre,
-        Post
-    }
 
     public void swing(SwingState state, SwingType type) {
         if (mc.player == null) {return;}
         if (!state.equals(getState(type))) {return;}
         Hand hand = gethand(type);
         switch (type) {
-            case AutoCrystalPlace -> swing(acPlace.get(), hand);
-            case AutoCrystalExplode -> swing(acExplode.get(), hand);
+            case Crystal -> swing(crystalPlace.get(), hand);
+            case Interact -> swing(interact.get(), hand);
             case Mining -> swing(mining.get(), hand);
             case Placing -> swing(placing.get(), hand);
             case Attacking -> swing(attacking.get(), hand);
+            case Using -> swing(using.get(), hand);
         }
     }
     Hand gethand(SwingType type) {
         SwingHand swingHand = SwingHand.MainHand;
         switch (type) {
-            case AutoCrystalPlace -> swingHand = acPlaceHand.get();
-            case AutoCrystalExplode -> swingHand = acExplodeHand.get();
+            case Crystal -> swingHand = crystalHand.get();
+            case Interact -> swingHand = interactHand.get();
             case Mining -> swingHand = miningHand.get();
             case Placing -> swingHand = placinghand.get();
             case Attacking -> swingHand = attackingHand.get();
+            case Using -> swingHand = usingHand.get();
         }
         return getHand(swingHand);
     }
@@ -155,11 +164,11 @@ public class SwingSettings extends Module {
     }
     SwingState getState(SwingType type) {
         switch (type) {
-            case AutoCrystalPlace -> {
-                return acPlaceState.get();
+            case Crystal -> {
+                return crystalState.get();
             }
-            case AutoCrystalExplode -> {
-                return acExplodeState.get();
+            case Interact -> {
+                return interactState.get();
             }
             case Mining -> {
                 return miningState.get();
@@ -169,6 +178,9 @@ public class SwingSettings extends Module {
             }
             case Attacking -> {
                 return attackingState.get();
+            }
+            case Using -> {
+                return usingState.get();
             }
         }
         return SwingState.Post;

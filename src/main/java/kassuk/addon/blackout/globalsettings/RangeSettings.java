@@ -2,6 +2,7 @@ package kassuk.addon.blackout.globalsettings;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
+import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.mixininterface.IVec3d;
 import meteordevelopment.meteorclient.settings.DoubleSetting;
 import meteordevelopment.meteorclient.settings.EnumSetting;
@@ -30,8 +31,16 @@ public class RangeSettings extends Module {
         .name("Place Range")
         .description("Range for placing.")
         .defaultValue(5.2)
-        .range(0, 10)
-        .sliderRange(0, 10)
+        .range(0, 6)
+        .sliderRange(0, 6)
+        .build()
+    );
+    public final Setting<Double> placeRangeWalls = sgPlace.add(new DoubleSetting.Builder()
+        .name("Place Range Walls")
+        .description("place for attacking entities behind blocks.")
+        .defaultValue(5.2)
+        .range(0, 6)
+        .sliderRange(0, 6)
         .build()
     );
     private final Setting<FromMode> placeRangeFrom = sgPlace.add(new EnumSetting.Builder<FromMode>()
@@ -78,8 +87,16 @@ public class RangeSettings extends Module {
         .name("Attack Range")
         .description("Range for attacking entities.")
         .defaultValue(4.8)
-        .range(0, 10)
-        .sliderRange(0, 10)
+        .range(0, 6)
+        .sliderRange(0, 6)
+        .build()
+    );
+    public final Setting<Double> attackRangeWalls = sgAttack.add(new DoubleSetting.Builder()
+        .name("Attack Range Walls")
+        .description("Range for attacking entities behind blocks.")
+        .defaultValue(4.8)
+        .range(0, 6)
+        .sliderRange(0, 6)
         .build()
     );
     private final Setting<FromMode> attackRangeFrom = sgAttack.add(new EnumSetting.Builder<FromMode>()
@@ -144,7 +161,13 @@ public class RangeSettings extends Module {
         if (mc.player == null) {return false;}
 
         double dist = placeRangeTo(pos);
-        return dist >= 0 && dist <= placeRange.get();
+        return dist >= 0 && dist <= (SettingUtils.placeTrace(pos) ? placeRange.get() : placeRangeWalls.get());
+    }
+    public boolean inPlaceRangeNoTrace(BlockPos pos) {
+        if (mc.player == null) {return false;}
+
+        double dist = placeRangeTo(pos);
+        return dist >= 0 && dist <= Math.max(placeRange.get(), placeRangeWalls.get());
     }
 
     public double placeRangeTo(BlockPos pos) {
@@ -182,6 +205,15 @@ public class RangeSettings extends Module {
     public boolean inAttackRange(Box bb, double eyeHeight, Vec3d feet) {
         if (mc.player == null) {return false;}
 
+        return attackRangeTo(bb, eyeHeight, feet) <= (SettingUtils.attackTrace(bb) ? attackRange.get() : attackRangeWalls.get());
+    }
+    public boolean inAttackRangeNoTrace(Box bb, double eyeHeight, Vec3d feet) {
+        if (mc.player == null) {return false;}
+
+        return attackRangeTo(bb, eyeHeight, feet) <= Math.max(attackRange.get(), attackRangeWalls.get());
+    }
+
+    public double attackRangeTo(Box bb, double eyeHeight, Vec3d feet) {
         Box pBB = mc.player.getBoundingBox();
         Vec3d from = mc.player.getEyePos();
         switch (attackRangeFrom.get()) {
@@ -191,27 +223,22 @@ public class RangeSettings extends Module {
 
         switch (attackRangeMode.get()) {
             case Height -> {
-                return getRange(from, feet.add(0, attackHeight.get(), 0))
-                    <= attackRange.get();
+                return getRange(from, feet.add(0, attackHeight.get(), 0));
             }
             case NCP -> {
-                return getRange(from, new Vec3d(feet.x, Math.min(Math.max(from.getY(), bb.minY), bb.minY + eyeHeight), feet.z))
-                    <= attackRange.get();
+                return getRange(from, new Vec3d(feet.x, Math.min(Math.max(from.getY(), bb.minY), bb.minY + eyeHeight), feet.z));
             }
             case Vanilla -> {
-                return getRange(from, OLEPOSSUtils.getClosest(mc.player.getEyePos(), feet, Math.abs(bb.minX - bb.maxX), Math.abs(bb.minY - bb.maxY)))
-                    <= attackRange.get();
+                return getRange(from, OLEPOSSUtils.getClosest(mc.player.getEyePos(), feet, Math.abs(bb.minX - bb.maxX), Math.abs(bb.minY - bb.maxY)));
             }
             case Middle -> {
-                return getRange(from, new Vec3d((bb.minX + bb.maxX) / 2, (bb.minY + bb.maxY) / 2, (bb.minX + bb.maxX) / 2))
-                    <= attackRange.get();
+                return getRange(from, new Vec3d((bb.minX + bb.maxX) / 2, (bb.minY + bb.maxY) / 2, (bb.minX + bb.maxX) / 2));
             }
             case CustomBox -> {
-                return getRange(from, OLEPOSSUtils.getClosest(mc.player.getEyePos(), feet, Math.abs(bb.minX - bb.maxX) * closestAttackWidth.get(), Math.abs(bb.minY - bb.maxY) * closestAttackHeight.get()))
-                    <= attackRange.get();
+                return getRange(from, OLEPOSSUtils.getClosest(mc.player.getEyePos(), feet, Math.abs(bb.minX - bb.maxX) * closestAttackWidth.get(), Math.abs(bb.minY - bb.maxY) * closestAttackHeight.get()));
             }
         }
-        return false;
+        return -1;
     }
 
     double getRange(Vec3d from, Vec3d to) {

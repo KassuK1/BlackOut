@@ -1,7 +1,10 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
-import meteordevelopment.meteorclient.settings.BoolSetting;
+import kassuk.addon.blackout.enums.SwingState;
+import kassuk.addon.blackout.enums.SwingType;
+import kassuk.addon.blackout.managers.Managers;
+import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.settings.IntSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
@@ -10,7 +13,6 @@ import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.util.Hand;
@@ -25,12 +27,6 @@ public class AutoPearl extends Module {
         super(BlackOut.BLACKOUT, "AutoPearl", "Easily clip inside walls");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private final Setting<Boolean> swing = sgGeneral.add(new BoolSetting.Builder()
-        .name("Swing")
-        .description("Swings before placing")
-        .defaultValue(true)
-        .build()
-    );
     private final Setting<Integer> pitch = sgGeneral.add(new IntSetting.Builder()
         .name("Pitch")
         .description(".")
@@ -47,9 +43,16 @@ public class AutoPearl extends Module {
         FindItemResult res = InvUtils.findInHotbar(Items.ENDER_PEARL);
         if (res.count() > 0) {
             InvUtils.swap(res.slot(), true);
+
+            Managers.ROTATION.endAny();
+
+            SettingUtils.swing(SwingState.Pre, SwingType.Using);
+
             mc.getNetworkHandler().sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(getYaw(pos), pitch.get(), mc.player.isOnGround()));
             mc.getNetworkHandler().sendPacket(new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, 0));
-            if (swing.get()) {mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));}
+
+            SettingUtils.swing(SwingState.Post, SwingType.Using);
+
             InvUtils.swapBack();
         }
         this.toggle();

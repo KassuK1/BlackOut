@@ -5,10 +5,7 @@ import kassuk.addon.blackout.commands.BlackoutGit;
 import kassuk.addon.blackout.commands.GearInfo;
 import kassuk.addon.blackout.commands.Kick;
 import kassuk.addon.blackout.commands.Panic;
-import kassuk.addon.blackout.globalsettings.FacingSettings;
-import kassuk.addon.blackout.globalsettings.RangeSettings;
-import kassuk.addon.blackout.globalsettings.RotationSettings;
-import kassuk.addon.blackout.globalsettings.SwingSettings;
+import kassuk.addon.blackout.globalsettings.*;
 import kassuk.addon.blackout.hud.*;
 import kassuk.addon.blackout.modules.*;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
@@ -74,6 +71,7 @@ public class BlackOut extends MeteorAddon {
         // Global Settings
         Modules.get().add(new FacingSettings());
         Modules.get().add(new RangeSettings());
+        Modules.get().add(new RaytraceSettings());
         Modules.get().add(new RotationSettings());
         Modules.get().add(new SwingSettings());
 

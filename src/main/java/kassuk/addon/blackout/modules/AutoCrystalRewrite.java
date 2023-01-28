@@ -1,11 +1,13 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
-import kassuk.addon.blackout.globalsettings.SwingSettings;
+import kassuk.addon.blackout.enums.RotationType;
+import kassuk.addon.blackout.enums.SwingState;
+import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
+import kassuk.addon.blackout.timers.IntTimerList;
 import kassuk.addon.blackout.utils.BODamageUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
-import kassuk.addon.blackout.timers.IntTimerList;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.entity.EntityAddedEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
@@ -17,7 +19,6 @@ import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
-import meteordevelopment.meteorclient.utils.player.DamageUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
@@ -31,7 +32,6 @@ import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
@@ -60,10 +60,8 @@ public class AutoCrystalRewrite extends Module {
     private final SettingGroup sgExplode = settings.createGroup("Explode");
     private final SettingGroup sgSwitch = settings.createGroup("Switch");
     private final SettingGroup sgDamage = settings.createGroup("Damage");
-    private final SettingGroup sgRotate = settings.createGroup("Rotate");
     private final SettingGroup sgID = settings.createGroup("ID-Predict");
     private final SettingGroup sgExtrapolation = settings.createGroup("Extrapolation");
-    private final SettingGroup sgRaytrace = settings.createGroup("Raytrace");
     private final SettingGroup sgRender = settings.createGroup("Render");
     private final SettingGroup sgDebug = settings.createGroup("Debug");
 
@@ -86,6 +84,12 @@ public class AutoCrystalRewrite extends Module {
         .defaultValue(true)
         .build()
     );
+    private final Setting<Boolean> performance = sgGeneral.add(new BoolSetting.Builder()
+        .name("Performance Mode")
+        .description("Doesn't calculate placements as often.")
+        .defaultValue(false)
+        .build()
+    );
 
     //  Place Page
     private final Setting<Boolean> oldVerPlacements = sgPlace.add(new BoolSetting.Builder()
@@ -104,12 +108,6 @@ public class AutoCrystalRewrite extends Module {
         .name("Instant Non-Blocked")
         .description("Ignores delay after crystal hitbox has disappeared.")
         .defaultValue(true)
-        .build()
-    );
-    private final Setting<Boolean> instant = sgPlace.add(new BoolSetting.Builder()
-        .name("Instant Place")
-        .description("Places after exploding a crystal.")
-        .defaultValue(false)
         .build()
     );
     private final Setting<Double> placeSpeed = sgPlace.add(new DoubleSetting.Builder()
@@ -158,10 +156,12 @@ public class AutoCrystalRewrite extends Module {
     );
 
     //  Explode Page
-    private final Setting<Boolean> instantExp = sgExplode.add(new BoolSetting.Builder()
-        .name("Instant Explode")
-        .description("Instantly sends attack packet after end crystal has spawned.")
-        .defaultValue(false)
+    private final Setting<Double> existed = sgExplode.add(new DoubleSetting.Builder()
+        .name("Existed")
+        .description("How many should the crystal exist before attacking.")
+        .defaultValue(0)
+        .range(0, 1)
+        .sliderRange(0, 1)
         .build()
     );
     private final Setting<Double> expSpeed = sgExplode.add(new DoubleSetting.Builder()
@@ -334,14 +334,6 @@ public class AutoCrystalRewrite extends Module {
         .defaultValue(2)
         .range(0, 10)
         .sliderRange(0, 10)
-        .build()
-    );
-
-    //  Rotation Page
-    private final Setting<Boolean> rotate = sgRotate.add(new BoolSetting.Builder()
-        .name("Rotate")
-        .description("Very simple.")
-        .defaultValue(true)
         .build()
     );
 
@@ -557,6 +549,7 @@ public class AutoCrystalRewrite extends Module {
     double delayTimer = 0;
 
     BlockPos placePos = null;
+    Direction placeDir = null;
     IntTimerList attacked = new IntTimerList(false);
     Map<String, Box> extPos = new HashMap<>();
     List<PlayerEntity> enemies = new ArrayList<>();
@@ -567,6 +560,12 @@ public class AutoCrystalRewrite extends Module {
     Map<BlockPos, Double[]> earthMap = new HashMap<>();
     double switchTimer = 0;
     int confirmed = Integer.MIN_VALUE;
+
+    //Used in placement calculation
+    BlockPos bestPos;
+    Direction bestDir;
+    double[] highest;
+    int r;
 
     //BlackOut Render
     Vec3d renderPos = null;
@@ -629,6 +628,13 @@ public class AutoCrystalRewrite extends Module {
                     debugRangeHeight(4) + "  " + dist(debugRangePos(4)) + "\n" +
                     debugRangeHeight(5) + "  " + dist(debugRangePos(5))));
             }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    private void onTickPost(TickEvent.Post event) {
+        if (performance.get()) {
+            updatePlacement();
         }
     }
 
@@ -705,18 +711,6 @@ public class AutoCrystalRewrite extends Module {
     private void onEntity(EntityAddedEvent event) {
         if (event.entity instanceof EndCrystalEntity entity) {
             confirmed = entity.getId();
-            if (instantExp.get()) {
-                Vec3d vec = entity.getPos();
-                if (canExplode(vec, false) && switchTimer <= 0) {
-                    explode(entity.getId(), null, vec);
-                    if (instant.get() && placePos != null && placePos.equals(entity.getBlockPos())) {
-                        Hand hand = getHand(Items.END_CRYSTAL);
-                        if (hand != null && !pausedCheck()) {
-                            placeCrystal(placePos.down(), hand);
-                        }
-                    }
-                }
-            }
         }
     }
 
@@ -764,7 +758,9 @@ public class AutoCrystalRewrite extends Module {
             }
         }
         Hand handToUse = hand;
-        placePos = place.get() ? getPlacePos((int) Math.ceil(SettingUtils.getPlaceRange())) : null;
+        if (!performance.get()) {
+            updatePlacement();
+        }
         switch (switchMode.get()) {
             case Simple -> {
                 int slot = InvUtils.findInHotbar(itemStack -> itemStack.getItem().equals(Items.END_CRYSTAL)).slot();
@@ -805,22 +801,22 @@ public class AutoCrystalRewrite extends Module {
             }
         }
 
-        if (placePos != null) {
+        if (placePos != null && placeDir != null) {
             if (handToUse != null) {
                 if (!placePos.equals(lastPos)) {
                     lastPos = placePos;
                     placeTimer = 0;
                 }
                 if (!pausedCheck()) {
-                    if (rotate.get()) {
-                        Managers.ROTATION.start(OLEPOSSUtils.getBox(placePos.down()));
+                    if (SettingUtils.shouldRotate(RotationType.Crystal)) {
+                        Managers.ROTATION.start(OLEPOSSUtils.getBox(placePos.down()), 1);
                     }
                     if ((placeTimer <= 0 || (instantPlace.get() && !shouldSlow() && !isBlocked(placePos))) && delayTimer >= placeDelay.get()) {
                         placeTimer = 1;
-                        placeCrystal(placePos.down(), handToUse);
+                        placeCrystal(placePos.down(), placeDir, handToUse);
                     }
                 } else {
-                    if (rotate.get()) {
+                    if (SettingUtils.shouldRotate(RotationType.Crystal)) {
                         Managers.ROTATION.end(OLEPOSSUtils.getBox(placePos.down()));
                     }
                 }
@@ -828,6 +824,14 @@ public class AutoCrystalRewrite extends Module {
         } else {
             lastPos = null;
         }
+    }
+
+    void updatePlacement() {
+        if (!place.get()) {
+            placePos = null;
+            placeDir = null;
+        }
+        placePos = getPlacePos();
     }
 
     boolean shouldGap(int slot) {
@@ -838,7 +842,7 @@ public class AutoCrystalRewrite extends Module {
         return true;
     }
 
-    void placeCrystal(BlockPos pos, Hand handToUse) {
+    void placeCrystal(BlockPos pos, Direction dir, Hand handToUse) {
         if (handToUse != null && pos != null && mc.player != null) {
             if (renderMode.get().equals(RenderMode.Earthhack)) {
                 if (!earthMap.containsKey(pos)) {
@@ -849,10 +853,10 @@ public class AutoCrystalRewrite extends Module {
             }
 
             blocked.add(new Box(pos.getX() - 0.5, pos.getY() + 1, pos.getZ() - 0.5, pos.getX() + 1.5, pos.getY() + 2, pos.getZ() + 1.5));
-            SettingUtils.swing(SwingSettings.SwingState.Pre, SwingSettings.SwingType.AutoCrystalPlace);
+            SettingUtils.swing(SwingState.Pre, SwingType.Crystal);
             mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(handToUse,
-                new BlockHitResult(new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), Direction.UP, pos, false), 0));
-            SettingUtils.swing(SwingSettings.SwingState.Post, SwingSettings.SwingType.AutoCrystalPlace);
+                new BlockHitResult(new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), dir, pos, false), 0));
+            SettingUtils.swing(SwingState.Post, SwingType.Crystal);
 
             if (idPredict.get()) {
                 int id = getHighest() + idOffset.get();
@@ -915,9 +919,20 @@ public class AutoCrystalRewrite extends Module {
                 attacked.add(en.getId(), 1 / expSpeed.get());
                 delayTimer = 0;
 
-                SettingUtils.swing(SwingSettings.SwingState.Pre, SwingSettings.SwingType.AutoCrystalExplode);
+                Box box = new Box(en.getX() - 1, en.getY(), en.getZ() - 1, en.getX() + 1, en.getY() + 2, en.getZ() + 1);
+                if (SettingUtils.shouldRotate(RotationType.Attacking)) {
+                    Managers.ROTATION.start(box, 5);
+                }
+                SettingUtils.swing(SwingState.Pre, SwingType.Attacking);
+
                 mc.player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(en, mc.player.isSneaking()));
-                SettingUtils.swing(SwingSettings.SwingState.Post, SwingSettings.SwingType.AutoCrystalExplode);
+
+                SettingUtils.swing(SwingState.Post, SwingType.Attacking);
+
+                if (SettingUtils.shouldRotate(RotationType.Attacking)) {
+                    Managers.ROTATION.end(box);
+                }
+
                 if (clearSend.get()) {blocked.clear();}
                 if (setDead.get()) {
                     Managers.DELAY.add(() -> setEntityDead(en), setDeadDelay.get());
@@ -949,16 +964,21 @@ public class AutoCrystalRewrite extends Module {
         en.remove(Entity.RemovalReason.KILLED);
     }
 
-    BlockPos getPlacePos(int r) {
-        BlockPos bestPos = null;
-        double[] highest = null;
+    BlockPos getPlacePos() {
+        r = (int) Math.ceil(Math.max(SettingUtils.getPlaceRange(), SettingUtils.getPlaceWallsRange()));
+        bestPos = null;
+        bestDir = null;
+        highest = null;
         for (int x = -r; x <= r; x++) {
             for (int y = -r; y <= r; y++) {
                 for (int z = -r; z <= r; z++) {
                     BlockPos pos = mc.player.getBlockPos().add(x, y, z);
                     // Checks if crystal can be placed
-                    if (!air(pos) || !(!oldVerPlacements.get() || air(pos.up())) || !inPlaceRange(pos.down()) ||
-                        !crystalBlock(pos.down()) || !inExplodeRange(new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5))) {continue;}
+                    if (!air(pos) || !(!oldVerPlacements.get() || air(pos.up())) || !crystalBlock(pos.down())) {continue;}
+
+                    // Checks if there is possible placing direction
+                    Direction dir = SettingUtils.getPlaceOnDirection(pos.down());
+                    if (dir == null) {continue;}
 
                     // Calculates damages and healths
                     double[][] result = getDmg(new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5));
@@ -966,14 +986,21 @@ public class AutoCrystalRewrite extends Module {
                     // Checks if damages are valid
                     if (!placeDamageCheck(result[0], result[1], highest)) {continue;}
 
+                    // Checks if the placement is in range
+                    if (!inPlaceRange(pos.down()) || !inExplodeRange(new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5))) {continue;}
+
                     // Checks if placement is blocked by other entities
                     Box box = new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + (ccPlacements.get() ? 1 : 2), pos.getZ() + 1);
                     if (EntityUtils.intersectsWithEntity(box, entity -> !(entity.getType().equals(EntityType.END_CRYSTAL) && canExplode(entity.getPos(), true)))) {continue;}
+
+                    // Sets best pos to calculated one
+                    bestDir = dir;
                     bestPos = pos;
                     highest = result[0];
                 }
             }
         }
+        placeDir = bestDir;
         return bestPos;
     }
 
@@ -1164,5 +1191,14 @@ public class AutoCrystalRewrite extends Module {
 
     boolean inside(PlayerEntity en, Box bb) {
         return mc.world.getBlockCollisions(en, bb).iterator().hasNext();
+    }
+
+    class CrystalPlacement {
+        public BlockPos pos;
+        public Direction dir;
+        public CrystalPlacement(BlockPos pos, Direction dir) {
+            this.pos = pos;
+            this.dir = dir;
+        }
     }
 }

@@ -1,10 +1,12 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.enums.RotationType;
+import kassuk.addon.blackout.enums.SwingState;
+import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
-import meteordevelopment.meteorclient.events.entity.EntityAddedEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.BlockUpdateEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -26,7 +28,6 @@ import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
@@ -46,18 +47,6 @@ public class AutoMine extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgValue = settings.createGroup("Value");
     private final SettingGroup sgCrystal = settings.createGroup("Crystal");
-    private final Setting<Boolean> swing = sgGeneral.add(new BoolSetting.Builder()
-        .name("Swing")
-        .description("Swing")
-        .defaultValue(true)
-        .build()
-    );
-    private final Setting<Boolean> swingOnce = sgGeneral.add(new BoolSetting.Builder()
-        .name("Swing Once")
-        .description("Swing but once")
-        .defaultValue(true)
-        .build()
-    );
     private final Setting<Boolean> silent = sgGeneral.add(new BoolSetting.Builder()
         .name("Silent")
         .description(".")
@@ -207,6 +196,21 @@ public class AutoMine extends Module {
         targetValue = -1;
         lastValue = -1;
     }
+    @EventHandler(priority = EventPriority.HIGHEST)
+    private void onTick(TickEvent.Pre event) {
+        if (targetPos != null) {
+            SettingUtils.swing(SwingState.Pre, SwingType.Mining);
+            if (SettingUtils.shouldRotate(RotationType.Breaking)) {
+                Managers.ROTATION.start(OLEPOSSUtils.getBox(targetPos), 9);
+            }
+        }
+    }
+    @EventHandler(priority = EventPriority.HIGHEST)
+    private void onTick(TickEvent.Post event) {
+        if (targetPos != null) {
+            SettingUtils.swing(SwingState.Post, SwingType.Mining);
+        }
+    }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
@@ -234,12 +238,12 @@ public class AutoMine extends Module {
                 calc();
             }
             if (tick <= 0 && (holdingBest(targetPos) || (silent.get()) && (!pauseEat.get() || !mc.player.isUsingItem()))) {
-                if (crystal.get()) {
+                if (crystal.get() && crystalPos != null) {
                     Entity at = isAt(targetPos, crystalPos);
                     Hand hand = getHand(Items.END_CRYSTAL);
                     if (at != null) {
                         end(targetPos);
-                        if (expCrystal.get()) {
+                        if (expCrystal.get() && at instanceof EndCrystalEntity) {
                             if (instant.get()) {
                                 attackID(at.getId(), at.getPos());
                             } else {
@@ -248,11 +252,23 @@ public class AutoMine extends Module {
                         }
                         targetPos = null;
                         crystalPos = null;
-                    } else if (hand != null && timer >= placeDelay.get() && placeCrystal.get() &&
-                        crystalPos != null && placeCrystal.get() && !EntityUtils.intersectsWithEntity(new Box(crystalPos), entity -> !entity.isSpectator())) {
+                    } else if (hand != null && timer >= placeDelay.get() && placeCrystal.get()
+                        && placeCrystal.get() && !EntityUtils.intersectsWithEntity(new Box(crystalPos), entity -> !entity.isSpectator())) {
                         timer = 0;
+                        if (SettingUtils.shouldRotate(RotationType.Crystal)) {
+                            Managers.ROTATION.start(crystalPos.down(), 9);
+                        }
+
+                        SettingUtils.swing(SwingState.Pre, SwingType.Crystal);
+
                         mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand,
                             new BlockHitResult(OLEPOSSUtils.getMiddle(crystalPos.down()), Direction.UP, crystalPos.down(), false), 0));
+
+                        SettingUtils.swing(SwingState.Post, SwingType.Crystal);
+
+                        if (SettingUtils.shouldRotate(RotationType.Crystal)) {
+                            Managers.ROTATION.end(crystalPos.down());
+                        }
                     }
                 } else {
                     end(targetPos);
@@ -274,32 +290,24 @@ public class AutoMine extends Module {
         }
     }
 
-    /*
-    @EventHandler(priority = EventPriority.HIGHEST)
-    private void onSpawn(EntityAddedEvent event) {
-        if (mc.player != null && mc.world != null && targetPos != null && crystalPos != null) {
-            BlockPos pos = event.entity.getBlockPos();
-            if (event.entity.getType().equals(EntityType.END_CRYSTAL) && pos.equals(crystalPos) && fastestSlot(pos) >= 0 && tick <= 0) {
-                end(targetPos);
-                int id = event.entity.getId();
-                if (instant.get()) {
-                    attackID(id, event.entity.getPos());
-                } else {
-                    Managers.DELAY.add(() -> attackID(id, event.entity.getPos()), (float) (crystalDelay.get() * 1f));
-                }
-                crystalPos = null;
-                targetPos = null;
-            }
-        }
-    }
-
-     */
-
     void attackID(int id, Vec3d pos) {
         EndCrystalEntity en = new EndCrystalEntity(mc.world, pos.x, pos.y, pos.z);
         en.setId(id);
+        Box box = new Box(pos.getX() - 1, pos.getY(), pos.getZ() - 1, pos.getX() + 1, pos.getY() + 2, pos.getZ() + 1);
+
+        if (SettingUtils.shouldRotate(RotationType.Attacking)) {
+            Managers.ROTATION.start(box, 9);
+        }
+
+        SettingUtils.swing(SwingState.Post, SwingType.Attacking);
+
         mc.getNetworkHandler().sendPacket(PlayerInteractEntityC2SPacket.attack(en, mc.player.isSneaking()));
-        mc.getNetworkHandler().sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
+
+        SettingUtils.swing(SwingState.Post, SwingType.Attacking);
+
+        if (SettingUtils.shouldRotate(RotationType.Attacking)) {
+            Managers.ROTATION.end(box);
+        }
     }
 
     Entity isAt(BlockPos pos, BlockPos crystalPos) {
@@ -451,9 +459,6 @@ public class AutoMine extends Module {
     void start(BlockPos pos) {
         mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK,
             pos, Direction.UP));
-        if (swing.get() && swingOnce.get()) {
-            mc.player.swingHand(Hand.MAIN_HAND);
-        }
     }
 
     void end(BlockPos pos) {
@@ -468,10 +473,6 @@ public class AutoMine extends Module {
         if (swapped) {
             InvUtils.swapBack();
         }
-    }
-    void abort(BlockPos pos) {
-        mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK,
-            pos, Direction.UP));
     }
 
     int getMineTicks(BlockPos pos) {

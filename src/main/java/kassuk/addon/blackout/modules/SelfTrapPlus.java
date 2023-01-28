@@ -1,8 +1,11 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
-import kassuk.addon.blackout.timers.BlockTimerList;
+import kassuk.addon.blackout.enums.RotationType;
+import kassuk.addon.blackout.enums.SwingState;
+import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
+import kassuk.addon.blackout.timers.BlockTimerList;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
@@ -21,7 +24,6 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -51,12 +53,6 @@ public class SelfTrapPlus extends Module {
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
         .name("Pause Eat")
         .description("Pauses when you are eating")
-        .defaultValue(true)
-        .build()
-    );
-    private final Setting<Boolean> swing = sgGeneral.add(new BoolSetting.Builder()
-        .name("Swing")
-        .description(".")
         .defaultValue(true)
         .build()
     );
@@ -156,18 +152,33 @@ public class SelfTrapPlus extends Module {
         placeTimer = 0;
         if (mc.player != null) {
             placesLeft--;
+
             if (result[1] != null) {
+                if (SettingUtils.shouldRotate(RotationType.Placing)) {
+                    Managers.ROTATION.start(toPlace, 3);
+                }
+                SettingUtils.swing(SwingState.Pre, SwingType.Placing);
                 mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
                     new BlockHitResult(new Vec3d(toPlace.getX() + 0.5, toPlace.getY() + 0.5, toPlace.getZ() + 0.5),
                         result[1], toPlace, false), 0));
+                SettingUtils.swing(SwingState.Post, SwingType.Placing);
+                if (SettingUtils.shouldRotate(RotationType.Placing)) {
+                    Managers.ROTATION.end(toPlace);
+                }
             } else {
+                if (SettingUtils.shouldRotate(RotationType.Placing)) {
+                    Managers.ROTATION.start(toPlace.offset(result[0]), 3);
+                }
+                SettingUtils.swing(SwingState.Pre, SwingType.Placing);
                 mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
                     new BlockHitResult(new Vec3d(toPlace.offset(result[0]).getX() + 0.5, toPlace.offset(result[0]).getY() + 0.5, toPlace.offset(result[0]).getZ() + 0.5),
                         result[0].getOpposite(), toPlace.offset(result[0]), false), 0));
+                SettingUtils.swing(SwingState.Post, SwingType.Placing);
+                if (SettingUtils.shouldRotate(RotationType.Placing)) {
+                    Managers.ROTATION.end(toPlace.offset(result[0]));
+                }
             }
-            if (swing.get()) {
-                mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
-            }
+
         }
     }
 

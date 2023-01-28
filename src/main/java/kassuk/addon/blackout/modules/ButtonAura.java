@@ -1,22 +1,26 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
-import kassuk.addon.blackout.timers.BlockTimerList;
+import kassuk.addon.blackout.enums.RotationType;
+import kassuk.addon.blackout.enums.SwingState;
+import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
+import kassuk.addon.blackout.timers.BlockTimerList;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
+import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
-import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.settings.ColorSetting;
+import meteordevelopment.meteorclient.settings.DoubleSetting;
+import meteordevelopment.meteorclient.settings.Setting;
+import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
-import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Blocks;
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -30,24 +34,6 @@ public class ButtonAura extends Module {
     public ButtonAura() {super(BlackOut.BLACKOUT, "ButtonAura", ".");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
-    private final Setting<Boolean> swing = sgGeneral.add(new BoolSetting.Builder()
-        .name("Swing")
-        .description(".")
-        .defaultValue(true)
-        .build()
-    );
-    private final Setting<Boolean> packetRotate = sgGeneral.add(new BoolSetting.Builder()
-        .name("Packet Rotate")
-        .description(".")
-        .defaultValue(true)
-        .build()
-    );
-    private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder()
-        .name("Rotate")
-        .description(".")
-        .defaultValue(true)
-        .build()
-    );
     private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
         .name("Range")
         .description(".")
@@ -99,18 +85,20 @@ public class ButtonAura extends Module {
         if (block != null && timer >= delay.get()) {
             timers.add(block, coolDown.get());
             timer = 0;
-            if (packetRotate.get()) {
-                mc.player.networkHandler.sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(
-                    (float) Rotations.getYaw(OLEPOSSUtils.getMiddle(block)), (float) Rotations.getPitch(OLEPOSSUtils.getMiddle(block)),
-                    Managers.ONGROUND.isOnGround()));
+
+            if (SettingUtils.shouldRotate(RotationType.Interact)) {
+                Managers.ROTATION.start(block, 10);
             }
-            if (rotate.get()) {
-                Rotations.rotate(Rotations.getYaw(OLEPOSSUtils.getMiddle(block)), Rotations.getPitch(OLEPOSSUtils.getMiddle(block)));
-            }
+
+            SettingUtils.swing(SwingState.Pre, SwingType.Interact);
+
             mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
                 new BlockHitResult(new Vec3d(block.getX() + 0.5, block.getY() + 0.5, block.getZ() + 0.5), OLEPOSSUtils.closestDir(block, mc.player.getEyePos()), block, false), 0));
-            if (swing.get()) {
-                mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
+
+            SettingUtils.swing(SwingState.Post, SwingType.Interact);
+
+            if (SettingUtils.shouldRotate(RotationType.Interact)) {
+                Managers.ROTATION.end(block);
             }
         }
     }

@@ -1,10 +1,12 @@
 package kassuk.addon.blackout.modules;
 
-import io.netty.util.internal.MathUtil;
 import kassuk.addon.blackout.BlackOut;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
-import kassuk.addon.blackout.timers.BlockTimerList;
+import kassuk.addon.blackout.enums.RotationType;
+import kassuk.addon.blackout.enums.SwingState;
+import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
+import kassuk.addon.blackout.timers.BlockTimerList;
+import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -20,11 +22,12 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.*;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,11 +40,6 @@ Updated by OLEPOSSU
 public class SurroundPlus extends Module {
     public SurroundPlus() {super(BlackOut.BLACKOUT, "Surround+", "KasumsSoft surround");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private final Setting<OrderMode> placeOrder = sgGeneral.add(new EnumSetting.Builder<OrderMode>()
-        .description("Place Order")
-        .defaultValue(OrderMode.Angle)
-        .build()
-    );
     private final Setting<Boolean> silent = sgGeneral.add(new BoolSetting.Builder()
         .name("Silent")
         .description("Silently switch to obby when placing")
@@ -51,12 +49,6 @@ public class SurroundPlus extends Module {
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
         .name("Pause Eat")
         .description("Pauses when you are eating")
-        .defaultValue(true)
-        .build()
-    );
-    private final Setting<Boolean> swing = sgGeneral.add(new BoolSetting.Builder()
-        .name("Swing")
-        .description(".")
         .defaultValue(true)
         .build()
     );
@@ -167,16 +159,37 @@ public class SurroundPlus extends Module {
                         placeTimer = 0;
                         placesLeft--;
                         if (result[1] != null) {
+                            if (SettingUtils.shouldRotate(RotationType.Placing)) {
+                                Managers.ROTATION.start(toPlace, 1);
+                            }
+
+                            SettingUtils.swing(SwingState.Pre, SwingType.Placing);
+
                             mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
                                 new BlockHitResult(new Vec3d(toPlace.getX() + 0.5, toPlace.getY() + 0.5, toPlace.getZ() + 0.5),
                                     result[1], toPlace, false), 0));
+
+                            SettingUtils.swing(SwingState.Post, SwingType.Placing);
+
+                            if (SettingUtils.shouldRotate(RotationType.Placing)) {
+                                Managers.ROTATION.end(toPlace);
+                            }
                         } else {
+                            if (SettingUtils.shouldRotate(RotationType.Placing)) {
+                                Managers.ROTATION.end(toPlace.offset(result[0]));
+                            }
+
+                            SettingUtils.swing(SwingState.Pre, SwingType.Placing);
+
                             mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
                                 new BlockHitResult(new Vec3d(toPlace.offset(result[0]).getX() + 0.5, toPlace.offset(result[0]).getY() + 0.5, toPlace.offset(result[0]).getZ() + 0.5),
                                     result[0].getOpposite(), toPlace.offset(result[0]), false), 0));
-                        }
-                        if (swing.get()) {
-                            mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Hand.MAIN_HAND));
+
+                            SettingUtils.swing(SwingState.Post, SwingType.Placing);
+
+                            if (SettingUtils.shouldRotate(RotationType.Placing)) {
+                                Managers.ROTATION.end(toPlace.offset(result[0]));
+                            }
                         }
                     }
                 }
