@@ -8,10 +8,7 @@ import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import meteordevelopment.orbit.EventHandler;
-import meteordevelopment.orbit.EventPriority;
 import meteordevelopment.meteorclient.settings.SettingGroup;
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
-import net.minecraft.util.Hand;
 
 /*
 Made by KassuK
@@ -35,7 +32,7 @@ public class SprintPlus extends Module {
         .build()
     );
 
-    @EventHandler(priority = EventPriority.HIGHEST)
+    @EventHandler
     private void onTick(TickEvent.Pre event) {
         if (mc.player != null && mc.world != null) {
             switch (sprintmode.get()){
