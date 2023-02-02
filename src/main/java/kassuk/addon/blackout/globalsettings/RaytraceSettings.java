@@ -4,7 +4,6 @@ import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.utils.BODamageUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.mixininterface.IRaycastContext;
-import meteordevelopment.meteorclient.mixininterface.IVec3d;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import net.minecraft.block.Blocks;
@@ -13,14 +12,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
-
-import java.awt.*;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
-import java.util.HashMap;
-import java.util.Map;
-
-import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 /*
 Made by OLEPOSSU

@@ -13,8 +13,6 @@ import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import org.slf4j.Logger;
 
-import java.awt.*;
-
 public class BlackOut extends MeteorAddon {
     public static final Logger LOG = LogUtils.getLogger();
 

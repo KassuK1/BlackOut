@@ -667,10 +667,7 @@ public class AutoCrystalRewrite extends Module {
                         Box box = new Box(renderPos.getX() + 0.5 - renderProgress / 2, renderPos.getY() - 0.5 - renderProgress / 2, renderPos.getZ() + 0.5 - renderProgress / 2,
                             renderPos.getX() + 0.5 + renderProgress / 2, renderPos.getY() - 0.5 + renderProgress / 2, renderPos.getZ() + 0.5 + renderProgress / 2);
 
-
                         event.renderer.box(box, new Color(color.get().r, color.get().g, color.get().b, Math.round(color.get().a / 5f)), color.get(), shapeMode.get(), 0);
-
-
                     }
                 }
                 case Future -> {
