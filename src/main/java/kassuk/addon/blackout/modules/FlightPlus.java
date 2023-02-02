@@ -10,7 +10,9 @@ import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.world.Timer;
 import meteordevelopment.orbit.EventHandler;
 
+
 public class FlightPlus extends Module {
+
     public FlightPlus() {super(BlackOut.BLACKOUT, "Flight+", "KasumsSoft Flight");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
