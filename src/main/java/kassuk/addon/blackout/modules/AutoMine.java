@@ -334,8 +334,10 @@ public class AutoMine extends Module {
 
                         SettingUtils.swing(SwingState.Pre, SwingType.Crystal);
 
-                        mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand == null ? Hand.MAIN_HAND : hand,
-                            new BlockHitResult(OLEPOSSUtils.getMiddle(crystalPos.down()), Direction.UP, crystalPos.down(), false), 0));
+                        if (crystalPos != null) {
+                            mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand == null ? Hand.MAIN_HAND : hand,
+                                new BlockHitResult(OLEPOSSUtils.getMiddle(crystalPos.down()), Direction.UP, crystalPos.down(), false), 0));
+                        }
 
                         SettingUtils.swing(SwingState.Post, SwingType.Crystal);
 
