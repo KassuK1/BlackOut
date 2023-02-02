@@ -6,6 +6,7 @@ import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.timers.BlockTimerList;
+import kassuk.addon.blackout.utils.BOInvUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
@@ -14,6 +15,7 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.movement.SafeWalk;
 import meteordevelopment.meteorclient.systems.modules.world.Timer;
+import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Block;
@@ -45,8 +47,14 @@ public class ScaffoldPlus extends Module {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Boolean> sSprint = sgGeneral.add(new BoolSetting.Builder()
-        .name("StopSprint")
+        .name("Stop Sprint")
         .description("Stops you from sprinting")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> safeWalk = sgGeneral.add(new BoolSetting.Builder()
+        .name("SafeWalk")
+        .description("Should SafeWalk be used")
         .defaultValue(true)
         .build()
     );
@@ -59,7 +67,7 @@ public class ScaffoldPlus extends Module {
     private final Setting<Double> timer = sgGeneral.add(new DoubleSetting.Builder()
         .visible(useTimer::get)
         .name("Timer")
-        .description("Speed but better")
+        .description("Sends more packets")
         .defaultValue(1.088)
         .min(0)
         .sliderMax(10)
@@ -68,12 +76,19 @@ public class ScaffoldPlus extends Module {
     private final Setting<List<Block>> blocks = sgGeneral.add(new BlockListSetting.Builder()
         .name("Blocks")
         .description("Blocks to use.")
+        .defaultValue(Blocks.OBSIDIAN, Blocks.CRYING_OBSIDIAN, Blocks.NETHERITE_BLOCK)
+        .build()
+    );
+    private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
+        .name("Switch Mode")
+        .description(".")
+        .defaultValue(SwitchMode.SilentBypass)
         .build()
     );
     private final Setting<Double> placeDelay = sgGeneral.add(new DoubleSetting.Builder()
         .name("Place Delay")
-        .description(".")
-        .defaultValue(0.1)
+        .description("Delay between places.")
+        .defaultValue(0.125)
         .range(0, 10)
         .sliderRange(0, 10)
         .build()
@@ -88,16 +103,10 @@ public class ScaffoldPlus extends Module {
     );
     private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
         .name("Delay")
-        .description("Delay.")
+        .description("Delay between places at each spot.")
         .defaultValue(0.3)
         .range(0, 5)
         .sliderRange(0, 5)
-        .build()
-    );
-    private final Setting<Boolean> silent = sgGeneral.add(new BoolSetting.Builder()
-        .name("Silent")
-        .description("Places even when not holding blocks")
-        .defaultValue(true)
         .build()
     );
     private final Setting<Integer> extrapolation = sgGeneral.add(new IntSetting.Builder()
@@ -108,13 +117,12 @@ public class ScaffoldPlus extends Module {
         .sliderRange(0, 20)
         .build()
     );
-    private final Setting<Boolean> safeWalk = sgGeneral.add(new BoolSetting.Builder()
-        .name("SafeWalk")
-        .description("Should SafeWalk be used")
-        .defaultValue(true)
-        .build()
-    );
-
+    public enum SwitchMode {
+        Disabled,
+        Normal,
+        Silent,
+        SilentBypass
+    }
     BlockTimerList timers = new BlockTimerList();
     Vec3d motion = null;
     double placeTimer;
@@ -142,31 +150,66 @@ public class ScaffoldPlus extends Module {
     @EventHandler
     private void onMove(PlayerMoveEvent event) {
         if (mc.player != null && mc.world != null) {
-            int[] obsidian = findBlocks();
-            if (obsidian[1] > 0 && (silent.get() || validItem(Managers.HOLDING.getStack().getItem()))) {
+
+            FindItemResult hotbar = InvUtils.findInHotbar(item -> item.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) item.getItem()).getBlock()));
+            FindItemResult inventory = InvUtils.find(item -> item.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) item.getItem()).getBlock()));
+            Hand hand = isValid(Managers.HOLDING.getStack()) ? Hand.MAIN_HAND : isValid(mc.player.getOffHandStack()) ? Hand.OFF_HAND : null;
+
+            if (hand != null || (switchMode.get() == SwitchMode.SilentBypass && inventory.slot() >= 0) ||
+                ((switchMode.get() == SwitchMode.Silent || switchMode.get() == SwitchMode.Normal) && hotbar.slot() >= 0)) {
+
                 if (safeWalk.get() && !Modules.get().get(SafeWalk.class).isActive()) {
                     Modules.get().get(SafeWalk.class).toggle();
+
                 }
                 motion = event.movement;
+
                 if (sSprint.get()) mc.player.setSprinting(false);
                 if (useTimer.get()) Modules.get().get(Timer.class).setOverride(timer.get());
+
                 List<BlockPos> placements = getBlocks();
-                if (!placements.isEmpty()) {
-                    boolean swapped = false;
-                    if (!Managers.HOLDING.isHolding(Items.OBSIDIAN) && silent.get()) {
-                        InvUtils.swap(obsidian[0], true);
-                        swapped = true;
-                    }
-                    int p = Math.min(Math.min(obsidian[1], placesLeft), placements.size());
-                    for (int i = 0; i < p; i++) {
-                        BlockPos toPlace = placements.get(i);
-                        Direction[] result = SettingUtils.getPlaceDirection(toPlace);
-                        if (result[0] != null || result[1] != null) {
-                            place(toPlace, result);
+
+                if (!placements.isEmpty() && placesLeft > 0) {
+                    List<BlockPos> toPlace = new ArrayList<>();
+
+                    for (BlockPos placement : placements) {
+                        if (toPlace.size() < placesLeft && canPlace(placement)) {
+                            toPlace.add(placement);
                         }
                     }
-                    if (swapped) {
-                        InvUtils.swapBack();
+
+                    if (!toPlace.isEmpty()) {
+                        int obsidian = hand == Hand.MAIN_HAND ? Managers.HOLDING.getStack().getCount() :
+                            hand == Hand.OFF_HAND ? mc.player.getOffHandStack().getCount() : -1;
+
+                        if (hand == null) {
+                            switch (switchMode.get()) {
+                                case Silent, Normal -> {
+                                    obsidian = hotbar.count();
+                                    InvUtils.swap(hotbar.slot(), true);
+                                }
+                                case SilentBypass -> {
+                                    obsidian = BOInvUtils.invSwitch(inventory.slot()) ? inventory.count() : -1;
+                                }
+                            }
+                        }
+
+                        if (obsidian >= 0) {
+                            for (int i = 0; i < Math.min(obsidian, toPlace.size()); i++) {
+                                place(toPlace.get(i));
+                            }
+
+                            if (hand == null) {
+                                switch (switchMode.get()) {
+                                    case Silent -> {
+                                        InvUtils.swapBack();
+                                    }
+                                    case SilentBypass -> {
+                                        BOInvUtils.swapBack();
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             } else {
@@ -177,23 +220,14 @@ public class ScaffoldPlus extends Module {
         }
     }
 
-    boolean validItem(Item item) {
-        return item instanceof BlockItem && blocks.get().contains(((BlockItem) item).getBlock());
+    boolean isValid(ItemStack item) {
+        return item.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) item.getItem()).getBlock());
     }
 
-    int[] findBlocks() {
-        int num = 0;
-        int slot = 0;
-        if (mc.player != null) {
-            for (int i = 0; i < 9; i++) {
-                ItemStack stack = mc.player.getInventory().getStack(i);
-                if (validItem(stack.getItem())) {
-                    num = stack.getCount();
-                    slot = i;
-                }
-            }
-        }
-        return new int[] {slot, num};
+    boolean canPlace(BlockPos pos) {
+        Direction[] dir = SettingUtils.getPlaceDirection(pos);
+        if (dir[0] == null && dir[1] == null) {return false;}
+        return true;
     }
 
     List<BlockPos> getBlocks() {
@@ -230,7 +264,9 @@ public class ScaffoldPlus extends Module {
 
     boolean air(BlockPos pos) {return mc.world.getBlockState(pos).getBlock().equals(Blocks.AIR);}
 
-    void place(BlockPos toPlace, Direction[] result) {
+    void place(BlockPos toPlace) {
+        Direction[] result = SettingUtils.getPlaceDirection(toPlace);
+        if (result[0] == null && result[1] == null) {return;}
         timers.add(toPlace, delay.get());
         placesLeft--;
         if (result[1] != null) {

@@ -5,7 +5,8 @@
   "client": [
     "MixinBackground",
     "MixinLivingEntityRenderer",
-    "MixinPlayerMoveC2SPacket"
+    "MixinPlayerMoveC2SPacket",
+    "MixinSound"
   ],
   "injectors": {
     "defaultRequire": 1

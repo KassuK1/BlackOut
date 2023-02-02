@@ -26,6 +26,7 @@ The development of the addon might not be super active due to us having our own 
 #### AutoAndrewTate
 
 #### AntiAim
+#### AutoAnchor+
 
 #### AutoCraftingTable
 
@@ -55,19 +56,23 @@ The development of the addon might not be super active due to us having our own 
 
 #### FlightPlus
 
-#### HoleFill
+#### Fog
+
+#### HoleFill+
 
 #### HoleSnap
+
+#### JumpModify
 
 #### ForceField
 
 #### LegitScaffold
 
-#### JumpModify
-
 #### OffHandPlus
 
 #### PacketCrash
+
+#### PacketFly
 
 #### NN-Nuker
 
@@ -106,8 +111,6 @@ The development of the addon might not be super active due to us having our own 
 #### HudWaterMark
 
 #### Keys
-
-#### PacketCounter
 
 #### TargetHud
 

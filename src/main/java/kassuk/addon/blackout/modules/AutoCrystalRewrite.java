@@ -5,13 +5,16 @@ import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
+import kassuk.addon.blackout.mixins.MixinSound;
 import kassuk.addon.blackout.timers.IntTimerList;
 import kassuk.addon.blackout.utils.BODamageUtils;
+import kassuk.addon.blackout.utils.BOInvUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.entity.EntityAddedEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
+import meteordevelopment.meteorclient.events.world.PlaySoundEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
@@ -26,6 +29,8 @@ import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.sound.PositionedSoundInstance;
+import net.minecraft.client.sound.Sound;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.EndCrystalEntity;
@@ -36,6 +41,9 @@ import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
+import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -44,10 +52,7 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /*
 Made by OLEPOSSU / Raksamies
@@ -63,6 +68,7 @@ public class AutoCrystalRewrite extends Module {
     private final SettingGroup sgID = settings.createGroup("ID-Predict");
     private final SettingGroup sgExtrapolation = settings.createGroup("Extrapolation");
     private final SettingGroup sgRender = settings.createGroup("Render");
+    private final SettingGroup sgSound = settings.createGroup("Sound");
     private final SettingGroup sgDebug = settings.createGroup("Debug");
 
     //  General Page
@@ -105,7 +111,7 @@ public class AutoCrystalRewrite extends Module {
         .build()
     );
     private final Setting<Boolean> instantPlace = sgPlace.add(new BoolSetting.Builder()
-        .name("Instant Non-Blocked")
+        .name("Instant Place")
         .description("Ignores delay after crystal hitbox has disappeared.")
         .defaultValue(true)
         .build()
@@ -128,7 +134,7 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<Double> slowDamage = sgPlace.add(new DoubleSetting.Builder()
         .name("Slow Damage")
-        .description("Switches to slow speed when the target would take low damage.")
+        .description("Switches to slow speed when the target would take under this amount of damage.")
         .defaultValue(3)
         .range(0, 20)
         .sliderRange(0, 20)
@@ -142,23 +148,11 @@ public class AutoCrystalRewrite extends Module {
         .sliderRange(0, 20)
         .build()
     );
-    private final Setting<Boolean> clearSend = sgPlace.add(new BoolSetting.Builder()
-        .name("Clear Send")
-        .description("Clears blocked positions when sending explode packet.")
-        .defaultValue(true)
-        .build()
-    );
-    private final Setting<Boolean> clearReceive = sgPlace.add(new BoolSetting.Builder()
-        .name("Clear Receive")
-        .description("Clears blocked positions when receiving explode packet.")
-        .defaultValue(false)
-        .build()
-    );
 
     //  Explode Page
     private final Setting<Double> existed = sgExplode.add(new DoubleSetting.Builder()
         .name("Existed")
-        .description("How many should the crystal exist before attacking.")
+        .description("How many seconds should the crystal exist before attacking.")
         .defaultValue(0)
         .range(0, 1)
         .sliderRange(0, 1)
@@ -228,7 +222,7 @@ public class AutoCrystalRewrite extends Module {
     //  Damage Page
     private final Setting<DmgCheckMode> dmgCheckMode = sgDamage.add(new EnumSetting.Builder<DmgCheckMode>()
         .name("Dmg Check Mode")
-        .description(".")
+        .description("How safe are the placements (normal is good).")
         .defaultValue(DmgCheckMode.Normal)
         .build()
     );
@@ -266,7 +260,7 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<Double> maxFriendPlaceRatio = sgDamage.add(new DoubleSetting.Builder()
         .name("Max Friend Place Ratio")
-        .description("Max friend damage ratio for placing (friend damage / enemy damage)..")
+        .description("Max friend damage ratio for placing (friend damage / enemy damage).")
         .defaultValue(0.5)
         .range(0, 5)
         .sliderRange(0, 5)
@@ -340,21 +334,21 @@ public class AutoCrystalRewrite extends Module {
     //  ID-Predict Page
     private final Setting<Boolean> idPredict = sgID.add(new BoolSetting.Builder()
         .name("ID Predict")
-        .description("yes.")
+        .description("Hits the crystal before it spawns.")
         .defaultValue(true)
         .build()
     );
     private final Setting<Integer> idOffset = sgID.add(new IntSetting.Builder()
         .name("Id Offset")
-        .description(".")
-        .defaultValue(0)
+        .description("How many id's ahead should we attack.")
+        .defaultValue(1)
         .min(0)
         .sliderMax(10)
         .build()
     );
     private final Setting<Integer> idPackets = sgID.add(new IntSetting.Builder()
         .name("Id Packets")
-        .description(".")
+        .description("How many packets to send.")
         .defaultValue(1)
         .min(1)
         .sliderMax(10)
@@ -406,7 +400,7 @@ public class AutoCrystalRewrite extends Module {
     );
     private final Setting<RenderMode> renderMode = sgRender.add(new EnumSetting.Builder<RenderMode>()
         .name("Render Mode")
-        .description(".")
+        .description("What should the render look like.")
         .defaultValue(RenderMode.BlackOut)
         .build()
     );
@@ -453,6 +447,14 @@ public class AutoCrystalRewrite extends Module {
         .name("Side Color")
         .description("Side color of rendered stuff")
         .defaultValue(new SettingColor(255, 0, 0, 50))
+        .build()
+    );
+
+    //  Sound Page
+    private final Setting<Boolean> explodeSound = sgSound.add(new BoolSetting.Builder()
+        .name("Explode Sound")
+        .description("Sets crystal explode sound to high pitch anvil mining.")
+        .defaultValue(false)
         .build()
     );
 
@@ -551,6 +553,7 @@ public class AutoCrystalRewrite extends Module {
     BlockPos placePos = null;
     Direction placeDir = null;
     IntTimerList attacked = new IntTimerList(false);
+    Map<BlockPos, Long> existedList = new HashMap<>();
     Map<String, Box> extPos = new HashMap<>();
     List<PlayerEntity> enemies = new ArrayList<>();
     Map<String, List<Vec3d>> motions = new HashMap<>();
@@ -566,6 +569,9 @@ public class AutoCrystalRewrite extends Module {
     Direction bestDir;
     double[] highest;
     int r;
+    BlockPos pos;
+    Direction dir;
+    double[][] result;
 
     //BlackOut Render
     Vec3d renderPos = null;
@@ -585,7 +591,8 @@ public class AutoCrystalRewrite extends Module {
         Disabled,
         Simple,
         Smart,
-        Gapple
+        Gapple,
+        SilentBypass
     }
 
     @Override
@@ -700,7 +707,7 @@ public class AutoCrystalRewrite extends Module {
             //Render extrapolation
             if (renderExt.get()) {
                 extPos.forEach((name, bb) -> {
-                    if (!renderSelfExt.get() || !name.equals(mc.player.getName().getString()))
+                    if (renderSelfExt.get() || !name.equals(mc.player.getName().getString()))
                         event.renderer.box(bb, color.get(), lineColor.get(), shapeMode.get(), 0);
                 });
             }
@@ -714,10 +721,18 @@ public class AutoCrystalRewrite extends Module {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
-    private void onReceive(PacketEvent.Receive event) {
-        if (event.packet instanceof ExplosionS2CPacket) {
-            if (clearReceive.get()) {blocked.clear();}
+    @EventHandler
+    private void onSound(PlaySoundEvent event) {
+        if (explodeSound.get()) {
+            if (event.sound.getId() == SoundEvents.ENTITY_GENERIC_EXPLODE.getId()) {
+                ((MixinSound) event.sound).setID(SoundEvents.BLOCK_ANVIL_FALL.getId());
+                ((MixinSound) event.sound).setVolume(1);
+                ((MixinSound) event.sound).setPitch(10);
+            }
+            if (event.sound.getId() == SoundEvents.ENTITY_PLAYER_ATTACK_NODAMAGE.getId() ||
+                event.sound.getId() == SoundEvents.ENTITY_PLAYER_ATTACK_WEAK.getId()) {
+                event.cancel();
+            }
         }
     }
 
@@ -741,7 +756,7 @@ public class AutoCrystalRewrite extends Module {
             for (Entity en : mc.world.getEntities()) {
                 if (en.getType().equals(EntityType.END_CRYSTAL)) {
                     double[] dmg = getDmg(en.getPos())[0];
-                    if (switchTimer <= 0 && canExplode(en.getPos(), false)) {
+                    if (switchTimer <= 0 && canExplode(en.getPos())) {
                         if ((expEntity == null || value == null) ||
                             (dmgCheckMode.get().equals(DmgCheckMode.Normal) && dmg[0] > value[0]) ||
                             (dmgCheckMode.get().equals(DmgCheckMode.Safe) && dmg[2] / dmg[0] < value[2] / dmg[0])) {
@@ -753,7 +768,8 @@ public class AutoCrystalRewrite extends Module {
             }
         }
         if (expEntity != null) {
-            if (!isAttacked(expEntity.getId())) {
+            if (!isAttacked(expEntity.getId()) &&
+                (!existedList.containsKey(expEntity.getBlockPos()) || System.currentTimeMillis() > existedList.get(expEntity.getBlockPos()) + existed.get() * 1000)) {
                 explode(expEntity.getId(), expEntity, expEntity.getPos());
             }
         }
@@ -802,22 +818,16 @@ public class AutoCrystalRewrite extends Module {
         }
 
         if (placePos != null && placeDir != null) {
-            if (handToUse != null) {
-                if (!placePos.equals(lastPos)) {
-                    lastPos = placePos;
-                    placeTimer = 0;
-                }
-                if (!pausedCheck()) {
-                    if (SettingUtils.shouldRotate(RotationType.Crystal)) {
-                        Managers.ROTATION.start(OLEPOSSUtils.getBox(placePos.down()), 1);
-                    }
+            if (!placePos.equals(lastPos)) {
+                lastPos = placePos;
+                placeTimer = 0;
+            }
+            if (!pausedCheck()) {
+                int silentSlot = InvUtils.find(Items.END_CRYSTAL).slot();
+                if (handToUse != null || (switchMode.get() == SwitchMode.SilentBypass && silentSlot >= 0)) {
                     if ((placeTimer <= 0 || (instantPlace.get() && !shouldSlow() && !isBlocked(placePos))) && delayTimer >= placeDelay.get()) {
                         placeTimer = 1;
-                        placeCrystal(placePos.down(), placeDir, handToUse);
-                    }
-                } else {
-                    if (SettingUtils.shouldRotate(RotationType.Crystal)) {
-                        Managers.ROTATION.end(OLEPOSSUtils.getBox(placePos.down()));
+                        placeCrystal(placePos.down(), placeDir, handToUse, silentSlot);
                     }
                 }
             }
@@ -842,8 +852,8 @@ public class AutoCrystalRewrite extends Module {
         return true;
     }
 
-    void placeCrystal(BlockPos pos, Direction dir, Hand handToUse) {
-        if (handToUse != null && pos != null && mc.player != null) {
+    void placeCrystal(BlockPos pos, Direction dir, Hand handToUse, int sl) {
+        if (pos != null && mc.player != null) {
             if (renderMode.get().equals(RenderMode.Earthhack)) {
                 if (!earthMap.containsKey(pos)) {
                     earthMap.put(pos, new Double[]{fadeTime.get() + renderTime.get(), fadeTime.get()});
@@ -853,10 +863,33 @@ public class AutoCrystalRewrite extends Module {
             }
 
             blocked.add(new Box(pos.getX() - 0.5, pos.getY() + 1, pos.getZ() - 0.5, pos.getX() + 1.5, pos.getY() + 2, pos.getZ() + 1.5));
+
+            boolean switched = handToUse == null;
+            if (switched) {
+                BOInvUtils.invSwitch(sl);
+            }
+
+            if (SettingUtils.shouldRotate(RotationType.Crystal)) {
+                Managers.ROTATION.start(OLEPOSSUtils.getBox(pos), 1);
+            }
+
             SettingUtils.swing(SwingState.Pre, SwingType.Crystal);
-            mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(handToUse,
+
+            if (!existedList.containsKey(pos.up())) {
+                existedList.put(pos.up(), System.currentTimeMillis());
+            }
+            mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(switched ? Hand.MAIN_HAND : handToUse,
                 new BlockHitResult(new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), dir, pos, false), 0));
+
             SettingUtils.swing(SwingState.Post, SwingType.Crystal);
+
+            if (SettingUtils.shouldRotate(RotationType.Crystal)) {
+                Managers.ROTATION.end(OLEPOSSUtils.getBox(pos));
+            }
+
+            if (switched) {
+                BOInvUtils.swapBack();
+            }
 
             if (idPredict.get()) {
                 int id = getHighest() + idOffset.get();
@@ -925,6 +958,9 @@ public class AutoCrystalRewrite extends Module {
                 }
                 SettingUtils.swing(SwingState.Pre, SwingType.Attacking);
 
+                if (existedList.containsKey(en.getBlockPos())) {
+                    existedList.remove(en.getBlockPos());
+                }
                 mc.player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(en, mc.player.isSneaking()));
 
                 SettingUtils.swing(SwingState.Post, SwingType.Attacking);
@@ -933,7 +969,7 @@ public class AutoCrystalRewrite extends Module {
                     Managers.ROTATION.end(box);
                 }
 
-                if (clearSend.get()) {blocked.clear();}
+                blocked.clear();
                 if (setDead.get()) {
                     Managers.DELAY.add(() -> setEntityDead(en), setDeadDelay.get());
                 }
@@ -941,10 +977,10 @@ public class AutoCrystalRewrite extends Module {
         }
     }
 
-    boolean canExplode(Vec3d vec, boolean onlyCache) {
+    boolean canExplode(Vec3d vec) {
         if (!inExplodeRange(vec)) {return false;}
-        if (!dmgCache.containsKey(vec) && onlyCache) {return true;}
-        double[][] result = onlyCache ? dmgCache.get(vec) : getDmg(vec);
+
+        double[][] result = dmgCache.containsKey(vec) ? dmgCache.get(vec) : getDmg(vec);
         return explodeDamageCheck(result[0], result[1]);
     }
 
@@ -972,26 +1008,26 @@ public class AutoCrystalRewrite extends Module {
         for (int x = -r; x <= r; x++) {
             for (int y = -r; y <= r; y++) {
                 for (int z = -r; z <= r; z++) {
-                    BlockPos pos = mc.player.getBlockPos().add(x, y, z);
+                    pos = mc.player.getBlockPos().add(x, y, z);
                     // Checks if crystal can be placed
                     if (!air(pos) || !(!oldVerPlacements.get() || air(pos.up())) || !crystalBlock(pos.down())) {continue;}
 
                     // Checks if there is possible placing direction
-                    Direction dir = SettingUtils.getPlaceOnDirection(pos.down());
+                    dir = SettingUtils.getPlaceOnDirection(pos.down());
                     if (dir == null) {continue;}
-
-                    // Calculates damages and healths
-                    double[][] result = getDmg(new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5));
-
-                    // Checks if damages are valid
-                    if (!placeDamageCheck(result[0], result[1], highest)) {continue;}
 
                     // Checks if the placement is in range
                     if (!inPlaceRange(pos.down()) || !inExplodeRange(new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5))) {continue;}
 
+                    // Calculates damages and healths
+                    result = getDmg(new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5));
+
+                    // Checks if damages are valid
+                    if (!placeDamageCheck(result[0], result[1], highest)) {continue;}
+
                     // Checks if placement is blocked by other entities
                     Box box = new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + (ccPlacements.get() ? 1 : 2), pos.getZ() + 1);
-                    if (EntityUtils.intersectsWithEntity(box, entity -> !(entity.getType().equals(EntityType.END_CRYSTAL) && canExplode(entity.getPos(), true)))) {continue;}
+                    if (EntityUtils.intersectsWithEntity(box, entity -> !(entity.getType().equals(EntityType.END_CRYSTAL) && canExplode(entity.getPos())))) {continue;}
 
                     // Sets best pos to calculated one
                     bestDir = dir;
@@ -1191,14 +1227,5 @@ public class AutoCrystalRewrite extends Module {
 
     boolean inside(PlayerEntity en, Box bb) {
         return mc.world.getBlockCollisions(en, bb).iterator().hasNext();
-    }
-
-    class CrystalPlacement {
-        public BlockPos pos;
-        public Direction dir;
-        public CrystalPlacement(BlockPos pos, Direction dir) {
-            this.pos = pos;
-            this.dir = dir;
-        }
     }
 }

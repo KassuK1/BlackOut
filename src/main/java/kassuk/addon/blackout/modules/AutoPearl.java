@@ -4,7 +4,9 @@ import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
+import kassuk.addon.blackout.utils.BOInvUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
+import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.IntSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
@@ -27,9 +29,15 @@ public class AutoPearl extends Module {
         super(BlackOut.BLACKOUT, "AutoPearl", "Easily clip inside walls");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final Setting<Boolean> invSwitch = sgGeneral.add(new BoolSetting.Builder()
+        .name("Inventory Switch")
+        .description("Moves pearl to hand before throwing it.")
+        .defaultValue(true)
+        .build()
+    );
     private final Setting<Integer> pitch = sgGeneral.add(new IntSetting.Builder()
         .name("Pitch")
-        .description(".")
+        .description("How deep down to look.")
         .defaultValue(85)
         .range(0, 90)
         .sliderRange(0, 90)
@@ -40,9 +48,18 @@ public class AutoPearl extends Module {
     public void onActivate() {
         super.onActivate();
         Vec3d pos = mc.player.getPos();
+        Hand hand = getHand();
         FindItemResult res = InvUtils.findInHotbar(Items.ENDER_PEARL);
-        if (res.count() > 0) {
-            InvUtils.swap(res.slot(), true);
+        int slot = InvUtils.find(Items.ENDER_PEARL).slot();
+        if (hand != null || (invSwitch.get() && slot >= 0) || (!invSwitch.get() && res.slot() >= 0)) {
+            boolean switched = false;
+            if (hand == null) {
+                if (!invSwitch.get()) {
+                    InvUtils.swap(res.slot(), true);
+                } else if (BOInvUtils.invSwitch(slot)) {
+                    switched = true;
+                }
+            }
 
             Managers.ROTATION.endAny();
 
@@ -53,7 +70,11 @@ public class AutoPearl extends Module {
 
             SettingUtils.swing(SwingState.Post, SwingType.Using);
 
-            InvUtils.swapBack();
+            if (!invSwitch.get() && hand == null) {
+                InvUtils.swapBack();
+            } else if (switched) {
+                BOInvUtils.swapBack();
+            }
         }
         this.toggle();
     }
@@ -62,5 +83,9 @@ public class AutoPearl extends Module {
         int yaw = (int) Math.round(Rotations.getYaw(new Vec3d(Math.floor(pos.x) + 0.5, pos.y,
             Math.floor(pos.z) + 0.5)));
         return yaw > 0 ? yaw - 180 : yaw + 180;
+    }
+
+    Hand getHand() {
+        return mc.player.getMainHandStack().getItem() == Items.ENDER_PEARL ? Hand.MAIN_HAND : mc.player.getOffHandStack().getItem() == Items.ENDER_PEARL ? Hand.OFF_HAND : null;
     }
 }

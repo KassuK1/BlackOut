@@ -20,59 +20,62 @@ public class RotationSettings extends Module {
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private final SettingGroup sgPlace = settings.createGroup("Placing");
-    private final SettingGroup sgAttack = settings.createGroup("Attacking");
 
     //  General Settings
-    private final Setting<RotationCheckMode> rotationCheckMode = sgPlace.add(new EnumSetting.Builder<RotationCheckMode>()
+    private final Setting<RotationCheckMode> rotationCheckMode = sgGeneral.add(new EnumSetting.Builder<RotationCheckMode>()
         .name("Rotation Check Mode")
         .description(".")
         .defaultValue(RotationCheckMode.Raytrace)
         .build()
     );
-    private final Setting<Boolean> crystalRotate = sgPlace.add(new BoolSetting.Builder()
+    private final Setting<Boolean> crystalRotate = sgGeneral.add(new BoolSetting.Builder()
         .name("Crystal Rotate")
         .description(".")
         .defaultValue(false)
         .build()
     );
-    private final Setting<Boolean> attackRotate = sgPlace.add(new BoolSetting.Builder()
+    private final Setting<Boolean> attackRotate = sgGeneral.add(new BoolSetting.Builder()
         .name("Attack Rotate")
         .description(".")
         .defaultValue(false)
         .build()
     );
-    private final Setting<Boolean> placeRotate = sgPlace.add(new BoolSetting.Builder()
+    private final Setting<Boolean> placeRotate = sgGeneral.add(new BoolSetting.Builder()
         .name("Placing Rotate")
         .description(".")
         .defaultValue(false)
         .build()
     );
-    private final Setting<Boolean> breakRotate = sgPlace.add(new BoolSetting.Builder()
-        .name("Breaking Rotate")
+    public final Setting<MiningRotMode> mineRotate = sgGeneral.add(new EnumSetting.Builder<MiningRotMode>()
+        .name("Mine Rotate")
         .description(".")
-        .defaultValue(false)
+        .defaultValue(MiningRotMode.Disabled)
         .build()
     );
-    private final Setting<Boolean> interactRotate = sgPlace.add(new BoolSetting.Builder()
+    private final Setting<Boolean> interactRotate = sgGeneral.add(new BoolSetting.Builder()
         .name("Interact Rotate")
         .description(".")
         .defaultValue(false)
         .build()
     );
 
+    public enum MiningRotMode {
+        Disabled,
+        Start,
+        End,
+        Double,
+        Full
+    }
 
     public enum RotationCheckMode {
-        Raytrace,
-        Angle,
-        CustomRaytrace
+        Raytrace
     }
     public boolean shouldRotate(RotationType type) {
         switch (type) {
             case Crystal -> {return crystalRotate.get();}
             case Attacking -> {return attackRotate.get();}
             case Placing -> {return placeRotate.get();}
-            case Breaking -> {return breakRotate.get();}
+            case Breaking -> {return mineRotate.get() == MiningRotMode.Full;}
             case Interact -> {return interactRotate.get();}
         }
         return false;
@@ -80,7 +83,7 @@ public class RotationSettings extends Module {
     public boolean rotationCheck(double yaw, double pitch, Box box) {
         if (box == null){return false;}
         if (mc.player == null) {return false;}
-        return rotationCheck(mc.player.getPos(), yaw, pitch, box);
+        return rotationCheck(mc.player.getEyePos(), yaw, pitch, box);
     }
 
     public boolean rotationCheck(Vec3d pPos, double yaw, double pitch, Box box) {
@@ -106,5 +109,12 @@ public class RotationSettings extends Module {
             }
         }
         return false;
+    }
+
+    public boolean endMineRot() {
+        return mineRotate.get() == MiningRotMode.End || mineRotate.get() == MiningRotMode.Double;
+    }
+    public boolean startMineRot() {
+        return mineRotate.get() == MiningRotMode.Start || mineRotate.get() == MiningRotMode.Double;
     }
 }

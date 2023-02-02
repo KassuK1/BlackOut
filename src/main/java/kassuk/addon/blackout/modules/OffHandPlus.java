@@ -63,7 +63,7 @@ public class OffHandPlus extends Module {
     );
     private final Setting<Integer> safetyHealth = sgGeneral.add(new IntSetting.Builder()
         .name("Safety Health")
-        .description(".")
+        .description("Holds totem if you would have under this health after getting damage.")
         .defaultValue(0)
         .range(0, 36)
         .sliderMax(36)

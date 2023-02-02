@@ -6,6 +6,7 @@ import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.timers.BlockTimerList;
+import kassuk.addon.blackout.utils.BOInvUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
@@ -25,6 +26,8 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItem;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.util.Hand;
@@ -52,10 +55,10 @@ public class HoleFillRewrite extends Module {
         .defaultValue(true)
         .build()
     );
-    private final Setting<Boolean> silent = sgGeneral.add(new BoolSetting.Builder()
-        .name("Silent")
-        .description("Places even when you arent holding")
-        .defaultValue(true)
+    private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
+        .name("Switch Mode")
+        .description(".")
+        .defaultValue(SwitchMode.SilentBypass)
         .build()
     );
     private final Setting<Boolean> efficient = sgGeneral.add(new BoolSetting.Builder()
@@ -67,6 +70,7 @@ public class HoleFillRewrite extends Module {
     private final Setting<List<Block>> blocks = sgGeneral.add(new BlockListSetting.Builder()
         .name("Blocks")
         .description("Blocks to use.")
+        .defaultValue(Blocks.OBSIDIAN, Blocks.CRYING_OBSIDIAN, Blocks.NETHERITE_BLOCK)
         .build()
     );
     private final Setting<Boolean> above = sgGeneral.add(new BoolSetting.Builder()
@@ -83,7 +87,7 @@ public class HoleFillRewrite extends Module {
     );
     private final Setting<Integer> holeDepth = sgGeneral.add(new IntSetting.Builder()
         .name("Hole Depth")
-        .description(".")
+        .description("Depth of the holes in blocks.")
         .defaultValue(3)
         .min(1)
         .sliderRange(1, 10)
@@ -91,8 +95,8 @@ public class HoleFillRewrite extends Module {
     );
     private final Setting<Double> placeDelay = sgGeneral.add(new DoubleSetting.Builder()
         .name("Place Delay")
-        .description(".")
-        .defaultValue(0)
+        .description("Delay between places.")
+        .defaultValue(0.125)
         .range(0, 10)
         .sliderRange(0, 10)
         .build()
@@ -107,15 +111,10 @@ public class HoleFillRewrite extends Module {
     );
     private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
         .name("Delay")
-        .description(".")
+        .description("Delay between places at single spot.")
         .defaultValue(0.3)
         .range(0, 10)
         .sliderRange(0, 10)
-        .build()
-    );
-    private final Setting<FaceMode> facing = sgGeneral.add(new EnumSetting.Builder<FaceMode>()
-        .description("Facing")
-        .defaultValue(FaceMode.Range)
         .build()
     );
     private final Setting<Double> holeRange = sgGeneral.add(new DoubleSetting.Builder()
@@ -150,29 +149,25 @@ public class HoleFillRewrite extends Module {
     );
     public final Setting<SettingColor> lineColor = sgGeneral.add(new ColorSetting.Builder()
         .name("Line Color")
-        .description("U blind?")
-        .defaultValue(new SettingColor(255, 255, 255, 255))
+        .description("Color of the outline.")
+        .defaultValue(new SettingColor(255, 0, 0, 255))
         .build()
     );
     public final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
         .name("Color")
-        .description("U blind?")
-        .defaultValue(new SettingColor(255, 255, 255, 50))
+        .description("Color of the sides.")
+        .defaultValue(new SettingColor(255, 0, 0, 50))
         .build()
     );
+    public enum SwitchMode {
+        Disabled,
+        Silent,
+        SilentBypass
+    }
     List<BlockPos> holes = new ArrayList<>();
     BlockTimerList timers = new BlockTimerList();
     double placeTimer = 0;
     Map<BlockPos, Double[]> toRender = new HashMap<>();
-    Direction[] directions = new Direction[]{
-        Direction.DOWN, Direction.EAST, Direction.WEST, Direction.NORTH, Direction.SOUTH
-    };
-
-    public enum FaceMode {
-        Normal,
-        Strict,
-        Range
-    }
 
     @Override
     public void onActivate() {
@@ -205,23 +200,61 @@ public class HoleFillRewrite extends Module {
 
     void update() {
         updateHoles(Math.max(SettingUtils.getPlaceRange(), SettingUtils.getPlaceWallsRange()) + 1);
-        List<BlockPos> toPlace = getValid(holes);
-        FindItemResult result = InvUtils.find(itemStack -> itemStack.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) itemStack.getItem()).getBlock()));
-        int[] obsidian = new int[]{result.slot(), result.count()};
-        if (!toPlace.isEmpty() && obsidian[1] > 0 && (!pauseEat.get() || !mc.player.isUsingItem()) && placeTimer >= placeDelay.get()) {
-            if (Managers.HOLDING.isHolding(Items.OBSIDIAN) || silent.get()) {
-                boolean swapped = false;
-                if (!Managers.HOLDING.isHolding(Items.OBSIDIAN)) {
-                    InvUtils.swap(obsidian[0], true);
-                    swapped = true;
+        List<BlockPos> placements = getValid(holes);
+
+        FindItemResult result = InvUtils.findInHotbar(itemStack -> itemStack.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) itemStack.getItem()).getBlock()));
+        FindItemResult invResult = InvUtils.find(itemStack -> itemStack.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) itemStack.getItem()).getBlock()));
+        Hand hand = isValid(Managers.HOLDING.getStack()) ? Hand.MAIN_HAND : isValid(mc.player.getOffHandStack()) ? Hand.OFF_HAND : null;
+
+        if (!placements.isEmpty() && (!pauseEat.get() || !mc.player.isUsingItem()) && placeTimer >= placeDelay.get()) {
+            if (hand != null || (switchMode.get() == SwitchMode.Silent && result.slot() >= 0) || (switchMode.get() == SwitchMode.SilentBypass && invResult.slot() >= 0)) {
+
+                List<BlockPos> toPlace = new ArrayList<>();
+                for (BlockPos pos : placements) {
+                    if (toPlace.size() < places.get() && canPlace(pos)) {
+                        toPlace.add(pos);
+                    }
                 }
-                for (int i = 0; i < Math.min(Math.min(toPlace.size(), places.get()), obsidian[1]); i++) {
-                    placeTimer = 0;
-                    place(toPlace.get(i));
+
+                if (!toPlace.isEmpty()) {
+                    int obsidian = hand == Hand.MAIN_HAND ? Managers.HOLDING.getStack().getCount() :
+                        hand == Hand.OFF_HAND ? mc.player.getOffHandStack().getCount() : -1;
+                    if (hand == null) {
+                        switch (switchMode.get()) {
+                            case Silent -> {
+                                obsidian = result.count();
+                                InvUtils.swap(result.slot(), true);
+                            }
+                            case SilentBypass -> {
+                                obsidian = BOInvUtils.invSwitch(invResult.slot()) ? invResult.count() : -1;
+                            }
+                        }
+                    }
+                    if (obsidian >= 0) {
+                        placeTimer = 0;
+
+                        for (int i = 0; i < Math.min(obsidian, toPlace.size()); i++) {
+                            place(toPlace.get(i));
+                        }
+
+                        if (hand == null) {
+                            switch (switchMode.get()) {
+                                case Silent -> {
+                                    InvUtils.swapBack();
+                                }
+                                case SilentBypass -> {
+                                    BOInvUtils.swapBack();
+                                }
+                            }
+                        }
+                    }
                 }
-                if (swapped) {InvUtils.swapBack();}
             }
         }
+    }
+
+    boolean isValid(ItemStack itemStack) {
+        return itemStack.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) itemStack.getItem()).getBlock());
     }
 
     List<BlockPos> getValid(List<BlockPos> positions) {
@@ -243,9 +276,9 @@ public class HoleFillRewrite extends Module {
 
                     if (OLEPOSSUtils.isHole(pos, mc.world, holeDepth.get()) && !EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(pos), entity -> !entity.isSpectator() && !(entity instanceof ItemEntity))) {
                         double closest = closestDist(pos);
-                        Direction dir = closestDir(pos);
-                        if (closest >= 0 && closest <= holeRange.get() && (!efficient.get() || OLEPOSSUtils.distance(mc.player.getPos(), OLEPOSSUtils.getMiddle(pos)) > closest)) {
-                            if (SettingUtils.inPlaceRange(pos.offset(dir))) {
+                        Direction[] dir = SettingUtils.getPlaceDirection(pos);
+                        if ((dir[0] != null || dir[1] != null) && closest >= 0 && closest <= holeRange.get() && (!efficient.get() || OLEPOSSUtils.distance(mc.player.getPos(), OLEPOSSUtils.getMiddle(pos)) > closest)) {
+                            if ((dir[1] != null && SettingUtils.inPlaceRange(pos)) || (dir[0] != null && SettingUtils.inPlaceRange(pos.offset(dir[0])))) {
                                 holes.add(pos);
                             }
                         }
@@ -253,37 +286,6 @@ public class HoleFillRewrite extends Module {
                 }
             }
         }
-    }
-
-    public Direction closestDir(BlockPos pos) {
-        double closest = -1;
-        Direction cDir = null;
-        switch (facing.get()) {
-            case Normal -> {
-                return Direction.UP;
-            }
-            case Strict -> {
-                for (Direction dir : directions) {
-                    double dist = OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(pos.offset(dir)), mc.player.getEyePos());
-                    if ((closest == -1 || dist < closest) && OLEPOSSUtils.strictDir(pos.offset(dir), dir.getOpposite())) {
-                        cDir = dir;
-                        closest = dist;
-                    }
-                }
-                return cDir;
-            }
-            case Range -> {
-                for (Direction dir : directions) {
-                    double dist = OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(pos.offset(dir)), mc.player.getEyePos());
-                    if (closest == -1 || dist < closest) {
-                        cDir = dir;
-                        closest = dist;
-                    }
-                }
-                return cDir;
-            }
-        }
-        return null;
     }
 
     double closestDist(BlockPos pos) {
@@ -309,26 +311,50 @@ public class HoleFillRewrite extends Module {
         return true;
     }
 
+    boolean canPlace(BlockPos pos) {
+        Direction[] dir = SettingUtils.getPlaceDirection(pos);
+        if (dir[0] == null && dir[1] == null) {return false;}
+        return true;
+    }
+
     void place(BlockPos pos) {
-        Direction dir = closestDir(pos);
-        if (dir == null) {return;}
+        Direction[] dir = SettingUtils.getPlaceDirection(pos);
+        if (dir[0] == null && dir[1] == null) {return;}
 
         timers.add(pos, delay.get());
+        if (dir[1] != null) {
+            if (SettingUtils.shouldRotate(RotationType.Placing)) {
+                Managers.ROTATION.start(pos, 2);
+            }
 
-        if (SettingUtils.shouldRotate(RotationType.Placing)) {
-            Managers.ROTATION.start(pos.offset(dir), 2);
+            SettingUtils.swing(SwingState.Pre, SwingType.Placing);
+
+            mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
+                new BlockHitResult(OLEPOSSUtils.getMiddle(pos), dir[1], pos, false), 0));
+
+            SettingUtils.swing(SwingState.Post, SwingType.Placing);
+
+            if (SettingUtils.shouldRotate(RotationType.Placing)) {
+                Managers.ROTATION.start(pos, 2);
+            }
+        } else {
+            if (SettingUtils.shouldRotate(RotationType.Placing)) {
+                Managers.ROTATION.start(pos.offset(dir[0]), 2);
+            }
+
+            SettingUtils.swing(SwingState.Pre, SwingType.Placing);
+
+            mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
+                new BlockHitResult(OLEPOSSUtils.getMiddle(pos.offset(dir[0])), dir[0].getOpposite(), pos.offset(dir[0]), false), 0));
+
+            SettingUtils.swing(SwingState.Post, SwingType.Placing);
+
+            if (SettingUtils.shouldRotate(RotationType.Placing)) {
+                Managers.ROTATION.start(pos.offset(dir[0]), 2);
+            }
         }
 
-        SettingUtils.swing(SwingState.Pre, SwingType.Placing);
 
-        mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
-            new BlockHitResult(OLEPOSSUtils.getMiddle(pos.offset(dir)), dir.getOpposite(), pos.offset(dir), false), 0));
-
-        SettingUtils.swing(SwingState.Post, SwingType.Placing);
-
-        if (SettingUtils.shouldRotate(RotationType.Placing)) {
-            Managers.ROTATION.start(pos.offset(dir), 2);
-        }
 
         if (!toRender.containsKey(pos)) {
             toRender.put(pos, new Double[]{fadeTime.get() + renderTime.get(), fadeTime.get()});

@@ -18,22 +18,22 @@ public class Fog extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     public final Setting<FogShape> shape = sgGeneral.add(new EnumSetting.Builder<FogShape>()
         .name("Shape")
-        .description(".")
+        .description("Fog shape.")
         .defaultValue(FogShape.SPHERE)
         .build()
     );
     public final Setting<Double> distance = sgGeneral.add(new DoubleSetting.Builder()
         .name("Distance")
-        .description(".")
+        .description("How far away should the fog start rendering.")
         .defaultValue(25)
         .min(0)
         .sliderRange(0, 100)
         .build()
     );
     public final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
-        .name("Side Color")
-        .description("The color")
-        .defaultValue(new SettingColor(0, 255, 0, 255))
+        .name("Color")
+        .description("Color of the fog")
+        .defaultValue(new SettingColor(255, 0, 0, 255))
         .build()
     );
 }

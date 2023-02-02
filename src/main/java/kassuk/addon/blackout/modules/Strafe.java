@@ -21,7 +21,7 @@ public class Strafe extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Double> speed = sgGeneral.add(new DoubleSetting.Builder()
         .name("Speed")
-        .description("Speed")
+        .description("How many blocks to move every movement tick")
         .defaultValue(0.2873)
         .min(0)
         .sliderMax(10)
@@ -29,7 +29,7 @@ public class Strafe extends Module {
     );
     private final Setting<Boolean> knockBack = sgGeneral.add(new BoolSetting.Builder()
         .name("Damage Boost")
-        .description(".")
+        .description("Turns knockback into velocity.")
         .defaultValue(false)
         .build()
     );
@@ -43,7 +43,7 @@ public class Strafe extends Module {
     );
     private final Setting<Double> kbFactor = sgGeneral.add(new DoubleSetting.Builder()
         .name("Damage Boost Factor")
-        .description("yes")
+        .description("Knockback multiplier")
         .defaultValue(1)
         .min(0)
         .sliderMax(10)
@@ -52,25 +52,25 @@ public class Strafe extends Module {
     );
     private final Setting<Double> decreaseSpeed = sgGeneral.add(new DoubleSetting.Builder()
         .name("Velocity Decrease Speed")
-        .description("yes")
-        .defaultValue(1.2)
-        .min(1)
+        .description("How fast should the velocity end")
+        .defaultValue(0.2)
+        .min(0)
         .sliderMax(10)
         .visible(knockBack::get)
         .build()
     );
 
     private final Setting<Boolean> sneakSpeed = sgGeneral.add(new BoolSetting.Builder()
-        .name("Not on sneak")
-        .description(".")
-        .defaultValue(false)
+        .name("Sneak Stop")
+        .description("Doesn't modify movement while sneaking.")
+        .defaultValue(true)
         .build()
     );
 
     private final Setting<Boolean> elytraSpeed = sgGeneral.add(new BoolSetting.Builder()
-        .name("Not on elytra")
-        .description(".")
-        .defaultValue(false)
+        .name("Elytra Stop")
+        .description("Doesn't modify movement while flying with elytra.")
+        .defaultValue(true)
         .build()
     );
     boolean move = false;
@@ -114,7 +114,7 @@ public class Strafe extends Module {
                 return;
             }
             double multiplier = speed.get() * (velocity + 1);
-            velocity /= decreaseSpeed.get();
+            velocity /= 1 + decreaseSpeed.get();
             if (velocity < 0.01) {
                 velocity = 0;
             }

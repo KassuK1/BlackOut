@@ -37,6 +37,12 @@ public class SettingUtils extends Utils {
     public static double getAttackWallsRange() {
         return range.attackRangeWalls.get();
     }
+    public static double getMineRange() {
+        return range.miningRange.get();
+    }
+    public static double getMineWallsRange() {
+        return range.miningRangeWalls.get();
+    }
     public static double placeRangeTo(BlockPos pos) {return range.placeRangeTo(pos);}
     public static boolean inPlaceRange(BlockPos pos) {
         return range.inPlaceRange(pos);
@@ -50,11 +56,25 @@ public class SettingUtils extends Utils {
     public static boolean inAttackRange(Box bb, double eyeHeight, Vec3d feet) {
         return range.inAttackRange(bb, eyeHeight, feet);
     }
+    public static double mineRangeTo(BlockPos pos) {return range.miningRangeTo(pos);}
+    public static boolean inMineRange(BlockPos pos) {
+        return range.inMineRange(pos);
+    }
+    public static boolean inMineRangeNoTrace(BlockPos pos) {
+        return range.inMineRangeNoTrace(pos);
+    }
     public static boolean inAttackRangeNoTrace(Box bb, double eyeHeight, Vec3d feet) {
         return range.inAttackRangeNoTrace(bb, eyeHeight, feet);
     }
 
+
     //  Rotate
+    public static boolean startMineRot() {
+        return rotation.startMineRot();
+    }
+    public static boolean endMineRot() {
+        return rotation.endMineRot();
+    }
     public static boolean shouldRotate(RotationType type) {
         return rotation.shouldRotate(type);
     }

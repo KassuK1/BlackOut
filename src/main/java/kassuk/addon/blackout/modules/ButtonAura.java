@@ -36,7 +36,7 @@ public class ButtonAura extends Module {
 
     private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
         .name("Range")
-        .description(".")
+        .description("Range for clicking buttons.")
         .defaultValue(4)
         .range(0, 10)
         .sliderRange(0, 10)
@@ -44,7 +44,7 @@ public class ButtonAura extends Module {
     );
     private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
         .name("Delay")
-        .description(".")
+        .description("Delay between button clicks.")
         .defaultValue(2)
         .range(0, 10)
         .sliderRange(0, 10)
@@ -52,7 +52,7 @@ public class ButtonAura extends Module {
     );
     private final Setting<Double> coolDown = sgGeneral.add(new DoubleSetting.Builder()
         .name("Cooldown")
-        .description(".")
+        .description("Cooldown for each button.")
         .defaultValue(10)
         .range(0, 100)
         .sliderRange(0, 100)
@@ -60,8 +60,8 @@ public class ButtonAura extends Module {
     );
     private final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
         .name("Color")
-        .description("U blind?")
-        .defaultValue(new SettingColor(255, 255, 255, 150))
+        .description("Color of the render?")
+        .defaultValue(new SettingColor(255, 0, 0, 150))
         .build()
     );
     BlockTimerList timers = new BlockTimerList();

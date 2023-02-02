@@ -47,7 +47,7 @@ public class PacketCrash extends Module {
     // Spam
     private final Setting<Boolean> bounds = sgGeneral.add(new BoolSetting.Builder()
         .name("Out Of Bounds")
-        .description(".")
+        .description("Send out of bounds packets.")
         .defaultValue(true)
         .visible(() -> mode.get().equals(SendMode.Spam))
         .build()
@@ -63,7 +63,7 @@ public class PacketCrash extends Module {
     );
     private final Setting<Integer> boundsDist = sgGeneral.add(new IntSetting.Builder()
         .name("Bounds Dist")
-        .description(".")
+        .description("Position offset for bounds packets.")
         .defaultValue(1337)
         .sliderRange(-1337, 1337)
         .visible(() -> mode.get().equals(SendMode.Spam) && bounds.get())
@@ -71,7 +71,7 @@ public class PacketCrash extends Module {
     );
     private final Setting<Boolean> swing = sgGeneral.add(new BoolSetting.Builder()
         .name("Swing")
-        .description(".")
+        .description("Sends swing packets.")
         .defaultValue(true)
         .visible(() -> mode.get().equals(SendMode.Spam))
         .build()
@@ -86,7 +86,7 @@ public class PacketCrash extends Module {
     );
     private final Setting<Boolean> confirm = sgGeneral.add(new BoolSetting.Builder()
         .name("Confirm")
-        .description(".")
+        .description("Sends confirm packets.")
         .defaultValue(true)
         .visible(() -> mode.get().equals(SendMode.Spam))
         .build()
@@ -101,8 +101,8 @@ public class PacketCrash extends Module {
     );
     private final Setting<Integer> forceLimit = sgGeneral.add(new IntSetting.Builder()
         .name("Limit")
-        .description(".")
-        .defaultValue(500)
+        .description("Doesn't send over this amount of packets.")
+        .defaultValue(420)
         .sliderMax(1000)
         .visible(() -> mode.get().equals(SendMode.Spam))
         .build()

@@ -25,6 +25,7 @@ public class RangeSettings extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgPlace = settings.createGroup("Placing");
     private final SettingGroup sgAttack = settings.createGroup("Attacking");
+    private final SettingGroup sgMining = settings.createGroup("Mining");
 
     //  Place Ranges
     public final Setting<Double> placeRange = sgPlace.add(new DoubleSetting.Builder()
@@ -137,6 +138,62 @@ public class RangeSettings extends Module {
         .visible(() -> attackRangeMode.get().equals(AttackRangeMode.Height))
         .build()
     );
+
+    //  Mining Ranges
+    public final Setting<Double> miningRange = sgMining.add(new DoubleSetting.Builder()
+        .name("Mining Range")
+        .description("Range for attacking entities.")
+        .defaultValue(4.8)
+        .range(0, 6)
+        .sliderRange(0, 6)
+        .build()
+    );
+    public final Setting<Double> miningRangeWalls = sgMining.add(new DoubleSetting.Builder()
+        .name("Mining Range Walls")
+        .description("Range for attacking entities behind blocks.")
+        .defaultValue(4.8)
+        .range(0, 6)
+        .sliderRange(0, 6)
+        .build()
+    );
+    private final Setting<FromMode> miningRangeFrom = sgMining.add(new EnumSetting.Builder<FromMode>()
+        .name("Mining Range From")
+        .description("Where to calculate ranges from.")
+        .defaultValue(FromMode.Eyes)
+        .build()
+    );
+    private final Setting<MiningRangeMode> miningRangeMode = sgMining.add(new EnumSetting.Builder<MiningRangeMode>()
+        .name("Mining Range Mode")
+        .description("Where to calculate ranges from.")
+        .defaultValue(MiningRangeMode.NCP)
+        .build()
+    );
+    private final Setting<Double> closestMiningWidth = sgMining.add(new DoubleSetting.Builder()
+        .name("Closest Mining Width")
+        .description("How wide should the box be for closest range.")
+        .defaultValue(1)
+        .range(0, 3)
+        .sliderRange(0, 3)
+        .visible(() -> miningRangeMode.get().equals(MiningRangeMode.CustomBox))
+        .build()
+    );
+    private final Setting<Double> closestMiningHeight = sgMining.add(new DoubleSetting.Builder()
+        .name("Closest Mining Height")
+        .description("How tall should the box be for closest range.")
+        .defaultValue(1)
+        .range(0, 3)
+        .sliderRange(0, 3)
+        .visible(() -> miningRangeMode.get().equals(MiningRangeMode.CustomBox))
+        .build()
+    );
+    private final Setting<Double> miningHeight = sgMining.add(new DoubleSetting.Builder()
+        .name("Mining Height")
+        .description("The height above block bottom to calculate ranges from.")
+        .defaultValue(1)
+        .sliderRange(-1, 2)
+        .visible(() -> miningRangeMode.get().equals(MiningRangeMode.Height))
+        .build()
+    );
     public enum PlaceRangeMode {
         NCP,
         Height,
@@ -148,6 +205,12 @@ public class RangeSettings extends Module {
         Height,
         Vanilla,
         Middle,
+        CustomBox
+    }
+    public enum MiningRangeMode {
+        NCP,
+        Height,
+        Vanilla,
         CustomBox
     }
     public enum FromMode {
@@ -196,7 +259,6 @@ public class RangeSettings extends Module {
         }
         return -1;
     }
-
 
     // Attack Range Chesks
     public boolean inAttackRange(Box bb, double eyeHeight) {
@@ -252,4 +314,46 @@ public class RangeSettings extends Module {
     Vec3d getFeet(Box bb) {
         return new Vec3d((bb.minX + bb.maxX) / 2, bb.minY, (bb.minX + bb.maxX) / 2);
     }
+
+    // Mining Range Checks
+    public boolean inMineRange(BlockPos pos) {
+        if (mc.player == null) {return false;}
+
+        double dist = miningRangeTo(pos);
+        return dist >= 0 && dist <= (SettingUtils.placeTrace(pos) ? placeRange.get() : placeRangeWalls.get());
+    }
+    public boolean inMineRangeNoTrace(BlockPos pos) {
+        if (mc.player == null) {return false;}
+
+        double dist = placeRangeTo(pos);
+        return dist >= 0 && dist <= Math.max(placeRange.get(), placeRangeWalls.get());
+    }
+
+    public double miningRangeTo(BlockPos pos) {
+        Box pBB = mc.player.getBoundingBox();
+        Vec3d from = mc.player.getEyePos();
+        Vec3d pPos = mc.player.getPos();
+        switch (placeRangeFrom.get()) {
+            case Middle -> ((IVec3d)from).set((pBB.minX + pBB.maxX) / 2, (pBB.minY + pBB.maxY) / 2, (pBB.minX + pBB.maxX) / 2);
+            case Feet -> ((IVec3d)from).set(pPos.x, pPos.y, pPos.z);
+        }
+
+        Vec3d feet = new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+        switch (placeRangeMode.get()) {
+            case NCP -> {
+                return getRange(from, feet.add(0, 0.5, 0));
+            }
+            case Height -> {
+                return getRange(from, feet.add(0, placeHeight.get(), 0));
+            }
+            case Vanilla -> {
+                return getRange(from, OLEPOSSUtils.getClosest(mc.player.getEyePos(), feet, 1, 1));
+            }
+            case CustomBox -> {
+                return getRange(from, OLEPOSSUtils.getClosest(mc.player.getEyePos(), feet, blockWidth.get(), blockHeight.get()));
+            }
+        }
+        return -1;
+    }
+
 }

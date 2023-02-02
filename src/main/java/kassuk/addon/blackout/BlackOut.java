@@ -16,6 +16,8 @@ import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import org.slf4j.Logger;
 
+import java.awt.*;
+
 public class BlackOut extends MeteorAddon {
     public static final Logger LOG = LogUtils.getLogger();
 
@@ -23,7 +25,7 @@ public class BlackOut extends MeteorAddon {
     public static final Category SETTINGS = new Category("Settings");
     public static final HudGroup HUD_BLACKOUT = new HudGroup("BlackOut");
     public static final String BLACKOUT_NAME = "BlackOut";
-    public static final String BLACKOUT_VERSION = "0.3.1";
+    public static final String BLACKOUT_VERSION = "0.3.2";
 
 
     @Override
@@ -43,7 +45,6 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new AutoTravel());
         Modules.get().add(new BedBomb());
         Modules.get().add(new ButtonAura());
-        Modules.get().add(new CrystalBait());
         Modules.get().add(new CustomFOV());
         Modules.get().add(new Disabler());
         Modules.get().add(new FastXP());
@@ -86,7 +87,6 @@ public class BlackOut extends MeteorAddon {
         Hud.get().register(GearHud.INFO);
         Hud.get().register(HudWaterMark.INFO);
         Hud.get().register(Keys.INFO);
-        Hud.get().register(PacketCounter.INFO);
         Hud.get().register(TargetHud.INFO);
         Hud.get().register(Welcomer.INFO);
 

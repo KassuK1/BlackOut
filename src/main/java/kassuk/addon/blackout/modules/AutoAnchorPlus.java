@@ -11,15 +11,13 @@ import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
-import meteordevelopment.meteorclient.settings.BoolSetting;
-import meteordevelopment.meteorclient.settings.DoubleSetting;
-import meteordevelopment.meteorclient.settings.Setting;
-import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
+import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Block;
@@ -62,7 +60,7 @@ public class AutoAnchorPlus extends Module {
     );
     private final Setting<Double> minDamage = sgGeneral.add(new DoubleSetting.Builder()
         .name("Min Damage")
-        .description(".")
+        .description("Minimum damage per place.")
         .defaultValue(10)
         .range(0, 20)
         .sliderRange(0, 20)
@@ -72,6 +70,24 @@ public class AutoAnchorPlus extends Module {
         .name("Hold")
         .description("Instantly places after exploding.")
         .defaultValue(true)
+        .build()
+    );
+    private final Setting<ShapeMode> shapeMode = sgGeneral.add(new EnumSetting.Builder<ShapeMode>()
+        .name("Shape Mode")
+        .description(".")
+        .defaultValue(ShapeMode.Both)
+        .build()
+    );
+    private final Setting<SettingColor> lineColor = sgGeneral.add(new ColorSetting.Builder()
+        .name("Line Color")
+        .description("Color of the outlines")
+        .defaultValue(new SettingColor(255, 0, 0, 150))
+        .build()
+    );
+    private final Setting<SettingColor> sideColor = sgGeneral.add(new ColorSetting.Builder()
+        .name("Side Color")
+        .description(".")
+        .defaultValue(new SettingColor(255, 0, 0, 0))
         .build()
     );
 
@@ -99,7 +115,7 @@ public class AutoAnchorPlus extends Module {
             placePos = getPos();
             placeDir = SettingUtils.getPlaceDirection(placePos);
             if (placePos != null && (placeDir[0] != null || placeDir[1] != null)) {
-                event.renderer.box(OLEPOSSUtils.getBox(placePos), new Color(255, 0, 0, 50), new Color(255, 0, 0, 255), ShapeMode.Both, 0);
+                event.renderer.box(OLEPOSSUtils.getBox(placePos), sideColor.get(), lineColor.get(), shapeMode.get(), 0);
                 if (placePos.equals(lastPos) && hold.get() && placed) {
                     lastPos = placePos;
                     int prevSlot = mc.player.getInventory().selectedSlot;

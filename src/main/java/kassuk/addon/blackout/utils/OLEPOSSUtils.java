@@ -268,4 +268,8 @@ public class OLEPOSSUtils extends Utils {
         if (dir.getOffsetZ() < 0 && mc.player.getZ() < pos.getZ() + 0.5 - dir.getOffsetZ() / 2f) {return true;}
         return false;
     }
+
+    public static boolean isCrystalBlock(Block block) {
+        return block == Blocks.OBSIDIAN || block == Blocks.BEDROCK;
+    }
 }

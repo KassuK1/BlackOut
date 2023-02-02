@@ -6,6 +6,7 @@ import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.timers.BlockTimerList;
+import kassuk.addon.blackout.utils.BOInvUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
@@ -15,13 +16,16 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.world.Timer;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
+import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
+import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
+import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
@@ -44,28 +48,34 @@ public class SelfTrapPlus extends Module {
         super(BlackOut.BLACKOUT, "Self Trap+", "Traps yourself");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private final Setting<Boolean> onlyTop = sgGeneral.add(new BoolSetting.Builder()
-        .name("Only Top")
-        .description(".")
-        .defaultValue(true)
-        .build()
-    );
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
         .name("Pause Eat")
         .description("Pauses when you are eating")
         .defaultValue(true)
         .build()
     );
-    private final Setting<Boolean> silent = sgGeneral.add(new BoolSetting.Builder()
-        .name("Silent")
+    private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
+        .name("Switch Mode")
         .description(".")
+        .defaultValue(SwitchMode.SilentBypass)
+        .build()
+    );
+    private final Setting<List<Block>> blocks = sgGeneral.add(new BlockListSetting.Builder()
+        .name("Blocks")
+        .description("Blocks to use.")
+        .defaultValue(Blocks.OBSIDIAN, Blocks.CRYING_OBSIDIAN, Blocks.NETHERITE_BLOCK)
+        .build()
+    );
+    private final Setting<Boolean> onlyTop = sgGeneral.add(new BoolSetting.Builder()
+        .name("Only Top")
+        .description("Only places the top blocks.")
         .defaultValue(true)
         .build()
     );
     private final Setting<Double> placeDelay = sgGeneral.add(new DoubleSetting.Builder()
         .name("Place Delay")
-        .description(".")
-        .defaultValue(0)
+        .description("Delay between places.")
+        .defaultValue(0.125)
         .range(0, 10)
         .sliderRange(0, 10)
         .build()
@@ -80,19 +90,36 @@ public class SelfTrapPlus extends Module {
     );
     private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
         .name("Delay")
-        .description(".")
+        .description("Delay between places at each spot.")
         .defaultValue(0.3)
         .range(0, 10)
         .sliderRange(0, 10)
         .build()
     );
-    private final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
-        .name("Color")
-        .description("U blind?")
-        .defaultValue(new SettingColor(255, 255, 255, 150))
+    private final Setting<ShapeMode> shapeMode = sgGeneral.add(new EnumSetting.Builder<ShapeMode>()
+        .name("Shape Mode")
+        .description(".")
+        .defaultValue(ShapeMode.Both)
         .build()
     );
-
+    private final Setting<SettingColor> lineColor = sgGeneral.add(new ColorSetting.Builder()
+        .name("Line Color")
+        .description("Color of the outlines")
+        .defaultValue(new SettingColor(255, 0, 0, 150))
+        .build()
+    );
+    private final Setting<SettingColor> sideColor = sgGeneral.add(new ColorSetting.Builder()
+        .name("Side Color")
+        .description(".")
+        .defaultValue(new SettingColor(255, 0, 0, 50))
+        .build()
+    );
+    public enum SwitchMode {
+        Disabled,
+        Normal,
+        Silent,
+        SilentBypass
+    }
     BlockTimerList timers = new BlockTimerList();
     double placeTimer = 0;
     int placesLeft = 0;
@@ -120,65 +147,111 @@ public class SelfTrapPlus extends Module {
 
         if (mc.player != null && mc.world != null) {
             List<BlockPos> render = getBlocks(getSize(mc.player.getBlockPos().up()), mc.player.getBoundingBox().intersects(OLEPOSSUtils.getBox(mc.player.getBlockPos().up(2))));
-            List<BlockPos> blocks = getValid(render);
-            render.forEach(item -> event.renderer.box(OLEPOSSUtils.getBox(item), new Color(color.get().r, color.get().g, color.get().b,
-                (int) Math.floor(color.get().a / 5f)), color.get(), ShapeMode.Both, 0));
+            List<BlockPos> placements = getValid(render);
 
-            int[] obsidian = findObby();
-            if ((!pauseEat.get() || !mc.player.isUsingItem()) && obsidian[1] > 0 &&
-                (silent.get() || Managers.HOLDING.isHolding(Items.OBSIDIAN)) && !blocks.isEmpty()) {
-                boolean swapped = false;
-                if (!Managers.HOLDING.isHolding(Items.OBSIDIAN) && silent.get()) {
-                    InvUtils.swap(obsidian[0], true);
-                    swapped = true;
-                }
-                int p = Math.min(Math.min(obsidian[1], placesLeft), blocks.size());
-                for (int i = 0; i < p; i++) {
-                    BlockPos toPlace = blocks.get(i);
-                    Direction[] result = SettingUtils.getPlaceDirection(toPlace);
-                    if (result[0] != null || result[1] != null) {
-                        place(blocks.get(i), result);
+            render.forEach(item -> event.renderer.box(OLEPOSSUtils.getBox(item), sideColor.get(), lineColor.get(), shapeMode.get(), 0));
+
+            FindItemResult hotbar = InvUtils.findInHotbar(item -> item.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) item.getItem()).getBlock()));
+            FindItemResult inventory = InvUtils.find(item -> item.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) item.getItem()).getBlock()));
+            Hand hand = isValid(Managers.HOLDING.getStack()) ? Hand.MAIN_HAND : isValid(mc.player.getOffHandStack()) ? Hand.OFF_HAND : null;
+
+
+            if ((!pauseEat.get() || !mc.player.isUsingItem()) &&
+                (hand != null || ((switchMode.get() == SwitchMode.Silent || switchMode.get() == SwitchMode.Normal) && hotbar.slot() >= 0) ||
+                    (switchMode.get() == SwitchMode.SilentBypass && inventory.slot() >= 0)) && placesLeft > 0 && !placements.isEmpty()) {
+
+                List<BlockPos> toPlace = new ArrayList<>();
+                for (BlockPos placement : placements) {
+                    if (toPlace.size() < placesLeft && canPlace(placement)) {
+                        toPlace.add(placement);
                     }
                 }
-                if (swapped) {
-                    InvUtils.swapBack();
+
+                if (!toPlace.isEmpty()) {
+                    int obsidian = hand == Hand.MAIN_HAND ? Managers.HOLDING.getStack().getCount() :
+                        hand == Hand.OFF_HAND ? mc.player.getOffHandStack().getCount() : -1;
+
+                    if (hand == null) {
+                        switch (switchMode.get()) {
+                            case Silent, Normal -> {
+                                obsidian = hotbar.count();
+                                InvUtils.swap(hotbar.slot(), true);
+                            }
+                            case SilentBypass -> {
+                                obsidian = BOInvUtils.invSwitch(inventory.slot()) ? inventory.count() : -1;
+                            }
+                        }
+                    }
+
+                    if (obsidian >= 0) {
+                        for (int i = 0; i < Math.min(obsidian, placements.size()); i++) {
+                            place(placements.get(i));
+                        }
+
+                        if (hand == null) {
+                            switch (switchMode.get()) {
+                                case Silent -> {
+                                    InvUtils.swapBack();
+                                }
+                                case SilentBypass -> {
+                                    BOInvUtils.swapBack();
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 
-    void place(BlockPos toPlace, Direction[] result) {
+    boolean isValid(ItemStack item) {
+        return item.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) item.getItem()).getBlock());
+    }
+
+    boolean canPlace(BlockPos pos) {
+        Direction[] dir = SettingUtils.getPlaceDirection(pos);
+        if (dir[0] == null && dir[1] == null) {return false;}
+        return true;
+    }
+
+    void place(BlockPos toPlace) {
+        Direction[] result = SettingUtils.getPlaceDirection(toPlace);
+        if (result[0] == null && result[1] == null) {return;}
         timers.add(toPlace, delay.get());
         placeTimer = 0;
-        if (mc.player != null) {
-            placesLeft--;
-
-            if (result[1] != null) {
-                if (SettingUtils.shouldRotate(RotationType.Placing)) {
-                    Managers.ROTATION.start(toPlace, 3);
-                }
-                SettingUtils.swing(SwingState.Pre, SwingType.Placing);
-                mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
-                    new BlockHitResult(new Vec3d(toPlace.getX() + 0.5, toPlace.getY() + 0.5, toPlace.getZ() + 0.5),
-                        result[1], toPlace, false), 0));
-                SettingUtils.swing(SwingState.Post, SwingType.Placing);
-                if (SettingUtils.shouldRotate(RotationType.Placing)) {
-                    Managers.ROTATION.end(toPlace);
-                }
-            } else {
-                if (SettingUtils.shouldRotate(RotationType.Placing)) {
-                    Managers.ROTATION.start(toPlace.offset(result[0]), 3);
-                }
-                SettingUtils.swing(SwingState.Pre, SwingType.Placing);
-                mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
-                    new BlockHitResult(new Vec3d(toPlace.offset(result[0]).getX() + 0.5, toPlace.offset(result[0]).getY() + 0.5, toPlace.offset(result[0]).getZ() + 0.5),
-                        result[0].getOpposite(), toPlace.offset(result[0]), false), 0));
-                SettingUtils.swing(SwingState.Post, SwingType.Placing);
-                if (SettingUtils.shouldRotate(RotationType.Placing)) {
-                    Managers.ROTATION.end(toPlace.offset(result[0]));
-                }
+        placesLeft--;
+        if (result[1] != null) {
+            if (SettingUtils.shouldRotate(RotationType.Placing)) {
+                Managers.ROTATION.start(toPlace, 3);
             }
 
+            SettingUtils.swing(SwingState.Pre, SwingType.Placing);
+
+            mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
+                new BlockHitResult(new Vec3d(toPlace.getX() + 0.5, toPlace.getY() + 0.5, toPlace.getZ() + 0.5),
+                    result[1], toPlace, false), 0));
+
+            SettingUtils.swing(SwingState.Post, SwingType.Placing);
+
+            if (SettingUtils.shouldRotate(RotationType.Placing)) {
+                Managers.ROTATION.end(toPlace);
+            }
+        } else {
+            if (SettingUtils.shouldRotate(RotationType.Placing)) {
+                Managers.ROTATION.start(toPlace.offset(result[0]), 3);
+            }
+
+            SettingUtils.swing(SwingState.Pre, SwingType.Placing);
+
+            mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
+                new BlockHitResult(new Vec3d(toPlace.offset(result[0]).getX() + 0.5, toPlace.offset(result[0]).getY() + 0.5, toPlace.offset(result[0]).getZ() + 0.5),
+                    result[0].getOpposite(), toPlace.offset(result[0]), false), 0));
+
+            SettingUtils.swing(SwingState.Post, SwingType.Placing);
+
+            if (SettingUtils.shouldRotate(RotationType.Placing)) {
+                Managers.ROTATION.end(toPlace.offset(result[0]));
+            }
         }
     }
 

@@ -22,6 +22,7 @@ public class GearHud extends HudElement {
     private final Setting<List<Item>> items = sgGeneral.add(new ItemListSetting.Builder()
         .name("Items")
         .description("Items to show.")
+        .defaultValue(Items.END_CRYSTAL, Items.EXPERIENCE_BOTTLE, Items.OBSIDIAN, Items.TOTEM_OF_UNDYING)
         .build()
     );
     private final Setting<Double> scale = sgGeneral.add(new DoubleSetting.Builder()

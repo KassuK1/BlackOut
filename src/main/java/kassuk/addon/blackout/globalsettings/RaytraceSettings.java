@@ -7,12 +7,16 @@ import meteordevelopment.meteorclient.mixininterface.IRaycastContext;
 import meteordevelopment.meteorclient.mixininterface.IVec3d;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import net.minecraft.block.Blocks;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 
+import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -50,15 +54,6 @@ public class RaytraceSettings extends Module {
         .defaultValue(0.5)
         .sliderRange(-0.5, 1.5)
         .visible(() -> placeMode.get().equals(RaytraceMode.SinglePoint))
-        .build()
-    );
-    private final Setting<Double> placeExposure = sgPlace.add(new DoubleSetting.Builder()
-        .name("Place Exposure")
-        .description(".")
-        .defaultValue(10)
-        .range(0, 100)
-        .sliderRange(0, 100)
-        .visible(() -> placeMode.get().equals(RaytraceMode.Exposure))
         .build()
     );
     private final Setting<Double> placeHeight1 = sgPlace.add(new DoubleSetting.Builder()
@@ -99,15 +94,6 @@ public class RaytraceSettings extends Module {
         .visible(() -> attackMode.get().equals(RaytraceMode.SinglePoint))
         .build()
     );
-    private final Setting<Double> attackExposure = sgAttack.add(new DoubleSetting.Builder()
-        .name("Attack Exposure %")
-        .description(".")
-        .defaultValue(10)
-        .range(0, 100)
-        .sliderRange(0, 100)
-        .visible(() -> attackMode.get().equals(RaytraceMode.Exposure))
-        .build()
-    );
     private final Setting<Double> attackHeight1 = sgAttack.add(new DoubleSetting.Builder()
         .name("Attack Height 1")
         .description("Raytraces to x * hitbox height above the bottom.")
@@ -125,30 +111,20 @@ public class RaytraceSettings extends Module {
         .build()
     );
     public enum RaytraceMode {
-        Exposure,
-        Any,
         SinglePoint,
         DoublePoint
     }
+    Vec3d vec;
 
     public boolean placeTrace(BlockPos pos) {
         if (!placeTrace.get()) {return true;}
         switch (placeMode.get()) {
             case SinglePoint -> {
-                ((IRaycastContext) BODamageUtils.raycastContext).set(new Vec3d(pos.getX() + 0.5, pos.getY() + placeHeight.get(), pos.getZ() + 0.5), mc.player.getEyePos(), RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player);
-                return BODamageUtils.raycast(BODamageUtils.raycastContext).getType() == HitResult.Type.MISS;
-            }
-            case Exposure -> {
-                return BODamageUtils.getExposure(mc.player.getEyePos(), OLEPOSSUtils.getBox(pos)) * 100 >= placeExposure.get();
-            }
-            case Any -> {
-                return BODamageUtils.isExposed(mc.player.getEyePos(), OLEPOSSUtils.getBox(pos));
+                return raytrace(mc.player.getEyePos(), new Vec3d(pos.getX() + 0.5, pos.getY() + placeHeight.get(), pos.getZ() + 0.5), OLEPOSSUtils.getBox(pos));
             }
             case DoublePoint -> {
-                ((IRaycastContext) BODamageUtils.raycastContext).set(new Vec3d(pos.getX() + 0.5, pos.getY() + placeHeight1.get(), pos.getZ() + 0.5), mc.player.getEyePos(), RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player);
-                boolean hit1 = BODamageUtils.raycast(BODamageUtils.raycastContext).getType() == HitResult.Type.MISS;
-                ((IRaycastContext) BODamageUtils.raycastContext).set(new Vec3d(pos.getX() + 0.5, pos.getY() + placeHeight2.get(), pos.getZ() + 0.5), mc.player.getEyePos(), RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player);
-                return BODamageUtils.raycast(BODamageUtils.raycastContext).getType() == HitResult.Type.MISS || hit1;
+                return raytrace(mc.player.getEyePos(), new Vec3d(pos.getX() + 0.5, pos.getY() + placeHeight1.get(), pos.getZ() + 0.5), OLEPOSSUtils.getBox(pos)) ||
+                    raytrace(mc.player.getEyePos(), new Vec3d(pos.getX() + 0.5, pos.getY() + placeHeight2.get(), pos.getZ() + 0.5), OLEPOSSUtils.getBox(pos));
             }
         }
         return false;
@@ -161,12 +137,6 @@ public class RaytraceSettings extends Module {
                 ((IRaycastContext) BODamageUtils.raycastContext).set(new Vec3d((box.minX + box.maxX) / 2f, box.minY + attackHeight.get(), (box.minZ + box.maxZ) / 2f), mc.player.getEyePos(), RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player);
                 return BODamageUtils.raycast(BODamageUtils.raycastContext).getType() == HitResult.Type.MISS;
             }
-            case Exposure -> {
-                return BODamageUtils.getExposure(mc.player.getEyePos(), box) * 100 >= attackExposure.get();
-            }
-            case Any -> {
-                return BODamageUtils.isExposed(mc.player.getEyePos(), box);
-            }
             case DoublePoint -> {
                 ((IRaycastContext) BODamageUtils.raycastContext).set(new Vec3d((box.minX + box.maxX) / 2f, box.minY + attackHeight1.get(), (box.minZ + box.maxZ) / 2f), mc.player.getEyePos(), RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player);
                 boolean hit1 = BODamageUtils.raycast(BODamageUtils.raycastContext).getType() == HitResult.Type.MISS;
@@ -176,4 +146,18 @@ public class RaytraceSettings extends Module {
         }
         return false;
     }
+
+    boolean raytrace(Vec3d start, Vec3d end, Box target) {
+        for (float i = 0; i <= 1; i += 0.01) {
+            vec = new Vec3d(start.x + (end.x - start.x) * i, start.y + (end.y - start.y) * i, start.z + (end.z - start.z) * i);
+            if (target.contains(vec)) {
+                return true;
+            }
+            if (mc.world.getBlockState(new BlockPos(vec)).getBlock() != Blocks.AIR) {
+                return false;
+            }
+        }
+        return false;
+    }
+
 }

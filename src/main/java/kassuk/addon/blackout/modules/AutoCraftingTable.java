@@ -42,7 +42,7 @@ public class AutoCraftingTable extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
         .name("Range")
-        .description("Range")
+        .description("Places in this range.")
         .defaultValue(5)
         .range(0, 10)
         .sliderMax(10)

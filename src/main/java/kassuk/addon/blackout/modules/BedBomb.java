@@ -46,12 +46,6 @@ public class BedBomb extends Module {
     public BedBomb() {super(BlackOut.BLACKOUT, "BedBomb", "Automatically places and breaks beds to cause damage to your opponents");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgDamage = settings.createGroup("Damage");
-    private final Setting<Boolean> swing = sgGeneral.add(new BoolSetting.Builder()
-        .name("Swing")
-        .description("Swing")
-        .defaultValue(true)
-        .build()
-    );
     public final Setting<CalcMode> calcMode = sgGeneral.add(new EnumSetting.Builder<CalcMode>()
         .name("Calc Mode")
         .description("Logic for bullying kids.")
@@ -98,7 +92,7 @@ public class BedBomb extends Module {
     public final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
         .name("Color")
         .description("U blind?")
-        .defaultValue(new SettingColor(255, 255, 255, 255))
+        .defaultValue(new SettingColor(255, 0, 0, 255))
         .build()
     );
     private final Setting<Double> animationSpeed = sgGeneral.add(new DoubleSetting.Builder()

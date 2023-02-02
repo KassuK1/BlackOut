@@ -24,7 +24,7 @@ public class PacketFly extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Integer> packets = sgGeneral.add(new IntSetting.Builder()
         .name("Packets")
-        .description(".")
+        .description("How many packets to send every movement tick.")
         .defaultValue(5)
         .min(1)
         .sliderRange(0, 10)
@@ -32,65 +32,71 @@ public class PacketFly extends Module {
     );
     private final Setting<Double> speed = sgGeneral.add(new DoubleSetting.Builder()
         .name("Speed")
-        .description(".")
-        .defaultValue(4)
+        .description("Distance to travel each packet.")
+        .defaultValue(0.2873)
         .min(0)
         .sliderRange(0, 10)
         .build()
     );
+    private final Setting<Boolean> fastVertical = sgGeneral.add(new BoolSetting.Builder()
+        .name("Fast Vertical")
+        .description("Sends multiple packets every movement tick.")
+        .defaultValue(false)
+        .build()
+    );
     private final Setting<Double> downSpeed = sgGeneral.add(new DoubleSetting.Builder()
         .name("Down Speed")
-        .description(".")
-        .defaultValue(1)
+        .description("How fast to fly down.")
+        .defaultValue(0.62)
         .min(0)
         .sliderRange(0, 10)
         .build()
     );
     private final Setting<Double> upSpeed = sgGeneral.add(new DoubleSetting.Builder()
         .name("Up Speed")
-        .description(".")
-        .defaultValue(1)
+        .description("How fast to fly up.")
+        .defaultValue(0.62)
         .min(0)
         .sliderRange(0, 10)
         .build()
     );
     private final Setting<Boolean> onGroundSpoof = sgGeneral.add(new BoolSetting.Builder()
         .name("On Ground Spoof")
-        .description(".")
+        .description("Spoofs on ground in packets.")
         .defaultValue(false)
         .build()
     );
     private final Setting<Boolean> onGround = sgGeneral.add(new BoolSetting.Builder()
         .name("On Ground")
-        .description(".")
+        .description("Should we tell the server that u are onground.")
         .defaultValue(false)
         .visible(onGroundSpoof::get)
         .build()
     );
     private final Setting<Integer> xzBound = sgGeneral.add(new IntSetting.Builder()
         .name("XZ Bound")
-        .description(".")
+        .description("Bounds offset horizontally.")
         .defaultValue(512)
         .sliderRange(-1337, 1337)
         .build()
     );
     private final Setting<Integer> yBound = sgGeneral.add(new IntSetting.Builder()
         .name("Y Bound")
-        .description(".")
+        .description("Bounds offset vertically.")
         .defaultValue(215)
         .sliderRange(-1337, 1337)
         .build()
     );
     private final Setting<Double> antiKick = sgGeneral.add(new DoubleSetting.Builder()
         .name("Anti Kick")
-        .description(".")
+        .description("Slowly glides down.")
         .defaultValue(1)
         .sliderRange(0, 10)
         .build()
     );
     private final Setting<Integer> antiKickDelay = sgGeneral.add(new IntSetting.Builder()
         .name("Anti Kick Delay")
-        .description(".")
+        .description("Tick delay between moving down.")
         .defaultValue(10)
         .min(1)
         .sliderRange(0, 100)
@@ -102,7 +108,6 @@ public class PacketFly extends Module {
     int sent = 0;
     int rur = 0;
     String info = null;
-    Random r = new Random();
     Map<Integer, Vec3d> validPos = new HashMap<>();
     List<PlayerMoveC2SPacket> validPackets = new ArrayList<>();
 
@@ -129,10 +134,10 @@ public class PacketFly extends Module {
         double x = 0, y = shouldAntiKick ? -0.04 * antiKick.get() : 0, z = 0;
         double[] result = getYaw(mc.player.input.movementForward, mc.player.input.movementSideways);
 
-        if (mc.options.jumpKey.isPressed() && y == 0) {y = upSpeed.get() * 0.0625;}
+        if (mc.options.jumpKey.isPressed() && y == 0) {y = upSpeed.get();}
         else if (mc.options.sneakKey.isPressed()) {
             shouldAntiKick = false;
-            y = downSpeed.get() * -0.0625;
+            y = -downSpeed.get();
         }
         if (result[1] != 0 && y == 0) {
             x = Math.cos(Math.toRadians(result[0] + 90));
@@ -140,8 +145,8 @@ public class PacketFly extends Module {
         }
         Vec3d motion = new Vec3d(0, 0, 0);
 
-        for (int i = 0; i < (shouldAntiKick ? 1 : (y == 0 ? packets.get() : 1)); i++) {
-            motion = motion.add(x * speed.get() * 0.0625, y, z * speed.get() * 0.0625);
+        for (int i = 0; i < (shouldAntiKick ? 1 : (y == 0 || fastVertical.get() ? packets.get() : 1)); i++) {
+            motion = motion.add(x * speed.get(), y, z * speed.get());
             send(motion.add(mc.player.getPos()), new Vec3d(xzBound.get() * Math.cos(Math.toRadians(result[0] + 90)), yBound.get(), xzBound.get() * Math.sin(Math.toRadians(result[0] + 90))),
                 onGroundSpoof.get() ? onGround.get() : mc.player.isOnGround());
         }

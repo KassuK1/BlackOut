@@ -27,14 +27,14 @@ public class AntiAim extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgIgnore = settings.createGroup("Ignore");
     private final Setting<Modes> mode = sgGeneral.add(new EnumSetting.Builder<Modes>()
-        .name("Place Swing Mode")
+        .name("Mode")
         .description(".")
         .defaultValue(Modes.Custom)
         .build()
     );
     private final Setting<Double> enemyRange = sgGeneral.add(new DoubleSetting.Builder()
         .name("Enemy Range")
-        .description(".")
+        .description("Looks at players in the range.")
         .defaultValue(20)
         .range(0, 1000)
         .sliderMin(0)
@@ -45,7 +45,7 @@ public class AntiAim extends Module {
 
     private final Setting<Double> spinSpeed = sgGeneral.add(new DoubleSetting.Builder()
         .name("Spin Speed")
-        .description(".")
+        .description("Spiid.")
         .defaultValue(5)
         .range(0, 100)
         .sliderMin(0)
@@ -55,21 +55,21 @@ public class AntiAim extends Module {
     );
     private final Setting<Boolean> rYaw = sgGeneral.add(new BoolSetting.Builder()
         .name("Random Yaw")
-        .description(".")
+        .description("Randomly sets yaw.")
         .defaultValue(true)
         .visible(() -> mode.get().equals(Modes.CSGO))
         .build()
     );
     private final Setting<Boolean> rPitch = sgGeneral.add(new BoolSetting.Builder()
         .name("Random Pitch")
-        .description(".")
+        .description("Randomly sets pitch.")
         .defaultValue(false)
         .visible(() -> mode.get().equals(Modes.CSGO))
         .build()
     );
     private final Setting<Integer> csgoPitch = sgGeneral.add(new IntSetting.Builder()
         .name("CS Pitch")
-        .description("Yaw")
+        .description("Sets pitch to this")
         .defaultValue(90)
         .range(-90, 90)
         .sliderMin(-90)
@@ -79,7 +79,7 @@ public class AntiAim extends Module {
     );
     private final Setting<Double> csDelay = sgGeneral.add(new DoubleSetting.Builder()
         .name("CSGO Delay")
-        .description(".")
+        .description("Tick delay between csgo rotation update.")
         .defaultValue(5)
         .range(0, 100)
         .sliderMin(0)
@@ -90,7 +90,7 @@ public class AntiAim extends Module {
 
     private final Setting<Integer> yaw = sgGeneral.add(new IntSetting.Builder()
         .name("Yaw")
-        .description("Yaw")
+        .description("Sets yaw to this")
         .defaultValue(0)
         .range(-180, 180)
         .sliderMin(-180)
@@ -100,7 +100,7 @@ public class AntiAim extends Module {
     );
     private final Setting<Integer> pitch = sgGeneral.add(new IntSetting.Builder()
         .name("Pitch")
-        .description("Pitch")
+        .description("Sets pitch to this")
         .defaultValue(90)
         .range(-90, 90)
         .sliderMin(-90)
@@ -110,19 +110,19 @@ public class AntiAim extends Module {
     );
     private final Setting<Boolean> bowMode = sgGeneral.add(new BoolSetting.Builder()
         .name("Look Up With Bow")
-        .description(".")
+        .description("Looks up while holding a bow.")
         .defaultValue(true)
         .build()
     );
     private final Setting<Boolean> encMode = sgGeneral.add(new BoolSetting.Builder()
         .name("Look Down With Exp")
-        .description(".")
+        .description("Looks down while holding enchanting bottles.")
         .defaultValue(true)
         .build()
     );
     private final Setting<Boolean> iYaw = sgIgnore.add(new BoolSetting.Builder()
         .name("Ignore Yaw")
-        .description(".")
+        .description("Doesn't change yaw when holding specific items.")
         .defaultValue(true)
         .build()
     );
@@ -134,7 +134,7 @@ public class AntiAim extends Module {
     );
     private final Setting<Boolean> iPitch = sgIgnore.add(new BoolSetting.Builder()
         .name("Ignore Pitch")
-        .description(".")
+        .description("Doesn't change pitch when holding specific items.")
         .defaultValue(true)
         .build()
     );

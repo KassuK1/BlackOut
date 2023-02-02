@@ -22,22 +22,22 @@ public class AutoEz extends Module {
     public AutoEz() {super(BlackOut.BLACKOUT, "AutoEZ", "Sends message after enemy dies(too EZ nn's)");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<MessageMode> msgMode = sgGeneral.add(new EnumSetting.Builder<MessageMode>()
-        .name("Rotation mode")
-        .description(".")
+        .name("Message Mode")
+        .description("What kind of messages to send.")
         .defaultValue(MessageMode.Blackout)
         .build()
     );
     private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Range")
-        .description(".")
+        .name("Enemy Range")
+        .description("Only send message if enemy died inside this range.")
         .defaultValue(50)
         .min(0)
         .sliderRange(0, 50)
         .build()
     );
     private final Setting<List<String>> messages = sgGeneral.add(new StringListSetting.Builder()
-        .name("Messages")
-        .description("Messages to send when killing enemy")
+        .name("Blackout Messages")
+        .description("Messages to send when killing enemy with blackout message mode on")
         .defaultValue(List.of("Fucked by BlackOut!", "BlackOut on top", "BlackOut strong", "BlackOut gayming","BlackOut on top"))
         .build()
     );
@@ -266,12 +266,15 @@ public class AutoEz extends Module {
                 ChatUtils.sendPlayerMsg(exhibobo[num].replace("%s",name == null ? "You" : name));}
 
             case Blackout -> {
-                int num = r.nextInt(0, messages.get().size() - 1);
-                if (num == lastNum) {
-                    num = num < messages.get().size() - 1 ? num + 1 : 0;
+                if (!messages.get().isEmpty()) {
+                    int num = r.nextInt(0, messages.get().size() - 1);
+                    if (num == lastNum) {
+                        num = num < messages.get().size() - 1 ? num + 1 : 0;
+                    }
+                    lastNum = num;
+                    ChatUtils.sendPlayerMsg(messages.get().get(num));
                 }
-                lastNum = num;
-                ChatUtils.sendPlayerMsg(messages.get().get(num));}
+            }
         }
 
     }
