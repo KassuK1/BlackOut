@@ -1,10 +1,7 @@
 package kassuk.addon.blackout;
 
 import com.mojang.logging.LogUtils;
-import kassuk.addon.blackout.commands.BlackoutGit;
-import kassuk.addon.blackout.commands.GearInfo;
-import kassuk.addon.blackout.commands.Kick;
-import kassuk.addon.blackout.commands.Panic;
+import kassuk.addon.blackout.commands.*;
 import kassuk.addon.blackout.globalsettings.*;
 import kassuk.addon.blackout.hud.*;
 import kassuk.addon.blackout.modules.*;
@@ -81,6 +78,7 @@ public class BlackOut extends MeteorAddon {
         Commands.get().add(new GearInfo());
         Commands.get().add(new Kick());
         Commands.get().add(new Panic());
+        Commands.get().add(new Coords());
 
         // HUD
         Hud.get().register(BlackoutArray.INFO);
