@@ -11,10 +11,11 @@ The development of the addon might not be super active due to us having our own 
 
 ### How to use Blackout:
  - Install Fabric 1.19.3.
- - Download Meteor Client and put them in your mods folder.
- - Put Blackout in your mods folder with them
+ - Download Meteor Client and put it in your mod's folder.
+ - Put Blackout in your mods folder with Meteor
  - Run Fabric.
- - Enjoy the addon and go get some kills with it (if you're bad it won't help tho)
+ - Enjoy the addon
+ - Join the discord if you have any issues with it
 
 #### Latest build: https://github.com/KassuK1/BlackOut/releases/download/latest/blackout-0.3.0.jar
 
@@ -26,6 +27,7 @@ The development of the addon might not be super active due to us having our own 
 #### AutoAndrewTate
 
 #### AntiAim
+
 #### AutoAnchor+
 
 #### AutoCraftingTable
