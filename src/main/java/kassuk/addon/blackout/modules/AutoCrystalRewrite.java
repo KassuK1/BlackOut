@@ -29,8 +29,6 @@ import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.sound.PositionedSoundInstance;
-import net.minecraft.client.sound.Sound;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.EndCrystalEntity;
@@ -40,9 +38,6 @@ import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
-import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket;
-import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
@@ -52,7 +47,10 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /*
 Made by OLEPOSSU / Raksamies
@@ -592,6 +590,7 @@ public class AutoCrystalRewrite extends Module {
         Simple,
         Smart,
         Gapple,
+        Silent,
         SilentBypass
     }
 
@@ -667,7 +666,11 @@ public class AutoCrystalRewrite extends Module {
                     if (renderPos != null) {
                         Box box = new Box(renderPos.getX() + 0.5 - renderProgress / 2, renderPos.getY() - 0.5 - renderProgress / 2, renderPos.getZ() + 0.5 - renderProgress / 2,
                             renderPos.getX() + 0.5 + renderProgress / 2, renderPos.getY() - 0.5 + renderProgress / 2, renderPos.getZ() + 0.5 + renderProgress / 2);
+
+
                         event.renderer.box(box, new Color(color.get().r, color.get().g, color.get().b, Math.round(color.get().a / 5f)), color.get(), shapeMode.get(), 0);
+
+
                     }
                 }
                 case Future -> {
@@ -752,7 +755,7 @@ public class AutoCrystalRewrite extends Module {
         Entity expEntity = null;
         double[] value = null;
         Hand hand = getHand(Items.END_CRYSTAL);
-        if (!pausedCheck() && hand != null && explode.get()) {
+        if (!pausedCheck() && (hand != null || switchMode.get() == SwitchMode.Silent || switchMode.get() == SwitchMode.SilentBypass) && explode.get()) {
             for (Entity en : mc.world.getEntities()) {
                 if (en.getType().equals(EntityType.END_CRYSTAL)) {
                     double[] dmg = getDmg(en.getPos())[0];
@@ -768,9 +771,10 @@ public class AutoCrystalRewrite extends Module {
             }
         }
         if (expEntity != null) {
-            if (!isAttacked(expEntity.getId()) &&
-                (!existedList.containsKey(expEntity.getBlockPos()) || System.currentTimeMillis() > existedList.get(expEntity.getBlockPos()) + existed.get() * 1000)) {
-                explode(expEntity.getId(), expEntity, expEntity.getPos());
+            if (!isAttacked(expEntity.getId())) {
+                if (!existedList.containsKey(expEntity.getBlockPos()) || System.currentTimeMillis() > existedList.get(expEntity.getBlockPos()) + existed.get() * 1000) {
+                    explode(expEntity.getId(), expEntity, expEntity.getPos());
+                }
             }
         }
         Hand handToUse = hand;
@@ -824,10 +828,11 @@ public class AutoCrystalRewrite extends Module {
             }
             if (!pausedCheck()) {
                 int silentSlot = InvUtils.find(Items.END_CRYSTAL).slot();
-                if (handToUse != null || (switchMode.get() == SwitchMode.SilentBypass && silentSlot >= 0)) {
+                int hotbar = InvUtils.findInHotbar(Items.END_CRYSTAL).slot();
+                if (handToUse != null || (switchMode.get() == SwitchMode.Silent && hotbar >= 0) ||(switchMode.get() == SwitchMode.SilentBypass && silentSlot >= 0)) {
                     if ((placeTimer <= 0 || (instantPlace.get() && !shouldSlow() && !isBlocked(placePos))) && delayTimer >= placeDelay.get()) {
                         placeTimer = 1;
-                        placeCrystal(placePos.down(), placeDir, handToUse, silentSlot);
+                        placeCrystal(placePos.down(), placeDir, handToUse, silentSlot, hotbar);
                     }
                 }
             }
@@ -852,7 +857,7 @@ public class AutoCrystalRewrite extends Module {
         return true;
     }
 
-    void placeCrystal(BlockPos pos, Direction dir, Hand handToUse, int sl) {
+    void placeCrystal(BlockPos pos, Direction dir, Hand handToUse, int sl, int hsl) {
         if (pos != null && mc.player != null) {
             if (renderMode.get().equals(RenderMode.Earthhack)) {
                 if (!earthMap.containsKey(pos)) {
@@ -866,7 +871,14 @@ public class AutoCrystalRewrite extends Module {
 
             boolean switched = handToUse == null;
             if (switched) {
-                BOInvUtils.invSwitch(sl);
+                switch (switchMode.get()) {
+                    case SilentBypass -> {
+                        BOInvUtils.invSwitch(sl);
+                    }
+                    case Silent -> {
+                        InvUtils.swap(hsl, true);
+                    }
+                }
             }
 
             if (SettingUtils.shouldRotate(RotationType.Crystal)) {
@@ -888,7 +900,14 @@ public class AutoCrystalRewrite extends Module {
             }
 
             if (switched) {
-                BOInvUtils.swapBack();
+                switch (switchMode.get()) {
+                    case SilentBypass -> {
+                        BOInvUtils.swapBack();
+                    }
+                    case Silent -> {
+                        InvUtils.swapBack();
+                    }
+                }
             }
 
             if (idPredict.get()) {
@@ -947,32 +966,29 @@ public class AutoCrystalRewrite extends Module {
 
     void attackEntity(Entity en) {
         if (mc.player != null) {
-            Hand handToUse = getHand(Items.END_CRYSTAL);
-            if (handToUse != null) {
-                attacked.add(en.getId(), 1 / expSpeed.get());
-                delayTimer = 0;
+            attacked.add(en.getId(), 1 / expSpeed.get());
+            delayTimer = 0;
 
-                Box box = new Box(en.getX() - 1, en.getY(), en.getZ() - 1, en.getX() + 1, en.getY() + 2, en.getZ() + 1);
-                if (SettingUtils.shouldRotate(RotationType.Attacking)) {
-                    Managers.ROTATION.start(box, 5);
-                }
-                SettingUtils.swing(SwingState.Pre, SwingType.Attacking);
+            Box box = new Box(en.getX() - 1, en.getY(), en.getZ() - 1, en.getX() + 1, en.getY() + 2, en.getZ() + 1);
+            if (SettingUtils.shouldRotate(RotationType.Attacking)) {
+                Managers.ROTATION.start(box, 5);
+            }
+            SettingUtils.swing(SwingState.Pre, SwingType.Attacking);
 
-                if (existedList.containsKey(en.getBlockPos())) {
-                    existedList.remove(en.getBlockPos());
-                }
-                mc.player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(en, mc.player.isSneaking()));
+            if (existedList.containsKey(en.getBlockPos())) {
+                existedList.remove(en.getBlockPos());
+            }
+            mc.player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(en, mc.player.isSneaking()));
 
-                SettingUtils.swing(SwingState.Post, SwingType.Attacking);
+            SettingUtils.swing(SwingState.Post, SwingType.Attacking);
 
-                if (SettingUtils.shouldRotate(RotationType.Attacking)) {
-                    Managers.ROTATION.end(box);
-                }
+            if (SettingUtils.shouldRotate(RotationType.Attacking)) {
+                Managers.ROTATION.end(box);
+            }
 
-                blocked.clear();
-                if (setDead.get()) {
-                    Managers.DELAY.add(() -> setEntityDead(en), setDeadDelay.get());
-                }
+            blocked.clear();
+            if (setDead.get()) {
+                Managers.DELAY.add(() -> setEntityDead(en), setDeadDelay.get());
             }
         }
     }
