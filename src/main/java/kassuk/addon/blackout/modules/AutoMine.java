@@ -465,7 +465,7 @@ public class AutoMine extends Module {
                     }
                     // Trap Cev
                     if (valueCheck(value, trapCev.get(), pos.offset(dir).up(), closest) &&
-                        getBlock(pos.offset(dir).up()) == Blocks.OBSIDIAN && getBlock(pos.offset(dir).up(2)) != Blocks.AIR) {
+                        getBlock(pos.offset(dir).up()) == Blocks.OBSIDIAN && getBlock(pos.offset(dir).up(2)) == Blocks.AIR) {
                         value = trapCev.get();
                         closest = pos.offset(dir).up();
                         crystal = pos.offset(dir).up(2);
