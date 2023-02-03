@@ -17,6 +17,7 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
@@ -42,6 +43,7 @@ import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 import net.minecraft.tag.FluidTags;
+import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -280,18 +282,14 @@ public class AutoMine extends Module {
             //Render
             Vec3d v = OLEPOSSUtils.getMiddle(targetPos);
             double p = 0.5 - r * r * r / 2;
-            int[] cl = getColor(lineStartColor.get(), lineEndColor.get(), smooth.get() ? p * 2 : Math.floor(p));
-            int[] c = getColor(startColor.get(), endColor.get(), smooth.get() ? p * 2 : Math.ceil(p));
 
             Box toRender = new Box(v.x - p, v.y - p, v.z - p, v.x + p, v.y + p, v.z + p);
-            event.renderer.box(toRender, new Color(cl[0], cl[1], cl[2],
-                    (int) Math.floor(c[3] / 5f)),
-                new Color(c[0], c[1], c[2], c[3]), shapeMode.get(), 0);
+            event.renderer.box(toRender,
+                getColor(startColor.get(), endColor.get(), smooth.get() ? p * 2 : Math.ceil(p)),
+                getColor(lineStartColor.get(), lineEndColor.get(), smooth.get() ? p * 2 : Math.floor(p)),
+                shapeMode.get(), 0);
 
             //Other Stuff
-            if (!SettingUtils.inPlaceRange(targetPos)) {
-                calc();
-            }
             if (progress >= 1 && (!pauseEat.get() || !mc.player.isUsingItem())) {
                 if (crystal.get() && crystalPos != null) {
                     Entity at = isAt(targetPos, crystalPos);
@@ -412,32 +410,27 @@ public class AutoMine extends Module {
     void calc() {
         lastValue = targetValue;
         BlockPos[] pos = getPos();
-        BlockPos pos1 = pos[0];
-        BlockPos pos2 = pos[1];
-        boolean valid = targetPos == null;
-        if (!valid) {
-            valid = getBlock(targetPos) == Blocks.AIR;
-            if (!valid && crystalPos != null) {
-                valid = getBlock(crystalPos) != Blocks.AIR || !OLEPOSSUtils.isCrystalBlock(getBlock(crystalPos.down()));
-            }
+        BlockPos pPos = pos[0];
+        BlockPos cPos = pos[1];
+
+        boolean valid = targetPos == null || getBlock(targetPos) == Blocks.AIR || !SettingUtils.inMineRange(targetPos);
+
+        if (crystalPos != null && !OLEPOSSUtils.isCrystalBlock(getBlock(crystalPos.down()))) {
+            valid = true;
         }
-        if (pos1 != null) {
-            if ((!pos1.equals(targetPos) && (targetValue == -1 || (targetValue > lastValue)) && SettingUtils.inPlaceRange(pos1)) || valid) {
+        if (pPos != null && SettingUtils.inMineRange(pPos)) {
+            if (valid) {
                 progress = 0;
                 miningFor = 0;
-                targetPos = pos1;
-                crystalPos = pos2;
+                targetPos = pPos;
+                crystalPos = cPos;
                 start(targetPos);
             }
         } else {
-            reset();
+            targetPos = null;
+            lastValue = -1;
+            targetValue = -1;
         }
-    }
-
-    void reset() {
-        targetPos = null;
-        lastValue = -1;
-        targetValue = -1;
     }
 
     BlockPos[] getPos() {
@@ -450,7 +443,7 @@ public class AutoMine extends Module {
                 for (Direction dir : OLEPOSSUtils.horizontals) {
                     // Anti Surround
                     if (valueCheck(value, antiSurround.get(), pos.offset(dir), closest)
-                        && getBlock(pos.offset(dir)) != Blocks.AIR) {
+                        && getBlock(pos.offset(dir)) != Blocks.AIR && SettingUtils.inMineRange(pos.offset(dir))) {
                         value = antiSurround.get();
                         closest = pos.offset(dir);
                         crystal = null;
@@ -458,14 +451,16 @@ public class AutoMine extends Module {
 
                     // Surround Cev
                     if (valueCheck(value, surroundCev.get(), pos.offset(dir), closest) &&
-                        getBlock(pos.offset(dir)) == Blocks.OBSIDIAN && getBlock(pos.offset(dir).up()) == Blocks.AIR) {
+                        getBlock(pos.offset(dir)) == Blocks.OBSIDIAN && getBlock(pos.offset(dir).up()) == Blocks.AIR
+                        && SettingUtils.inMineRange(pos.offset(dir)) && SettingUtils.inPlaceRange(pos.offset(dir))) {
                         value = surroundCev.get();
                         closest = pos.offset(dir);
                         crystal = pos.offset(dir).up();
                     }
                     // Trap Cev
                     if (valueCheck(value, trapCev.get(), pos.offset(dir).up(), closest) &&
-                        getBlock(pos.offset(dir).up()) == Blocks.OBSIDIAN && getBlock(pos.offset(dir).up(2)) == Blocks.AIR) {
+                        getBlock(pos.offset(dir).up()) == Blocks.OBSIDIAN && getBlock(pos.offset(dir).up(2)) == Blocks.AIR &&
+                        SettingUtils.inMineRange(pos.offset(dir).up()) && SettingUtils.inPlaceRange(pos.offset(dir).up())) {
                         value = trapCev.get();
                         closest = pos.offset(dir).up();
                         crystal = pos.offset(dir).up(2);
@@ -473,21 +468,23 @@ public class AutoMine extends Module {
                     // Auto City
                     if (valueCheck(value, autoCity.get(), pos.offset(dir), closest) &&
                         getBlock(pos.offset(dir)) != Blocks.AIR && getBlock(pos.offset(dir).offset(dir)) == Blocks.AIR &&
-                        OLEPOSSUtils.isCrystalBlock(getBlock(pos.offset(dir).offset(dir).down()))) {
+                        OLEPOSSUtils.isCrystalBlock(getBlock(pos.offset(dir).offset(dir).down())) && SettingUtils.inMineRange(pos.offset(dir)) &&
+                        SettingUtils.inPlaceRange(pos.offset(dir).offset(dir).down())) {
                         value = autoCity.get();
                         closest = pos.offset(dir);
                         crystal = pos.offset(dir).offset(dir);
                     }
                     // Cev
                     if (valueCheck(value, cev.get(), pos.up(2), closest)
-                        && getBlock(pos.up(2)) == Blocks.OBSIDIAN && getBlock(pos.up(3)) == Blocks.AIR) {
+                        && getBlock(pos.up(2)) == Blocks.OBSIDIAN && getBlock(pos.up(3)) == Blocks.AIR &&
+                        SettingUtils.inMineRange(pos.up(2)) && SettingUtils.inPlaceRange(pos.up(2))) {
                         value = cev.get();
                         closest = pos.up(2);
                         crystal = pos.up(3);
                     }
                     // Anti Burrow
                     if (valueCheck(value, antiBurrow.get(), pos, closest)
-                        && getBlock(pl.getBlockPos()) != Blocks.AIR) {
+                        && getBlock(pos) != Blocks.AIR && SettingUtils.inMineRange(pos)) {
                         value = antiBurrow.get();
                         closest = pl.getBlockPos();
                         crystal = null;
@@ -614,15 +611,14 @@ public class AutoMine extends Module {
         return slot;
     }
 
-    int[] getColor(Color start, Color end, double progress) {
+    Color getColor(Color start, Color end, double progress) {
         double r = (end.r - start.r) * progress;
         double g = (end.g - start.g) * progress;
         double b = (end.b - start.b) * progress;
         double a = (end.a - start.a) * progress;
-        return new int[] {
-            (int) Math.round(start.r + r),
+        return new Color((int) Math.round(start.r + r),
             (int) Math.round(start.g + g),
             (int) Math.round(start.b + b),
-            (int) Math.round(start.a + a)};
+            (int) Math.round(start.a + a));
     }
 }
