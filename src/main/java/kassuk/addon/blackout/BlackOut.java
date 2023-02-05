@@ -85,6 +85,7 @@ public class BlackOut extends MeteorAddon {
         Hud.get().register(Keys.INFO);
         Hud.get().register(TargetHud.INFO);
         Hud.get().register(Welcomer.INFO);
+        Hud.get().register(OnTope.INFO);
 
         // Theme
         // add a fucking theme  // no
