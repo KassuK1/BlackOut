@@ -4,9 +4,12 @@
   "compatibilityLevel": "JAVA_17",
   "client": [
     "MixinBackground",
+    "MixinClientPlayerEntity",
+    "MixinHeldItemRenderer",
     "MixinLivingEntityRenderer",
     "MixinPlayerMoveC2SPacket",
-    "MixinSound"
+    "MixinSound",
+    "MixinEntity"
   ],
   "injectors": {
     "defaultRequire": 1

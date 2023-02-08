@@ -38,7 +38,7 @@ public class HoleSnap extends Module {
     private final Setting<Boolean> jump = sgGeneral.add(new BoolSetting.Builder()
         .name("Jump")
         .description("Jumps to the hole (very useful)")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
     private final Setting<Integer> jumpCoolDown = sgGeneral.add(new IntSetting.Builder()
@@ -60,7 +60,7 @@ public class HoleSnap extends Module {
     private final Setting<Double> timer = sgGeneral.add(new DoubleSetting.Builder()
         .name("Timer")
         .description("Sends packets faster")
-        .defaultValue(1)
+        .defaultValue(30)
         .min(0)
         .sliderMax(100)
         .build()

@@ -54,6 +54,7 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new OffHandPlus());
         Modules.get().add(new PacketCrash());
         Modules.get().add(new PacketFly());
+        Modules.get().add(new ForceSneak());
         Modules.get().add(new PurpleSpinnyThingBlowerUpererAndPlacer());
         Modules.get().add(new ResetVL());
         Modules.get().add(new RPC());
@@ -62,6 +63,7 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new SprintPlus());
         Modules.get().add(new Strafe());
         Modules.get().add(new SurroundPlus());
+        Modules.get().add(new SwingModifier());
         Modules.get().add(new WeakAlert());
 
         // Global Settings

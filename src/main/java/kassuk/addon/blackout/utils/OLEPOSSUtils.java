@@ -232,7 +232,7 @@ public class OLEPOSSUtils extends Utils {
         for (Direction dir : horizontals) {
             if (world.getBlockState(pos.offset(dir)).getBlock() == Blocks.AIR) {return false;}
         }
-        for (int i = 0; i <= height; i++) {
+        for (int i = 0; i < height; i++) {
             if (!world.getBlockState(pos.up(i)).getBlock().equals(Blocks.AIR)) {
                 return false;
             }

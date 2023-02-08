@@ -60,7 +60,7 @@ public class AutoAnchorPlus extends Module {
     private final Setting<Double> minDamage = sgGeneral.add(new DoubleSetting.Builder()
         .name("Min Damage")
         .description("Minimum damage per place.")
-        .defaultValue(10)
+        .defaultValue(6)
         .range(0, 20)
         .sliderRange(0, 20)
         .build()

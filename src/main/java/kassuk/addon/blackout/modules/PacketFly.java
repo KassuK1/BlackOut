@@ -83,7 +83,7 @@ public class PacketFly extends Module {
     private final Setting<Integer> yBound = sgGeneral.add(new IntSetting.Builder()
         .name("Y Bound")
         .description("Bounds offset vertically.")
-        .defaultValue(215)
+        .defaultValue(0)
         .sliderRange(-1337, 1337)
         .build()
     );

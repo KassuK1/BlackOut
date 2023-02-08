@@ -10,14 +10,12 @@ import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
-import meteordevelopment.meteorclient.events.world.BlockUpdateEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
-import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
@@ -42,8 +40,8 @@ import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
+import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket;
 import net.minecraft.tag.FluidTags;
-import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -62,6 +60,19 @@ public class AutoMine extends Module {
     private final SettingGroup sgSpeed = settings.createGroup("Speed");
     private final SettingGroup sgCrystal = settings.createGroup("Crystal");
     private final SettingGroup sgRender = settings.createGroup("Render");
+    private final Setting<AutoMineMode> mode = sgGeneral.add(new EnumSetting.Builder<AutoMineMode>()
+        .name("Mode")
+        .description("Pauses when you are eating")
+        .defaultValue(AutoMineMode.AutoMine)
+        .build()
+    );
+    private final Setting<Boolean> resetOnEnd = sgGeneral.add(new BoolSetting.Builder()
+        .name("Reset On End")
+        .description("Resets Speedmine position when ending mining.")
+        .defaultValue(true)
+        .visible(() -> mode.get() == AutoMineMode.SpeedMine)
+        .build()
+    );
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
         .name("Pause Eat")
         .description("Pauses when you are eating")
@@ -188,10 +199,12 @@ public class AutoMine extends Module {
     );
 
     //  Render Page
-    private final Setting<Boolean> smooth = sgRender.add(new BoolSetting.Builder()
-        .name("Smooth Color")
-        .description("Smoothly changes the color.")
-        .defaultValue(true)
+    private final Setting<Double> exp = sgRender.add(new DoubleSetting.Builder()
+        .name("Animation Exponent")
+        .description("3 - 4 look cool")
+        .defaultValue(3)
+        .range(0, 10)
+        .sliderRange(1, 5)
         .build()
     );
     private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
@@ -224,14 +237,23 @@ public class AutoMine extends Module {
         .defaultValue(new SettingColor(255, 0, 0, 50))
         .build()
     );
-
-    double progress;
-    BlockPos targetPos;
+    public enum AutoMineMode {
+        SpeedMine,
+        AutoMine,
+        Smart
+    }
+    public Block lastBlock = null;
+    boolean speedmining = false;
+    public double progress;
+    public boolean shouldRestart;
+    public BlockPos targetPos;
+    public Direction targetDir;
     BlockPos crystalPos;
     int targetValue;
     int lastValue;
     double timer = 0;
-    double miningFor;
+    public double miningFor;
+    public boolean ignore = false;
 
     @Override
     public void onActivate() {
@@ -245,7 +267,7 @@ public class AutoMine extends Module {
     }
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onTick(TickEvent.Pre event) {
-        if (targetPos != null) {
+        if (targetPos != null && getBlock(targetPos) != Blocks.AIR) {
             SettingUtils.swing(SwingState.Pre, SwingType.Mining);
             if (SettingUtils.shouldRotate(RotationType.Breaking)) {
                 Managers.ROTATION.start(OLEPOSSUtils.getBox(targetPos), 9);
@@ -254,7 +276,7 @@ public class AutoMine extends Module {
     }
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onTick(TickEvent.Post event) {
-        if (targetPos != null) {
+        if (targetPos != null && getBlock(targetPos) != Blocks.AIR) {
             SettingUtils.swing(SwingState.Post, SwingType.Mining);
         }
     }
@@ -269,24 +291,101 @@ public class AutoMine extends Module {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
+    private void onPacket(PacketEvent.Send event) {
+        if (event.packet instanceof PlayerActionC2SPacket packet) {
+            if (!ignore) {
+                if (packet.getAction() == PlayerActionC2SPacket.Action.START_DESTROY_BLOCK) {
+                    switch (mode.get()) {
+                        case SpeedMine -> {
+                            if (getBlock(packet.getPos()) == Blocks.BEDROCK && targetPos != null) {
+                                event.cancel();
+                            } else if (targetPos != null && packet.getPos().equals(targetPos)) {
+                                reset();
+                            } else {
+                                targetPos = packet.getPos();
+                                targetDir = packet.getDirection();
+                                crystalPos = null;
+                                progress = 0;
+                                miningFor = 0;
+                            }
+                        }
+                        case AutoMine -> {
+                            if (getBlock(packet.getPos()) == Blocks.BEDROCK && targetPos != null) {
+                                event.cancel();
+                            } else {
+                                reset();
+                            }
+                        }
+                        case Smart -> {
+                            if (getBlock(packet.getPos()) == Blocks.BEDROCK && targetPos != null) {
+                                event.cancel();
+                            } else if (targetPos != null && packet.getPos().equals(targetPos)) {
+                                speedmining = false;
+                                reset();
+                            } else {
+                                speedmining = true;
+                                crystalPos = null;
+                                targetPos = packet.getPos();
+                                targetDir = packet.getDirection();
+                                progress = 0;
+                                miningFor = 0;
+                            }
+                        }
+                    }
+                } else if (targetPos != null && (packet.getAction() == PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK || packet.getAction() == PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK)) {
+                    event.cancel();
+                }
+            }
+            ignore = false;
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
         if (mc.player == null || mc.world == null) {return;}
 
-        calc();
+        switch (mode.get()) {
+            case AutoMine -> {
+                calc();
+            }
+            case SpeedMine -> {
+                if (targetPos != null && !SettingUtils.inMineRange(targetPos)) {
+                    reset();
+                }
+            }
+            case Smart -> {
+                if (speedmining) {
+                    if (targetPos != null && !SettingUtils.inMineRange(targetPos)) {
+                        reset();
+                    }
+                } else {
+                    calc();
+                }
+            }
+        }
         timer = Math.min(placeDelay.get(), timer + event.frameTime);
 
         if (targetPos != null) {
             miningFor += event.frameTime;
             double r = 1 - progress;
-            progress = Math.min(1, progress + event.frameTime * getMineTicks(targetPos) * 20);
+            if (shouldRestart) {
+                start(targetPos);
+                shouldRestart = false;
+            }
+            if (getBlock(targetPos) != Blocks.AIR) {
+                progress = Math.min(1, progress + event.frameTime * getMineTicks(targetPos) * 20);
+            } else {
+                progress = 0;
+            }
+
             //Render
             Vec3d v = OLEPOSSUtils.getMiddle(targetPos);
-            double p = 0.5 - r * r * r / 2;
+            double p = 0.5 - (Math.pow(r, exp.get())) / 2;
 
             Box toRender = new Box(v.x - p, v.y - p, v.z - p, v.x + p, v.y + p, v.z + p);
             event.renderer.box(toRender,
-                getColor(startColor.get(), endColor.get(), smooth.get() ? p * 2 : Math.ceil(p)),
-                getColor(lineStartColor.get(), lineEndColor.get(), smooth.get() ? p * 2 : Math.floor(p)),
+                getColor(startColor.get(), endColor.get(), p * 2),
+                getColor(lineStartColor.get(), lineEndColor.get(), p * 2),
                 shapeMode.get(), 0);
 
             //Other Stuff
@@ -294,7 +393,7 @@ public class AutoMine extends Module {
                 if (crystal.get() && crystalPos != null) {
                     Entity at = isAt(targetPos, crystalPos);
                     Hand hand = getHand(Items.END_CRYSTAL);
-                    int cSlot = InvUtils.findInHotbar(itemStack -> itemStack.getItem() == Items.END_CRYSTAL).slot();
+                    int cSlot = InvUtils.find(itemStack -> itemStack.getItem() == Items.END_CRYSTAL).slot();
                     if (at != null) {
                         int holding = 0;
                         if (holdingBest(targetPos)) {
@@ -360,18 +459,35 @@ public class AutoMine extends Module {
                     if (holding == 2) {
                         BOInvUtils.swapBack();
                     }
-                    targetPos = null;
+                    if (mode.get() == AutoMineMode.SpeedMine) {
+                        if (resetOnEnd.get()) {
+                            targetPos = null;
+                        } else {
+                            progress = 0;
+                            miningFor = 0;
+                        }
+                    }
+                    if (mode.get() == AutoMineMode.Smart && speedmining) {
+                        speedmining = false;
+                        targetPos = null;
+                    }
                 }
             }
         }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
-    private void onBlock(BlockUpdateEvent event) {
-        if (mc.player != null && mc.world != null && targetPos != null) {
-            if (event.newState.getBlock() != Blocks.AIR && event.oldState.getBlock() == Blocks.AIR) {
-                if (event.pos == targetPos) {
-                    progress = 0;
+    private void onBlock(PacketEvent.Receive event) {
+        if (event.packet instanceof BlockUpdateS2CPacket packet) {
+            if (mc.player != null && mc.world != null && targetPos != null) {
+                if (packet.getPos().equals(targetPos)) {
+                    if (packet.getState().getBlock() != Blocks.AIR && lastBlock == Blocks.AIR) {
+                        if (mode.get() == AutoMineMode.SpeedMine) {
+                            shouldRestart = true;
+                        }
+                        progress = 0;
+                    }
+                    lastBlock = getBlock(packet.getPos());
                 }
             }
         }
@@ -415,7 +531,7 @@ public class AutoMine extends Module {
 
         boolean valid = targetPos == null || getBlock(targetPos) == Blocks.AIR || !SettingUtils.inMineRange(targetPos);
 
-        if (crystalPos != null && !OLEPOSSUtils.isCrystalBlock(getBlock(crystalPos.down()))) {
+        if (crystalPos != null && (!OLEPOSSUtils.isCrystalBlock(getBlock(crystalPos.down())) || !SettingUtils.inPlaceRange(crystalPos.down()) || getBlock(crystalPos) != Blocks.AIR)) {
             valid = true;
         }
         if (pPos != null && SettingUtils.inMineRange(pPos)) {
@@ -433,6 +549,13 @@ public class AutoMine extends Module {
         }
     }
 
+    void reset() {
+        targetPos = null;
+        lastValue = -1;
+        targetValue = -1;
+        shouldRestart = false;
+    }
+
     BlockPos[] getPos() {
         int value = 0;
         BlockPos closest = null;
@@ -443,7 +566,7 @@ public class AutoMine extends Module {
                 for (Direction dir : OLEPOSSUtils.horizontals) {
                     // Anti Surround
                     if (valueCheck(value, antiSurround.get(), pos.offset(dir), closest)
-                        && getBlock(pos.offset(dir)) != Blocks.AIR && SettingUtils.inMineRange(pos.offset(dir))) {
+                        && getBlock(pos.offset(dir)) != Blocks.AIR && getBlock(pos.offset(dir)) != Blocks.BEDROCK && SettingUtils.inMineRange(pos.offset(dir))) {
                         value = antiSurround.get();
                         closest = pos.offset(dir);
                         crystal = null;
@@ -467,7 +590,7 @@ public class AutoMine extends Module {
                     }
                     // Auto City
                     if (valueCheck(value, autoCity.get(), pos.offset(dir), closest) &&
-                        getBlock(pos.offset(dir)) != Blocks.AIR && getBlock(pos.offset(dir).offset(dir)) == Blocks.AIR &&
+                        getBlock(pos.offset(dir)) != Blocks.AIR && getBlock(pos.offset(dir)) != Blocks.BEDROCK && getBlock(pos.offset(dir).offset(dir)) == Blocks.AIR &&
                         OLEPOSSUtils.isCrystalBlock(getBlock(pos.offset(dir).offset(dir).down())) && SettingUtils.inMineRange(pos.offset(dir)) &&
                         SettingUtils.inPlaceRange(pos.offset(dir).offset(dir).down())) {
                         value = autoCity.get();
@@ -484,7 +607,7 @@ public class AutoMine extends Module {
                     }
                     // Anti Burrow
                     if (valueCheck(value, antiBurrow.get(), pos, closest)
-                        && getBlock(pos) != Blocks.AIR && SettingUtils.inMineRange(pos)) {
+                        && getBlock(pos) != Blocks.AIR && getBlock(pos) != Blocks.BEDROCK && SettingUtils.inMineRange(pos)) {
                         value = antiBurrow.get();
                         closest = pl.getBlockPos();
                         crystal = null;
@@ -531,6 +654,8 @@ public class AutoMine extends Module {
         if (SettingUtils.startMineRot()) {
             Managers.ROTATION.start(pos, 9);
         }
+        ignore = true;
+        lastBlock = getBlock(pos);
         mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK,
             pos, Direction.UP));
         if (SettingUtils.startMineRot()) {
@@ -542,6 +667,7 @@ public class AutoMine extends Module {
         if (SettingUtils.endMineRot()) {
             Managers.ROTATION.start(pos, 9);
         }
+        ignore = true;
         mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
             pos, Direction.UP));
         if (SettingUtils.endMineRot()) {

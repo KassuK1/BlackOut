@@ -151,7 +151,7 @@ public class AutoCrystalRewrite extends Module {
     private final Setting<Double> existed = sgExplode.add(new DoubleSetting.Builder()
         .name("Existed")
         .description("How many seconds should the crystal exist before attacking.")
-        .defaultValue(0)
+        .defaultValue(0.125)
         .range(0, 1)
         .sliderRange(0, 1)
         .build()
@@ -208,10 +208,10 @@ public class AutoCrystalRewrite extends Module {
         .visible(() -> !alwaysGap.get() && switchMode.get().equals(SwitchMode.Smart))
         .build()
     );
-    private final Setting<Double> afterSwitchDelay = sgSwitch.add(new DoubleSetting.Builder()
-        .name("After Switch Delay")
+    private final Setting<Double> switchPenalty = sgSwitch.add(new DoubleSetting.Builder()
+        .name("Switch Penalty")
         .description("Time to wait after switching before hitting crystals.")
-        .defaultValue(0.1)
+        .defaultValue(0.125)
         .min(0)
         .sliderRange(0, 1)
         .build()
@@ -333,7 +333,7 @@ public class AutoCrystalRewrite extends Module {
     private final Setting<Boolean> idPredict = sgID.add(new BoolSetting.Builder()
         .name("ID Predict")
         .description("Hits the crystal before it spawns.")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
     private final Setting<Integer> idOffset = sgID.add(new IntSetting.Builder()
@@ -740,7 +740,7 @@ public class AutoCrystalRewrite extends Module {
     private void onSend(PacketEvent.Send event) {
         if (mc.player != null && mc.world != null) {
             if (event.packet instanceof UpdateSelectedSlotC2SPacket) {
-                switchTimer = afterSwitchDelay.get();
+                switchTimer = switchPenalty.get();
             }
         }
     }
@@ -1010,7 +1010,7 @@ public class AutoCrystalRewrite extends Module {
     }
 
     void setEntityDead(Entity en) {
-        en.remove(Entity.RemovalReason.KILLED);
+        mc.world.removeEntity(en.getId(), Entity.RemovalReason.KILLED);
     }
 
     BlockPos getPlacePos() {
@@ -1214,7 +1214,7 @@ public class AutoCrystalRewrite extends Module {
                                     box = box.offset(0, y, 0);
                                 }
                             } else {
-                                y = 0;
+                                y = -0.08;
                             }
                         }
                     }

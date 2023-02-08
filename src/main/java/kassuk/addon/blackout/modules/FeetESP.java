@@ -11,6 +11,7 @@ import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 
@@ -26,12 +27,6 @@ public class FeetESP extends Module {
         super(BlackOut.BLACKOUT, "FeetESP", "No, it doesn't show you pictures of feet");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private final Setting<Boolean> self = sgGeneral.add(new BoolSetting.Builder()
-        .name("Self")
-        .description("Renders own feet.")
-        .defaultValue(true)
-        .build()
-    );
     private final Setting<Boolean> friend = sgGeneral.add(new BoolSetting.Builder()
         .name("Friend")
         .description("Renders friends' feet.")
@@ -70,25 +65,25 @@ public class FeetESP extends Module {
     private void onRender(Render3DEvent event) {
         mc.world.getPlayers().forEach(player -> {
             String name = player.getName().getString();
-            Render existing = getByName(name);
+            Render existing = getByEntity(player);
 
             if (existing == null) {
-                renders.add(new Render(name, player.getPos()));
+                renders.add(new Render(player, player.getPos()));
             }
         });
         mc.world.getPlayers().forEach(player -> {
             if (OLEPOSSUtils.distance(player.getPos(), mc.player.getEyePos()) <= range.get() &&
-                (player != mc.player || self.get()) && (!Friends.get().isFriend(player) || friend.get()) &&
+                player != mc.player && (!Friends.get().isFriend(player) || friend.get()) &&
                 (Friends.get().isFriend(player) || player == mc.player || other.get())) {
-                Render render = getByName(player.getName().getString());
+                Render render = getByEntity(player);
                 if (render != null) {render.update(event, color.get(), player.getPos());}
             }
         });
     }
 
-    Render getByName(String name) {
+    Render getByEntity(PlayerEntity player) {
         for (Render render : renders) {
-            if (render.getName().equals(name)) {
+            if (render.getPlayer().equals(player)) {
                 return render;
             }
         }
@@ -96,15 +91,15 @@ public class FeetESP extends Module {
     }
 
     class Render {
-        private final String name;
+        private final PlayerEntity player;
         private Vec3d vec;
-        public Render(String name, Vec3d vec) {
-            this.name = name;
+        public Render(PlayerEntity player, Vec3d vec) {
+            this.player = player;
             this.vec = vec;
         }
 
-        public String getName() {
-            return name;
+        public PlayerEntity getPlayer() {
+            return player;
         }
 
         public void update(Render3DEvent event, Color color, Vec3d newVec) {
