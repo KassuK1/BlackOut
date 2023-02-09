@@ -297,7 +297,7 @@ public class AutoMine extends Module {
                 if (packet.getAction() == PlayerActionC2SPacket.Action.START_DESTROY_BLOCK) {
                     switch (mode.get()) {
                         case SpeedMine -> {
-                            if (getBlock(packet.getPos()) == Blocks.BEDROCK && targetPos != null) {
+                            if (getBlock(packet.getPos()) == Blocks.BEDROCK) {
                                 event.cancel();
                             } else if (targetPos != null && packet.getPos().equals(targetPos)) {
                                 reset();
@@ -317,7 +317,7 @@ public class AutoMine extends Module {
                             }
                         }
                         case Smart -> {
-                            if (getBlock(packet.getPos()) == Blocks.BEDROCK && targetPos != null) {
+                            if (getBlock(packet.getPos()) == Blocks.BEDROCK) {
                                 event.cancel();
                             } else if (targetPos != null && packet.getPos().equals(targetPos)) {
                                 speedmining = false;

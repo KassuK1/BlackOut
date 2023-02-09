@@ -1198,6 +1198,12 @@ public class AutoCrystalRewrite extends Module {
                     if (!inside(en, box)) {
                         for (int i = 0; i < extrapolation.get(); i++) {
 
+                            // half block step check
+                            if (inside(en, box.offset(x, y, z)) && !inside(en, box.offset(x, y + 0.5, z))) {
+                                box = box.offset(x, y + 0.5, z);
+                                continue;
+                            }
+
                             //x
                             if (!inside(en, box.offset(x, 0, 0))) {
                                 box = box.offset(x, 0, 0);
@@ -1208,13 +1214,13 @@ public class AutoCrystalRewrite extends Module {
                                 box = box.offset(0, 0, z);
                             }
 
-                            if (!inside(en, box.offset(0, -0.05, 0))) {
-                                y -= 0.08;
+                            if (!inside(en, box.offset(0, -0.01, 0))) {
+                                y = (y - 0.08) * 0.98;
                                 if (!inside(en, box.offset(0, y, 0))) {
                                     box = box.offset(0, y, 0);
                                 }
                             } else {
-                                y = -0.08;
+                                y = -0.0784;
                             }
                         }
                     }
