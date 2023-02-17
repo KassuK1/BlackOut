@@ -148,6 +148,7 @@ public class KassuKAura extends Module {
                         mc.options.useKey.setPressed(true);
                     }
                 }
+
                 if (timer >= delay.get()) {
                     if (noMenu.get() && mc.currentScreen != null) {
                         return;
@@ -177,6 +178,9 @@ public class KassuKAura extends Module {
                         info("Tried to hit target");
                     }
                 }
+            }
+            else {
+                if (autoBlock.get()) {mc.options.useKey.setPressed(false);}
             }
         }
     }

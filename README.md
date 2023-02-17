@@ -17,7 +17,7 @@ The development of the addon might not be super active due to us having our own 
  - Enjoy the addon
  - Join the discord if you have any issues with it
 
-#### Latest build: https://github.com/KassuK1/BlackOut/releases/download/latest/blackout-0.3.0.jar
+#### Latest build: https://github.com/KassuK1/BlackOut/releases/download/latest/blackout-0.3.2.jar
 
 <details>
 <summary><b>Features</b></summary>
