@@ -7,6 +7,7 @@ import meteordevelopment.meteorclient.mixininterface.IRaycastContext;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.FluidBlock;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
@@ -111,11 +112,11 @@ public class RaytraceSettings extends Module {
         if (!placeTrace.get()) {return true;}
         switch (placeMode.get()) {
             case SinglePoint -> {
-                return raytrace(mc.player.getEyePos(), new Vec3d(pos.getX() + 0.5, pos.getY() + placeHeight.get(), pos.getZ() + 0.5), OLEPOSSUtils.getBox(pos));
+                return raytrace(mc.player.getEyePos(), new Vec3d(pos.getX() + 0.5, pos.getY() + placeHeight.get(), pos.getZ() + 0.5));
             }
             case DoublePoint -> {
-                return raytrace(mc.player.getEyePos(), new Vec3d(pos.getX() + 0.5, pos.getY() + placeHeight1.get(), pos.getZ() + 0.5), OLEPOSSUtils.getBox(pos)) ||
-                    raytrace(mc.player.getEyePos(), new Vec3d(pos.getX() + 0.5, pos.getY() + placeHeight2.get(), pos.getZ() + 0.5), OLEPOSSUtils.getBox(pos));
+                return raytrace(mc.player.getEyePos(), new Vec3d(pos.getX() + 0.5, pos.getY() + placeHeight1.get(), pos.getZ() + 0.5)) ||
+                    raytrace(mc.player.getEyePos(), new Vec3d(pos.getX() + 0.5, pos.getY() + placeHeight2.get(), pos.getZ() + 0.5));
             }
         }
         return false;
@@ -125,30 +126,28 @@ public class RaytraceSettings extends Module {
         if (!attackTrace.get()) {return true;}
         switch (attackMode.get()) {
             case SinglePoint -> {
-                ((IRaycastContext) BODamageUtils.raycastContext).set(new Vec3d((box.minX + box.maxX) / 2f, box.minY + attackHeight.get(), (box.minZ + box.maxZ) / 2f), mc.player.getEyePos(), RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player);
-                return BODamageUtils.raycast(BODamageUtils.raycastContext).getType() == HitResult.Type.MISS;
+                ((IRaycastContext) BODamageUtils.raycastContext).set(new Vec3d((box.minX + box.maxX) / 2f, box.minY + attackHeight1.get(), (box.minZ + box.maxZ) / 2f), mc.player.getEyePos(), RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player);
+
+                return BODamageUtils.raycast(BODamageUtils.raycastContext).getType() != HitResult.Type.BLOCK;
             }
             case DoublePoint -> {
                 ((IRaycastContext) BODamageUtils.raycastContext).set(new Vec3d((box.minX + box.maxX) / 2f, box.minY + attackHeight1.get(), (box.minZ + box.maxZ) / 2f), mc.player.getEyePos(), RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player);
-                boolean hit1 = BODamageUtils.raycast(BODamageUtils.raycastContext).getType() == HitResult.Type.MISS;
+                boolean hit1 = BODamageUtils.raycast(BODamageUtils.raycastContext).getType() != HitResult.Type.BLOCK;
                 ((IRaycastContext) BODamageUtils.raycastContext).set(new Vec3d((box.minX + box.maxX) / 2f, box.minY + attackHeight2.get(), (box.minZ + box.maxZ) / 2f), mc.player.getEyePos(), RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player);
-                return BODamageUtils.raycast(BODamageUtils.raycastContext).getType() == HitResult.Type.MISS || hit1;
+                return BODamageUtils.raycast(BODamageUtils.raycastContext).getType() != HitResult.Type.BLOCK || hit1;
             }
         }
         return false;
     }
 
-    boolean raytrace(Vec3d start, Vec3d end, Box target) {
+    boolean raytrace(Vec3d start, Vec3d end) {
         for (float i = 0; i <= 1; i += 0.01) {
             vec = new Vec3d(start.x + (end.x - start.x) * i, start.y + (end.y - start.y) * i, start.z + (end.z - start.z) * i);
-            if (target.contains(vec)) {
-                return true;
-            }
-            if (mc.world.getBlockState(new BlockPos(vec)).getBlock() != Blocks.AIR) {
+            if (mc.world.getBlockState(new BlockPos(vec)).getBlock() != Blocks.AIR && !(mc.world.getBlockState(new BlockPos(vec)).getBlock() instanceof FluidBlock)) {
                 return false;
             }
         }
-        return false;
+        return true;
     }
 
 }

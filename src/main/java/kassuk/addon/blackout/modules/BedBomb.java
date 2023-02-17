@@ -5,6 +5,7 @@ import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
+import kassuk.addon.blackout.utils.RotationUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
@@ -30,10 +31,7 @@ import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -182,11 +180,12 @@ public class BedBomb extends Module {
     BlockPos bedPos;
     Direction bedDir;
     Vec3d renderPos;
-    float renderDir;
+    double renderDir;
     BlockPos lastPos = null;
     double timer = 0;
     boolean explode = false;
     List<NotHolding> holdings = new ArrayList<>();
+    List<PlayerEntity> targets = new ArrayList<>();
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onTick(TickEvent.Pre event) {if (calcMode.get().equals(CalcMode.Tick)) {update();}}
@@ -207,19 +206,20 @@ public class BedBomb extends Module {
             });
         }
         if (calcMode.get().equals(CalcMode.Render) || calcMode.get().equals(CalcMode.OnPlace) && timer >= delay.get()) {update();}
-        if (bedPos != null) {
+        if (bedPos != null && bedDir != null) {
             renderPos = smoothMove(renderPos, new Vec3d(bedPos.offset(bedDir).getX(), bedPos.offset(bedDir).getY(), bedPos.offset(bedDir).getZ()), (float) (event.frameTime * animationSpeed.get() * 2));
-            renderDir = smoothTurn(renderDir + 180, bedDir.getOpposite().asRotation() + 180, (float) (event.frameTime * rotationSpeed.get() * 2)) - 180;
+            renderDir = RotationUtils.nextYaw(renderDir, bedDir.getOpposite().asRotation(), event.frameTime * rotationSpeed.get() * 20);
+
         }
         if (bedPos != null) {
             double yaw = renderDir + 90;
             double cos = Math.cos(Math.toRadians(yaw + 90));
             double sin = Math.sin(Math.toRadians(yaw + 90));
             Vec3d vec = new Vec3d(renderPos.getX() + 0.5 - cos / 2 - sin / 2, renderPos.getY(), renderPos.getZ() + 0.5 + cos / 2 - sin / 2);
-            Vec2 corner1 = new Vec2(vec.x, vec.z);
-            Vec2 corner2 = new Vec2(vec.x + Math.cos(Math.toRadians(yaw)) * 2, vec.z + Math.sin(Math.toRadians(yaw)) * 2);
-            Vec2 corner3 = new Vec2(vec.x + cos, vec.z + sin);
-            Vec2 corner4 = new Vec2(vec.x + Math.cos(Math.toRadians(yaw + 26.50511770779)) * Math.sqrt(5), vec.z + Math.sin(Math.toRadians(yaw + 26.50511770779)) * Math.sqrt(5));
+            Vec2f corner1 = new Vec2f((float) vec.x, (float) vec.z);
+            Vec2f corner2 = new Vec2f((float) (vec.x + Math.cos(Math.toRadians(yaw)) * 2), (float) (vec.z + Math.sin(Math.toRadians(yaw)) * 2));
+            Vec2f corner3 = new Vec2f((float) (vec.x + cos), (float) (vec.z + sin));
+            Vec2f corner4 = new Vec2f((float) (vec.x + Math.cos(Math.toRadians(yaw + 26.50511770779)) * Math.sqrt(5)), (float) (vec.z + Math.sin(Math.toRadians(yaw + 26.50511770779)) * Math.sqrt(5)));
 
             event.renderer.line(corner1.x, vec.getY(), corner1.y, corner2.x, vec.getY(), corner2.y, new Color(255, 0, 0, 255));
             event.renderer.line(corner1.x, vec.getY(), corner1.y, corner3.x, vec.getY(), corner3.y, new Color(255, 255, 0, 255));
@@ -263,6 +263,12 @@ public class BedBomb extends Module {
 
     void update() {
         if (mc.player == null || mc.world == null) {return;}
+        targets.clear();
+        for (PlayerEntity pl : mc.world.getPlayers()) {
+            if (pl.distanceTo(mc.player) <= 15) {
+                targets.add(pl);
+            }
+        }
         int slot =  bedSlot();
         Hand hand = getHand();
         bedPos = findBestPos();
@@ -299,13 +305,8 @@ public class BedBomb extends Module {
 
         SettingUtils.swing(SwingState.Pre, SwingType.Placing);
 
-        if (air(pos.down())) {
-            mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand,
-                new BlockHitResult(OLEPOSSUtils.getMiddle(pos), Direction.UP, pos, false), 0));
-        } else {
-            mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand,
-                new BlockHitResult(OLEPOSSUtils.getMiddle(pos.down()), Direction.UP, pos.down(), false), 0));
-        }
+        mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand,
+            new BlockHitResult(OLEPOSSUtils.getMiddle(pos.down()), Direction.UP, pos.down(), false), 0));
         SettingUtils.swing(SwingState.Post, SwingType.Placing);
     }
 
@@ -321,46 +322,33 @@ public class BedBomb extends Module {
         BlockPos position = null;
         if (mc.player != null && mc.world != null) {
             double highestDMG = 0;
-            double highestDist = 0;
             Direction direction = null;
-            int calcRange = (int) Math.ceil(range.get());
+            int calcRange = (int) Math.ceil(SettingUtils.getPlaceRange());
             for (int y = calcRange; y >= -calcRange; y--) {
                 for (int x = -calcRange; x <= calcRange; x++) {
                     for (int z = -calcRange; z <= calcRange; z++) {
                         BlockPos pos = new BlockPos(x + mc.player.getBlockPos().getX(),
                             y + mc.player.getBlockPos().getY(), z + mc.player.getBlockPos().getZ());
-                        if (canBePlaced(pos)) {
-                            for (Direction dir : OLEPOSSUtils.horizontals) {
-                                if (air(pos.offset(dir)) || bed(pos.offset(dir))) {
-                                    int changed = 0;
-                                    BlockState state1 = mc.world.getBlockState(pos);
-                                    BlockState state2 = mc.world.getBlockState(pos.offset(dir));
-                                    if (bed(pos)) {
-                                        mc.world.setBlockState(pos, mc.world.getBlockState(new BlockPos(0, 1000, 0)));
-                                        changed += 1;
-                                    }
-                                    if (bed(pos.offset(dir))) {
-                                        mc.world.setBlockState(pos.offset(dir), mc.world.getBlockState(new BlockPos(0, 1000, 0)));
-                                        changed += 2;
-                                    }
-                                    double[] dmg = highestDmg(pos.offset(dir));
-                                    double self = getSelfDamage(new Vec3d(pos.offset(dir).getX() + 0.5, pos.offset(dir).getY() + 0.5, pos.offset(dir).getZ() + 0.5));
-                                    double dist = OLEPOSSUtils.distance(new Vec3d(x + mc.player.getBlockPos().getX() + 0.5,
-                                        y + mc.player.getBlockPos().getY(), z + mc.player.getBlockPos().getZ() + 0.5), mc.player.getEyePos());
-                                    if (changed == 1 || changed == 3) {
-                                        mc.world.setBlockState(pos, state1);
-                                    }
-                                    if (changed == 2 || changed == 3) {
-                                        mc.world.setBlockState(pos.offset(dir), state2);
-                                    }
-                                    if (placeDamageCheck(dmg[0], self, dmg[1], highestDMG, dist, highestDist)) {
-                                        direction = dir;
-                                        highestDMG = dmg[0];
-                                        highestDist = dist;
-                                        position = pos;
-                                    }
-                                }
+                        if (!canBePlaced(pos)) { continue;}
+
+                        double hd = Double.MAX_VALUE;
+
+                        Direction d = null;
+                        for (Direction dir : OLEPOSSUtils.horizontals) {
+                            if (!air(pos.offset(dir)) && !bed(pos.offset(dir))) {continue;}
+                            double dist = OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(pos.offset(dir)), mc.player.getEyePos());
+
+                            if (dist <= hd && !EntityUtils.intersectsWithEntity(new Box(pos.offset(dir).getX(), pos.offset(dir).getY(), pos.offset(dir).getZ(), pos.offset(dir).getX() + 1, pos.offset(dir).getY() + 0.5, pos.offset(dir).getZ() + 1),
+                                entity -> !entity.isSpectator() && !(entity instanceof ItemEntity))) {
+                                d = dir;
+                                hd = dist;
                             }
+                        }
+                        double dmg = highestDmg(pos);
+                        if (dmg >= highestDMG && placeDamageCheck(dmg, getSelfDamage(OLEPOSSUtils.getMiddle(pos)), mc.player.getHealth() + mc.player.getAbsorptionAmount())) {
+                            direction = d;
+                            highestDMG = dmg;
+                            position = pos;
                         }
                     }
                 }
@@ -372,51 +360,58 @@ public class BedBomb extends Module {
     double getSelfDamage(Vec3d vec) {
         return DamageUtils.bedDamage(mc.player, vec);
     }
-    double[] highestDmg(BlockPos pos) {
+    double highestDmg(BlockPos pos) {
+        BlockState state = null;
+        List<StateDir> states = new ArrayList<>();
+        if (bed(pos)) {
+            state = mc.world.getBlockState(pos);
+            mc.world.setBlockState(pos, mc.world.getBlockState(new BlockPos(0, 1000, 0)));
+        }
+
+        for (Direction dir : OLEPOSSUtils.horizontals) {
+            if (bed(pos.offset(dir))) {
+                states.add(new StateDir(dir, mc.world.getBlockState(pos.offset(dir))));
+                mc.world.setBlockState(pos.offset(dir), Blocks.AIR.getDefaultState());
+            }
+        }
+
         double highest = 0;
         double highestHP = 0;
         if (mc.player != null && mc.world != null) {
-            for (PlayerEntity enemy : mc.world.getPlayers()) {
-                NotHolding holding = getHolding(enemy.getName().getString());
-                if (enemy != mc.player && (holding != null && holding.timer > totemTime.get() || !notHoldingTotem.get()) &&
-                    !Friends.get().isFriend(enemy) && enemy.getHealth() > 0 && !enemy.isSpectator()) {
-                    double dmg = DamageUtils.bedDamage(enemy, new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5));
-                    if (dmg > highest) {
-                        highest = dmg;
-                        highestHP = enemy.getHealth() + enemy.getAbsorptionAmount();
-                    }
+            for (PlayerEntity target : targets) {
+                double dmg = DamageUtils.bedDamage(target, new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5));
+                if (dmg > highest) {
+                    highest = dmg;
+                    highestHP = target.getHealth() + target.getAbsorptionAmount();
                 }
             }
         }
-        return new double[] {highest, highestHP};
+
+        if (state != null) {
+            mc.world.setBlockState(pos, state);
+        }
+        for (StateDir s : states) {
+            mc.world.setBlockState(pos.offset(s.dir), s.state);
+        }
+        return highest;
     }
     boolean canBePlaced(BlockPos pos) {
         if (mc.player != null && mc.world != null) {
-            if (air(pos.down())) {
+            if (air(pos.down()) || (!air(pos) && !bed(pos))) {
                 return false;
             }
 
-            if (!mc.world.getBlockState(pos).getBlock().equals(Blocks.AIR) &&
-                !bed(pos)) {
+            if (!SettingUtils.inPlaceRange(pos)) {
                 return false;
             }
-            if (!placeRangeCheck(pos)) {
-                return false;
-            }
-            Box box = new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 2, pos.getZ() + 1);
-            return !EntityUtils.intersectsWithEntity(box, entity -> !entity.isSpectator() && !(entity instanceof ItemEntity));
+            return !EntityUtils.intersectsWithEntity(new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1),
+                entity -> !entity.isSpectator() && !(entity instanceof ItemEntity));
         }
         return false;
     }
-    boolean placeRangeCheck(BlockPos pos) {
-        return (OLEPOSSUtils.distance(mc.player.getEyePos(),
-                new Vec3d(pos.getX() + 0.5, pos.getY() + 1.8, pos.getZ() + 0.5)) <= range.get());
-    }
 
 
-    boolean placeDamageCheck(double dmg, double self, double health, double highest, double distance, double highestDist) {
-        if (dmg < highest) {return false;}
-        if (dmg == highest && distance > highestDist) {return false;}
+    boolean placeDamageCheck(double dmg, double self, double health) {
 
         //  Force pop check
         if (popStuff.get() && mc.player != null && forcePop.get() * dmg >= health &&
@@ -485,4 +480,5 @@ public class BedBomb extends Module {
             timer = isHolding ? 0 : (float) (timer + delta);
         }
     }
+    record StateDir(Direction dir, BlockState state){}
 }

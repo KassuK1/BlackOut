@@ -4,6 +4,7 @@ import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.globalsettings.*;
+import kassuk.addon.blackout.managers.RotationManager;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.Utils;
 import net.minecraft.block.BlockState;
@@ -13,6 +14,7 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.function.Predicate;
+import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class SettingUtils extends Utils {
 
@@ -76,11 +78,11 @@ public class SettingUtils extends Utils {
     public static boolean shouldRotate(RotationType type) {
         return rotation.shouldRotate(type);
     }
-    public static boolean rotationCheck(Vec3d pPos, double yaw, double pitch, Box box) {
-        return rotation.rotationCheck(pPos, yaw, pitch, box);
+    public static boolean rotationCheckHistory(Box box, RotationType type) {
+        return rotation.rotationCheckHistory(box, rotation.getExisted(type) + 1);
     }
-    public static boolean rotationCheck(double yaw, double pitch, Box box) {
-        return rotation.rotationCheck(yaw, pitch, box);
+    public static boolean rotationCheck(Vec3d pPos, double yaw, double pitch, Box box, RotationType type) {
+        return rotation.rotationCheck(pPos, yaw, pitch, box, rotation.getExisted(type));
     }
 
     //  Swing
@@ -89,11 +91,11 @@ public class SettingUtils extends Utils {
     }
 
     //  Facing
-    public static Direction[] getPlaceDirection(BlockPos pos) {
-        return facing.getDirection(pos);
+    public static PlaceData getPlaceData(BlockPos pos) {
+        return facing.getPlaceData(pos);
     }
-    public static Direction[] getPlaceDirection(BlockPos pos, Predicate<BlockState> predicate) {
-        return facing.getDirection(pos, predicate);
+    public static PlaceData getPlaceData(BlockPos pos, Predicate<BlockState> predicate) {
+        return facing.getPlaceData(pos, predicate);
     }
     public static Direction getPlaceOnDirection(BlockPos pos) {
         return facing.getPlaceOnDirection(pos);
@@ -105,9 +107,9 @@ public class SettingUtils extends Utils {
     }
     public static boolean shouldAttackTrace() {return raytrace.attackTrace.get();}
     public static boolean placeTrace(BlockPos pos) {
-        return shouldPlaceTrace() && raytrace.placeTrace(pos);
+        return !shouldPlaceTrace() && raytrace.placeTrace(pos);
     }
     public static boolean attackTrace(Box bb) {
-        return shouldPlaceTrace() && raytrace.attackTrace(bb);
+        return !shouldAttackTrace() || raytrace.attackTrace(bb);
     }
 }

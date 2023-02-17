@@ -2,6 +2,7 @@ package kassuk.addon.blackout.globalsettings;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
+import kassuk.addon.blackout.utils.PlaceData;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.Setting;
@@ -47,39 +48,21 @@ public class FacingSettings extends Module {
         .build()
     );
 
-    public Direction[] getDirection(BlockPos pos) {
-        if (pos == null) {return new Direction[]{null, null};}
-        Direction best = null;
-        if (mc.world != null && mc.player != null) {
-            if (airPlace.get()) {
-                return new Direction[]{null, Direction.UP};
-            } else {
-                double cDist = -1;
-                for (Direction dir : Direction.values()) {
-                    if (!getBlock(pos.offset(dir)).equals(Blocks.AIR)) {
-                        double dist = SettingUtils.placeRangeTo(pos.offset(dir));
-                        if (dist >= 0 && (cDist < 0 || dist < cDist)) {
-                            best = dir;
-                            cDist = dist;
-                        }
-                    }
-                }
-            }
-        }
-        return new Direction[]{best, null};
+    public PlaceData getPlaceData(BlockPos pos) {
+        return getPlaceData(pos, null);
     }
-    public Direction[] getDirection(BlockPos pos, Predicate<BlockState> predicate) {
-        if (pos == null) {return new Direction[]{null, null};}
+    public PlaceData getPlaceData(BlockPos pos, Predicate<BlockState> predicate) {
+        if (pos == null) {return new PlaceData(null, null, false);}
         Direction best = null;
         if (mc.world != null && mc.player != null) {
             if (airPlace.get()) {
-                return new Direction[]{null, Direction.UP};
+                return new PlaceData(pos, Direction.UP, true);
             } else {
                 double cDist = -1;
                 for (Direction dir : Direction.values()) {
 
                     // Test if there is block in the side and if predicate is valid
-                    if (getBlock(pos.offset(dir)).equals(Blocks.AIR) || !predicate.test(mc.world.getBlockState(pos.offset(dir)))) {continue;}
+                    if (getBlock(pos.offset(dir)).equals(Blocks.AIR) || (predicate != null && !predicate.test(mc.world.getBlockState(pos.offset(dir))))) {continue;}
 
                     // Strict dir check (checks if face is on opposite side of the block to player)
                     if (strictDir.get() && !OLEPOSSUtils.strictDir(pos.offset(dir), dir.getOpposite())) {continue;}
@@ -93,7 +76,7 @@ public class FacingSettings extends Module {
                 }
             }
         }
-        return new Direction[]{best, null};
+        return best == null ? new PlaceData(null, null, false) : new PlaceData(pos.offset(best), best.getOpposite(), true);
     }
 
     public Direction getPlaceOnDirection(BlockPos pos) {

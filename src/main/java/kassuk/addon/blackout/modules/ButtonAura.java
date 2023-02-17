@@ -87,7 +87,7 @@ public class ButtonAura extends Module {
             timer = 0;
 
             if (SettingUtils.shouldRotate(RotationType.Interact)) {
-                Managers.ROTATION.start(block, 10);
+                Managers.ROTATION.start(block, 10, RotationType.Interact);
             }
 
             SettingUtils.swing(SwingState.Pre, SwingType.Interact);

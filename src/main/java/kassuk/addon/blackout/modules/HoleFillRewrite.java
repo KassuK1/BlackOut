@@ -8,6 +8,7 @@ import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.timers.BlockTimerList;
 import kassuk.addon.blackout.utils.BOInvUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
+import kassuk.addon.blackout.utils.PlaceData;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -32,6 +33,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -217,22 +219,43 @@ public class HoleFillRewrite extends Module {
                 if (!toPlace.isEmpty()) {
                     int obsidian = hand == Hand.MAIN_HAND ? Managers.HOLDING.getStack().getCount() :
                         hand == Hand.OFF_HAND ? mc.player.getOffHandStack().getCount() : -1;
+
                     if (hand == null) {
                         switch (switchMode.get()) {
                             case Silent -> {
                                 obsidian = result.count();
-                                InvUtils.swap(result.slot(), true);
                             }
                             case SilentBypass -> {
-                                obsidian = BOInvUtils.invSwitch(invResult.slot()) ? invResult.count() : -1;
+                                obsidian = invResult.slot() >= 0 ? invResult.count() : -1;
                             }
                         }
                     }
+
                     if (obsidian >= 0) {
+                        if (hand == null) {
+                            switch (switchMode.get()) {
+                                case Silent -> {
+                                    obsidian = result.count();
+                                    InvUtils.swap(result.slot(), true);
+                                }
+                                case SilentBypass -> {
+                                    obsidian = BOInvUtils.invSwitch(invResult.slot()) ? invResult.count() : -1;
+                                }
+                            }
+                        }
+
                         placeTimer = 0;
 
                         for (int i = 0; i < Math.min(obsidian, toPlace.size()); i++) {
-                            place(toPlace.get(i));
+                            PlaceData placeData = SettingUtils.getPlaceData(toPlace.get(i));
+                            if (placeData.valid()) {
+                                boolean rotated = !SettingUtils.shouldRotate(RotationType.Placing) || Managers.ROTATION.start(placeData.pos().offset(placeData.dir()), 1, RotationType.Placing);
+
+                                if (!rotated) {
+                                    break;
+                                }
+                                place(placeData, toPlace.get(i));
+                            }
                         }
 
                         if (hand == null) {
@@ -274,9 +297,9 @@ public class HoleFillRewrite extends Module {
 
                     if (OLEPOSSUtils.isHole(pos, mc.world, holeDepth.get()) && !EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(pos), entity -> !entity.isSpectator() && !(entity instanceof ItemEntity))) {
                         double closest = closestDist(pos);
-                        Direction[] dir = SettingUtils.getPlaceDirection(pos);
-                        if ((dir[0] != null || dir[1] != null) && closest >= 0 && closest <= holeRange.get() && (!efficient.get() || OLEPOSSUtils.distance(mc.player.getPos(), OLEPOSSUtils.getMiddle(pos)) > closest)) {
-                            if ((dir[1] != null && SettingUtils.inPlaceRange(pos)) || (dir[0] != null && SettingUtils.inPlaceRange(pos.offset(dir[0])))) {
+                        PlaceData d = SettingUtils.getPlaceData(pos);
+                        if (d.valid() && closest >= 0 && closest <= holeRange.get() && (!efficient.get() || OLEPOSSUtils.distance(mc.player.getPos(), OLEPOSSUtils.getMiddle(pos)) > closest)) {
+                            if (SettingUtils.inPlaceRange(d.pos())) {
                                 holes.add(pos);
                             }
                         }
@@ -310,54 +333,30 @@ public class HoleFillRewrite extends Module {
     }
 
     boolean canPlace(BlockPos pos) {
-        Direction[] dir = SettingUtils.getPlaceDirection(pos);
-        if (dir[0] == null && dir[1] == null) {return false;}
-        return true;
+        return SettingUtils.getPlaceData(pos).valid();
     }
 
-    void place(BlockPos pos) {
-        Direction[] dir = SettingUtils.getPlaceDirection(pos);
-        if (dir[0] == null && dir[1] == null) {return;}
+    void place(PlaceData d, BlockPos ogPos) {
+        timers.add(ogPos, delay.get());
 
-        timers.add(pos, delay.get());
-        if (dir[1] != null) {
-            if (SettingUtils.shouldRotate(RotationType.Placing)) {
-                Managers.ROTATION.start(pos, 2);
-            }
+        SettingUtils.swing(SwingState.Pre, SwingType.Placing);
 
-            SettingUtils.swing(SwingState.Pre, SwingType.Placing);
+        mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
+            new BlockHitResult(new Vec3d(d.pos().getX() + 0.5, d.pos().getY() + 0.5, d.pos().getZ() + 0.5),
+                d.dir(), d.pos(), false), 0));
 
-            mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
-                new BlockHitResult(OLEPOSSUtils.getMiddle(pos), dir[1], pos, false), 0));
+        SettingUtils.swing(SwingState.Post, SwingType.Placing);
 
-            SettingUtils.swing(SwingState.Post, SwingType.Placing);
-
-            if (SettingUtils.shouldRotate(RotationType.Placing)) {
-                Managers.ROTATION.start(pos, 2);
-            }
-        } else {
-            if (SettingUtils.shouldRotate(RotationType.Placing)) {
-                Managers.ROTATION.start(pos.offset(dir[0]), 2);
-            }
-
-            SettingUtils.swing(SwingState.Pre, SwingType.Placing);
-
-            mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
-                new BlockHitResult(OLEPOSSUtils.getMiddle(pos.offset(dir[0])), dir[0].getOpposite(), pos.offset(dir[0]), false), 0));
-
-            SettingUtils.swing(SwingState.Post, SwingType.Placing);
-
-            if (SettingUtils.shouldRotate(RotationType.Placing)) {
-                Managers.ROTATION.start(pos.offset(dir[0]), 2);
-            }
+        if (SettingUtils.shouldRotate(RotationType.Placing)) {
+            Managers.ROTATION.end(d.pos());
         }
 
 
 
-        if (!toRender.containsKey(pos)) {
-            toRender.put(pos, new Double[]{fadeTime.get() + renderTime.get(), fadeTime.get()});
+        if (!toRender.containsKey(ogPos)) {
+            toRender.put(ogPos, new Double[]{fadeTime.get() + renderTime.get(), fadeTime.get()});
         } else {
-            toRender.replace(pos, new Double[]{fadeTime.get() + renderTime.get(), fadeTime.get()});
+            toRender.replace(ogPos, new Double[]{fadeTime.get() + renderTime.get(), fadeTime.get()});
         }
     }
 }

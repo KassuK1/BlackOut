@@ -150,7 +150,7 @@ public class AutoCraftingTable extends Module {
         }
         if (slot >= 0) {
             if (SettingUtils.shouldRotate(RotationType.Placing)) {
-                Managers.ROTATION.start(pos, 4);
+                Managers.ROTATION.start(pos, 4, RotationType.Placing);
             }
 
             SettingUtils.swing(SwingState.Pre, SwingType.Placing);

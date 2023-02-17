@@ -9,7 +9,6 @@ import meteordevelopment.meteorclient.systems.hud.HudElementInfo;
 import meteordevelopment.meteorclient.systems.hud.HudRenderer;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.Vec3d;
 
@@ -95,7 +94,6 @@ public class TargetHud extends HudElement {
     String renderName = "HeavyMan";
     Random r = new Random();
     Map<Vec3d, Integer> damages = new HashMap<>();
-    MatrixStack matrixStack = new MatrixStack();
 
     @Override
     public void render(HudRenderer renderer) {

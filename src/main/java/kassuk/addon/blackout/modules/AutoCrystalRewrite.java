@@ -94,6 +94,18 @@ public class AutoCrystalRewrite extends Module {
         .defaultValue(false)
         .build()
     );
+    private final Setting<Boolean> smartRot = sgGeneral.add(new BoolSetting.Builder()
+        .name("Smart Rotations")
+        .description("Looks at the top of placement block to make the ca faster.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> ignoreTerrain = sgGeneral.add(new BoolSetting.Builder()
+        .name("Ignore Terrain")
+        .description("Spams trough terrain to kill your enemy.")
+        .defaultValue(true)
+        .build()
+    );
 
     //  Place Page
     private final Setting<Boolean> oldVerPlacements = sgPlace.add(new BoolSetting.Builder()
@@ -122,12 +134,26 @@ public class AutoCrystalRewrite extends Module {
         .sliderRange(0, 20)
         .build()
     );
+    private final Setting<DelayMode> placeDelayMode = sgPlace.add(new EnumSetting.Builder<DelayMode>()
+        .name("Place Delay Mode")
+        .description(".")
+        .defaultValue(DelayMode.Seconds)
+        .build()
+    );
     private final Setting<Double> placeDelay = sgPlace.add(new DoubleSetting.Builder()
         .name("Place Delay")
         .description("How many seconds after attacking a crystal should we place.")
         .defaultValue(0)
         .min(0)
         .sliderRange(0, 1)
+            .visible(() -> placeDelayMode.get() == DelayMode.Seconds)
+        .build()
+    );
+    private final Setting<SequentialMode> sequentialMode = sgPlace.add(new EnumSetting.Builder<SequentialMode>()
+        .name("Sequential Mode")
+        .description("How strict should sequential delay be.")
+        .defaultValue(SequentialMode.Weak)
+        .visible(() -> placeDelayMode.get() == DelayMode.Sequential)
         .build()
     );
     private final Setting<Double> slowDamage = sgPlace.add(new DoubleSetting.Builder()
@@ -148,12 +174,28 @@ public class AutoCrystalRewrite extends Module {
     );
 
     //  Explode Page
+    private final Setting<ExistedMode> existedMode = sgPlace.add(new EnumSetting.Builder<ExistedMode>()
+        .name("Existed Mode")
+        .description(".")
+        .defaultValue(ExistedMode.Seconds)
+        .build()
+    );
     private final Setting<Double> existed = sgExplode.add(new DoubleSetting.Builder()
         .name("Existed")
         .description("How many seconds should the crystal exist before attacking.")
         .defaultValue(0.125)
-        .range(0, 1)
+        .min(0)
         .sliderRange(0, 1)
+        .visible(() -> existedMode.get() == ExistedMode.Seconds)
+        .build()
+    );
+    private final Setting<Integer> existedTicks = sgExplode.add(new IntSetting.Builder()
+        .name("Existed Ticks")
+        .description("How many ticks should the crystal exist before attacking.")
+        .defaultValue(2)
+        .min(0)
+        .sliderRange(0, 20)
+        .visible(() -> existedMode.get() == ExistedMode.Ticks)
         .build()
     );
     private final Setting<Double> expSpeed = sgExplode.add(new DoubleSetting.Builder()
@@ -262,6 +304,12 @@ public class AutoCrystalRewrite extends Module {
         .defaultValue(0.5)
         .range(0, 5)
         .sliderRange(0, 5)
+        .build()
+    );
+    private final Setting<ExplodeMode> expMode = sgDamage.add(new EnumSetting.Builder<ExplodeMode>()
+        .name("Explode Damage Mode")
+        .description("Which things should be checked for exploding.")
+        .defaultValue(ExplodeMode.FullCheck)
         .build()
     );
     private final Setting<Double> minExplode = sgDamage.add(new DoubleSetting.Builder()
@@ -540,6 +588,7 @@ public class AutoCrystalRewrite extends Module {
         .build()
     );
 
+    long ticksEnabled = 0;
     double highestEnemy = 0;
     double enemyHP = 0;
     double highestFriend = 0;
@@ -547,13 +596,15 @@ public class AutoCrystalRewrite extends Module {
     double self = 0;
     double placeTimer = 0;
     double delayTimer = 0;
+    int delayTicks = 0;
 
     BlockPos placePos = null;
     Direction placeDir = null;
     IntTimerList attacked = new IntTimerList(false);
     Map<BlockPos, Long> existedList = new HashMap<>();
+    Map<BlockPos, Long> existedTicksList = new HashMap<>();
+    Map<BlockPos, Long> own = new HashMap<>();
     Map<String, Box> extPos = new HashMap<>();
-    List<PlayerEntity> enemies = new ArrayList<>();
     Map<String, List<Vec3d>> motions = new HashMap<>();
     List<Box> blocked = new ArrayList<>();
     Map<Vec3d, double[][]> dmgCache = new HashMap<>();
@@ -593,15 +644,47 @@ public class AutoCrystalRewrite extends Module {
         Silent,
         SilentBypass
     }
+    public enum DelayMode {
+        Seconds,
+        Sequential
+    }
+    public enum SequentialMode {
+        Weak,
+        Strong,
+        Strict
+    }
+    public enum ExplodeMode {
+        FullCheck,
+        SelfDmgCheck,
+        SelfDmgOwn,
+        AlwaysOwn,
+        Always
+    }
+    public enum ExistedMode {
+        Seconds,
+        Ticks
+    }
 
     @Override
     public void onActivate() {
         super.onActivate();
+        ticksEnabled = 0;
+
         earthMap.clear();
+        existedTicksList.clear();
+        existedList.clear();
+        blocked.clear();
+        motions.clear();
+        extPos.clear();
+        own.clear();
+        dmgCache.clear();
     }
+
 
     @EventHandler(priority = EventPriority.HIGHEST + 1)
     private void onTickPre(TickEvent.Pre event) {
+        delayTicks++;
+        ticksEnabled++;
         if (mc.player != null && mc.world != null) {
             for (PlayerEntity pl : mc.world.getPlayers()) {
                 String key = pl.getName().getString();
@@ -635,6 +718,31 @@ public class AutoCrystalRewrite extends Module {
                     debugRangeHeight(5) + "  " + dist(debugRangePos(5))));
             }
         }
+
+        List<BlockPos> toRemove = new ArrayList<>();
+        existedList.forEach((key, val) -> {
+            if (System.currentTimeMillis() - val >= 5000 + existed.get() * 1000) {
+                toRemove.add(key);
+            }
+        });
+        toRemove.forEach(existedList::remove);
+
+        toRemove.clear();
+        existedTicksList.forEach((key, val) -> {
+            if (ticksEnabled - val >= 100 + existedTicks.get()) {
+                toRemove.add(key);
+            }
+        });
+        toRemove.forEach(existedTicksList::remove);
+
+        toRemove.clear();
+
+        own.forEach((key, val) -> {
+            if (System.currentTimeMillis() - val >= 5000) {
+                toRemove.add(key);
+            }
+        });
+        toRemove.forEach(own::remove);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -657,7 +765,7 @@ public class AutoCrystalRewrite extends Module {
         if (render.get()) {
             switch (renderMode.get()) {
                 case BlackOut -> {
-                    if (placePos != null && !pausedCheck()) {
+                    if (placePos != null && !pausedCheck() && holdingCheck()) {
                         renderProgress = Math.min(1, renderProgress + d);
                         renderPos = smoothMove(renderPos, new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ()), event.frameTime * animationSpeed.get());
                     } else {
@@ -671,7 +779,7 @@ public class AutoCrystalRewrite extends Module {
                     }
                 }
                 case Future -> {
-                    if (placePos != null && !pausedCheck()) {
+                    if (placePos != null && !pausedCheck() && holdingCheck()) {
                         renderPos = new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ());
                         renderProgress = fadeTime.get() + renderTime.get();
                     } else {
@@ -769,8 +877,11 @@ public class AutoCrystalRewrite extends Module {
         }
         if (expEntity != null) {
             if (!isAttacked(expEntity.getId())) {
-                if (!existedList.containsKey(expEntity.getBlockPos()) || System.currentTimeMillis() > existedList.get(expEntity.getBlockPos()) + existed.get() * 1000) {
-                    explode(expEntity.getId(), expEntity, expEntity.getPos());
+                if (existedCheck(expEntity.getBlockPos())) {
+                    boolean rotated = !SettingUtils.shouldRotate(RotationType.Attacking) || Managers.ROTATION.start(expEntity.getBoundingBox(), 5, RotationType.Attacking);
+                    if (rotated) {
+                        explode(expEntity.getId(), expEntity, expEntity.getPos());
+                    }
                 }
             }
         }
@@ -827,9 +938,12 @@ public class AutoCrystalRewrite extends Module {
                 int silentSlot = InvUtils.find(Items.END_CRYSTAL).slot();
                 int hotbar = InvUtils.findInHotbar(Items.END_CRYSTAL).slot();
                 if (handToUse != null || (switchMode.get() == SwitchMode.Silent && hotbar >= 0) ||(switchMode.get() == SwitchMode.SilentBypass && silentSlot >= 0)) {
-                    if ((placeTimer <= 0 || (instantPlace.get() && !shouldSlow() && !isBlocked(placePos))) && delayTimer >= placeDelay.get()) {
-                        placeTimer = 1;
-                        placeCrystal(placePos.down(), placeDir, handToUse, silentSlot, hotbar);
+                    if ((placeTimer <= 0 || (instantPlace.get() && !shouldSlow() && !isBlocked(placePos))) && delayCheck()) {
+                        boolean rotated = !SettingUtils.shouldRotate(RotationType.Crystal) || Managers.ROTATION.start(new Box(placePos.getX(), placePos.getY() - 0.05, placePos.getZ(), placePos.getX() + 1, placePos.getY(), placePos.getZ() + 1), 5, RotationType.Crystal);
+                        if (rotated) {
+                            placeTimer = 1;
+                            placeCrystal(placePos.down(), placeDir, handToUse, silentSlot, hotbar);
+                        }
                     }
                 }
             }
@@ -838,10 +952,25 @@ public class AutoCrystalRewrite extends Module {
         }
     }
 
+    boolean holdingCheck() {
+        switch (switchMode.get()) {
+            case Silent -> {
+                return InvUtils.findInHotbar(Items.END_CRYSTAL).slot() >= 0;
+            }
+            case SilentBypass -> {
+                return InvUtils.find(Items.END_CRYSTAL).slot() >= 0;
+            }
+            default -> {
+                return getHand(Items.END_CRYSTAL) != null;
+            }
+        }
+    }
+
     void updatePlacement() {
         if (!place.get()) {
             placePos = null;
             placeDir = null;
+            return;
         }
         placePos = getPlacePos();
     }
@@ -878,14 +1007,14 @@ public class AutoCrystalRewrite extends Module {
                 }
             }
 
-            if (SettingUtils.shouldRotate(RotationType.Crystal)) {
-                Managers.ROTATION.start(OLEPOSSUtils.getBox(pos), 1);
-            }
-
             SettingUtils.swing(SwingState.Pre, SwingType.Crystal);
 
-            if (!existedList.containsKey(pos.up())) {
-                existedList.put(pos.up(), System.currentTimeMillis());
+            addExisted(pos.up());
+
+            if (!own.containsKey(pos.up())) {
+                own.put(pos.up(), System.currentTimeMillis());
+            } else {
+                own.replace(pos.up(), System.currentTimeMillis());
             }
             mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(switched ? Hand.MAIN_HAND : handToUse,
                 new BlockHitResult(new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), dir, pos, false), 0));
@@ -906,7 +1035,6 @@ public class AutoCrystalRewrite extends Module {
                     }
                 }
             }
-
             if (idPredict.get()) {
                 int id = getHighest() + idOffset.get();
                 for (int i = 0; i < idPackets.get(); i++) {
@@ -918,6 +1046,25 @@ public class AutoCrystalRewrite extends Module {
                 confirmed++;
             }
         }
+    }
+
+    boolean delayCheck() {
+        if (placeDelayMode.get() == DelayMode.Seconds) {
+            return delayTimer >= placeDelay.get();
+        } else {
+            switch (sequentialMode.get()) {
+                case Weak -> {
+                    return delayTicks >= 1;
+                }
+                case Strong -> {
+                    return delayTicks >= 2;
+                }
+                case Strict -> {
+                    return delayTicks >= 3;
+                }
+            }
+        }
+        return false;
     }
 
     int getHighest() {
@@ -965,16 +1112,14 @@ public class AutoCrystalRewrite extends Module {
         if (mc.player != null) {
             attacked.add(en.getId(), 1 / expSpeed.get());
             delayTimer = 0;
+            delayTicks = 0;
 
             Box box = new Box(en.getX() - 1, en.getY(), en.getZ() - 1, en.getX() + 1, en.getY() + 2, en.getZ() + 1);
-            if (SettingUtils.shouldRotate(RotationType.Attacking)) {
-                Managers.ROTATION.start(box, 5);
-            }
+
             SettingUtils.swing(SwingState.Pre, SwingType.Attacking);
 
-            if (existedList.containsKey(en.getBlockPos())) {
-                existedList.remove(en.getBlockPos());
-            }
+            removeExisted(en.getBlockPos());
+
             mc.player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(en, mc.player.isSneaking()));
 
             SettingUtils.swing(SwingState.Post, SwingType.Attacking);
@@ -990,11 +1135,42 @@ public class AutoCrystalRewrite extends Module {
         }
     }
 
+    boolean existedCheck(BlockPos pos) {
+        if (existedMode.get() == ExistedMode.Seconds) {
+            return !existedList.containsKey(pos) || System.currentTimeMillis() > existedList.get(pos) + existed.get() * 1000;
+        } else {
+            return !existedTicksList.containsKey(pos) || ticksEnabled > existedTicksList.get(pos) + existedTicks.get();
+        }
+    }
+
+    void addExisted(BlockPos pos) {
+        if (existedMode.get() == ExistedMode.Seconds) {
+            if (!existedList.containsKey(pos)) {
+                existedList.put(pos, System.currentTimeMillis());
+            }
+        } else {
+            if (!existedTicksList.containsKey(pos)) {
+                existedTicksList.put(pos, ticksEnabled);
+            }
+        }
+    }
+    void removeExisted(BlockPos pos) {
+        if (existedMode.get() == ExistedMode.Seconds) {
+            if (existedList.containsKey(pos)) {
+                existedList.remove(pos);
+            }
+        } else {
+            if (existedTicksList.containsKey(pos)) {
+                existedTicksList.remove(pos);
+            }
+        }
+    }
+
     boolean canExplode(Vec3d vec) {
         if (!inExplodeRange(vec)) {return false;}
 
         double[][] result = dmgCache.containsKey(vec) ? dmgCache.get(vec) : getDmg(vec);
-        return explodeDamageCheck(result[0], result[1]);
+        return explodeDamageCheck(result[0], result[1], isOwn(vec));
     }
 
     Hand getHand(Item item) {
@@ -1079,24 +1255,59 @@ public class AutoCrystalRewrite extends Module {
         return true;
     }
 
-    boolean explodeDamageCheck(double[] dmg, double[] health) {
+    boolean explodeDamageCheck(double[] dmg, double[] health, boolean own) {
+        boolean checkOwn = expMode.get() == ExplodeMode.FullCheck || expMode.get() == ExplodeMode.SelfDmgCheck
+            || expMode.get() == ExplodeMode.SelfDmgOwn || expMode.get() == ExplodeMode.AlwaysOwn;
+        boolean checkDmg = expMode.get() == ExplodeMode.FullCheck || (expMode.get() == ExplodeMode.SelfDmgOwn && !own) ||
+            (expMode.get() == ExplodeMode.AlwaysOwn && !own);
+
         //  0 = enemy, 1 = friend, 2 = self
 
         //  Force/anti-pop check
         double playerHP = mc.player.getHealth() + mc.player.getAbsorptionAmount();
-        if (playerHP >= 0 && dmg[2] * forcePop.get() >= playerHP) {return false;}
-        if (health[1] >= 0 && dmg[1] * antiFriendPop.get() >= health[1]) {return false;}
-        if (health[0] >= 0 && dmg[0] * forcePop.get() >= health[0]) {return true;}
+        if (checkOwn) {
+            if (playerHP >= 0 && dmg[2] * forcePop.get() >= playerHP) {
+                return false;
+            }
+            if (health[1] >= 0 && dmg[1] * antiFriendPop.get() >= health[1]) {
+                return false;
+            }
 
-        //  Min Damage
-        if (dmg[0] < minExplode.get()) {return false;}
+        }
+        if (checkDmg) {
+            if (health[0] >= 0 && dmg[0] * forcePop.get() >= health[0]) {
+                return true;
+            }
 
-        //  Max Damage
-        if (dmg[1] > maxFriendExp.get()) {return false;}
-        if (dmg[1] / dmg[0] > maxFriendExpRatio.get()) {return false;}
-        if (dmg[2] > maxSelfExp.get()) {return false;}
-        if (dmg[2] / dmg[0] > maxSelfExpRatio.get()) {return false;}
+        }
+
+        if (checkDmg) {
+            if (dmg[0] < minExplode.get()) {
+                return false;
+            }
+
+            if (dmg[1] / dmg[0] > maxFriendExpRatio.get()) {
+                return false;
+            }
+            if (dmg[2] / dmg[0] > maxSelfExpRatio.get()) {
+                return false;
+            }
+        }
+
+
+        if (checkOwn) {
+            if (dmg[1] > maxFriendExp.get()) {
+                return false;
+            }
+            if (dmg[2] > maxSelfExp.get()) {
+                return false;
+            }
+        }
         return true;
+    }
+
+    boolean isOwn(Vec3d vec) {
+        return own.containsKey(new BlockPos(vec));
     }
 
     double[][] getDmg(Vec3d vec) {
@@ -1116,7 +1327,7 @@ public class AutoCrystalRewrite extends Module {
             }
 
             String key = player.getName().getString();
-            double dmg = BODamageUtils.crystalDamage(player, extPos.containsKey(key) && shouldExt(player) ? extPos.get(key) : player.getBoundingBox(),vec);
+            double dmg = BODamageUtils.crystalDamage(player, extPos.containsKey(key) && shouldExt(player) ? extPos.get(key) : player.getBoundingBox(), vec, null, ignoreTerrain.get());
             double hp = player.getHealth() + player.getAbsorptionAmount();
 
             //  friend
@@ -1132,7 +1343,7 @@ public class AutoCrystalRewrite extends Module {
                 enemyHP = hp;
             }
         }
-        self = BODamageUtils.crystalDamage(mc.player, selfExt.get() && extPos.containsKey(mc.player.getName().getString()) ? extPos.get(mc.player.getName().getString()) : mc.player.getBoundingBox(),vec);
+        self = BODamageUtils.crystalDamage(mc.player, selfExt.get() && extPos.containsKey(mc.player.getName().getString()) ? extPos.get(mc.player.getName().getString()) : mc.player.getBoundingBox(), vec, null, ignoreTerrain.get());
         double[][] result = new double[][]{new double[] {highestEnemy, highestFriend, self}, new double[]{enemyHP, friendHP}};
         dmgCache.put(vec, result);
         return result;
@@ -1184,7 +1395,6 @@ public class AutoCrystalRewrite extends Module {
 
     Map<String, Box> getExtPos() {
         Map<String, Box> map = new HashMap<>();
-        enemies = new ArrayList<>();
         if (!mc.world.getPlayers().isEmpty()) {
             for (int p = 0; p < mc.world.getPlayers().size(); p++) {
                 PlayerEntity en = mc.world.getPlayers().get(p);

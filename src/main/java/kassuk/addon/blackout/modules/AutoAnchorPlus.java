@@ -7,6 +7,7 @@ import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.utils.BODamageUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
+import kassuk.addon.blackout.utils.PlaceData;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -93,7 +94,7 @@ public class AutoAnchorPlus extends Module {
     public long nextPlace = -1;
     public BlockPos placePos;
     public BlockPos lastPos;
-    public Direction[] placeDir;
+    public PlaceData placeDir;
     boolean placed = false;
     int[] slots = null;
     List<LivingEntity> targets = new ArrayList<>();
@@ -112,8 +113,8 @@ public class AutoAnchorPlus extends Module {
     public void onRender(Render3DEvent event) {
         if (!targets.isEmpty()) {
             placePos = getPos();
-            placeDir = SettingUtils.getPlaceDirection(placePos);
-            if (placePos != null && (placeDir[0] != null || placeDir[1] != null)) {
+            placeDir = SettingUtils.getPlaceData(placePos);
+            if (placePos != null && placeDir.valid()) {
                 event.renderer.box(OLEPOSSUtils.getBox(placePos), sideColor.get(), lineColor.get(), shapeMode.get(), 0);
                 if (placePos.equals(lastPos) && hold.get() && placed) {
                     lastPos = placePos;
@@ -142,7 +143,7 @@ public class AutoAnchorPlus extends Module {
                             InvUtils.find(itemStack -> !(itemStack.getItem() instanceof BlockItem)).slot()
                         };
                         if (slots[0] >= 0 && (hold.get() || (slots[1] >= 0 && slots[2] >= 0))) {
-                            placeAnchor(placePos, placeDir, slots[0]);
+                            placeAnchor(placeDir, slots[0]);
                             if (!hold.get()) {
                                 Direction glowDir = SettingUtils.getPlaceOnDirection(placePos);
                                 placeGlowStone(placePos, glowDir, slots[1]);
@@ -173,7 +174,7 @@ public class AutoAnchorPlus extends Module {
                             explode(placePos, expDir, slots[1]);
 
                             if (hold.get()) {
-                                placeAnchor(placePos, placeDir, slots[2]);
+                                placeAnchor(placeDir, slots[2]);
                                 placed = true;
                             }
                             InvUtils.swap(prevSlot, false);
@@ -187,49 +188,24 @@ public class AutoAnchorPlus extends Module {
         }
     }
 
-    void placeAnchor(BlockPos pos, Direction[] dir, int slot) {
+    void placeAnchor(PlaceData d, int slot) {
         if (!Managers.HOLDING.isHolding(Items.RESPAWN_ANCHOR)) {
             InvUtils.swap(slot, false);
         }
 
-        if (dir[1] != null) {
-            if (SettingUtils.shouldRotate(RotationType.Placing)) {
-                Managers.ROTATION.start(pos, 7);
-            }
+        SettingUtils.swing(SwingState.Pre, SwingType.Placing);
 
-            SettingUtils.swing(SwingState.Pre, SwingType.Placing);
+        mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
+            new BlockHitResult(new Vec3d(d.pos().getX() + 0.5, d.pos().getY() + 0.5, d.pos().getZ() + 0.5), d.dir(), d.pos(), false), 0));
+        SettingUtils.swing(SwingState.Post, SwingType.Placing);
 
-            mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
-                new BlockHitResult(new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), Direction.UP, pos, false), 0));
-
-            SettingUtils.swing(SwingState.Post, SwingType.Placing);
-
-            if (SettingUtils.shouldRotate(RotationType.Placing)) {
-                Managers.ROTATION.end(pos);
-            }
-        } else {
-            if (SettingUtils.shouldRotate(RotationType.Crystal)) {
-                Managers.ROTATION.start(pos.offset(dir[0]), 7);
-            }
-
-            SettingUtils.swing(SwingState.Pre, SwingType.Placing);
-
-            mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
-                new BlockHitResult(new Vec3d(pos.offset(dir[0]).getX() + 0.5, pos.offset(dir[0]).getY() + 0.5, pos.offset(dir[0]).getZ() + 0.5), dir[0].getOpposite(), pos.offset(dir[0]), false), 0));
-            SettingUtils.swing(SwingState.Post, SwingType.Placing);
-
-            if (SettingUtils.shouldRotate(RotationType.Placing)) {
-                Managers.ROTATION.end(pos.offset(dir[0]));
-            }
+        if (SettingUtils.shouldRotate(RotationType.Placing)) {
+            Managers.ROTATION.end(d.pos());
         }
     }
     void placeGlowStone(BlockPos pos, Direction dir, int slot) {
         if (!Managers.HOLDING.isHolding(Items.GLOWSTONE)) {
             InvUtils.swap(slot, false);
-        }
-
-        if (SettingUtils.shouldRotate(RotationType.Interact)) {
-            Managers.ROTATION.start(pos, 7);
         }
 
         SettingUtils.swing(SwingState.Pre, SwingType.Interact);
@@ -248,10 +224,6 @@ public class AutoAnchorPlus extends Module {
             InvUtils.swap(slot, false);
         }
 
-        if (SettingUtils.shouldRotate(RotationType.Interact)) {
-            Managers.ROTATION.start(pos, 7);
-        }
-
         SettingUtils.swing(SwingState.Pre, SwingType.Interact);
 
         mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
@@ -260,7 +232,7 @@ public class AutoAnchorPlus extends Module {
         SettingUtils.swing(SwingState.Post, SwingType.Interact);
 
         if (SettingUtils.shouldRotate(RotationType.Interact)) {
-            Managers.ROTATION.start(pos, 7);
+            Managers.ROTATION.end(pos);
         }
     }
 
@@ -274,9 +246,9 @@ public class AutoAnchorPlus extends Module {
                     BlockPos pos = mc.player.getBlockPos().add(x, y, z);
                     Block block = getBlock(pos);
                     if (block == Blocks.AIR || block == Blocks.RESPAWN_ANCHOR) {
-                        Direction[] dirs = SettingUtils.getPlaceDirection(pos);
-                        if (dirs[0] != null || dirs[1] != null) {
-                            if (SettingUtils.inPlaceRange(pos) && (dirs[1] != null || SettingUtils.inPlaceRange(pos.offset(dirs[0])))) {
+                        PlaceData d = SettingUtils.getPlaceData(pos);
+                        if (d.valid()) {
+                            if (SettingUtils.inPlaceRange(pos) && SettingUtils.inPlaceRange(d.pos())) {
                                 if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(pos), entity -> !(entity instanceof EndCrystalEntity) && !(entity instanceof ItemEntity))) {
                                     double dmg = getDmg(pos);
                                     if (dmg >= minDamage.get() && dmg > bestDmg) {

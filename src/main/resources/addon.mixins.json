@@ -5,11 +5,11 @@
   "client": [
     "MixinBackground",
     "MixinClientPlayerEntity",
+    "MixinEntity",
     "MixinHeldItemRenderer",
     "MixinLivingEntityRenderer",
     "MixinPlayerMoveC2SPacket",
-    "MixinSound",
-    "MixinEntity"
+    "MixinSound"
   ],
   "injectors": {
     "defaultRequire": 1

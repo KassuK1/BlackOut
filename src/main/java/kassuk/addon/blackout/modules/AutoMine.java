@@ -5,6 +5,7 @@ import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
+import kassuk.addon.blackout.managers.RotationManager;
 import kassuk.addon.blackout.utils.BOInvUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
@@ -83,6 +84,12 @@ public class AutoMine extends Module {
         .name("Reset On Switch")
         .description("Resets mining progress when switching (useful on strict)")
         .defaultValue(false)
+        .build()
+    );
+    private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
+        .name("Switch Mode")
+        .description(".")
+        .defaultValue(SwitchMode.SilentBypass)
         .build()
     );
 
@@ -242,6 +249,10 @@ public class AutoMine extends Module {
         AutoMine,
         Smart
     }
+    public enum SwitchMode {
+        Silent,
+        SilentBypass
+    }
     public Block lastBlock = null;
     boolean speedmining = false;
     public double progress;
@@ -270,7 +281,7 @@ public class AutoMine extends Module {
         if (targetPos != null && getBlock(targetPos) != Blocks.AIR) {
             SettingUtils.swing(SwingState.Pre, SwingType.Mining);
             if (SettingUtils.shouldRotate(RotationType.Breaking)) {
-                Managers.ROTATION.start(OLEPOSSUtils.getBox(targetPos), 9);
+                Managers.ROTATION.start(OLEPOSSUtils.getBox(targetPos), 9, RotationType.Breaking);
             }
         }
     }
@@ -369,8 +380,11 @@ public class AutoMine extends Module {
             miningFor += event.frameTime;
             double r = 1 - progress;
             if (shouldRestart) {
-                start(targetPos);
-                shouldRestart = false;
+                boolean rotated = !SettingUtils.startMineRot() || Managers.ROTATION.start(targetPos, 9, RotationType.Breaking);
+                if (rotated) {
+                    start(targetPos);
+                    shouldRestart = false;
+                }
             }
             if (getBlock(targetPos) != Blocks.AIR) {
                 progress = Math.min(1, progress + event.frameTime * getMineTicks(targetPos) * 20);
@@ -390,86 +404,114 @@ public class AutoMine extends Module {
 
             //Other Stuff
             if (progress >= 1 && (!pauseEat.get() || !mc.player.isUsingItem())) {
+
                 if (crystal.get() && crystalPos != null) {
                     Entity at = isAt(targetPos, crystalPos);
                     Hand hand = getHand(Items.END_CRYSTAL);
                     int cSlot = InvUtils.find(itemStack -> itemStack.getItem() == Items.END_CRYSTAL).slot();
                     if (at != null) {
-                        int holding = 0;
-                        if (holdingBest(targetPos)) {
-                            holding = 1;
+                        boolean rotated = !SettingUtils.endMineRot() || Managers.ROTATION.start(targetPos, 9, RotationType.Breaking);
+
+                        if (rotated) {
+                            int holding = 0;
+                            if (holdingBest(targetPos)) {
+                                holding = 1;
+                            } else if (BOInvUtils.invSwitch(fastestSlot(targetPos))) {
+                                holding = 2;
+                            }
+                            if (holding == 0) {
+                                return;
+                            }
+                            end(targetPos);
+                            if (holding == 2) {
+                                BOInvUtils.swapBack();
+                            }
+                            if (expCrystal.get() && at instanceof EndCrystalEntity) {
+                                attackID(at);
+                            }
+                            targetPos = null;
+                            crystalPos = null;
                         }
-                        else if (BOInvUtils.invSwitch(fastestSlot(targetPos))){
-                            holding = 2;
-                        }
-                        if (holding == 0) {return;}
-                        end(targetPos);
-                        if (holding == 2) {
-                            BOInvUtils.swapBack();
-                        }
-                        if (expCrystal.get() && at instanceof EndCrystalEntity) {
-                            attackID(at.getId(), at.getPos());
-                        }
-                        targetPos = null;
-                        crystalPos = null;
                     } else if ((cSlot >= 0 || hand != null) && timer >= placeDelay.get() && placeCrystal.get()
                         && placeCrystal.get() && !EntityUtils.intersectsWithEntity(new Box(crystalPos), entity -> !entity.isSpectator())) {
-                        timer = 0;
-                        if (SettingUtils.shouldRotate(RotationType.Crystal)) {
-                            Managers.ROTATION.start(crystalPos.down(), 9);
-                        }
+                        boolean rotated = !SettingUtils.shouldRotate(RotationType.Crystal) || Managers.ROTATION.start(crystalPos.down(), 9, RotationType.Crystal);
+                        if (rotated) {
+                            timer = 0;
 
-                        int holding = 0;
-                        if (holdingBest(targetPos)) {
-                            holding = 1;
-                        }
-                        else if (BOInvUtils.invSwitch(cSlot)){
-                            holding = 2;
-                        }
-                        if (holding == 0) {return;}
+                            int holding = 0;
+                            if (holdingBest(targetPos)) {
+                                holding = 1;
+                            } else if (BOInvUtils.invSwitch(cSlot)) {
+                                holding = 2;
+                            }
+                            if (holding == 0) {
+                                return;
+                            }
 
 
-                        SettingUtils.swing(SwingState.Pre, SwingType.Crystal);
+                            SettingUtils.swing(SwingState.Pre, SwingType.Crystal);
 
-                        if (crystalPos != null) {
-                            mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand == null ? Hand.MAIN_HAND : hand,
-                                new BlockHitResult(OLEPOSSUtils.getMiddle(crystalPos.down()), Direction.UP, crystalPos.down(), false), 0));
-                        }
+                            if (crystalPos != null) {
+                                mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand == null ? Hand.MAIN_HAND : hand,
+                                    new BlockHitResult(OLEPOSSUtils.getMiddle(crystalPos.down()), Direction.UP, crystalPos.down(), false), 0));
+                            }
 
-                        SettingUtils.swing(SwingState.Post, SwingType.Crystal);
+                            SettingUtils.swing(SwingState.Post, SwingType.Crystal);
 
-                        if (holding == 2) {
-                            BOInvUtils.swapBack();
-                        }
+                            if (holding == 2) {
+                                BOInvUtils.swapBack();
+                            }
 
-                        if (SettingUtils.shouldRotate(RotationType.Crystal)) {
-                            Managers.ROTATION.end(crystalPos.down());
+                            if (SettingUtils.shouldRotate(RotationType.Crystal)) {
+                                Managers.ROTATION.end(crystalPos.down());
+                            }
                         }
                     }
                 } else {
-                    int holding = 0;
-                    if (holdingBest(targetPos)) {
-                        holding = 1;
-                    }
-                    else if (BOInvUtils.invSwitch(fastestSlot(targetPos))){
-                        holding = 2;
-                    }
-                    if (holding == 0) {return;}
-                    end(targetPos);
-                    if (holding == 2) {
-                        BOInvUtils.swapBack();
-                    }
-                    if (mode.get() == AutoMineMode.SpeedMine) {
-                        if (resetOnEnd.get()) {
-                            targetPos = null;
+                    boolean rotated = !SettingUtils.endMineRot() || Managers.ROTATION.start(targetPos, 9, RotationType.Breaking);
+
+                    if (rotated) {
+                        int holding = 0;
+                        if (holdingBest(targetPos)) {
+                            holding = 1;
                         } else {
-                            progress = 0;
-                            miningFor = 0;
+                            switch (switchMode.get()) {
+                                case Silent -> {
+                                    int s = InvUtils.findFastestTool(mc.world.getBlockState(targetPos)).slot();
+                                    if (s >= 0) {
+                                        InvUtils.swap(s, true);
+                                        holding = 2;
+                                    }
+                                }
+                                case SilentBypass -> {
+                                    if (BOInvUtils.invSwitch(fastestSlot(targetPos))) {
+                                        holding = 2;
+                                    }
+                                }
+                            }
                         }
-                    }
-                    if (mode.get() == AutoMineMode.Smart && speedmining) {
-                        speedmining = false;
-                        targetPos = null;
+                        if (holding == 0) {
+                            return;
+                        }
+                        end(targetPos);
+                        if (holding == 2) {
+                            switch (switchMode.get()) {
+                                case Silent -> InvUtils.swapBack();
+                                case SilentBypass -> BOInvUtils.swapBack();
+                            }
+                        }
+                        if (mode.get() == AutoMineMode.SpeedMine) {
+                            if (resetOnEnd.get()) {
+                                targetPos = null;
+                            } else {
+                                progress = 0;
+                                miningFor = 0;
+                            }
+                        }
+                        if (mode.get() == AutoMineMode.Smart && speedmining) {
+                            speedmining = false;
+                            targetPos = null;
+                        }
                     }
                 }
             }
@@ -493,15 +535,7 @@ public class AutoMine extends Module {
         }
     }
 
-    void attackID(int id, Vec3d pos) {
-        EndCrystalEntity en = new EndCrystalEntity(mc.world, pos.x, pos.y, pos.z);
-        en.setId(id);
-        Box box = new Box(pos.getX() - 1, pos.getY(), pos.getZ() - 1, pos.getX() + 1, pos.getY() + 2, pos.getZ() + 1);
-
-        if (SettingUtils.shouldRotate(RotationType.Attacking)) {
-            Managers.ROTATION.start(box, 9);
-        }
-
+    void attackID(Entity en) {
         SettingUtils.swing(SwingState.Post, SwingType.Attacking);
 
         mc.getNetworkHandler().sendPacket(PlayerInteractEntityC2SPacket.attack(en, mc.player.isSneaking()));
@@ -509,7 +543,7 @@ public class AutoMine extends Module {
         SettingUtils.swing(SwingState.Post, SwingType.Attacking);
 
         if (SettingUtils.shouldRotate(RotationType.Attacking)) {
-            Managers.ROTATION.end(box);
+            Managers.ROTATION.end(en.getBoundingBox());
         }
     }
 
@@ -540,7 +574,10 @@ public class AutoMine extends Module {
                 miningFor = 0;
                 targetPos = pPos;
                 crystalPos = cPos;
-                start(targetPos);
+                boolean rotated = !SettingUtils.startMineRot() || Managers.ROTATION.start(targetPos, 9, RotationType.Breaking);
+                if (rotated) {
+                    start(targetPos);
+                }
             }
         } else {
             targetPos = null;
@@ -651,9 +688,6 @@ public class AutoMine extends Module {
 
 
     void start(BlockPos pos) {
-        if (SettingUtils.startMineRot()) {
-            Managers.ROTATION.start(pos, 9);
-        }
         ignore = true;
         lastBlock = getBlock(pos);
         mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK,
@@ -664,9 +698,6 @@ public class AutoMine extends Module {
     }
 
     void end(BlockPos pos) {
-        if (SettingUtils.endMineRot()) {
-            Managers.ROTATION.start(pos, 9);
-        }
         ignore = true;
         mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
             pos, Direction.UP));

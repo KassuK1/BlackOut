@@ -14,4 +14,8 @@ public interface MixinPlayerMoveC2SPacket {
     @Mutable
     @Accessor("pitch")
     void setPitch(float pitch);
+
+    @Mutable
+    @Accessor("changeLook")
+    void setLook(boolean look);
 }

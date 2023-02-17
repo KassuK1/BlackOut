@@ -8,6 +8,7 @@ import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.timers.BlockTimerList;
 import kassuk.addon.blackout.utils.BOInvUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
+import kassuk.addon.blackout.utils.PlaceData;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -170,21 +171,41 @@ public class SelfTrapPlus extends Module {
                     int obsidian = hand == Hand.MAIN_HAND ? Managers.HOLDING.getStack().getCount() :
                         hand == Hand.OFF_HAND ? mc.player.getOffHandStack().getCount() : -1;
 
+
                     if (hand == null) {
                         switch (switchMode.get()) {
                             case Silent, Normal -> {
                                 obsidian = hotbar.count();
-                                InvUtils.swap(hotbar.slot(), true);
                             }
                             case SilentBypass -> {
-                                obsidian = BOInvUtils.invSwitch(inventory.slot()) ? inventory.count() : -1;
+                                obsidian = inventory.slot() >= 0 ? inventory.count() : -1;
                             }
                         }
                     }
 
                     if (obsidian >= 0) {
-                        for (int i = 0; i < Math.min(obsidian, placements.size()); i++) {
-                            place(placements.get(i));
+                        if (hand == null) {
+                            switch (switchMode.get()) {
+                                case Silent, Normal -> {
+                                    obsidian = hotbar.count();
+                                    InvUtils.swap(hotbar.slot(), true);
+                                }
+                                case SilentBypass -> {
+                                    obsidian = BOInvUtils.invSwitch(inventory.slot()) ? inventory.count() : -1;
+                                }
+                            }
+                        }
+
+                        for (int i = 0; i < Math.min(obsidian, toPlace.size()); i++) {
+                            PlaceData placeData = SettingUtils.getPlaceData(toPlace.get(i));
+                            if (placeData.valid()) {
+                                boolean rotated = !SettingUtils.shouldRotate(RotationType.Placing) || Managers.ROTATION.start(placeData.pos().offset(placeData.dir()), 1, RotationType.Placing);
+
+                                if (!rotated) {
+                                    break;
+                                }
+                                place(placeData, toPlace.get(i));
+                            }
                         }
 
                         if (hand == null) {
@@ -208,49 +229,24 @@ public class SelfTrapPlus extends Module {
     }
 
     boolean canPlace(BlockPos pos) {
-        Direction[] dir = SettingUtils.getPlaceDirection(pos);
-        if (dir[0] == null && dir[1] == null) {return false;}
-        return true;
+        return SettingUtils.getPlaceData(pos).valid();
     }
 
-    void place(BlockPos toPlace) {
-        Direction[] result = SettingUtils.getPlaceDirection(toPlace);
-        if (result[0] == null && result[1] == null) {return;}
-        timers.add(toPlace, delay.get());
+    void place(PlaceData d, BlockPos ogPos) {
+        timers.add(ogPos, delay.get());
         placeTimer = 0;
         placesLeft--;
-        if (result[1] != null) {
-            if (SettingUtils.shouldRotate(RotationType.Placing)) {
-                Managers.ROTATION.start(toPlace, 3);
-            }
 
-            SettingUtils.swing(SwingState.Pre, SwingType.Placing);
+        SettingUtils.swing(SwingState.Pre, SwingType.Placing);
 
-            mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
-                new BlockHitResult(new Vec3d(toPlace.getX() + 0.5, toPlace.getY() + 0.5, toPlace.getZ() + 0.5),
-                    result[1], toPlace, false), 0));
+        mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
+            new BlockHitResult(new Vec3d(d.pos().getX() + 0.5, d.pos().getY() + 0.5, d.pos().getZ() + 0.5),
+                d.dir(), d.pos(), false), 0));
 
-            SettingUtils.swing(SwingState.Post, SwingType.Placing);
+        SettingUtils.swing(SwingState.Post, SwingType.Placing);
 
-            if (SettingUtils.shouldRotate(RotationType.Placing)) {
-                Managers.ROTATION.end(toPlace);
-            }
-        } else {
-            if (SettingUtils.shouldRotate(RotationType.Placing)) {
-                Managers.ROTATION.start(toPlace.offset(result[0]), 3);
-            }
-
-            SettingUtils.swing(SwingState.Pre, SwingType.Placing);
-
-            mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
-                new BlockHitResult(new Vec3d(toPlace.offset(result[0]).getX() + 0.5, toPlace.offset(result[0]).getY() + 0.5, toPlace.offset(result[0]).getZ() + 0.5),
-                    result[0].getOpposite(), toPlace.offset(result[0]), false), 0));
-
-            SettingUtils.swing(SwingState.Post, SwingType.Placing);
-
-            if (SettingUtils.shouldRotate(RotationType.Placing)) {
-                Managers.ROTATION.end(toPlace.offset(result[0]));
-            }
+        if (SettingUtils.shouldRotate(RotationType.Placing)) {
+            Managers.ROTATION.end(d.pos());
         }
     }
 
