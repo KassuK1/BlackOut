@@ -43,7 +43,7 @@ public class OffHandPlus extends Module {
     );
     private final Setting<swordGapModes> swordGapple = sgGeneral.add(new EnumSetting.Builder<swordGapModes>()
         .name("Sword Gapple")
-        .description("Holds gapple's while swording")
+        .description("Holds gapples while swording")
         .defaultValue(swordGapModes.Pressing)
         .build()
     );

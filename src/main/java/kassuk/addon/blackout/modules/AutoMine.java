@@ -9,6 +9,7 @@ import kassuk.addon.blackout.managers.RotationManager;
 import kassuk.addon.blackout.utils.BOInvUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
+import meteordevelopment.meteorclient.events.entity.player.PlaceBlockEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -17,6 +18,7 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
@@ -43,12 +45,14 @@ import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket;
 import net.minecraft.tag.FluidTags;
+import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
+import org.apache.commons.lang3.CharUtils;
 
 /*
 Made by OLEPOSSU / Raksamies
@@ -83,6 +87,18 @@ public class AutoMine extends Module {
     private final Setting<Boolean> resetOnSwitch = sgGeneral.add(new BoolSetting.Builder()
         .name("Reset On Switch")
         .description("Resets mining progress when switching (useful on strict)")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> resetOnPlace = sgGeneral.add(new BoolSetting.Builder()
+        .name("Reset On Place")
+        .description("Resets Speedmine position when placing a block.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> debug = sgCrystal.add(new BoolSetting.Builder()
+        .name("Debug")
+        .description("Sends a message in chat when the module starts and ends mining.")
         .defaultValue(false)
         .build()
     );
@@ -294,8 +310,16 @@ public class AutoMine extends Module {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onSwitch(PacketEvent.Send event) {
         if (event.packet instanceof UpdateSelectedSlotC2SPacket && resetOnSwitch.get() && targetPos != null) {
-            targetPos = null;
-            crystalPos = null;
+            shouldRestart = true;
+            progress = 0;
+            miningFor = 0;
+        }
+    }
+
+    @EventHandler
+    private void onPlace(PlaceBlockEvent event) {
+        if (resetOnPlace.get() && targetPos != null) {
+            shouldRestart = true;
             progress = 0;
             miningFor = 0;
         }
@@ -494,6 +518,10 @@ public class AutoMine extends Module {
                             return;
                         }
                         end(targetPos);
+
+                        progress = 0;
+                        miningFor = 0;
+
                         if (holding == 2) {
                             switch (switchMode.get()) {
                                 case Silent -> InvUtils.swapBack();
@@ -504,8 +532,7 @@ public class AutoMine extends Module {
                             if (resetOnEnd.get()) {
                                 targetPos = null;
                             } else {
-                                progress = 0;
-                                miningFor = 0;
+                                shouldRestart = true;
                             }
                         }
                         if (mode.get() == AutoMineMode.Smart && speedmining) {
@@ -690,6 +717,9 @@ public class AutoMine extends Module {
     void start(BlockPos pos) {
         ignore = true;
         lastBlock = getBlock(pos);
+        if (debug.get()) {
+            ChatUtils.sendMsg(Text.of("AutoMine: start"));
+        }
         mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK,
             pos, Direction.UP));
         if (SettingUtils.startMineRot()) {
@@ -699,10 +729,15 @@ public class AutoMine extends Module {
 
     void end(BlockPos pos) {
         ignore = true;
-        mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
-            pos, Direction.UP));
-        if (SettingUtils.endMineRot()) {
-            Managers.ROTATION.end(pos);
+        if (pos != null) {
+            if (debug.get()) {
+                ChatUtils.sendMsg(Text.of("AutoMine: end"));
+            }
+            mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
+                pos, Direction.UP));
+            if (SettingUtils.endMineRot()) {
+                Managers.ROTATION.end(pos);
+            }
         }
     }
 
