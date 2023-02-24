@@ -17,7 +17,6 @@ import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
-import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
@@ -73,6 +72,13 @@ public class AutoMine extends BlackOutModule {
     private final Setting<Boolean> resetOnEnd = sgGeneral.add(new BoolSetting.Builder()
         .name("Reset On End")
         .description("Resets Speedmine position when ending mining.")
+        .defaultValue(true)
+        .visible(() -> mode.get() == AutoMineMode.SpeedMine)
+        .build()
+    );
+    private final Setting<Boolean> civ = sgGeneral.add(new BoolSetting.Builder()
+        .name("Civ")
+        .description("Doesn't reset mine progress when ending mining.")
         .defaultValue(true)
         .visible(() -> mode.get() == AutoMineMode.SpeedMine)
         .build()
@@ -280,6 +286,8 @@ public class AutoMine extends BlackOutModule {
     double timer = 0;
     public double miningFor;
     public boolean ignore = false;
+    public BlockPos civPos = null;
+    public double civTimer = 0;
 
     @Override
     public void onActivate() {
@@ -290,6 +298,7 @@ public class AutoMine extends BlackOutModule {
         crystalPos = null;
         targetValue = -1;
         lastValue = -1;
+        speedmining = false;
     }
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onTick(TickEvent.Pre event) {
@@ -397,6 +406,7 @@ public class AutoMine extends BlackOutModule {
                 }
             }
         }
+        civTimer += event.frameTime;
         timer = Math.min(placeDelay.get(), timer + event.frameTime);
 
         if (targetPos != null) {
@@ -426,8 +436,8 @@ public class AutoMine extends BlackOutModule {
                 shapeMode.get(), 0);
 
             //Other Stuff
-            if (progress >= 1 && (!pauseEat.get() || !mc.player.isUsingItem())) {
-
+            if ((progress >= 1 || (civTimer >= 0.2 && civPos == targetPos)) && (!pauseEat.get() || !mc.player.isUsingItem())) {
+                civTimer = 0;
                 if (crystal.get() && crystalPos != null) {
                     Entity at = isAt(targetPos, crystalPos);
                     Hand hand = getHand(Items.END_CRYSTAL);
@@ -550,6 +560,7 @@ public class AutoMine extends BlackOutModule {
             if (mc.player != null && mc.world != null && targetPos != null) {
                 if (packet.getPos().equals(targetPos)) {
                     if (packet.getState().getBlock() != Blocks.AIR && lastBlock == Blocks.AIR) {
+                        ChatUtils.sendMsg(Text.of("very"));
                         if (mode.get() == AutoMineMode.SpeedMine) {
                             shouldRestart = true;
                         }
@@ -716,13 +727,42 @@ public class AutoMine extends BlackOutModule {
     void start(BlockPos pos) {
         ignore = true;
         lastBlock = getBlock(pos);
-        if (debug.get()) {
-            ChatUtils.sendMsg(Text.of("AutoMine: start"));
-        }
-        mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK,
-            pos, Direction.UP));
 
-        SettingUtils.mineSwing(SwingSettings.MiningSwingState.Start);
+        if (civPos != null && civPos.equals(pos)) {
+            mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
+                pos, Direction.UP));
+
+            SettingUtils.mineSwing(SwingSettings.MiningSwingState.End);
+            if (debug.get()) {
+                ChatUtils.sendMsg(Text.of("AutoMine: civ start"));
+            }
+        } else {
+            civPos = null;
+            mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK,
+                pos, Direction.UP));
+
+            SettingUtils.mineSwing(SwingSettings.MiningSwingState.Start);
+            if (debug.get()) {
+                ChatUtils.sendMsg(Text.of("AutoMine: start"));
+            }
+        }
+
+        if (SettingUtils.startMineRot()) {
+            Managers.ROTATION.end(pos);
+        }
+    }
+
+    void abort(BlockPos pos) {
+        ignore = true;
+        civPos = null;
+        lastBlock = getBlock(pos);
+
+        if (debug.get()) {
+            ChatUtils.sendMsg(Text.of("AutoMine: abort"));
+        }
+
+        mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK,
+            pos, Direction.UP));
 
         if (SettingUtils.startMineRot()) {
             Managers.ROTATION.end(pos);
@@ -732,9 +772,12 @@ public class AutoMine extends BlackOutModule {
     void end(BlockPos pos) {
         ignore = true;
         if (pos != null) {
+
             if (debug.get()) {
                 ChatUtils.sendMsg(Text.of("AutoMine: end"));
             }
+
+            civPos = pos;
             mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
                 pos, Direction.UP));
 
