@@ -65,9 +65,9 @@ public class SwingSettings extends Module {
         .defaultValue(SwingHand.MainHand)
         .build()
     );
-    private final Setting<SwingState> miningState = sgMining.add(new EnumSetting.Builder<SwingState>()
+    private final Setting<MiningSwingState> miningState = sgMining.add(new EnumSetting.Builder<MiningSwingState>()
         .name("Mining Swing State")
-        .defaultValue(SwingState.Post)
+        .defaultValue(MiningSwingState.End)
         .build()
     );
     private final Setting<SwingMode> placing = sgPlace.add(new EnumSetting.Builder<SwingMode>()
@@ -122,6 +122,12 @@ public class SwingSettings extends Module {
         Packet,
         Full
     }
+    public enum MiningSwingState {
+        Full,
+        Start,
+        End,
+        Double
+    }
     public enum SwingHand {
         MainHand,
         OffHand
@@ -134,11 +140,32 @@ public class SwingSettings extends Module {
         switch (type) {
             case Crystal -> swing(crystalPlace.get(), hand);
             case Interact -> swing(interact.get(), hand);
-            case Mining -> swing(mining.get(), hand);
             case Placing -> swing(placing.get(), hand);
             case Attacking -> swing(attacking.get(), hand);
             case Using -> swing(using.get(), hand);
         }
+    }
+    public void mineSwing(MiningSwingState state) {
+        switch (state) {
+            case Start -> {
+                if (miningState.get() != MiningSwingState.Double && miningState.get() != MiningSwingState.Start && miningState.get() != MiningSwingState.Full) {
+                    return;
+                }
+            }
+            case End -> {
+                if (miningState.get() != MiningSwingState.Double && miningState.get() != MiningSwingState.End && miningState.get() != MiningSwingState.Full) {
+                    return;
+                }
+            }
+            case Full -> {
+                if (miningState.get() != MiningSwingState.Full) {
+                    return;
+                }
+            }
+        }
+        if (mc.player == null) {return;}
+        Hand hand = gethand(SwingType.Mining);
+        swing(mining.get(), hand);
     }
     Hand gethand(SwingType type) {
         SwingHand swingHand = SwingHand.MainHand;
@@ -172,7 +199,7 @@ public class SwingSettings extends Module {
                 return interactState.get();
             }
             case Mining -> {
-                return miningState.get();
+
             }
             case Placing -> {
                 return placingState.get();

@@ -53,9 +53,7 @@ public class SettingUtils extends Utils {
     public static boolean inAttackRange(Box bb, double eyeHeight) {
         return range.inAttackRange(bb, eyeHeight);
     }
-    public static boolean inAttackRange(Box bb, double eyeHeight, Vec3d feet) {
-        return range.inAttackRange(bb, eyeHeight, feet);
-    }
+    public static boolean inAttackRange(Box bb, double eyeHeight, Vec3d feet) {return range.inAttackRange(bb, eyeHeight, feet);}
     public static double mineRangeTo(BlockPos pos) {return range.miningRangeTo(pos);}
     public static boolean inMineRange(BlockPos pos) {
         return range.inMineRange(pos);
@@ -63,9 +61,7 @@ public class SettingUtils extends Utils {
     public static boolean inMineRangeNoTrace(BlockPos pos) {
         return range.inMineRangeNoTrace(pos);
     }
-    public static boolean inAttackRangeNoTrace(Box bb, double eyeHeight, Vec3d feet) {
-        return range.inAttackRangeNoTrace(bb, eyeHeight, feet);
-    }
+    public static boolean inAttackRangeNoTrace(Box bb, double eyeHeight, Vec3d feet) {return range.inAttackRangeNoTrace(bb, eyeHeight, feet);}
 
 
     //  Rotate
@@ -78,25 +74,22 @@ public class SettingUtils extends Utils {
     public static boolean shouldRotate(RotationType type) {
         return rotation.shouldRotate(type);
     }
-    public static boolean rotationCheckHistory(Box box, RotationType type) {
-        return rotation.rotationCheckHistory(box, rotation.getExisted(type) + 1);
-    }
-    public static boolean rotationCheck(Vec3d pPos, double yaw, double pitch, Box box, RotationType type) {
-        return rotation.rotationCheck(pPos, yaw, pitch, box, rotation.getExisted(type));
-    }
+    public static boolean rotationCheckHistory(Box box, RotationType type) {return rotation.rotationCheckHistory(box, rotation.getExisted(type) + 1);}
+    public static boolean rotationCheck(Vec3d pPos, double yaw, double pitch, Box box, RotationType type) {return rotation.rotationCheck(pPos, yaw, pitch, box, rotation.getExisted(type));}
 
     //  Swing
     public static void swing(SwingState state, SwingType type) {
         swing.swing(state, type);
+    }
+    public static void mineSwing(SwingSettings.MiningSwingState state) {
+        swing.mineSwing(state);
     }
 
     //  Facing
     public static PlaceData getPlaceData(BlockPos pos) {
         return facing.getPlaceData(pos);
     }
-    public static PlaceData getPlaceData(BlockPos pos, Predicate<BlockState> predicate) {
-        return facing.getPlaceData(pos, predicate);
-    }
+    public static PlaceData getPlaceData(BlockPos pos, Predicate<BlockState> predicate) {return facing.getPlaceData(pos, predicate);}
     public static Direction getPlaceOnDirection(BlockPos pos) {
         return facing.getPlaceOnDirection(pos);
     }

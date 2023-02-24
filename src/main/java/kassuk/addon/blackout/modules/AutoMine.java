@@ -5,6 +5,7 @@ import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
+import kassuk.addon.blackout.globalsettings.SwingSettings;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.utils.BOInvUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
@@ -293,7 +294,7 @@ public class AutoMine extends BlackOutModule {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onTick(TickEvent.Pre event) {
         if (targetPos != null && getBlock(targetPos) != Blocks.AIR) {
-            SettingUtils.swing(SwingState.Pre, SwingType.Mining);
+            SettingUtils.mineSwing(SwingSettings.MiningSwingState.Full);
             if (SettingUtils.shouldRotate(RotationType.Breaking)) {
                 Managers.ROTATION.start(OLEPOSSUtils.getBox(targetPos), 9, RotationType.Breaking);
             }
@@ -720,6 +721,9 @@ public class AutoMine extends BlackOutModule {
         }
         mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK,
             pos, Direction.UP));
+
+        SettingUtils.mineSwing(SwingSettings.MiningSwingState.Start);
+
         if (SettingUtils.startMineRot()) {
             Managers.ROTATION.end(pos);
         }
@@ -733,6 +737,9 @@ public class AutoMine extends BlackOutModule {
             }
             mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
                 pos, Direction.UP));
+
+            SettingUtils.mineSwing(SwingSettings.MiningSwingState.End);
+
             if (SettingUtils.endMineRot()) {
                 Managers.ROTATION.end(pos);
             }

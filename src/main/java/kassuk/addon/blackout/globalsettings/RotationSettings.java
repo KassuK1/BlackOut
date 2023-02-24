@@ -55,13 +55,13 @@ public class RotationSettings extends Module {
     );
 
     //  Crystal Page
-    private final Setting<Boolean> crystalRotate = sgGeneral.add(new BoolSetting.Builder()
+    private final Setting<Boolean> crystalRotate = sgCrystal.add(new BoolSetting.Builder()
         .name("Crystal Rotate")
         .description(".")
         .defaultValue(false)
         .build()
     );
-    private final Setting<Integer> crystalExisted = sgGeneral.add(new IntSetting.Builder()
+    private final Setting<Integer> crystalExisted = sgCrystal.add(new IntSetting.Builder()
         .name("Crystal Rotation Existed")
         .description(".")
         .defaultValue(0)
@@ -71,13 +71,13 @@ public class RotationSettings extends Module {
     );
 
     // Attack Page
-    private final Setting<Boolean> attackRotate = sgGeneral.add(new BoolSetting.Builder()
+    private final Setting<Boolean> attackRotate = sgAttack.add(new BoolSetting.Builder()
         .name("Attack Rotate")
         .description(".")
         .defaultValue(false)
         .build()
     );
-    private final Setting<Integer> attackExisted = sgGeneral.add(new IntSetting.Builder()
+    private final Setting<Integer> attackExisted = sgAttack.add(new IntSetting.Builder()
         .name("Attack Rotation Existed")
         .description(".")
         .defaultValue(0)
@@ -87,13 +87,13 @@ public class RotationSettings extends Module {
     );
 
     // Place Page
-    private final Setting<Boolean> placeRotate = sgGeneral.add(new BoolSetting.Builder()
+    private final Setting<Boolean> placeRotate = sgPlace.add(new BoolSetting.Builder()
         .name("Placing Rotate")
         .description(".")
         .defaultValue(false)
         .build()
     );
-    private final Setting<Integer> placeExisted = sgGeneral.add(new IntSetting.Builder()
+    private final Setting<Integer> placeExisted = sgPlace.add(new IntSetting.Builder()
         .name("Place Rotation Existed")
         .description(".")
         .defaultValue(0)
@@ -103,13 +103,13 @@ public class RotationSettings extends Module {
     );
 
     // Mine Page
-    public final Setting<MiningRotMode> mineRotate = sgGeneral.add(new EnumSetting.Builder<MiningRotMode>()
+    public final Setting<MiningRotMode> mineRotate = sgMine.add(new EnumSetting.Builder<MiningRotMode>()
         .name("Mine Rotate")
         .description(".")
         .defaultValue(MiningRotMode.Disabled)
         .build()
     );
-    private final Setting<Integer> mineExisted = sgGeneral.add(new IntSetting.Builder()
+    private final Setting<Integer> mineExisted = sgMine.add(new IntSetting.Builder()
         .name("Mine Rotation Existed")
         .description(".")
         .defaultValue(0)
@@ -119,13 +119,13 @@ public class RotationSettings extends Module {
     );
 
     // Interact Page
-    private final Setting<Boolean> interactRotate = sgGeneral.add(new BoolSetting.Builder()
+    private final Setting<Boolean> interactRotate = sgInteract.add(new BoolSetting.Builder()
         .name("Interact Rotate")
         .description(".")
         .defaultValue(false)
         .build()
     );
-    private final Setting<Integer> interactExisted = sgGeneral.add(new IntSetting.Builder()
+    private final Setting<Integer> interactExisted = sgInteract.add(new IntSetting.Builder()
         .name("Interact Rotation Existed")
         .description(".")
         .defaultValue(0)
