@@ -1,12 +1,13 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Blocks;
 
-public class LegitScaffold extends Module {
+public class LegitScaffold extends BlackOutModule {
     public LegitScaffold() {super(BlackOut.BLACKOUT, "LegitScaffold", "It do be kinda speed bridging doe");}
 
     @Override

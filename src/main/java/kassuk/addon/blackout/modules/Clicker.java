@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.IntSetting;
@@ -13,7 +14,7 @@ import net.minecraft.util.Hand;
 
 import java.util.Random;
 
-public class Clicker extends Module {
+public class Clicker extends BlackOutModule {
     public Clicker() {
         super(BlackOut.BLACKOUT, "Clicker", "Clicks for you");
     }

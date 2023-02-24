@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -18,7 +19,7 @@ import java.util.Random;
 
 
 //Made by KassuK
-public class AnteroTaateli extends Module {
+public class AnteroTaateli extends BlackOutModule {
     public AnteroTaateli() {super(BlackOut.BLACKOUT, "AutoAndrewTate", "What colour is your bugatti?");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 

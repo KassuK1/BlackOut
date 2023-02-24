@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -17,7 +18,7 @@ import net.minecraft.util.Hand;
 
 //Made by KassuK
 
-public class KassuKAura extends Module {
+public class KassuKAura extends BlackOutModule {
     public KassuKAura(){super(BlackOut.BLACKOUT,"ForceField", "An Killaura made by KassuK probably should not be used");}
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -156,7 +157,7 @@ public class KassuKAura extends Module {
                     if (onlyHurt.get() && health <= healthRange.get()) {
                         return;
                     }
-                    if (noCA.get() && Modules.get().get(AutoCrystalPlus.class).isActive() || Modules.get().get(CrystalAura.class).isActive() || Modules.get().get(AutoCrystalRewrite.class).isActive()) {
+                    if (noCA.get() && Modules.get().get(PurpleSpinnyThingBlowerUpererAndPlacer.class).isActive() || Modules.get().get(CrystalAura.class).isActive() || Modules.get().get(AutoCrystalRewrite.class).isActive()) {
                         return;
                     }
                     health = (int) (target.getHealth() + target.getAbsorptionAmount());

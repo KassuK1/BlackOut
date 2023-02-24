@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
@@ -14,7 +15,7 @@ import net.minecraft.item.Items;
 Made by KassuK
 */
 
-public class FastXP extends Module {
+public class FastXP extends BlackOutModule {
     public FastXP() {
         super(BlackOut.BLACKOUT, "FastXP", "XP spamming moment");
     }

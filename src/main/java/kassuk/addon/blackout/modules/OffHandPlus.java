@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.settings.*;
@@ -18,7 +19,7 @@ import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 Made by OLEPOSSU / Raksamies and KassuK(KassuK's version was better)
 */
 
-public class OffHandPlus extends Module {
+public class OffHandPlus extends BlackOutModule {
     public OffHandPlus() {
         super(BlackOut.BLACKOUT, "Offhand+", "Better offhand");
     }

@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
@@ -44,7 +45,7 @@ import java.util.Map;
 Made by OLEPOSSU / Raksamies
 */
 
-public class AutoAnchorPlus extends Module {
+public class AutoAnchorPlus extends BlackOutModule {
     public AutoAnchorPlus() {super(BlackOut.BLACKOUT, "Auto Anchor+", ".");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 

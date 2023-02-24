@@ -25,6 +25,7 @@ public class SwingSettings extends Module {
     private final SettingGroup sgMining = settings.createGroup("Mining");
     private final SettingGroup sgPlace = settings.createGroup("Placing");
     private final SettingGroup sgAttack = settings.createGroup("Attacking");
+    private final SettingGroup sgUse = settings.createGroup("Using");
     private final Setting<SwingMode> crystalPlace = sgCrystal.add(new EnumSetting.Builder<SwingMode>()
         .name("Crystal Place Swing")
         .defaultValue(SwingMode.Disabled)
@@ -99,17 +100,17 @@ public class SwingSettings extends Module {
         .defaultValue(SwingState.Post)
         .build()
     );
-    private final Setting<SwingMode> using = sgAttack.add(new EnumSetting.Builder<SwingMode>()
+    private final Setting<SwingMode> using = sgUse.add(new EnumSetting.Builder<SwingMode>()
         .name("Using Swing")
         .defaultValue(SwingMode.Full)
         .build()
     );
-    private final Setting<SwingHand> usingHand = sgAttack.add(new EnumSetting.Builder<SwingHand>()
+    private final Setting<SwingHand> usingHand = sgUse.add(new EnumSetting.Builder<SwingHand>()
         .name("Using Hand")
         .defaultValue(SwingHand.MainHand)
         .build()
     );
-    private final Setting<SwingState> usingState = sgAttack.add(new EnumSetting.Builder<SwingState>()
+    private final Setting<SwingState> usingState = sgUse.add(new EnumSetting.Builder<SwingState>()
         .name("Using Swing State")
         .defaultValue(SwingState.Post)
         .build()

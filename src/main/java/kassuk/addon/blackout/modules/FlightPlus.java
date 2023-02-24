@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.mixininterface.IVec3d;
@@ -11,7 +12,7 @@ import meteordevelopment.meteorclient.systems.modules.world.Timer;
 import meteordevelopment.orbit.EventHandler;
 
 
-public class FlightPlus extends Module {
+public class FlightPlus extends BlackOutModule {
 
     public FlightPlus() {super(BlackOut.BLACKOUT, "Flight+", "KasumsSoft Flight");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();

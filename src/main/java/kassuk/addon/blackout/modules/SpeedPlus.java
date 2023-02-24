@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.mixininterface.IVec3d;
@@ -8,7 +9,6 @@ import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.DoubleSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
-import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.world.Timer;
 import meteordevelopment.orbit.EventHandler;
@@ -16,9 +16,10 @@ import meteordevelopment.orbit.EventPriority;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
 
-public class Strafe extends Module {
-    public Strafe() {super(BlackOut.BLACKOUT, "Strafe", "Very ass module");}
+public class SpeedPlus extends BlackOutModule {
+    public SpeedPlus() {super(BlackOut.BLACKOUT, "Speed+", "Speeeeeeeed");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final SettingGroup sgPause = settings.createGroup("Pause");
     private final Setting<Double> speed = sgGeneral.add(new DoubleSetting.Builder()
         .name("Speed")
         .description("How many blocks to move every movement tick")
@@ -33,14 +34,6 @@ public class Strafe extends Module {
         .defaultValue(false)
         .build()
     );
-    private final Setting<Double> effect = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Effect Multi")
-        .description("Speed multiplied each speed level")
-        .defaultValue(0.2)
-        .min(0)
-        .sliderMax(1)
-        .build()
-    );
     private final Setting<Double> kbFactor = sgGeneral.add(new DoubleSetting.Builder()
         .name("Damage Boost Factor")
         .description("Knockback multiplier")
@@ -53,28 +46,34 @@ public class Strafe extends Module {
     private final Setting<Double> decreaseSpeed = sgGeneral.add(new DoubleSetting.Builder()
         .name("Velocity Decrease Speed")
         .description("How fast should the velocity end")
-        .defaultValue(0.2)
+        .defaultValue(2)
         .min(0)
         .sliderMax(10)
         .visible(knockBack::get)
         .build()
     );
 
-    private final Setting<Boolean> sneakSpeed = sgGeneral.add(new BoolSetting.Builder()
-        .name("Sneak Stop")
+    //  Pause Page
+    private final Setting<Boolean> pauseSneak = sgGeneral.add(new BoolSetting.Builder()
+        .name("Pause Sneak")
         .description("Doesn't modify movement while sneaking.")
         .defaultValue(true)
         .build()
     );
 
-    private final Setting<Boolean> elytraSpeed = sgGeneral.add(new BoolSetting.Builder()
-        .name("Elytra Stop")
+    private final Setting<Boolean> pauseElytra = sgGeneral.add(new BoolSetting.Builder()
+        .name("Pause Elytra")
         .description("Doesn't modify movement while flying with elytra.")
         .defaultValue(true)
         .build()
     );
+    public enum SpeedMode {
+        Strafe,
+        Instant,
+        Accelerate
+    }
     boolean move = false;
-    double velocity;
+    public double velocity;
 
     @Override
     public void onActivate() {
@@ -95,7 +94,7 @@ public class Strafe extends Module {
                 if (packet.getId() == mc.player.getId()) {
                     double x = packet.getVelocityX() / 8000f;
                     double z = packet.getVelocityZ() / 8000f;
-                    velocity = Math.sqrt(x * x + z * z) * kbFactor.get();
+                    velocity = Math.max(velocity, Math.sqrt(x * x + z * z) * kbFactor.get());
                 }
             }
         }
@@ -104,23 +103,26 @@ public class Strafe extends Module {
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onMove(PlayerMoveEvent event) {
         if (mc.player != null && mc.world != null) {
+
             if (Modules.get().get(HoleSnap.class).isActive()) {
                 return;
             }
-            if (sneakSpeed.get() && mc.player.isSneaking()) {
+            if (pauseSneak.get() && mc.player.isSneaking()) {
                 return;
             }
-            if (elytraSpeed.get() && mc.player.isFallFlying()) {
+            if (pauseElytra.get() && mc.player.isFallFlying()) {
                 return;
             }
-            double multiplier = speed.get() * (velocity + 1);
-            velocity /= 1 + decreaseSpeed.get();
+
+            velocity = Math.max(speed.get(), velocity * (1 - decreaseSpeed.get() * 0.025));
+            double motion = velocity;
             if (velocity < 0.01) {
-                velocity = 0;
+                motion = 0;
             }
             if (mc.player.hasStatusEffect(StatusEffects.SPEED)) {
-                multiplier += (mc.player.getStatusEffect(StatusEffects.SPEED).getAmplifier() + 1) * effect.get();
+                motion *= 1.2 + mc.player.getStatusEffect(StatusEffects.SPEED).getAmplifier() * 0.2;
             }
+
             double forward = mc.player.input.movementForward;
             double sideways = mc.player.input.movementSideways;
             double yaw = getYaw(forward, sideways);
@@ -129,7 +131,7 @@ public class Strafe extends Module {
             double z = Math.sin(Math.toRadians(yaw + 90.0f));
 
             if (move) {
-                ((IVec3d) event.movement).set(multiplier * x, y, multiplier * z);
+                ((IVec3d) event.movement).set(motion * x, y, motion * z);
             } else {
                 ((IVec3d) event.movement).set(0, y, 0);
             }

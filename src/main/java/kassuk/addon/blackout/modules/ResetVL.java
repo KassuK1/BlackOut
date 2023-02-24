@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import meteordevelopment.meteorclient.settings.DoubleSetting;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.settings.Setting;
@@ -15,7 +16,7 @@ import meteordevelopment.meteorclient.systems.modules.Modules;
 Made by KassuK
 */
 
-public class ResetVL extends Module {
+public class ResetVL extends BlackOutModule {
     public ResetVL() {
         super(BlackOut.BLACKOUT, "ResetVL", "Tries to reset your violation level");
     }

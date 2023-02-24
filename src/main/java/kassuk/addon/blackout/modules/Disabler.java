@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
@@ -23,7 +24,7 @@ import java.util.Random;
 Made by OLEPOSSU / Raksamies
 */
 
-public class Disabler extends Module {
+public class Disabler extends BlackOutModule {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     public Disabler() {

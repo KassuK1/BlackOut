@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
@@ -21,7 +22,7 @@ import java.util.Random;
 Made by OLEPOSSU / Raksamies and KassuK
 */
 
-public class PacketCrash extends Module {
+public class PacketCrash extends BlackOutModule {
     public PacketCrash() {
         super(BlackOut.BLACKOUT, "Packet Crash", "Sends packets");
     }

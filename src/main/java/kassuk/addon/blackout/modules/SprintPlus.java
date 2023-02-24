@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.EnumSetting;
@@ -15,7 +16,7 @@ import meteordevelopment.orbit.EventPriority;
 Made by KassuK
 */
 
-public class SprintPlus extends Module {
+public class SprintPlus extends BlackOutModule {
     public SprintPlus() {
         super(BlackOut.BLACKOUT, "Sprint+", "Non shit sprint");
     }

@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import meteordevelopment.discordipc.DiscordIPC;
 import meteordevelopment.discordipc.RichPresence;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -22,7 +23,7 @@ import java.util.List;
 Made by OLEPOSSU / Raksamies
 */
 
-public class RPC extends Module {
+public class RPC extends BlackOutModule {
     public RPC() {
         super(BlackOut.BLACKOUT, "RPC", "Epic rpc");
     }

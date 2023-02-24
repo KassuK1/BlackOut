@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
@@ -56,7 +57,7 @@ import java.util.Map;
 Made by OLEPOSSU / Raksamies
 */
 
-public class AutoCrystalRewrite extends Module {
+public class AutoCrystalRewrite extends BlackOutModule {
     public AutoCrystalRewrite() {super(BlackOut.BLACKOUT, "Auto Crystal Rewrite", "Breaks and places crystals automatically (but better).");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgPlace = settings.createGroup("Place");
@@ -402,22 +403,12 @@ public class AutoCrystalRewrite extends Module {
     );
 
     //  Extrapolation Page
-    private final Setting<Boolean> enemyExt = sgExtrapolation.add(new BoolSetting.Builder()
-        .name("Enemy Extrapolation")
-        .description("Predicts enemy motion.")
-        .defaultValue(true)
-        .build()
-    );
-    private final Setting<Boolean> selfExt = sgExtrapolation.add(new BoolSetting.Builder()
+    private final Setting<Integer> selfExt = sgExtrapolation.add(new IntSetting.Builder()
         .name("Self Extrapolation")
-        .description("Predicts own motion.")
-        .defaultValue(true)
-        .build()
-    );
-    private final Setting<Boolean> friendExt = sgExtrapolation.add(new BoolSetting.Builder()
-        .name("Friend Extrapolation")
-        .description("Predicts friend motion.")
-        .defaultValue(true)
+        .description("How many ticks of movement should be predicted, should be lower than normal.")
+        .defaultValue(0)
+        .range(0, 100)
+        .sliderMax(100)
         .build()
     );
     private final Setting<Integer> extrapolation = sgExtrapolation.add(new IntSetting.Builder()
@@ -604,7 +595,7 @@ public class AutoCrystalRewrite extends Module {
     Map<BlockPos, Long> existedList = new HashMap<>();
     Map<BlockPos, Long> existedTicksList = new HashMap<>();
     Map<BlockPos, Long> own = new HashMap<>();
-    Map<String, Box> extPos = new HashMap<>();
+    Map<PlayerEntity, Box> extPos = new HashMap<>();
     Map<String, List<Vec3d>> motions = new HashMap<>();
     List<Box> blocked = new ArrayList<>();
     Map<Vec3d, double[][]> dmgCache = new HashMap<>();
@@ -678,6 +669,7 @@ public class AutoCrystalRewrite extends Module {
         extPos.clear();
         own.clear();
         dmgCache.clear();
+        renderPos = null;
     }
 
 
@@ -1169,7 +1161,7 @@ public class AutoCrystalRewrite extends Module {
     boolean canExplode(Vec3d vec) {
         if (!inExplodeRange(vec)) {return false;}
 
-        double[][] result = dmgCache.containsKey(vec) ? dmgCache.get(vec) : getDmg(vec);
+        double[][] result = getDmg(vec);
         return explodeDamageCheck(result[0], result[1], isOwn(vec));
     }
 
@@ -1319,15 +1311,14 @@ public class AutoCrystalRewrite extends Module {
         self = -1;
         enemyHP = -1;
         friendHP = -1;
-        List<AbstractClientPlayerEntity> players = mc.world.getPlayers();
-        for (int i = 0; i < players.size(); i++) {
-            AbstractClientPlayerEntity player = players.get(i);
-            if (player.getHealth() <= 0 || player.isSpectator() || player == mc.player) {
+        for (Map.Entry<PlayerEntity, Box> entry : extPos.entrySet()) {
+            PlayerEntity player = entry.getKey();
+            Box box = entry.getValue();
+            if (player.getHealth() <= 0 || player == mc.player) {
                 continue;
             }
 
-            String key = player.getName().getString();
-            double dmg = BODamageUtils.crystalDamage(player, extPos.containsKey(key) && shouldExt(player) ? extPos.get(key) : player.getBoundingBox(), vec, null, ignoreTerrain.get());
+            double dmg = BODamageUtils.crystalDamage(player, box, vec, null, ignoreTerrain.get());
             double hp = player.getHealth() + player.getAbsorptionAmount();
 
             //  friend
@@ -1343,13 +1334,11 @@ public class AutoCrystalRewrite extends Module {
                 enemyHP = hp;
             }
         }
-        self = BODamageUtils.crystalDamage(mc.player, selfExt.get() && extPos.containsKey(mc.player.getName().getString()) ? extPos.get(mc.player.getName().getString()) : mc.player.getBoundingBox(), vec, null, ignoreTerrain.get());
+        self = BODamageUtils.crystalDamage(mc.player, extPos.containsKey(mc.player) ? extPos.get(mc.player) : mc.player.getBoundingBox(), vec, null, ignoreTerrain.get());
         double[][] result = new double[][]{new double[] {highestEnemy, highestFriend, self}, new double[]{enemyHP, friendHP}};
         dmgCache.put(vec, result);
         return result;
     }
-
-    boolean shouldExt(PlayerEntity pl) {return (enemyExt.get() && !Friends.get().isFriend(pl)) || (friendExt.get() && Friends.get().isFriend(pl));}
 
     boolean air(BlockPos pos) {
         return mc.world.getBlockState(pos).getBlock().equals(Blocks.AIR);
@@ -1393,37 +1382,30 @@ public class AutoCrystalRewrite extends Module {
         return new Vec3d(en.getX() - en.prevX, en.getY() - en.prevY, en.getZ() - en.prevZ);
     }
 
-    Map<String, Box> getExtPos() {
-        Map<String, Box> map = new HashMap<>();
+    Map<PlayerEntity, Box> getExtPos() {
+        Map<PlayerEntity, Box> map = new HashMap<>();
         if (!mc.world.getPlayers().isEmpty()) {
-            for (int p = 0; p < mc.world.getPlayers().size(); p++) {
-                PlayerEntity en = mc.world.getPlayers().get(p);
-                if (en.getHealth() <= 0) {continue;}
-                if (!motions.isEmpty()) {
+            if (!motions.isEmpty()) {
+                for (int p = 0; p < mc.world.getPlayers().size(); p++) {
+
+                    PlayerEntity en = mc.world.getPlayers().get(p);
+
+                    if (en.getHealth() <= 0 || en.isSpectator()) {
+                        continue;
+                    }
+
                     Vec3d motion = average(motions.get(en.getName().getString()));
+
                     double x = motion.x;
                     double y = motion.y;
                     double z = motion.z;
+
                     Box box = en.getBoundingBox();
+
                     if (!inside(en, box)) {
-                        for (int i = 0; i < extrapolation.get(); i++) {
+                        for (int i = 0; i < (en == mc.player ? selfExt.get() : extrapolation.get()); i++) {
 
-                            // half block step check
-                            if (inside(en, box.offset(x, y, z)) && !inside(en, box.offset(x, y + 0.5, z))) {
-                                box = box.offset(x, y + 0.5, z);
-                                continue;
-                            }
-
-                            //x
-                            if (!inside(en, box.offset(x, 0, 0))) {
-                                box = box.offset(x, 0, 0);
-                            }
-
-                            //z
-                            if (!inside(en, box.offset(0, 0, z))) {
-                                box = box.offset(0, 0, z);
-                            }
-
+                            // y
                             if (!inside(en, box.offset(0, -0.01, 0))) {
                                 y = (y - 0.08) * 0.98;
                                 if (!inside(en, box.offset(0, y, 0))) {
@@ -1432,9 +1414,26 @@ public class AutoCrystalRewrite extends Module {
                             } else {
                                 y = -0.0784;
                             }
+
+                            // half block step check
+                            if (inside(en, box.offset(x, 0, z)) && !inside(en, box.offset(x, 0.5, z))) {
+                                box = box.offset(x, 0.5, z);
+                                continue;
+                            }
+
+                            // x
+                            if (!inside(en, box.offset(x, 0, 0))) {
+                                box = box.offset(x, 0, 0);
+                            }
+
+                            // z
+                            if (!inside(en, box.offset(0, 0, z))) {
+                                box = box.offset(0, 0, z);
+                            }
                         }
                     }
-                    map.put(en.getName().getString(), box);
+
+                    map.put(en, box);
                 }
             }
         }

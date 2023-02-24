@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
@@ -37,7 +38,7 @@ import net.minecraft.util.math.Vec3d;
 Made by OLEPOSSU / Raksamies
 */
 
-public class AutoCraftingTable extends Module {
+public class AutoCraftingTable extends BlackOutModule {
     public AutoCraftingTable() {super(BlackOut.BLACKOUT, "AutoCraftingTable", "Automatically places and opens an Crafting table");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()

@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
@@ -18,7 +19,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
-public class LightsOut extends Module {
+public class LightsOut extends BlackOutModule {
     public LightsOut(){super(BlackOut.BLACKOUT,"LightsOut","a tribute to Reliant");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()

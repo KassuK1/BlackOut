@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -15,7 +16,7 @@ import net.minecraft.util.math.Vec3d;
 
 import java.util.*;
 
-public class PacketFly extends Module {
+public class PacketFly extends BlackOutModule {
 
     public PacketFly() {
         super(BlackOut.BLACKOUT, "Packet Fly", "Flies with packets");

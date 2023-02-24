@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
@@ -40,9 +41,11 @@ Made by KassuK
 Updated by OLEPOSSU
 */
 
-public class SurroundPlus extends Module {
+public class SurroundPlus extends BlackOutModule {
     public SurroundPlus() {super(BlackOut.BLACKOUT, "Surround+", "KasumsSoft surround");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final SettingGroup sgToggle = settings.createGroup("Toggle");
+    private final SettingGroup sgRender = settings.createGroup("Render");
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
         .name("Pause Eat")
         .description("Pauses when you are eating")
@@ -91,19 +94,41 @@ public class SurroundPlus extends Module {
         .sliderRange(0, 10)
         .build()
     );
-    private final Setting<ShapeMode> shapeMode = sgGeneral.add(new EnumSetting.Builder<ShapeMode>()
+
+    //  Toggle Page
+    private final Setting<Boolean> toggleMove = sgToggle.add(new BoolSetting.Builder()
+        .name("Toggle Move")
+        .description("Toggles when you move horizontally")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<ToggleYMode> toggleY = sgToggle.add(new EnumSetting.Builder<ToggleYMode>()
+        .name("Toggle Y")
+        .description("Toggles when you move vertically")
+        .defaultValue(ToggleYMode.Full)
+        .build()
+    );
+    private final Setting<Boolean> toggleSneak = sgToggle.add(new BoolSetting.Builder()
+        .name("Toggle Sneak")
+        .description("Toggles when you sneak")
+        .defaultValue(false)
+        .build()
+    );
+
+    //  Render Page
+    private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
         .name("Shape Mode")
         .description(".")
         .defaultValue(ShapeMode.Both)
         .build()
     );
-    private final Setting<SettingColor> lineColor = sgGeneral.add(new ColorSetting.Builder()
+    private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder()
         .name("Line Color")
         .description("Color of the outlines")
         .defaultValue(new SettingColor(255, 0, 0, 150))
         .build()
     );
-    private final Setting<SettingColor> sideColor = sgGeneral.add(new ColorSetting.Builder()
+    private final Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder()
         .name("Side Color")
         .description(".")
         .defaultValue(new SettingColor(255, 0, 0, 50))
@@ -115,11 +140,18 @@ public class SurroundPlus extends Module {
         Silent,
         SilentBypass
     }
+    public enum ToggleYMode {
+        Disabled,
+        Up,
+        Down,
+        Full
+    }
     BlockTimerList timers = new BlockTimerList();
     BlockPos startPos = null;
     double placeTimer = 0;
     int placesLeft = 0;
     List<BlockPos> render = new ArrayList<>();
+    boolean lastSneak = false;
 
     @Override
     public void onActivate() {
@@ -145,10 +177,47 @@ public class SurroundPlus extends Module {
     void update() {
         if (mc.player != null && mc.world != null) {
 
-            //Check if player has moved
-            if (!mc.player.getBlockPos().equals(startPos)) {
+            // Move Check
+            if (toggleMove.get() && (mc.player.getBlockPos().getX() != startPos.getX() || mc.player.getBlockPos().getZ() != startPos.getZ())) {
+                sendDisableMsg("moved");
                 toggle();
                 return;
+            }
+
+            // Y Check
+            switch (toggleY.get()) {
+                case Full -> {
+                    if (mc.player.getBlockPos().getY() != startPos.getY()) {
+                        sendDisableMsg("moved vertically");
+                        toggle();
+                        return;
+                    }
+                }
+                case Up -> {
+                    if (mc.player.getBlockPos().getY() > startPos.getY()) {
+                        sendDisableMsg("moved up");
+                        toggle();
+                        return;
+                    }
+                }
+                case Down -> {
+                    if (mc.player.getBlockPos().getY() < startPos.getY()) {
+                        sendDisableMsg("moved down");
+                        toggle();
+                        return;
+                    }
+                }
+            }
+
+            // Sneak Check
+            if (toggleSneak.get()) {
+                boolean isClicked = mc.options.sneakKey.isPressed();
+                if (isClicked && !lastSneak) {
+                    sendDisableMsg("sneaked");
+                    toggle();
+                    return;
+                }
+                lastSneak = isClicked;
             }
 
             List<BlockPos> placements = check();

@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
@@ -29,7 +30,7 @@ import net.minecraft.util.math.Vec3d;
 
 import java.util.Map;
 
-public class ButtonAura extends Module {
+public class ButtonAura extends BlackOutModule {
 
     public ButtonAura() {super(BlackOut.BLACKOUT, "ButtonAura", ".");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();

@@ -1,13 +1,14 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import meteordevelopment.orbit.EventHandler;
 
-public class AutoTravel extends Module {
+public class AutoTravel extends BlackOutModule {
     public AutoTravel() {super(BlackOut.BLACKOUT, "AutoTravel", "Basically autistic baritone");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Boolean> sprint = sgGeneral.add(new BoolSetting.Builder()

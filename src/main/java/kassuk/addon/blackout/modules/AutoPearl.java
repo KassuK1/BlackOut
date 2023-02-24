@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
@@ -24,7 +25,7 @@ import net.minecraft.util.math.Vec3d;
 Made by OLEPOSSU / Raksamies
 */
 
-public class AutoPearl extends Module {
+public class AutoPearl extends BlackOutModule {
     public AutoPearl() {
         super(BlackOut.BLACKOUT, "AutoPearl", "Easily clip inside walls");
     }

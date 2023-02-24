@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
@@ -14,6 +15,7 @@ import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Blocks;
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
@@ -24,7 +26,7 @@ import java.util.List;
 Made by OLEPOSSU / Raksamies
 */
 
-public class HoleSnap extends Module {
+public class HoleSnap extends BlackOutModule {
     public HoleSnap() {
         super(BlackOut.BLACKOUT, "HoleSnap", "For the time that you cant even press W");
     }
@@ -129,7 +131,7 @@ public class HoleSnap extends Module {
             rubberbands++;
             if (rubberbands >= rDisable.get() && rDisable.get() > 0) {
                 this.toggle();
-                info("Toggled: Rubberbanding");
+                sendDisableMsg("rubberbanding");
             }
         }
     }
@@ -150,10 +152,10 @@ public class HoleSnap extends Module {
                 if (mc.player.getX() == hole.getX() + 0.5 && mc.player.getZ() == hole.getZ() + 0.5) {
                     if (mc.player.getY() == hole.getY()) {
                         this.toggle();
-                        info("Toggled: In hole");
+                        sendDisableMsg("in hole");
                     } else if (OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox().offset(0, -0.05, 0))){
                         this.toggle();
-                        info("Toggled: Hole unreachable");
+                        sendDisableMsg("hole unreachable");
                     } else {
                         ((IVec3d) event.movement).setXZ(0, 0);
                     }
@@ -166,7 +168,7 @@ public class HoleSnap extends Module {
                         collisions++;
                         if (collisions >= coll.get() && coll.get() > 0) {
                             this.toggle();
-                            info("Toggled: Collided");
+                            sendDisableMsg("collided");
                         }
                     } else {
                         collisions = 0;
@@ -181,7 +183,7 @@ public class HoleSnap extends Module {
                 }
             } else {
                 this.toggle();
-                info("Toggled: no hole found");
+                sendDisableMsg("no hole found");
             }
         }
     }

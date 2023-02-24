@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import meteordevelopment.meteorclient.events.render.GetFovEvent;
 import meteordevelopment.meteorclient.settings.IntSetting;
 import meteordevelopment.meteorclient.settings.Setting;
@@ -8,7 +9,7 @@ import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
 
-public class CustomFOV extends Module {
+public class CustomFOV extends BlackOutModule {
     public CustomFOV() {super(BlackOut.BLACKOUT, "CustomFOV", "Allows more customisation to the FOV");}
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();

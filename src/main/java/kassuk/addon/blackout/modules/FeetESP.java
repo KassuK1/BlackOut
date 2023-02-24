@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -22,7 +23,7 @@ import java.util.List;
 Made by OLEPOSSU / Raksamies
 */
 
-public class FeetESP extends Module {
+public class FeetESP extends BlackOutModule {
     public FeetESP() {
         super(BlackOut.BLACKOUT, "FeetESP", "No, it doesn't show you pictures of feet");
     }

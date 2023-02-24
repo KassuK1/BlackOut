@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 
 import meteordevelopment.meteorclient.mixininterface.IVec3d;
@@ -12,7 +13,7 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.util.math.Vec3d;
 
-public class JumpModify extends Module {
+public class JumpModify extends BlackOutModule {
     public JumpModify() {super(BlackOut.BLACKOUT, "JumpModify", "Allows you to modify jumping");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Double> jumpForce = sgGeneral.add(new DoubleSetting.Builder()

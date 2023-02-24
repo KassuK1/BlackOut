@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
@@ -17,6 +18,7 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.world.Timer;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
@@ -43,11 +45,13 @@ import java.util.List;
 Made by OLEPOSSU / Raksamies
 */
 
-public class SelfTrapPlus extends Module {
+public class SelfTrapPlus extends BlackOutModule {
     public SelfTrapPlus() {
         super(BlackOut.BLACKOUT, "Self Trap+", "Traps yourself");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final SettingGroup sgToggle = settings.createGroup("Toggle");
+    private final SettingGroup sgRender = settings.createGroup("Render");
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
         .name("Pause Eat")
         .description("Pauses when you are eating")
@@ -96,19 +100,41 @@ public class SelfTrapPlus extends Module {
         .sliderRange(0, 10)
         .build()
     );
-    private final Setting<ShapeMode> shapeMode = sgGeneral.add(new EnumSetting.Builder<ShapeMode>()
+
+    //  Toggle Page
+    private final Setting<Boolean> toggleMove = sgToggle.add(new BoolSetting.Builder()
+        .name("Toggle Move")
+        .description("Toggles when you move horizontally")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<SurroundPlus.ToggleYMode> toggleY = sgToggle.add(new EnumSetting.Builder<SurroundPlus.ToggleYMode>()
+        .name("Toggle Y")
+        .description("Toggles when you move vertically")
+        .defaultValue(SurroundPlus.ToggleYMode.Full)
+        .build()
+    );
+    private final Setting<Boolean> toggleSneak = sgToggle.add(new BoolSetting.Builder()
+        .name("Toggle Sneak")
+        .description("Toggles when you sneak")
+        .defaultValue(false)
+        .build()
+    );
+
+    //  Render Page
+    private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
         .name("Shape Mode")
         .description(".")
         .defaultValue(ShapeMode.Both)
         .build()
     );
-    private final Setting<SettingColor> lineColor = sgGeneral.add(new ColorSetting.Builder()
+    private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder()
         .name("Line Color")
         .description("Color of the outlines")
         .defaultValue(new SettingColor(255, 0, 0, 150))
         .build()
     );
-    private final Setting<SettingColor> sideColor = sgGeneral.add(new ColorSetting.Builder()
+    private final Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder()
         .name("Side Color")
         .description(".")
         .defaultValue(new SettingColor(255, 0, 0, 50))
@@ -123,10 +149,14 @@ public class SelfTrapPlus extends Module {
     BlockTimerList timers = new BlockTimerList();
     double placeTimer = 0;
     int placesLeft = 0;
+    BlockPos startPos = new BlockPos(0, 0, 0);
+    boolean lastSneak = false;
 
     @Override
     public void onActivate() {
         super.onActivate();
+        if (mc.player == null || mc.world == null) {toggle();}
+        startPos = mc.player.getBlockPos();
     }
 
     @Override
@@ -146,6 +176,50 @@ public class SelfTrapPlus extends Module {
         }
 
         if (mc.player != null && mc.world != null) {
+
+            // Move Check
+            if (toggleMove.get() && (mc.player.getBlockPos().getX() != startPos.getX() || mc.player.getBlockPos().getZ() != startPos.getZ())) {
+                sendDisableMsg("moved");
+                toggle();
+                return;
+            }
+
+            // Y Check
+            switch (toggleY.get()) {
+                case Full -> {
+                    if (mc.player.getBlockPos().getY() != startPos.getY()) {
+                        sendDisableMsg("moved vertically");
+                        toggle();
+                        return;
+                    }
+                }
+                case Up -> {
+                    if (mc.player.getBlockPos().getY() > startPos.getY()) {
+                        sendDisableMsg("moved up");
+                        toggle();
+                        return;
+                    }
+                }
+                case Down -> {
+                    if (mc.player.getBlockPos().getY() < startPos.getY()) {
+                        sendDisableMsg("moved down");
+                        toggle();
+                        return;
+                    }
+                }
+            }
+
+            // Sneak Check
+            if (toggleSneak.get()) {
+                boolean isClicked = mc.options.sneakKey.isPressed();
+                if (isClicked && !lastSneak) {
+                    sendDisableMsg("sneaked");
+                    toggle();
+                    return;
+                }
+                lastSneak = isClicked;
+            }
+
             List<BlockPos> render = getBlocks(getSize(mc.player.getBlockPos().up()), mc.player.getBoundingBox().intersects(OLEPOSSUtils.getBox(mc.player.getBlockPos().up(2))));
             List<BlockPos> placements = getValid(render);
 

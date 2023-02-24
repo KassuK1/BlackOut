@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.IntSetting;
@@ -16,7 +17,7 @@ Made by KassuK
 */
 
 
-public class WeakAlert extends Module {
+public class WeakAlert extends BlackOutModule {
     public WeakAlert() {
         super(BlackOut.BLACKOUT, "WeakAlert", "Alerts you if you get weakness");
     }

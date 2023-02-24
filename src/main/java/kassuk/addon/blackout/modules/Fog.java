@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
@@ -11,7 +12,7 @@ Made by OLEPOSSU
 */
 
 
-public class Fog extends Module {
+public class Fog extends BlackOutModule {
     public Fog() {
         super(BlackOut.BLACKOUT, "Fog", "Customizable fog");
     }

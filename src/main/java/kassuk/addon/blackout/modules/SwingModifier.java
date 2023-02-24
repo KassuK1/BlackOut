@@ -1,7 +1,9 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
+import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.DoubleSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
@@ -9,7 +11,7 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.util.Hand;
 
-public class SwingModifier extends Module {
+public class SwingModifier extends BlackOutModule {
     public SwingModifier() {super(BlackOut.BLACKOUT, "Swing Modifier", "Modifies swing rendering");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Double> speed = sgGeneral.add(new DoubleSetting.Builder()
@@ -34,6 +36,12 @@ public class SwingModifier extends Module {
         .sliderMax(10)
         .build()
     );
+    private final Setting<Boolean> reset = sgGeneral.add(new BoolSetting.Builder()
+        .name("Reset")
+        .description("Resets swing when swinging again.")
+        .defaultValue(false)
+        .build()
+    );
 
     public static boolean mainSwinging = false;
     public float mainProgress = 0;
@@ -43,12 +51,12 @@ public class SwingModifier extends Module {
 
     public void startSwing(Hand hand) {
         if (hand == Hand.MAIN_HAND) {
-            if (!mainSwinging) {
+            if (reset.get() || !mainSwinging) {
                 mainProgress = 0;
                 mainSwinging = true;
             }
         } else {
-            if (!offSwinging) {
+            if (reset.get() || !offSwinging) {
                 offProgress = 0;
                 offSwinging = true;
             }

@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
@@ -12,10 +13,8 @@ import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
-import meteordevelopment.meteorclient.utils.misc.Vec2;
 import meteordevelopment.meteorclient.utils.player.DamageUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
@@ -40,7 +39,7 @@ import java.util.List;
 Made by OLEPOSSU / Raksamies
 */
 
-public class BedBomb extends Module {
+public class BedBomb extends BlackOutModule {
     public BedBomb() {super(BlackOut.BLACKOUT, "BedBomb", "Automatically places and breaks beds to cause damage to your opponents");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgDamage = settings.createGroup("Damage");

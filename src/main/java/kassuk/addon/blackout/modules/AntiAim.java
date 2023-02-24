@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
@@ -20,7 +21,7 @@ import java.util.Random;
 Made by OLEPOSSU / Raksamies
 */
 
-public class AntiAim extends Module {
+public class AntiAim extends BlackOutModule {
     public AntiAim() {
         super(BlackOut.BLACKOUT, "AntiAim", "Funi conter stik module");
     }

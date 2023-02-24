@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.timers.IntTimerList;
@@ -26,7 +27,7 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
-public class PurpleSpinnyThingBlowerUpererAndPlacer extends Module {
+public class PurpleSpinnyThingBlowerUpererAndPlacer extends BlackOutModule {
     public PurpleSpinnyThingBlowerUpererAndPlacer() {super(BlackOut.BLACKOUT,"NN-Nuker","PurpleSpinnyThingBlowerUpererAndPlacer");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 

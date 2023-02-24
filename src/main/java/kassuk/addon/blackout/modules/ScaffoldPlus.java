@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
@@ -39,7 +40,7 @@ Made by KassuK
 Updated by OLEPOSSU
 */
 
-public class ScaffoldPlus extends Module {
+public class ScaffoldPlus extends BlackOutModule {
     public ScaffoldPlus() {
         super(BlackOut.BLACKOUT, "Scaffold+", "KasumsSoft blockwalk");
     }
