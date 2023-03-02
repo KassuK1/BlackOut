@@ -71,7 +71,7 @@ public class BODamageUtils {
         double impact = (1 - (modDistance / 12)) * exposure;
         double damage = ((impact * impact + impact) / 2 * 7 * (6 * 2) + 1);
 
-        damage = getDamageForDifficulty(damage);
+        damage = damage * 3 / 2;
         damage = DamageUtil.getDamageLeft((float) damage, (float) player.getArmor(), (float) player.getAttributeInstance(EntityAttributes.GENERIC_ARMOR_TOUGHNESS).getValue());
         damage = resistanceReduction(player, damage);
 
@@ -147,7 +147,7 @@ public class BODamageUtils {
         double damage = (impact * impact + impact) / 2 * 7 * (5 * 2) + 1;
 
         // Multiply damage by difficulty
-        damage = getDamageForDifficulty(damage);
+        damage = damage * 3 / 2;
 
         // Reduce by resistance
         damage = resistanceReduction(player, damage);
@@ -176,15 +176,6 @@ public class BODamageUtils {
     }
 
     // Utils
-
-    private static double getDamageForDifficulty(double damage) {
-        return switch (mc.world.getDifficulty()) {
-            case PEACEFUL -> 0;
-            case EASY     -> Math.min(damage / 2 + 1, damage);
-            case HARD     -> damage * 3 / 2;
-            default       -> damage;
-        };
-    }
 
     private static double normalProtReduction(Entity player, double damage) {
         int protLevel = EnchantmentHelper.getProtectionAmount(player.getArmorItems(), DamageSource.GENERIC);

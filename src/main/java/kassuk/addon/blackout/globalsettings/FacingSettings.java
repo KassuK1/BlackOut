@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.globalsettings;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.PlaceData;
 import kassuk.addon.blackout.utils.SettingUtils;
@@ -21,7 +22,7 @@ import java.util.function.Predicate;
 Made by OLEPOSSU
 */
 
-public class FacingSettings extends Module {
+public class FacingSettings extends BlackOutModule {
     public FacingSettings() {
         super(BlackOut.SETTINGS, "Facing", "Global facing settings for every blackout module");
     }

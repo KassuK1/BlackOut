@@ -18,4 +18,19 @@ public interface MixinPlayerMoveC2SPacket {
     @Mutable
     @Accessor("changeLook")
     void setLook(boolean look);
+
+    @Accessor("x")
+    double getX();
+
+    @Accessor("y")
+    double getY();
+
+    @Accessor("z")
+    double getZ();
+
+    @Accessor("yaw")
+    float getYaw();
+
+    @Accessor("pitch")
+    float getPitch();
 }

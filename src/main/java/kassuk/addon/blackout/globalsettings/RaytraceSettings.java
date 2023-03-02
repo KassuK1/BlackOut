@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.globalsettings;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.utils.BODamageUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.mixininterface.IRaycastContext;
@@ -18,7 +19,7 @@ import net.minecraft.world.RaycastContext;
 Made by OLEPOSSU
 */
 
-public class RaytraceSettings extends Module {
+public class RaytraceSettings extends BlackOutModule {
     public RaytraceSettings() {
         super(BlackOut.SETTINGS, "Raytrace", "Global raytrace settings for every blackout module");
     }

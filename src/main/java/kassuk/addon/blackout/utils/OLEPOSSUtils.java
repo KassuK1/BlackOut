@@ -3,11 +3,13 @@ package kassuk.addon.blackout.utils;
 import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
@@ -19,6 +21,7 @@ import net.minecraft.world.World;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class OLEPOSSUtils extends Utils {
+    static ItemStack obbyStack = new ItemStack(Items.OBSIDIAN);
     public static double distance(Vec3d v1, Vec3d v2) {
         double dX = Math.abs(v1.x - v2.x);
         double dY = Math.abs(v1.y - v2.y);
@@ -262,14 +265,19 @@ public class OLEPOSSUtils extends Utils {
     public static boolean strictDir(BlockPos pos, Direction dir) {
         if (dir.getOffsetY() > 0 && mc.player.getEyePos().y >= pos.getY() + 0.5) {return true;}
         if (dir.getOffsetY() < 0 && mc.player.getEyePos().y <= pos.getY() + 0.5) {return true;}
-        if (dir.getOffsetX() > 0 && mc.player.getX() >= pos.getX() + 0.5 + dir.getOffsetX() / 2f) {return true;}
-        if (dir.getOffsetX() < 0 && mc.player.getX() < pos.getX() + 0.5 - dir.getOffsetX() / 2f) {return true;}
-        if (dir.getOffsetZ() > 0 && mc.player.getZ() >= pos.getZ() + 0.5 + dir.getOffsetZ() / 2f) {return true;}
-        if (dir.getOffsetZ() < 0 && mc.player.getZ() < pos.getZ() + 0.5 - dir.getOffsetZ() / 2f) {return true;}
+        if (dir.getOffsetX() > 0 && mc.player.getX() >= pos.getX() + 1) {return true;}
+        if (dir.getOffsetX() < 0 && mc.player.getX() < pos.getX()) {return true;}
+        if (dir.getOffsetZ() > 0 && mc.player.getZ() >= pos.getZ() + 1) {return true;}
+        if (dir.getOffsetZ() < 0 && mc.player.getZ() < pos.getZ()) {return true;}
         return false;
     }
-
+    public static Box getCrystalBox(BlockPos pos) {
+        return new Box(pos.getX() - 0.5, pos.getY(), pos.getZ() - 0.5, pos.getX() + 1.5, pos.getY() + 2, pos.getZ() + 1.5);
+    }
     public static boolean isCrystalBlock(Block block) {
         return block == Blocks.OBSIDIAN || block == Blocks.BEDROCK;
+    }
+    public static boolean canPlaceOn(BlockPos block) {
+        return mc.world != null && mc.world.getBlockState(block).getBlock().hasDynamicBounds();
     }
 }

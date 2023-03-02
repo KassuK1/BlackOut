@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.globalsettings;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import meteordevelopment.meteorclient.settings.EnumSetting;
@@ -14,7 +15,7 @@ import net.minecraft.util.Hand;
 Made by OLEPOSSU
 */
 
-public class SwingSettings extends Module {
+public class SwingSettings extends BlackOutModule {
     public SwingSettings() {
         super(BlackOut.SETTINGS, "Swing", "Global swing settings for every blackout module");
     }

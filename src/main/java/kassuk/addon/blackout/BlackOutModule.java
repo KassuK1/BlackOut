@@ -39,9 +39,17 @@ public class BlackOutModule extends Module {
     public void sendBOInfo(String text) {
         if (mc.world != null) {
             ChatUtils.forceNextPrefixClass(getClass());
-            String msg = prefix + Formatting.GRAY + "[" + Formatting.WHITE + name + Formatting.GRAY + "] " + text;
+            String msg = prefix + " " + Formatting.WHITE + name + " " + text;
             Text message = Text.of(msg);
             ((IChatHud) mc.inGameHud.getChatHud()).add(message, Objects.hash(name + "-info"));
+        }
+    }
+    public void debug(String text) {
+        if (mc.world != null) {
+            ChatUtils.forceNextPrefixClass(getClass());
+            String msg = prefix + " " + Formatting.WHITE + name + " " + Formatting.AQUA + text;
+            Text message = Text.of(msg);
+            ((IChatHud) mc.inGameHud.getChatHud()).add(message, 0);
         }
     }
 }

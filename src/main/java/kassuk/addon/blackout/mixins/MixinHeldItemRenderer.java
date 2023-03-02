@@ -14,7 +14,7 @@ public abstract class MixinHeldItemRenderer {
     private void setArgs(Args args) {
         SwingModifier module = Modules.get().get(SwingModifier.class);
         if (module.isActive()) {
-            args.set(6, 0f);
+            args.set(6, module.getY(args.get(3)));
             args.set(4, module.getSwing(args.get(3)));
         }
     }

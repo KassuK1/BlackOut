@@ -88,6 +88,8 @@ public class AutoEz extends BlackOutModule {
     String name = null;
     List<Message> messageQueue = new ArrayList<>();
     int timer = 0;
+
+    // credits to exhibition for these messages
     static final String[] exhibobo = new String[]{
         "Wow, you just died in a block game %s",
         "%s died in a block game lmfao.",

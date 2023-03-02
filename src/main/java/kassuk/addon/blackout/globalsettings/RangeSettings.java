@@ -1,7 +1,9 @@
 package kassuk.addon.blackout.globalsettings;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
+import kassuk.addon.blackout.utils.RotationUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.mixininterface.IVec3d;
 import meteordevelopment.meteorclient.settings.DoubleSetting;
@@ -9,15 +11,16 @@ import meteordevelopment.meteorclient.settings.EnumSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
+import meteordevelopment.meteorclient.utils.player.Rotations;
+import net.minecraft.util.math.*;
+
+import java.util.Vector;
 
 /*
 Made by OLEPOSSU
 */
 
-public class RangeSettings extends Module {
+public class RangeSettings extends BlackOutModule {
     public RangeSettings() {
         super(BlackOut.SETTINGS, "Range", "Global range settings for every blackout module");
     }
@@ -202,6 +205,7 @@ public class RangeSettings extends Module {
     }
     public enum AttackRangeMode {
         NCP,
+        UpdatedNCP,
         Height,
         Vanilla,
         Middle,
@@ -238,7 +242,7 @@ public class RangeSettings extends Module {
         Vec3d from = mc.player.getEyePos();
         Vec3d pPos = mc.player.getPos();
         switch (placeRangeFrom.get()) {
-            case Middle -> ((IVec3d)from).set((pBB.minX + pBB.maxX) / 2, (pBB.minY + pBB.maxY) / 2, (pBB.minX + pBB.maxX) / 2);
+            case Middle -> ((IVec3d)from).set((pBB.minX + pBB.maxX) / 2, (pBB.minY + pBB.maxY) / 2, (pBB.minZ + pBB.maxZ) / 2);
             case Feet -> ((IVec3d)from).set(pPos.x, pPos.y, pPos.z);
         }
 
@@ -261,26 +265,26 @@ public class RangeSettings extends Module {
     }
 
     // Attack Range Chesks
-    public boolean inAttackRange(Box bb, double eyeHeight) {
-        return inAttackRange(bb, eyeHeight, getFeet(bb));
+    public boolean inAttackRange(Box bb) {
+        return inAttackRange(bb, getFeet(bb));
     }
-    public boolean inAttackRange(Box bb, double eyeHeight, Vec3d feet) {
+    public boolean inAttackRange(Box bb, Vec3d feet) {
         if (mc.player == null) {return false;}
 
-        return attackRangeTo(bb, eyeHeight, feet) <= (SettingUtils.attackTrace(bb) ? attackRange.get() : attackRangeWalls.get());
+        return attackRangeTo(bb, feet) <= (SettingUtils.attackTrace(bb) ? attackRange.get() : attackRangeWalls.get());
     }
-    public boolean inAttackRangeNoTrace(Box bb, double eyeHeight, Vec3d feet) {
+    public boolean inAttackRangeNoTrace(Box bb, Vec3d feet) {
         if (mc.player == null) {return false;}
 
-        return attackRangeTo(bb, eyeHeight, feet) <= Math.max(attackRange.get(), attackRangeWalls.get());
+        return attackRangeTo(bb, feet) <= Math.max(attackRange.get(), attackRangeWalls.get());
     }
 
-    public double attackRangeTo(Box bb, double eyeHeight, Vec3d feet) {
+    public double attackRangeTo(Box bb, Vec3d feet) {
         Box pBB = mc.player.getBoundingBox();
         Vec3d from = mc.player.getEyePos();
         switch (attackRangeFrom.get()) {
-            case Middle -> ((IVec3d)from).set((pBB.minX + pBB.maxX) / 2, (pBB.minY + pBB.maxY) / 2, (pBB.minX + pBB.maxX) / 2);
-            case Feet -> ((IVec3d)from).set((pBB.minX + pBB.maxX) / 2, pBB.minY, (pBB.minX + pBB.maxX) / 2);
+            case Middle -> ((IVec3d)from).set((pBB.minX + pBB.maxX) / 2, (pBB.minY + pBB.maxY) / 2, (pBB.minZ + pBB.maxZ) / 2);
+            case Feet -> ((IVec3d)from).set((pBB.minX + pBB.maxX) / 2, pBB.minY, (pBB.minZ + pBB.maxZ) / 2);
         }
 
         switch (attackRangeMode.get()) {
@@ -288,19 +292,66 @@ public class RangeSettings extends Module {
                 return getRange(from, feet.add(0, attackHeight.get(), 0));
             }
             case NCP -> {
-                return getRange(from, new Vec3d(feet.x, Math.min(Math.max(from.getY(), bb.minY), bb.minY + eyeHeight), feet.z));
+                return getRange(from, new Vec3d(feet.x, Math.min(Math.max(from.getY(), bb.minY), bb.maxY), feet.z));
             }
             case Vanilla -> {
                 return getRange(from, OLEPOSSUtils.getClosest(mc.player.getEyePos(), feet, Math.abs(bb.minX - bb.maxX), Math.abs(bb.minY - bb.maxY)));
             }
             case Middle -> {
-                return getRange(from, new Vec3d((bb.minX + bb.maxX) / 2, (bb.minY + bb.maxY) / 2, (bb.minX + bb.maxX) / 2));
+                return getRange(from, new Vec3d((bb.minX + bb.maxX) / 2, (bb.minY + bb.maxY) / 2, (bb.minZ + bb.maxZ) / 2));
             }
             case CustomBox -> {
                 return getRange(from, OLEPOSSUtils.getClosest(mc.player.getEyePos(), feet, Math.abs(bb.minX - bb.maxX) * closestAttackWidth.get(), Math.abs(bb.minY - bb.maxY) * closestAttackHeight.get()));
             }
+            case UpdatedNCP -> {
+                double d = getDistFromCenter(bb, feet, from, false);
+
+                return getRange(from, new Vec3d(feet.x, Math.min(Math.max(from.getY(), bb.minY), bb.maxY), feet.z)) - d;
+            }
         }
         return -1;
+    }
+
+    public double getDistFromCenter(Box bb, Vec3d feet, Vec3d from, boolean debug) {
+        Vec3d startPos = new Vec3d(feet.x, Math.min(Math.max(from.getY(), bb.minY), bb.maxY), feet.z);
+        Vec3d rangePos = new Vec3d(feet.x, Math.min(Math.max(from.getY(), bb.minY), bb.maxY), feet.z);
+
+
+        double halfWidth = Math.abs(bb.minX - bb.maxX) / 2f;
+
+        if (from.x == rangePos.x && from.z == rangePos.z) {return 0;}
+
+        Vec3d dist = new Vec3d(from.x - rangePos.x, 0, from.z - rangePos.z);
+
+        if (getDistXZ(dist) < halfWidth * Math.sqrt(2)) {return 0;}
+
+        if (dist.getZ() > 0.0) {
+            ((IVec3d) rangePos).setXZ(rangePos.x, rangePos.z + halfWidth);
+        }
+        else if (dist.getZ() < 0.0) {
+            ((IVec3d) rangePos).setXZ(rangePos.x, rangePos.z - halfWidth);
+        }
+        else if (dist.getX() > 0.0) {
+            ((IVec3d) rangePos).setXZ(rangePos.x + halfWidth, rangePos.z);
+        }
+        else ((IVec3d) rangePos).setXZ(rangePos.x - halfWidth, rangePos.z);
+
+
+        Vec3d vec2 = rangePos.subtract(startPos);
+        double angle = RotationUtils.radAngle(new Vec2f((float) dist.x, (float) dist.z), new Vec2f((float) vec2.x, (float) vec2.z));
+
+        if (angle > Math.PI / 4) {
+            angle = Math.PI / 2 - angle;
+        };
+        if (angle >= 0.0 && angle <= Math.PI / 4) {
+            return halfWidth / Math.cos(angle);
+        } else {
+            return 0;
+        }
+        /*
+        vec1 = 15, 10
+        vec2 = 0, 1
+         */
     }
 
     double getRange(Vec3d from, Vec3d to) {
@@ -354,6 +405,10 @@ public class RangeSettings extends Module {
             }
         }
         return -1;
+    }
+
+    double getDistXZ(Vec3d vec) {
+        return Math.sqrt(vec.x * vec.x + vec.z * vec.z);
     }
 
 }

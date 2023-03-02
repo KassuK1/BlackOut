@@ -14,16 +14,18 @@ import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
+import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.BlockItem;
+import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
@@ -33,8 +35,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /*
 Made by KassuK
@@ -134,6 +135,24 @@ public class SurroundPlus extends BlackOutModule {
         .defaultValue(new SettingColor(255, 0, 0, 50))
         .build()
     );
+    private final Setting<ShapeMode> supportShapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
+        .name("Support Shape Mode")
+        .description(".")
+        .defaultValue(ShapeMode.Both)
+        .build()
+    );
+    private final Setting<SettingColor> supportLineColor = sgRender.add(new ColorSetting.Builder()
+        .name("Support Line Color")
+        .description("Color of the outlines")
+        .defaultValue(new SettingColor(255, 0, 0, 150))
+        .build()
+    );
+    private final Setting<SettingColor> supportSideColor = sgRender.add(new ColorSetting.Builder()
+        .name("Support Side Color")
+        .description(".")
+        .defaultValue(new SettingColor(255, 0, 0, 50))
+        .build()
+    );
     public enum SwitchMode {
         Disabled,
         Normal,
@@ -150,7 +169,7 @@ public class SurroundPlus extends BlackOutModule {
     BlockPos startPos = null;
     double placeTimer = 0;
     int placesLeft = 0;
-    List<BlockPos> render = new ArrayList<>();
+    List<Render> render = new ArrayList<>();
     boolean lastSneak = false;
 
     @Override
@@ -170,7 +189,7 @@ public class SurroundPlus extends BlackOutModule {
             placesLeft = places.get();
             placeTimer = 0;
         }
-        render.forEach(item -> event.renderer.box(OLEPOSSUtils.getBox(item), sideColor.get(), lineColor.get(), shapeMode.get(), 0));
+        render.forEach(item -> event.renderer.box(OLEPOSSUtils.getBox(item.pos), item.support ? supportSideColor.get() : sideColor.get(), item.support ? supportLineColor.get() : lineColor.get(), item.support ? supportShapeMode.get() : shapeMode.get(), 0));
         update();
     }
 
@@ -230,12 +249,14 @@ public class SurroundPlus extends BlackOutModule {
                 (!pauseEat.get() || !mc.player.isUsingItem()) && placesLeft > 0 && !placements.isEmpty()) {
 
 
-                List<BlockPos> toPlace = new ArrayList<>();
+                Map<PlaceData, BlockPos> toPlace = new HashMap<>();
                 for (BlockPos placement : placements) {
-                    if (toPlace.size() < placesLeft && canPlace(placement)) {
-                        toPlace.add(placement);
+                    PlaceData data = SettingUtils.getPlaceData(placement);
+                    if (toPlace.size() < placesLeft && data.valid()) {
+                        toPlace.put(data, placement);
                     }
                 }
+                sort(toPlace);
 
                 if (!toPlace.isEmpty()) {
                     int obsidian = hand == Hand.MAIN_HAND ? Managers.HOLDING.getStack().getCount() :
@@ -252,8 +273,12 @@ public class SurroundPlus extends BlackOutModule {
 
                     if (obsidian >= 0) {
                         boolean switched = false;
-                        for (int i = 0; i < Math.min(obsidian, toPlace.size()); i++) {
-                            PlaceData placeData = SettingUtils.getPlaceData(toPlace.get(i));
+                        int i = 0;
+                        for (Map.Entry<PlaceData, BlockPos> entry : toPlace.entrySet()) {
+                            if (i >= Math.min(obsidian, toPlace.size())) {continue;}
+
+                            PlaceData placeData = entry.getKey();
+                            BlockPos pos = entry.getValue();
                             if (placeData.valid()) {
                                 boolean rotated = !SettingUtils.shouldRotate(RotationType.Placing) || Managers.ROTATION.start(placeData.pos(), 1, RotationType.Placing);
 
@@ -273,9 +298,10 @@ public class SurroundPlus extends BlackOutModule {
                                         }
                                     }
                                 }
-                                place(placeData, toPlace.get(i));
+                                place(placeData, pos);
                             }
                         }
+
                         if (switched) {
                             switch (switchMode.get()) {
                                 case Silent -> {
@@ -290,10 +316,6 @@ public class SurroundPlus extends BlackOutModule {
                 }
             }
         }
-    }
-
-    boolean canPlace(BlockPos pos) {
-        return SettingUtils.getPlaceData(pos).valid();
     }
 
     void place(PlaceData d, BlockPos ogPos) {
@@ -320,15 +342,53 @@ public class SurroundPlus extends BlackOutModule {
 
     List<BlockPos> check() {
         List<BlockPos> list = new ArrayList<>();
-        List<BlockPos> renders = new ArrayList<>();
+        List<Render> renders = new ArrayList<>();
         List<BlockPos> blocks = getBlocks(getSize());
         if (mc.player != null && mc.world != null) {
             for (BlockPos position : blocks) {
                 if (mc.world.getBlockState(position).getBlock().equals(Blocks.AIR)) {
                     if (!timers.contains(position) && !EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
-                        list.add(position);
+                        PlaceData data = SettingUtils.getPlaceData(position);
+                        if (data.valid()) {
+                            list.add(position);
+                        } else {
+                            Direction best = null;
+                            int value = -1;
+                            double dist = Double.MAX_VALUE;
+                            for (Direction dir : Direction.values()) {
+                                if (mc.world.getBlockState(position.offset(dir)).getBlock() == Blocks.AIR) {
+                                    PlaceData placeData = SettingUtils.getPlaceData(position.offset(dir));
+                                    if (placeData.valid()) {
+                                        if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
+                                            double distance = OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(position.offset(dir)), mc.player.getPos());
+                                            if (distance < dist || value <= 1) {
+                                                dist = distance;
+                                                best = dir;
+                                                value = 2;
+                                            }
+                                        } else if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM && entity.getType() != EntityType.END_CRYSTAL)) {
+                                            if (value <= 1) {
+                                                double distance = OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(position.offset(dir)), mc.player.getPos());
+                                                if (distance < dist || value <= 0) {
+                                                    best = dir;
+                                                    value = 1;
+                                                    dist = distance;
+
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            if (best != null) {
+                                if (!timers.contains(position.offset(best))) {
+                                    list.add(position.offset(best));
+                                }
+                                renders.add(new Render(position.offset(best), true));
+                            }
+                        }
                     }
-                    renders.add(position);
+                    renders.add(new Render(position, false));
                 }
             }
         }
@@ -364,5 +424,33 @@ public class SurroundPlus extends BlackOutModule {
         return list;
     }
 
+    // Very shitty sorting
+    void sort(Map<PlaceData, BlockPos> original) {
+        Map<PlaceData, BlockPos> map = new HashMap<>();
+        double lowest;
+        PlaceData lData;
+        BlockPos lPos;
+        for (int i = 0; i < original.size(); i++) {
+            lowest = Double.MAX_VALUE;
+            lData = null;
+            lPos = null;
+
+            for (Map.Entry<PlaceData, BlockPos> entry : original.entrySet()) {
+                double yaw = Rotations.getYaw(entry.getValue());
+                if (yaw < lowest) {
+                    lowest = yaw;
+                    lData = entry.getKey();
+                    lPos = entry.getValue();
+                }
+            }
+            map.put(lData, lPos);
+        }
+
+        original.clear();
+        original.putAll(map);
+    }
+
     boolean air(BlockPos pos) {return mc.world.getBlockState(pos).getBlock().equals(Blocks.AIR);}
+
+    record Render(BlockPos pos, boolean support) {}
 }

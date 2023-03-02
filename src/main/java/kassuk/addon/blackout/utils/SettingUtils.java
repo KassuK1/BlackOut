@@ -50,10 +50,10 @@ public class SettingUtils extends Utils {
     public static boolean inPlaceRangeNoTrace(BlockPos pos) {
         return range.inPlaceRangeNoTrace(pos);
     }
-    public static boolean inAttackRange(Box bb, double eyeHeight) {
-        return range.inAttackRange(bb, eyeHeight);
+    public static boolean inAttackRange(Box bb) {
+        return range.inAttackRange(bb);
     }
-    public static boolean inAttackRange(Box bb, double eyeHeight, Vec3d feet) {return range.inAttackRange(bb, eyeHeight, feet);}
+    public static boolean inAttackRange(Box bb, Vec3d feet) {return range.inAttackRange(bb, feet);}
     public static double mineRangeTo(BlockPos pos) {return range.miningRangeTo(pos);}
     public static boolean inMineRange(BlockPos pos) {
         return range.inMineRange(pos);
@@ -61,10 +61,12 @@ public class SettingUtils extends Utils {
     public static boolean inMineRangeNoTrace(BlockPos pos) {
         return range.inMineRangeNoTrace(pos);
     }
-    public static boolean inAttackRangeNoTrace(Box bb, double eyeHeight, Vec3d feet) {return range.inAttackRangeNoTrace(bb, eyeHeight, feet);}
+    public static boolean inAttackRangeNoTrace(Box bb, double eyeHeight, Vec3d feet) {return range.inAttackRangeNoTrace(bb, feet);}
+    public static double attackRangeTo(Box bb, Vec3d feet) {return range.attackRangeTo(bb, feet);}
 
 
     //  Rotate
+    public static int rotationPackets() {return rotation.packets.get();}
     public static boolean startMineRot() {
         return rotation.startMineRot();
     }

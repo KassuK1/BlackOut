@@ -5,6 +5,7 @@ import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
+import kassuk.addon.blackout.globalsettings.RangeSettings;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.mixins.MixinSound;
 import kassuk.addon.blackout.timers.IntTimerList;
@@ -20,16 +21,14 @@ import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
-import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
-import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Blocks;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.EndCrystalEntity;
@@ -39,8 +38,8 @@ import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
+import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -68,6 +67,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     private final SettingGroup sgExtrapolation = settings.createGroup("Extrapolation");
     private final SettingGroup sgRender = settings.createGroup("Render");
     private final SettingGroup sgSound = settings.createGroup("Sound");
+    private final SettingGroup sgCompatibility = settings.createGroup("Compatibility");
     private final SettingGroup sgDebug = settings.createGroup("Debug");
 
     //  General Page
@@ -427,6 +427,14 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .sliderRange(1, 20)
         .build()
     );
+    private final Setting<Integer> rangeExtrapolation = sgExtrapolation.add(new IntSetting.Builder()
+        .name("Range Extrapolation")
+        .description("How many ticks of movement should be predicted for attack ranges before placing.")
+        .defaultValue(0)
+        .range(0, 100)
+        .sliderMax(100)
+        .build()
+    );
 
     //  Render Page
     private final Setting<Boolean> render = sgRender.add(new BoolSetting.Builder()
@@ -456,6 +464,13 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .visible(() -> renderMode.get().equals(RenderMode.Earthhack) || renderMode.get().equals(RenderMode.Future))
         .build()
     );
+    private final Setting<FadeMode> fadeMode = sgRender.add(new EnumSetting.Builder<FadeMode>()
+        .name("Fade Mode")
+        .description(".")
+        .defaultValue(FadeMode.Normal)
+        .visible(() -> renderMode.get() == RenderMode.BlackOut)
+        .build()
+    );
     private final Setting<Double> fadeTime = sgRender.add(new DoubleSetting.Builder()
         .name("Fade Time")
         .description("How long the fading should take.")
@@ -466,9 +481,27 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .build()
     );
     private final Setting<Double> animationSpeed = sgRender.add(new DoubleSetting.Builder()
-        .name("Animation Speed")
+        .name("Animation Move Speed")
         .description("How fast should blackout mode box move.")
         .defaultValue(1)
+        .min(0)
+        .sliderRange(0, 10)
+        .visible(() -> renderMode.get().equals(RenderMode.BlackOut))
+        .build()
+    );
+    private final Setting<Double> animationMoveExponent = sgRender.add(new DoubleSetting.Builder()
+        .name("Animation Move Exponent")
+        .description("Moves faster when longer away from the target.")
+        .defaultValue(1.3)
+        .min(0)
+        .sliderRange(0, 10)
+        .visible(() -> renderMode.get().equals(RenderMode.BlackOut))
+        .build()
+    );
+    private final Setting<Double> animationExponent = sgRender.add(new DoubleSetting.Builder()
+        .name("Animation Exponent")
+        .description("How fast should blackout mode box grow.")
+        .defaultValue(3)
         .min(0)
         .sliderRange(0, 10)
         .visible(() -> renderMode.get().equals(RenderMode.BlackOut))
@@ -492,6 +525,16 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .name("Explode Sound")
         .description("Sets crystal explode sound to high pitch anvil mining.")
         .defaultValue(false)
+        .build()
+    );
+
+    //  Compatibility Page
+    private final Setting<Double> autoMineDamage = sgCompatibility.add(new DoubleSetting.Builder()
+        .name("Auto Mine Damage")
+        .description("Places at automine pos if it deals over 'highest dmg / x' damage.")
+        .defaultValue(2)
+        .sliderRange(1, 5)
+        .min(1)
         .build()
     );
 
@@ -603,6 +646,11 @@ public class AutoCrystalRewrite extends BlackOutModule {
     Map<BlockPos, Double[]> earthMap = new HashMap<>();
     double switchTimer = 0;
     int confirmed = Integer.MIN_VALUE;
+    double infoCps = 0;
+    double cps = 0;
+    long cpsTime = System.currentTimeMillis();
+    int explosions = 0;
+    long lastMillis = System.currentTimeMillis();
 
     //Used in placement calculation
     BlockPos bestPos;
@@ -614,9 +662,9 @@ public class AutoCrystalRewrite extends BlackOutModule {
     double[][] result;
 
     //BlackOut Render
+    Vec3d renderTarget = null;
     Vec3d renderPos = null;
     double renderProgress = 0;
-
 
     public enum DmgCheckMode {
         Normal,
@@ -655,6 +703,11 @@ public class AutoCrystalRewrite extends BlackOutModule {
         Seconds,
         Ticks
     }
+    public enum FadeMode {
+        Up,
+        Down,
+        Normal
+    }
 
     @Override
     public void onActivate() {
@@ -670,6 +723,18 @@ public class AutoCrystalRewrite extends BlackOutModule {
         own.clear();
         dmgCache.clear();
         renderPos = null;
+        renderProgress = 0;
+        lastMillis = System.currentTimeMillis();
+        cps = 0;
+        infoCps = 0;
+        cpsTime = System.currentTimeMillis();
+    }
+
+    @Override
+    public String getInfoString() {
+        super.getInfoString();
+
+        return ((float) Math.round(infoCps * 10) / 10) + " CPS";
     }
 
 
@@ -703,11 +768,12 @@ public class AutoCrystalRewrite extends BlackOutModule {
             }
             extPos = getExtPos();
             if (debugRange.get()) {
-                ChatUtils.sendMsg(Text.of(debugRangeHeight(1) + "  " + dist(debugRangePos(1)) + "\n" +
+                debug(debugRangeHeight(1) + "  " + dist(debugRangePos(1)) + "\n" +
                     debugRangeHeight(2) + "  " + dist(debugRangePos(2)) + "\n" +
                     debugRangeHeight(3) + "  " + dist(debugRangePos(3)) + "\n" +
                     debugRangeHeight(4) + "  " + dist(debugRangePos(4)) + "\n" +
-                    debugRangeHeight(5) + "  " + dist(debugRangePos(5))));
+                    debugRangeHeight(5) + "  " + dist(debugRangePos(5)) + "\n" +
+                    SettingUtils.attackRangeTo(OLEPOSSUtils.getCrystalBox(new BlockPos(debugRangeX.get(), debugRangeY.get(), debugRangeZ.get())), new Vec3d(debugRangeX.get() + 0.5, debugRangeY.get(), debugRangeZ.get() + 0.5)));
             }
         }
 
@@ -746,7 +812,17 @@ public class AutoCrystalRewrite extends BlackOutModule {
 
     @EventHandler(priority = EventPriority.HIGHEST + 1)
     private void onRender3D(Render3DEvent event) {
-        double d = event.frameTime;
+        double d = (System.currentTimeMillis() - lastMillis) / 1000f;
+        lastMillis = System.currentTimeMillis();
+
+        infoCps = smoothChange(cps, infoCps, d);
+
+        if (System.currentTimeMillis() - cpsTime >= 1000) {
+            cps = explosions * (System.currentTimeMillis() - cpsTime) / 1000f;
+            cpsTime = System.currentTimeMillis();
+            explosions = 0;
+        }
+
         attacked.update(d);
         placeTimer = Math.max(placeTimer - d * getSpeed(), 0);
         delayTimer += d;
@@ -759,15 +835,43 @@ public class AutoCrystalRewrite extends BlackOutModule {
                 case BlackOut -> {
                     if (placePos != null && !pausedCheck() && holdingCheck()) {
                         renderProgress = Math.min(1, renderProgress + d);
-                        renderPos = smoothMove(renderPos, new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ()), event.frameTime * animationSpeed.get());
+                        renderTarget = new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ());
                     } else {
                         renderProgress = Math.max(0, renderProgress - d);
                     }
-                    if (renderPos != null) {
-                        Box box = new Box(renderPos.getX() + 0.5 - renderProgress / 2, renderPos.getY() - 0.5 - renderProgress / 2, renderPos.getZ() + 0.5 - renderProgress / 2,
-                            renderPos.getX() + 0.5 + renderProgress / 2, renderPos.getY() - 0.5 + renderProgress / 2, renderPos.getZ() + 0.5 + renderProgress / 2);
 
-                        event.renderer.box(box, new Color(color.get().r, color.get().g, color.get().b, Math.round(color.get().a / 5f)), color.get(), shapeMode.get(), 0);
+                    if (renderTarget != null) {
+                        renderPos = smoothMove(renderPos, renderTarget, d * animationSpeed.get() * 5);
+                    }
+
+                    if (renderPos != null) {
+                        double r = 0.5 - Math.pow(1 - renderProgress, animationExponent.get()) / 2f;
+
+                        if (r >= 0.001) {
+                            double down = -0.5;
+                            double up = -0.5;
+                            double width = 0.5;
+
+                            switch (fadeMode.get()) {
+                                case Up -> {
+                                    up = 0;
+                                    down = -(r * 2);
+                                }
+                                case Down -> {
+                                    up = -1 + r * 2;
+                                    down = -1;
+                                }
+                                case Normal -> {
+                                    up = -0.5 + r;
+                                    down = -0.5 - r;
+                                    width = r;
+                                }
+                            }
+                            Box box = new Box(renderPos.getX() + 0.5 - width, renderPos.getY() + down, renderPos.getZ() + 0.5 - width,
+                                renderPos.getX() + 0.5 + width, renderPos.getY() + up, renderPos.getZ() + 0.5 + width);
+
+                            event.renderer.box(box, new Color(color.get().r, color.get().g, color.get().b, Math.round(color.get().a)), lineColor.get(), shapeMode.get(), 0);
+                        }
                     }
                 }
                 case Future -> {
@@ -777,6 +881,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
                     } else {
                         renderProgress = Math.max(0, renderProgress - d);
                     }
+
                     if (renderProgress > 0 && renderPos != null) {
                         event.renderer.box(new Box(renderPos.getX(), renderPos.getY() - 1, renderPos.getZ(),
                                 renderPos.getX() + 1, renderPos.getY(), renderPos.getZ() + 1),
@@ -807,7 +912,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
             //Render extrapolation
             if (renderExt.get()) {
                 extPos.forEach((name, bb) -> {
-                    if (renderSelfExt.get() || !name.equals(mc.player.getName().getString()))
+                    if (renderSelfExt.get() || !name.equals(mc.player))
                         event.renderer.box(bb, color.get(), lineColor.get(), shapeMode.get(), 0);
                 });
             }
@@ -828,6 +933,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
                 ((MixinSound) event.sound).setID(SoundEvents.BLOCK_ANVIL_FALL.getId());
                 ((MixinSound) event.sound).setVolume(1);
                 ((MixinSound) event.sound).setPitch(10);
+
             }
             if (event.sound.getId() == SoundEvents.ENTITY_PLAYER_ATTACK_NODAMAGE.getId() ||
                 event.sound.getId() == SoundEvents.ENTITY_PLAYER_ATTACK_WEAK.getId()) {
@@ -845,6 +951,16 @@ public class AutoCrystalRewrite extends BlackOutModule {
         }
     }
 
+    @EventHandler(priority = EventPriority.HIGHEST)
+    private void onReceive(PacketEvent.Receive event) {
+        if (event.packet instanceof ExplosionS2CPacket packet) {
+            Vec3d pos = new Vec3d(packet.getX(), packet.getY(), packet.getZ());;
+            if (isOwn(pos)) {
+                explosions++;
+            }
+        }
+    }
+
     // Other stuff
 
     void update() {
@@ -854,7 +970,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         Hand hand = getHand(Items.END_CRYSTAL);
         if (!pausedCheck() && (hand != null || switchMode.get() == SwitchMode.Silent || switchMode.get() == SwitchMode.SilentBypass) && explode.get()) {
             for (Entity en : mc.world.getEntities()) {
-                if (en.getType().equals(EntityType.END_CRYSTAL)) {
+                if (en instanceof EndCrystalEntity) {
                     double[] dmg = getDmg(en.getPos())[0];
                     if (switchTimer <= 0 && canExplode(en.getPos())) {
                         if ((expEntity == null || value == null) ||
@@ -929,9 +1045,9 @@ public class AutoCrystalRewrite extends BlackOutModule {
             if (!pausedCheck()) {
                 int silentSlot = InvUtils.find(Items.END_CRYSTAL).slot();
                 int hotbar = InvUtils.findInHotbar(Items.END_CRYSTAL).slot();
-                if (handToUse != null || (switchMode.get() == SwitchMode.Silent && hotbar >= 0) ||(switchMode.get() == SwitchMode.SilentBypass && silentSlot >= 0)) {
+                if (handToUse != null || (switchMode.get() == SwitchMode.Silent && hotbar >= 0) || (switchMode.get() == SwitchMode.SilentBypass && silentSlot >= 0)) {
                     if ((placeTimer <= 0 || (instantPlace.get() && !shouldSlow() && !isBlocked(placePos))) && delayCheck()) {
-                        boolean rotated = !SettingUtils.shouldRotate(RotationType.Crystal) || Managers.ROTATION.start(new Box(placePos.getX(), placePos.getY() - 0.05, placePos.getZ(), placePos.getX() + 1, placePos.getY(), placePos.getZ() + 1), 5, RotationType.Crystal);
+                        boolean rotated = !SettingUtils.shouldRotate(RotationType.Crystal) || Managers.ROTATION.start(smartRot.get() && SettingUtils.shouldRotate(RotationType.Attacking) ? new Box(placePos.getX(), placePos.getY() - 0.05, placePos.getZ(), placePos.getX() + 1, placePos.getY(), placePos.getZ() + 1) : OLEPOSSUtils.getBox(placePos.down()), 5, RotationType.Crystal);
                         if (rotated) {
                             placeTimer = 1;
                             placeCrystal(placePos.down(), placeDir, handToUse, silentSlot, hotbar);
@@ -1003,11 +1119,13 @@ public class AutoCrystalRewrite extends BlackOutModule {
 
             addExisted(pos.up());
 
-            if (!own.containsKey(pos.up())) {
+            if (!isOwn(pos.up())) {
                 own.put(pos.up(), System.currentTimeMillis());
             } else {
-                own.replace(pos.up(), System.currentTimeMillis());
+                own.remove(pos.up());
+                own.put(pos.up(), System.currentTimeMillis());
             }
+
             mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(switched ? Hand.MAIN_HAND : handToUse,
                 new BlockHitResult(new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), dir, pos, false), 0));
 
@@ -1186,6 +1304,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         bestPos = null;
         bestDir = null;
         highest = null;
+
         for (int x = -r; x <= r; x++) {
             for (int y = -r; y <= r; y++) {
                 for (int z = -r; z <= r; z++) {
@@ -1217,6 +1336,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
                 }
             }
         }
+
         placeDir = bestDir;
         return bestPos;
     }
@@ -1244,6 +1364,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         if (dmg[1] / dmg[0] > maxFriendPlaceRatio.get()) {return false;}
         if (dmg[2] > maxSelfPlace.get()) {return false;}
         if (dmg[2] / dmg[0] > maxSelfPlaceRatio.get()) {return false;}
+
         return true;
     }
 
@@ -1299,7 +1420,15 @@ public class AutoCrystalRewrite extends BlackOutModule {
     }
 
     boolean isOwn(Vec3d vec) {
-        return own.containsKey(new BlockPos(vec));
+        return isOwn(new BlockPos(vec));
+    }
+    boolean isOwn(BlockPos pos) {
+        for (Map.Entry<BlockPos, Long> entry : own.entrySet()) {
+            if (entry.getKey().equals(pos)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     double[][] getDmg(Vec3d vec) {
@@ -1319,6 +1448,9 @@ public class AutoCrystalRewrite extends BlackOutModule {
             }
 
             double dmg = BODamageUtils.crystalDamage(player, box, vec, null, ignoreTerrain.get());
+            if (new BlockPos(vec).down().equals(AutoMine.targetPos)) {
+                dmg *= autoMineDamage.get();
+            }
             double hp = player.getHealth() + player.getAbsorptionAmount();
 
             //  friend
@@ -1351,7 +1483,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         return SettingUtils.inPlaceRange(pos);
     }
     boolean inExplodeRange(Vec3d vec) {
-        return SettingUtils.inAttackRange(new Box(vec.getX() - 1, vec.getY(), vec.getZ() - 1, vec.getX() + 1, vec.getY() + 2, vec.getZ() + 1), 1.75, vec);
+        return SettingUtils.inAttackRange(new Box(vec.getX() - 1, vec.getY(), vec.getZ() - 1, vec.getX() + 1, vec.getY() + 2, vec.getZ() + 1), vec);
     }
     double dist(Vec3d distances) {
         return Math.sqrt(distances.x * distances.x + distances.y * distances.y + distances.z * distances.z);
@@ -1370,9 +1502,10 @@ public class AutoCrystalRewrite extends BlackOutModule {
         double absY = Math.abs(current.y - target.y);
         double absZ = Math.abs(current.z - target.z);
 
-        double x = absX * delta;
-        double y = absY * delta;
-        double z = absZ * delta;
+        double x = (absX + Math.pow(absX, animationMoveExponent.get() - 1)) * delta;
+        double y = (absX + Math.pow(absY, animationMoveExponent.get() - 1)) * delta;
+        double z = (absX + Math.pow(absZ, animationMoveExponent.get() - 1)) * delta;
+
         return new Vec3d(current.x > target.x ? Math.max(target.x, current.x - x) : Math.min(target.x, current.x + x),
             current.y > target.y ? Math.max(target.y, current.y - y) : Math.min(target.y, current.y + y),
             current.z > target.z ? Math.max(target.z, current.z - z) : Math.min(target.z, current.z + z));
@@ -1455,5 +1588,11 @@ public class AutoCrystalRewrite extends BlackOutModule {
 
     boolean inside(PlayerEntity en, Box bb) {
         return mc.world.getBlockCollisions(en, bb).iterator().hasNext();
+    }
+
+    double smoothChange(double target, double current, double delta) {
+        double d = target - current;
+        double c = d * delta;
+        return Math.abs(d) <= Math.abs(c) ? target : current + c;
     }
 }

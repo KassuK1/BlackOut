@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.globalsettings;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.managers.RotationManager;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
@@ -18,7 +19,7 @@ import java.util.List;
 Made by OLEPOSSU
 */
 
-public class RotationSettings extends Module {
+public class RotationSettings extends BlackOutModule {
     public RotationSettings() {
         super(BlackOut.SETTINGS, "Rotation", "Global rotation settings for every blackout module");
     }
@@ -51,6 +52,14 @@ public class RotationSettings extends Module {
         .defaultValue(180)
         .range(0, 180)
         .sliderRange(0, 180)
+        .build()
+    );
+    public final Setting<Integer> packets = sgGeneral.add(new IntSetting.Builder()
+        .name("Packets")
+        .description("Max amount of rotation packets every second.")
+        .defaultValue(20)
+        .min(20)
+        .sliderRange(0, 40)
         .build()
     );
 

@@ -45,6 +45,12 @@ public class PacketFly extends BlackOutModule {
         .defaultValue(false)
         .build()
     );
+    private final Setting<Boolean> noClip = sgGeneral.add(new BoolSetting.Builder()
+        .name("No Clip")
+        .description("Lets you walk trough walls and stuff.")
+        .defaultValue(false)
+        .build()
+    );
     private final Setting<Double> downSpeed = sgGeneral.add(new DoubleSetting.Builder()
         .name("Down Speed")
         .description("How fast to fly down.")
@@ -131,6 +137,7 @@ public class PacketFly extends BlackOutModule {
     @EventHandler
     private void onMove(PlayerMoveEvent e) {
         if (mc.player == null || mc.world == null) {return;}
+        mc.player.noClip = noClip.get();
         boolean shouldAntiKick = ticks % antiKickDelay.get() == 0;
         double x = 0, y = shouldAntiKick ? -0.04 * antiKick.get() : 0, z = 0;
         double[] result = getYaw(mc.player.input.movementForward, mc.player.input.movementSideways);

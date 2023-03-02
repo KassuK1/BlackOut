@@ -23,7 +23,7 @@ public class BOInvUtils {
 
             mc.getNetworkHandler().sendPacket(new ClickSlotC2SPacket(handler.syncId,
                 handler.getRevision(), PlayerInventory.MAIN_SIZE + Managers.HOLDING.slot,
-                slot, SlotActionType.SWAP, handler.getCursorStack().copy(), stack)
+                slot, SlotActionType.SWAP, handler.getSlot(slot).getStack(), stack)
             );
             ((IClientPlayerInteractionManager) mc.interactionManager).syncSelected();
             slots = new int[]{slot, Managers.HOLDING.slot};
@@ -39,7 +39,7 @@ public class BOInvUtils {
 
         mc.getNetworkHandler().sendPacket(new ClickSlotC2SPacket(handler.syncId,
             handler.getRevision(), PlayerInventory.MAIN_SIZE + slots[1],
-            slots[0], SlotActionType.SWAP, handler.getCursorStack().copy(), stack)
+            slots[0], SlotActionType.SWAP, handler.getSlot(slots[0]).getStack().copy(), stack)
         );
         ((IClientPlayerInteractionManager) mc.interactionManager).syncSelected();
     }

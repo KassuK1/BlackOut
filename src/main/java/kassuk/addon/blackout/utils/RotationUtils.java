@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.utils;
 
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec2f;
 
 public class RotationUtils {
     public static double nextYaw(double current, double target, double step) {
@@ -28,4 +29,10 @@ public class RotationUtils {
         return Math.abs(i) <= step ? target : i >= 0 ? current + step : current - step;
     }
 
+    public static double radAngle(Vec2f vec1, Vec2f vec2) {
+        double p = vec1.x * vec2.x + vec1.y * vec2.y;
+        p /= Math.sqrt(vec1.x * vec1.x + vec1.y * vec1.y);
+        p /= Math.sqrt(vec2.x * vec2.x + vec2.y * vec2.y);
+        return Math.acos(p);
+    }
 }

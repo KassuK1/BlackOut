@@ -42,6 +42,7 @@ public class RotationManager {
     public RotationSettings settings = null;
     public boolean unsent = false;
     public static List<Rotation> history = new ArrayList<>();
+    public double rotationsLeft = 0;
 
     public RotationManager() {
         MeteorClient.EVENT_BUS.subscribe(this);
@@ -49,6 +50,7 @@ public class RotationManager {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
+        rotationsLeft = Math.min(rotationsLeft + event.frameTime * (SettingUtils.rotationPackets() - 20), Math.ceil((SettingUtils.rotationPackets() - 20) / 20f));
         if (settings == null) {
             settings = Modules.get().get(RotationSettings.class);
         }
@@ -76,16 +78,19 @@ public class RotationManager {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onPacket(PacketEvent.Send event) {
-        if (event.packet instanceof PlayerMoveC2SPacket packet && target != null && timer > 0) {
-            unsent = false;
-            float[] next = new float[]{(float) RotationUtils.nextYaw(lastDir[0], Rotations.getYaw(OLEPOSSUtils.getMiddle(target)), settings.yawStep.get()), (float) RotationUtils.nextPitch(lastDir[1], Rotations.getPitch(OLEPOSSUtils.getMiddle(target)), settings.pitchStep.get())};
+        if (event.packet instanceof PlayerMoveC2SPacket packet) {
+            if (target != null && timer > 0) {
+                unsent = false;
+                float[] next = new float[]{(float) RotationUtils.nextYaw(lastDir[0], Rotations.getYaw(OLEPOSSUtils.getMiddle(target)), settings.yawStep.get()), (float) RotationUtils.nextPitch(lastDir[1], Rotations.getPitch(OLEPOSSUtils.getMiddle(target)), settings.pitchStep.get())};
 
-            ((MixinPlayerMoveC2SPacket) packet).setLook(true);
-            ((MixinPlayerMoveC2SPacket) packet).setYaw(next[0]);
-            ((MixinPlayerMoveC2SPacket) packet).setPitch(next[1]);
-            addHistory(next[0], next[1]);
-
-            lastDir = next;
+                ((MixinPlayerMoveC2SPacket) packet).setLook(true);
+                ((MixinPlayerMoveC2SPacket) packet).setYaw(next[0]);
+                ((MixinPlayerMoveC2SPacket) packet).setPitch(next[1]);
+                addHistory(next[0], next[1]);
+            }
+            if (packet.changesLook()) {
+                lastDir = new float[]{((MixinPlayerMoveC2SPacket) packet).getYaw(), ((MixinPlayerMoveC2SPacket) packet).getPitch()};
+            }
         }
     }
     public boolean isTarget(Box box) {
@@ -111,8 +116,8 @@ public class RotationManager {
                 return true;
             }
             if (!isTarget(box) && SettingUtils.rotationCheck(mc.player.getEyePos(), RotationUtils.nextYaw(lastDir[0], Rotations.getYaw(OLEPOSSUtils.getMiddle(target)), settings.yawStep.get()),
-                RotationUtils.nextPitch(lastDir[1], Rotations.getPitch(OLEPOSSUtils.getMiddle(target)), settings.pitchStep.get()), target, type)) {
-
+                RotationUtils.nextPitch(lastDir[1], Rotations.getPitch(OLEPOSSUtils.getMiddle(target)), settings.pitchStep.get()), target, type) && rotationsLeft >= 1) {
+                rotationsLeft -= 1;
                 mc.getNetworkHandler().sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(0, 0, Managers.ONGROUND.isOnGround()));
                 return true;
             }

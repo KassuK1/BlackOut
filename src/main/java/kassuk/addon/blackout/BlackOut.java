@@ -11,7 +11,6 @@ import meteordevelopment.meteorclient.systems.hud.Hud;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
-import org.lwjgl.opengl.GL46;
 import org.slf4j.Logger;
 
 public class BlackOut extends MeteorAddon {
@@ -30,6 +29,7 @@ public class BlackOut extends MeteorAddon {
         // Modules
         Modules.get().add(new AnteroTaateli());
         Modules.get().add(new AntiAim());
+        Modules.get().add(new AntiCrawl());
         Modules.get().add(new AutoAnchorPlus());
         Modules.get().add(new AutoCraftingTable());
         Modules.get().add(new AutoCrystalRewrite());
@@ -61,10 +61,12 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new RPC());
         Modules.get().add(new ScaffoldPlus());
         Modules.get().add(new SelfTrapPlus());
-        Modules.get().add(new SprintPlus());
         Modules.get().add(new SpeedPlus());
+        Modules.get().add(new SprintPlus());
+        Modules.get().add(new StrictNoSlow());
         Modules.get().add(new SurroundPlus());
         Modules.get().add(new SwingModifier());
+        Modules.get().add(new TickShift());
         Modules.get().add(new WeakAlert());
 
         // Global Settings
