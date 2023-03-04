@@ -33,18 +33,16 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.*;
 
 /*
-Made by KassuK
-90% rewritten by OLEPOSSU
+Ported from surround+
 */
 
-public class SurroundPlus extends BlackOutModule {
-    public SurroundPlus() {super(BlackOut.BLACKOUT, "Surround+", "KasumsSoft surround");}
+public class SelfTrapRewrite extends BlackOutModule {
+    public SelfTrapRewrite() {super(BlackOut.BLACKOUT, "SelfTrapRewrite", "KasumsSoft selftrap");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgToggle = settings.createGroup("Toggle");
     private final SettingGroup sgRender = settings.createGroup("Render");
@@ -166,6 +164,11 @@ public class SurroundPlus extends BlackOutModule {
         Down,
         Full
     }
+    public enum TrapMode {
+        Top,
+        Face,
+        Both
+    }
     BlockTimerList timers = new BlockTimerList();
     BlockPos startPos = null;
     double placeTimer = 0;
@@ -257,7 +260,7 @@ public class SurroundPlus extends BlackOutModule {
                         toPlace.put(data, placement);
                     }
                 }
-                toPlace = sort(toPlace);
+                sort(toPlace);
 
                 if (!toPlace.isEmpty()) {
                     int obsidian = hand == Hand.MAIN_HAND ? Managers.HOLDING.getStack().getCount() :
@@ -407,17 +410,21 @@ public class SurroundPlus extends BlackOutModule {
     List<BlockPos> getBlocks(int[] size) {
         List<BlockPos> list = new ArrayList<>();
         if (mc.player != null && mc.world != null) {
-            BlockPos pPos = mc.player.getBlockPos();
+            BlockPos pos = mc.player.getBlockPos().add(0, mc.player.getY() - Math.floor(mc.player.getY()) >= 0.2 ? 2 : 1, 0);
             for (int x = size[0] - 1; x <= size[1] + 1; x++) {
                 for (int z = size[2] - 1; z <= size[3] + 1; z++) {
                     boolean isX = x == size[0] - 1 || x == size[1] + 1;
                     boolean isZ = z == size[2] - 1 || z == size[3] + 1;
-                    boolean ignore = (isX && !isZ ? !air(pPos.add(OLEPOSSUtils.closerToZero(x), 0, z)) :
-                        !isX && isZ && !air(pPos.add(x, 0, OLEPOSSUtils.closerToZero(z)))) && !(x == 0 && z == 0);
+                    boolean ignore = isX && !isZ ? !air(pos.add(OLEPOSSUtils.closerToZero(x), 0, z)) :
+                        !isX && isZ && !air(pos.add(x, 0, OLEPOSSUtils.closerToZero(z)));
+                    BlockPos bPos = null;
                     if (isX != isZ && !ignore) {
-                        list.add(pPos.add(x, 0, z));
-                    } else if (!isX && !isZ && floor.get() && air(pPos.add(x, 0, z))) {
-                        list.add(pPos.add(x, -1, z));
+                        bPos = new BlockPos(x, pos.getY() ,z).add(pos.getX(), 0, pos.getZ());
+                    } else if (!isX && !isZ && air(pos.add(x, 0, z))) {
+                        bPos = new BlockPos(x, pos.getY() ,z).add(pos.getX(), 1, pos.getZ());
+                    }
+                    if (bPos != null && mc.world.getBlockState(bPos).getBlock().equals(Blocks.AIR)) {
+                        list.add(bPos);
                     }
                 }
             }
@@ -426,9 +433,8 @@ public class SurroundPlus extends BlackOutModule {
     }
 
     // Very shitty sorting
-    Map<PlaceData, BlockPos> sort(Map<PlaceData, BlockPos> original) {
+    void sort(Map<PlaceData, BlockPos> original) {
         Map<PlaceData, BlockPos> map = new HashMap<>();
-        List<PlaceData> ignored = new ArrayList<>();
         double lowest;
         PlaceData lData;
         BlockPos lPos;
@@ -438,19 +444,18 @@ public class SurroundPlus extends BlackOutModule {
             lPos = null;
 
             for (Map.Entry<PlaceData, BlockPos> entry : original.entrySet()) {
-                if (ignored.contains(entry.getKey())) {continue;}
-                double yaw = MathHelper.wrapDegrees(Rotations.getYaw(entry.getValue())) + 360;
+                double yaw = Rotations.getYaw(entry.getValue());
                 if (yaw < lowest) {
                     lowest = yaw;
                     lData = entry.getKey();
                     lPos = entry.getValue();
                 }
             }
-            ignored.add(lData);
             map.put(lData, lPos);
         }
 
-        return map;
+        original.clear();
+        original.putAll(map);
     }
 
     boolean air(BlockPos pos) {return mc.world.getBlockState(pos).getBlock().equals(Blocks.AIR);}

@@ -20,7 +20,7 @@ public class SwingModifier extends BlackOutModule {
     private final Setting<Double> mSpeed = sgMainHand.add(new DoubleSetting.Builder()
         .name("Main Speed")
         .description("Speed of swinging")
-        .defaultValue(0.1)
+        .defaultValue(1)
         .min(0)
         .sliderMax(10)
         .build()
@@ -64,7 +64,7 @@ public class SwingModifier extends BlackOutModule {
     private final Setting<Double> oSpeed = sgOffHand.add(new DoubleSetting.Builder()
         .name("Off Speed")
         .description("Speed of swinging")
-        .defaultValue(0.1)
+        .defaultValue(1)
         .min(0)
         .sliderMax(10)
         .build()
@@ -127,20 +127,20 @@ public class SwingModifier extends BlackOutModule {
     @EventHandler
     public void onRender(Render3DEvent event) {
         if (mainSwinging) {
-            if (mainProgress >= 1 || mEnd.get().equals(mStart.get())) {
+            if (mainProgress >= 1) {
                 mainSwinging = false;
                 mainProgress = 0;
             } else {
-                mainProgress += event.frameTime * mSpeed.get() / Math.abs(mEnd.get() - mStart.get());
+                mainProgress += event.frameTime * mSpeed.get();
             }
         }
 
         if (offSwinging) {
-            if (offProgress >= 1 || oEnd.get().equals(oStart.get())) {
+            if (offProgress >= 1) {
                 offSwinging = false;
                 offProgress = 0;
             } else {
-                offProgress += event.frameTime * oSpeed.get() / Math.abs(oEnd.get() - oStart.get());
+                offProgress += event.frameTime * oSpeed.get();
             }
         }
     }

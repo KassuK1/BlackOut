@@ -110,6 +110,18 @@ public class AutoMine extends BlackOutModule {
         .defaultValue(true)
         .build()
     );
+    private final Setting<Boolean> resetOnCrystal = sgGeneral.add(new BoolSetting.Builder()
+        .name("Reset On Crystal")
+        .description("Resets Speedmine position when placing a crystal.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> resetOnAttack = sgGeneral.add(new BoolSetting.Builder()
+        .name("Reset On Attack")
+        .description("Resets Speedmine position when attacking an entity.")
+        .defaultValue(true)
+        .build()
+    );
     private final Setting<Boolean> debug = sgGeneral.add(new BoolSetting.Builder()
         .name("Debug")
         .description("Sends a message in chat when the module starts and ends mining.")
@@ -337,6 +349,18 @@ public class AutoMine extends BlackOutModule {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onSwitch(PacketEvent.Send event) {
         if (event.packet instanceof UpdateSelectedSlotC2SPacket && resetOnSwitch.get() && targetPos != null) {
+            shouldRestart = true;
+            civPos = null;
+            progress = 0;
+            miningFor = 0;
+        }
+        if (event.packet instanceof PlayerInteractBlockC2SPacket && resetOnCrystal.get() && targetPos != null) {
+            shouldRestart = true;
+            civPos = null;
+            progress = 0;
+            miningFor = 0;
+        }
+        if (event.packet instanceof PlayerInteractEntityC2SPacket && resetOnAttack.get() && targetPos != null) {
             shouldRestart = true;
             civPos = null;
             progress = 0;

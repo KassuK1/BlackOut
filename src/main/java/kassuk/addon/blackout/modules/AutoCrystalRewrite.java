@@ -471,6 +471,13 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .visible(() -> renderMode.get() == RenderMode.BlackOut)
         .build()
     );
+    private final Setting<EarthFadeMode> earthFadeMode = sgRender.add(new EnumSetting.Builder<EarthFadeMode>()
+        .name("Earth Fade Mode")
+        .description(".")
+        .defaultValue(EarthFadeMode.Normal)
+        .visible(() -> renderMode.get() == RenderMode.Earthhack)
+        .build()
+    );
     private final Setting<Double> fadeTime = sgRender.add(new DoubleSetting.Builder()
         .name("Fade Time")
         .description("How long the fading should take.")
@@ -703,6 +710,12 @@ public class AutoCrystalRewrite extends BlackOutModule {
         Seconds,
         Ticks
     }
+    public enum EarthFadeMode {
+        Normal,
+        Up,
+        Down,
+        Shrink
+    }
     public enum FadeMode {
         Up,
         Down,
@@ -815,7 +828,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         double d = (System.currentTimeMillis() - lastMillis) / 1000f;
         lastMillis = System.currentTimeMillis();
 
-        infoCps = smoothChange(cps, infoCps, d);
+        infoCps = smoothChange(cps, infoCps, d * 6);
 
         if (System.currentTimeMillis() - cpsTime >= 1000) {
             cps = explosions * (System.currentTimeMillis() - cpsTime) / 1000f;
@@ -897,7 +910,36 @@ public class AutoCrystalRewrite extends BlackOutModule {
                         if (alpha[0] <= d) {
                             toRemove.add(pos);
                         } else {
-                            event.renderer.box(OLEPOSSUtils.getBox(pos),
+                            double r = alpha[0] / alpha[1] / 2f;
+                            double down = -0.5;
+                            double up = -0.5;
+                            double width = 0.5;
+
+                            switch (earthFadeMode.get()) {
+                                case Normal -> {
+                                    up = 0;
+                                    down = -1;
+                                    width = 0.5;
+                                }
+                                case Up -> {
+                                    up = 0;
+                                    down = -(r * 2);
+                                }
+                                case Down -> {
+                                    up = -1 + r * 2;
+                                    down = -1;
+                                }
+                                case Shrink -> {
+                                    up = -0.5 + r;
+                                    down = -0.5 - r;
+                                    width = r;
+                                }
+                            }
+
+                            Box box = new Box(pos.getX() + 0.5 - width, pos.getY() + down, pos.getZ() + 0.5 - width,
+                                pos.getX() + 0.5 + width, pos.getY() + up, pos.getZ() + 0.5 + width);
+
+                            event.renderer.box(box,
                                 new Color(color.get().r, color.get().g, color.get().b, (int) Math.round(color.get().a * Math.min(1, alpha[0] / alpha[1]))),
                                 new Color(lineColor.get().r, lineColor.get().g, lineColor.get().b, (int) Math.round(lineColor.get().a * Math.min(1, alpha[0] / alpha[1]))), shapeMode.get(), 0);
                             entry.setValue(new Double[]{alpha[0] - d, alpha[1]});
