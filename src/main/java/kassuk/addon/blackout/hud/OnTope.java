@@ -38,9 +38,9 @@ public class OnTope extends HudElement {
     @Override
     public void render(HudRenderer renderer) {
         if (mc.player != null) {
-            setSize(renderer.textWidth(mc.player.getName().getString() + " On top!", true) * scale.get() * scale.get(), renderer.textHeight(true) * scale.get() * scale.get());
+            setSize(renderer.textWidth(mc.player.getName().getString() + " on top!", true) * scale.get() * scale.get(), renderer.textHeight(true) * scale.get() * scale.get());
 
-            renderer.text(mc.player.getName().getString() + " On top!", x, y, color.get(), true, scale.get());
+            renderer.text(mc.player.getName().getString() + " on top!", x, y, color.get(), true, scale.get());
         }
     }
 }
