@@ -910,28 +910,28 @@ public class AutoCrystalRewrite extends BlackOutModule {
                         if (alpha[0] <= d) {
                             toRemove.add(pos);
                         } else {
-                            double r = alpha[0] / alpha[1] / 2f;
+                            double r = Math.min(1, alpha[0] / alpha[1]) / 2f;
                             double down = -0.5;
                             double up = -0.5;
                             double width = 0.5;
 
                             switch (earthFadeMode.get()) {
                                 case Normal -> {
-                                    up = 0;
-                                    down = -1;
+                                    up = 1;
+                                    down = 0;
                                     width = 0.5;
                                 }
                                 case Up -> {
-                                    up = 0;
-                                    down = -(r * 2);
+                                    up = 1;
+                                    down = 1 -(r * 2);
                                 }
                                 case Down -> {
-                                    up = -1 + r * 2;
-                                    down = -1;
+                                    up = r * 2;
+                                    down = 0;
                                 }
                                 case Shrink -> {
-                                    up = -0.5 + r;
-                                    down = -0.5 - r;
+                                    up = 0.5 + r;
+                                    down = 0.5 - r;
                                     width = r;
                                 }
                             }
@@ -1028,7 +1028,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         if (expEntity != null) {
             if (!isAttacked(expEntity.getId())) {
                 if (existedCheck(expEntity.getBlockPos())) {
-                    boolean rotated = !SettingUtils.shouldRotate(RotationType.Attacking) || Managers.ROTATION.start(expEntity.getBoundingBox(), 5, RotationType.Attacking);
+                    boolean rotated = !SettingUtils.shouldRotate(RotationType.Attacking) || Managers.ROTATION.start(expEntity.getBoundingBox(), smartRot.get() ? expEntity.getPos() : null, 5, RotationType.Attacking);
                     if (rotated) {
                         explode(expEntity.getId(), expEntity, expEntity.getPos());
                     }
@@ -1089,7 +1089,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
                 int hotbar = InvUtils.findInHotbar(Items.END_CRYSTAL).slot();
                 if (handToUse != null || (switchMode.get() == SwitchMode.Silent && hotbar >= 0) || (switchMode.get() == SwitchMode.SilentBypass && silentSlot >= 0)) {
                     if ((placeTimer <= 0 || (instantPlace.get() && !shouldSlow() && !isBlocked(placePos))) && delayCheck()) {
-                        boolean rotated = !SettingUtils.shouldRotate(RotationType.Crystal) || Managers.ROTATION.start(smartRot.get() && SettingUtils.shouldRotate(RotationType.Attacking) ? new Box(placePos.getX(), placePos.getY() - 0.05, placePos.getZ(), placePos.getX() + 1, placePos.getY(), placePos.getZ() + 1) : OLEPOSSUtils.getBox(placePos.down()), 5, RotationType.Crystal);
+                        boolean rotated = !SettingUtils.shouldRotate(RotationType.Crystal) || Managers.ROTATION.start(placePos.down(), smartRot.get() ? new Vec3d(placePos.getX() + 0.5, placePos.getY(), placePos.getZ() + 0.5) : null, 5, RotationType.Crystal);
                         if (rotated) {
                             placeTimer = 1;
                             placeCrystal(placePos.down(), placeDir, handToUse, silentSlot, hotbar);

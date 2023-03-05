@@ -35,7 +35,9 @@ Made by OLEPOSSU / Raksamies
 public class RotationManager {
 
     public Box target = null;
+    public Vec3d targetVec = null;
     public double timer = 0;
+
     public float[] lastDir = new float[]{0, 0};
     public int priority = 1000;
     public float[] rot = new float[]{0, 0};
@@ -59,6 +61,7 @@ public class RotationManager {
             rot = lastDir;
         } else if (target != null) {
             target = null;
+            targetVec = null;
             priority = 1000;
         } else {
             priority = 1000;
@@ -71,7 +74,7 @@ public class RotationManager {
     }
     @EventHandler
     private void onMovePost(SendMovementPacketsEvent.Post event) {
-        if (unsent && target != null && timer > 0) {
+        if (unsent && target != null && targetVec != null && timer > 0) {
             mc.getNetworkHandler().sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(0, 0, Managers.ONGROUND.isOnGround()));
         }
     }
@@ -79,9 +82,9 @@ public class RotationManager {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onPacket(PacketEvent.Send event) {
         if (event.packet instanceof PlayerMoveC2SPacket packet) {
-            if (target != null && timer > 0) {
+            if (target != null && targetVec != null && timer > 0) {
                 unsent = false;
-                float[] next = new float[]{(float) RotationUtils.nextYaw(lastDir[0], Rotations.getYaw(OLEPOSSUtils.getMiddle(target)), settings.yawStep.get()), (float) RotationUtils.nextPitch(lastDir[1], Rotations.getPitch(OLEPOSSUtils.getMiddle(target)), settings.pitchStep.get())};
+                float[] next = new float[]{(float) RotationUtils.nextYaw(lastDir[0], Rotations.getYaw(targetVec), settings.yawStep.get()), (float) RotationUtils.nextPitch(lastDir[1], Rotations.getPitch(targetVec), settings.pitchStep.get())};
 
                 ((MixinPlayerMoveC2SPacket) packet).setLook(true);
                 ((MixinPlayerMoveC2SPacket) packet).setYaw(next[0]);
@@ -106,17 +109,18 @@ public class RotationManager {
         end(OLEPOSSUtils.getBox(pos));
     }
 
-    public boolean start(Box box, int p, RotationType type) {
+    public boolean start(Box box, Vec3d vec, int p, RotationType type) {
         if (p <= priority && settings != null) {
             priority = p;
             target = box;
+            targetVec = vec != null ? vec : OLEPOSSUtils.getMiddle(box);
             timer = 1;
 
             if (SettingUtils.rotationCheckHistory(box, type)) {
                 return true;
             }
-            if (!isTarget(box) && SettingUtils.rotationCheck(mc.player.getEyePos(), RotationUtils.nextYaw(lastDir[0], Rotations.getYaw(OLEPOSSUtils.getMiddle(target)), settings.yawStep.get()),
-                RotationUtils.nextPitch(lastDir[1], Rotations.getPitch(OLEPOSSUtils.getMiddle(target)), settings.pitchStep.get()), target, type) && rotationsLeft >= 1) {
+            if (!isTarget(box) && SettingUtils.rotationCheck(mc.player.getEyePos(), RotationUtils.nextYaw(lastDir[0], Rotations.getYaw(targetVec), settings.yawStep.get()),
+                RotationUtils.nextPitch(lastDir[1], Rotations.getPitch(targetVec), settings.pitchStep.get()), target, type) && rotationsLeft >= 1) {
                 rotationsLeft -= 1;
                 mc.getNetworkHandler().sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(0, 0, Managers.ONGROUND.isOnGround()));
                 return true;
@@ -124,8 +128,14 @@ public class RotationManager {
         }
         return false;
     }
+    public boolean start(Box box, int p, RotationType type) {
+        return start(box, OLEPOSSUtils.getMiddle(box), p, type);
+    }
     public boolean start(BlockPos pos, int p, RotationType type) {
         return start(OLEPOSSUtils.getBox(pos), p, type);
+    }
+    public boolean start(BlockPos pos, Vec3d vec, int p, RotationType type) {
+        return start(OLEPOSSUtils.getBox(pos), vec, p, type);
     }
     public void addHistory(double yaw, double pitch) {
         if (history.size() > 10) {
