@@ -28,7 +28,7 @@ Made by OLEPOSSU / Raksamies
 
 public class HoleSnap extends BlackOutModule {
     public HoleSnap() {
-        super(BlackOut.BLACKOUT, "HoleSnap", "For the time that you cant even press W");
+        super(BlackOut.BLACKOUT, "HoleSnap", "For the time when you cant even press W");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Boolean> single = sgGeneral.add(new BoolSetting.Builder()

@@ -6,6 +6,7 @@ import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
@@ -118,8 +119,10 @@ public class OffHandPlus extends BlackOutModule {
 
     Item getItem() {
         if (mc.player != null) {
+            Suicide suicide = Modules.get().get(Suicide.class);
+
             boolean crystalAvailable = InvUtils.find(itemStack -> itemStack.getItem().equals(Items.END_CRYSTAL)).count() > 0;
-            boolean totemAvailable = InvUtils.find(itemStack -> itemStack.getItem().equals(Items.TOTEM_OF_UNDYING)).count() > 0;
+            boolean totemAvailable = !(suicide.isActive() && suicide.offhand.get()) && InvUtils.find(itemStack -> itemStack.getItem().equals(Items.TOTEM_OF_UNDYING)).count() > 0;
             boolean gapAvailable = InvUtils.find(itemStack -> itemStack.getItem().equals(Items.ENCHANTED_GOLDEN_APPLE)).count() > 0;
             boolean shouldGap = (swordGapple.get().equals(swordGapModes.Always) && OLEPOSSUtils.isSword(mc.player.getMainHandStack().getItem())) ||
                 (swordGapple.get().equals(swordGapModes.Pressing) && OLEPOSSUtils.isSword(mc.player.getMainHandStack().getItem()) && mc.options.useKey.isPressed()) ||

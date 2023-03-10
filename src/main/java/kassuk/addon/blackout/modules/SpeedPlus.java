@@ -13,6 +13,7 @@ import meteordevelopment.orbit.EventPriority;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
 import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.math.BlockPos;
@@ -29,12 +30,26 @@ public class SpeedPlus extends BlackOutModule {
         .defaultValue(SpeedMode.Strafe)
         .build()
     );
-    private final Setting<Double> acceleration = sgGeneral.add(new DoubleSetting.Builder()
+    private final Setting<Double> accelerationAmount = sgGeneral.add(new DoubleSetting.Builder()
         .name("Acceleration")
         .description("How many blocks to move every movement tick")
         .defaultValue(0.3)
         .min(0)
         .sliderMax(10)
+        .visible(() -> mode.get() == SpeedMode.Accelerate)
+        .build()
+    );
+    private final Setting<Boolean> rbReset = sgGeneral.add(new BoolSetting.Builder()
+        .name("Reset On Rubberband")
+        .description("Resets speed when rubberbanding.")
+        .defaultValue(false)
+        .visible(() -> mode.get() == SpeedMode.Accelerate)
+        .build()
+    );
+    private final Setting<Boolean> airStrafe = sgGeneral.add(new BoolSetting.Builder()
+        .name("Air Strafe")
+        .description("Lets you move fast in air too.")
+        .defaultValue(false)
         .visible(() -> mode.get() == SpeedMode.Accelerate)
         .build()
     );
@@ -110,8 +125,9 @@ public class SpeedPlus extends BlackOutModule {
     }
     boolean move = false;
     public double velocity;
-    double lastX = 0;
-    double lastZ = 0;
+    double acceleration = 0;
+    double ax = 0;
+    double az = 0;
 
     @Override
     public void onActivate() {
@@ -135,13 +151,15 @@ public class SpeedPlus extends BlackOutModule {
                     velocity = Math.max(velocity, Math.sqrt(x * x + z * z) * kbFactor.get());
                 }
             }
+            if (rbReset.get() && event.packet instanceof PlayerPositionLookS2CPacket) {
+                acceleration = 0;
+            }
         }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onMove(PlayerMoveEvent event) {
         if (mc.player != null && mc.world != null) {
-
             if (Modules.get().get(HoleSnap.class).isActive()) {
                 return;
             }
@@ -213,16 +231,11 @@ public class SpeedPlus extends BlackOutModule {
                     }
                 }
                 case Accelerate -> {
-                    double tx = move ? x : 0;
-                    double tz = move ? z : 0;
+                    acceleration = Math.min(1, (move ? acceleration + (mc.player.isOnGround() || airStrafe.get() ? accelerationAmount.get() / 10 : 0.02) : acceleration) * slipperiness(move));
 
-                    lastX = smooth(lastX, tx, acceleration.get()) * slipperiness(move);
-                    lastZ = smooth(lastZ, tz, acceleration.get()) * slipperiness(move);
+                    if ((move && mc.player.isOnGround()) || airStrafe.get()) {ax = x;az = z;}
 
-                    Vec2f m = limit(lastX, lastZ, speed.get());
-                    lastX = m.x;
-                    lastZ = m.y;
-                    ((IVec3d) event.movement).setXZ(lastX, lastZ);
+                    ((IVec3d) event.movement).setXZ(speed.get() * ax * acceleration, speed.get() * az * acceleration);
                 }
             }
         }
@@ -248,15 +261,5 @@ public class SpeedPlus extends BlackOutModule {
             yaw += s > 0 ? -90 : s < 0 ? 90 : 0;
         }
         return yaw;
-    }
-
-    Vec2f limit(double x, double z, double speed) {
-        double s = Math.sqrt(x * x + z * z) / speed;
-
-        return new Vec2f((float) (x / s), (float) (z / s));
-    }
-
-    double smooth(double current, double target, double ac) {
-        return current + (target - current) * ac / 20f;
     }
 }

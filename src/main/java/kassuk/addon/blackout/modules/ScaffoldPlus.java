@@ -12,6 +12,7 @@ import kassuk.addon.blackout.utils.PlaceData;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
+import meteordevelopment.meteorclient.mixininterface.IVec3d;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
@@ -46,22 +47,32 @@ public class ScaffoldPlus extends BlackOutModule {
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final Setting<ScaffoldMode> scaffoldMode = sgGeneral.add(new EnumSetting.Builder<ScaffoldMode>()
+        .name("Scaffold Mode")
+        .description(".")
+        .defaultValue(ScaffoldMode.Normal)
+        .build()
+    );
+    // Normal
     private final Setting<Boolean> sSprint = sgGeneral.add(new BoolSetting.Builder()
         .name("Stop Sprint")
         .description("Stops you from sprinting")
         .defaultValue(true)
+        .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
         .build()
     );
     private final Setting<Boolean> safeWalk = sgGeneral.add(new BoolSetting.Builder()
         .name("SafeWalk")
         .description("Should SafeWalk be used")
         .defaultValue(true)
+        .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
         .build()
     );
     private final Setting<Boolean> useTimer = sgGeneral.add(new BoolSetting.Builder()
         .name("Use timer")
         .description("Should we use timer")
         .defaultValue(true)
+        .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
         .build()
     );
     private final Setting<Double> timer = sgGeneral.add(new DoubleSetting.Builder()
@@ -71,18 +82,21 @@ public class ScaffoldPlus extends BlackOutModule {
         .defaultValue(1.088)
         .min(0)
         .sliderMax(10)
+        .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
         .build()
     );
     private final Setting<List<Block>> blocks = sgGeneral.add(new BlockListSetting.Builder()
         .name("Blocks")
         .description("Blocks to use.")
         .defaultValue(Blocks.OBSIDIAN, Blocks.CRYING_OBSIDIAN, Blocks.NETHERITE_BLOCK)
+        .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
         .build()
     );
     private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
         .name("Switch Mode")
         .description(".")
         .defaultValue(SwitchMode.SilentBypass)
+        .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
         .build()
     );
     private final Setting<Double> placeDelay = sgGeneral.add(new DoubleSetting.Builder()
@@ -91,6 +105,7 @@ public class ScaffoldPlus extends BlackOutModule {
         .defaultValue(0.125)
         .range(0, 10)
         .sliderRange(0, 10)
+        .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
         .build()
     );
     private final Setting<Integer> places = sgGeneral.add(new IntSetting.Builder()
@@ -99,6 +114,7 @@ public class ScaffoldPlus extends BlackOutModule {
         .defaultValue(1)
         .range(1, 10)
         .sliderRange(1, 10)
+        .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
         .build()
     );
     private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
@@ -107,6 +123,7 @@ public class ScaffoldPlus extends BlackOutModule {
         .defaultValue(0.3)
         .range(0, 5)
         .sliderRange(0, 5)
+        .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
         .build()
     );
     private final Setting<Integer> extrapolation = sgGeneral.add(new IntSetting.Builder()
@@ -115,8 +132,13 @@ public class ScaffoldPlus extends BlackOutModule {
         .defaultValue(3)
         .range(0, 20)
         .sliderRange(0, 20)
+        .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
         .build()
     );
+    public enum ScaffoldMode {
+        Normal,
+        Legit
+    }
     public enum SwitchMode {
         Disabled,
         Normal,
@@ -130,16 +152,25 @@ public class ScaffoldPlus extends BlackOutModule {
 
     @Override
     public void onDeactivate() {
-        placeTimer = 0;
-        placesLeft = places.get();
-        Modules.get().get(Timer.class).setOverride(1);
-        if (Modules.get().get(SafeWalk.class).isActive()) {
-            Modules.get().get(SafeWalk.class).toggle();
+        switch (scaffoldMode.get()) {
+            case Normal -> {
+                placeTimer = 0;
+                placesLeft = places.get();
+                Modules.get().get(Timer.class).setOverride(1);
+                if (Modules.get().get(SafeWalk.class).isActive()) {
+                    Modules.get().get(SafeWalk.class).toggle();
+                }
+            }
+            case Legit -> {
+                mc.options.sneakKey.setPressed(false);
+            }
         }
     }
 
     @EventHandler
     private void onRender(Render3DEvent event) {
+        if (scaffoldMode.get() == ScaffoldMode.Legit) {return;}
+
         placeTimer = Math.min(placeDelay.get(), placeTimer + event.frameTime);
         if (placeTimer >= placeDelay.get()) {
             placesLeft = places.get();
@@ -149,6 +180,11 @@ public class ScaffoldPlus extends BlackOutModule {
 
     @EventHandler
     private void onMove(PlayerMoveEvent event) {
+        if (scaffoldMode.get() == ScaffoldMode.Legit) {
+            mc.options.sneakKey.setPressed(mc.world.getBlockState(mc.player.getBlockPos().down()).getBlock().equals(Blocks.AIR));
+            return;
+        }
+
         if (mc.player != null && mc.world != null) {
 
             FindItemResult hotbar = InvUtils.findInHotbar(item -> item.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) item.getItem()).getBlock()));
@@ -162,8 +198,8 @@ public class ScaffoldPlus extends BlackOutModule {
                     Modules.get().get(SafeWalk.class).toggle();
 
                 }
-                motion = event.movement;
 
+                motion = event.movement;
                 if (sSprint.get()) mc.player.setSprinting(false);
                 if (useTimer.get()) Modules.get().get(Timer.class).setOverride(timer.get());
 

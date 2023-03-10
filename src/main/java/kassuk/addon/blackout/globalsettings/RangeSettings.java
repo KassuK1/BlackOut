@@ -227,23 +227,26 @@ public class RangeSettings extends BlackOutModule {
     public boolean inPlaceRange(BlockPos pos) {
         if (mc.player == null) {return false;}
 
-        double dist = placeRangeTo(pos);
+        double dist = placeRangeTo(pos, null);
         return dist >= 0 && dist <= (SettingUtils.placeTrace(pos) ? placeRange.get() : placeRangeWalls.get());
     }
     public boolean inPlaceRangeNoTrace(BlockPos pos) {
         if (mc.player == null) {return false;}
 
-        double dist = placeRangeTo(pos);
+        double dist = placeRangeTo(pos, null);
         return dist >= 0 && dist <= Math.max(placeRange.get(), placeRangeWalls.get());
     }
 
-    public double placeRangeTo(BlockPos pos) {
+    public double placeRangeTo(BlockPos pos, Vec3d from) {
         Box pBB = mc.player.getBoundingBox();
-        Vec3d from = mc.player.getEyePos();
-        Vec3d pPos = mc.player.getPos();
-        switch (placeRangeFrom.get()) {
-            case Middle -> ((IVec3d)from).set((pBB.minX + pBB.maxX) / 2, (pBB.minY + pBB.maxY) / 2, (pBB.minZ + pBB.maxZ) / 2);
-            case Feet -> ((IVec3d)from).set(pPos.x, pPos.y, pPos.z);
+        if (from == null) {
+            from = mc.player.getEyePos();
+            Vec3d pPos = mc.player.getPos();
+            switch (placeRangeFrom.get()) {
+                case Middle ->
+                    ((IVec3d) from).set((pBB.minX + pBB.maxX) / 2, (pBB.minY + pBB.maxY) / 2, (pBB.minZ + pBB.maxZ) / 2);
+                case Feet -> ((IVec3d) from).set(pPos.x, pPos.y, pPos.z);
+            }
         }
 
         Vec3d feet = new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
@@ -271,20 +274,22 @@ public class RangeSettings extends BlackOutModule {
     public boolean inAttackRange(Box bb, Vec3d feet) {
         if (mc.player == null) {return false;}
 
-        return attackRangeTo(bb, feet) <= (SettingUtils.attackTrace(bb) ? attackRange.get() : attackRangeWalls.get());
+        return attackRangeTo(bb, feet, null) <= (SettingUtils.attackTrace(bb) ? attackRange.get() : attackRangeWalls.get());
     }
     public boolean inAttackRangeNoTrace(Box bb, Vec3d feet) {
         if (mc.player == null) {return false;}
 
-        return attackRangeTo(bb, feet) <= Math.max(attackRange.get(), attackRangeWalls.get());
+        return attackRangeTo(bb, feet, null) <= Math.max(attackRange.get(), attackRangeWalls.get());
     }
 
-    public double attackRangeTo(Box bb, Vec3d feet) {
+    public double attackRangeTo(Box bb, Vec3d feet, Vec3d from) {
         Box pBB = mc.player.getBoundingBox();
-        Vec3d from = mc.player.getEyePos();
-        switch (attackRangeFrom.get()) {
-            case Middle -> ((IVec3d)from).set((pBB.minX + pBB.maxX) / 2, (pBB.minY + pBB.maxY) / 2, (pBB.minZ + pBB.maxZ) / 2);
-            case Feet -> ((IVec3d)from).set((pBB.minX + pBB.maxX) / 2, pBB.minY, (pBB.minZ + pBB.maxZ) / 2);
+        if (from == null) {
+            from = mc.player.getEyePos();
+            switch (attackRangeFrom.get()) {
+                case Middle -> ((IVec3d) from).set((pBB.minX + pBB.maxX) / 2, (pBB.minY + pBB.maxY) / 2, (pBB.minZ + pBB.maxZ) / 2);
+                case Feet -> ((IVec3d) from).set((pBB.minX + pBB.maxX) / 2, pBB.minY, (pBB.minZ + pBB.maxZ) / 2);
+            }
         }
 
         switch (attackRangeMode.get()) {
@@ -304,7 +309,7 @@ public class RangeSettings extends BlackOutModule {
                 return getRange(from, OLEPOSSUtils.getClosest(mc.player.getEyePos(), feet, Math.abs(bb.minX - bb.maxX) * closestAttackWidth.get(), Math.abs(bb.minY - bb.maxY) * closestAttackHeight.get()));
             }
             case UpdatedNCP -> {
-                double d = getDistFromCenter(bb, feet, from, false);
+                double d = getDistFromCenter(bb, feet, from);
 
                 return getRange(from, new Vec3d(feet.x, Math.min(Math.max(from.getY(), bb.minY), bb.maxY), feet.z)) - d;
             }
@@ -312,7 +317,7 @@ public class RangeSettings extends BlackOutModule {
         return -1;
     }
 
-    public double getDistFromCenter(Box bb, Vec3d feet, Vec3d from, boolean debug) {
+    public double getDistFromCenter(Box bb, Vec3d feet, Vec3d from) {
         Vec3d startPos = new Vec3d(feet.x, Math.min(Math.max(from.getY(), bb.minY), bb.maxY), feet.z);
         Vec3d rangePos = new Vec3d(feet.x, Math.min(Math.max(from.getY(), bb.minY), bb.maxY), feet.z);
 
@@ -348,10 +353,6 @@ public class RangeSettings extends BlackOutModule {
         } else {
             return 0;
         }
-        /*
-        vec1 = 15, 10
-        vec2 = 0, 1
-         */
     }
 
     double getRange(Vec3d from, Vec3d to) {
@@ -370,27 +371,30 @@ public class RangeSettings extends BlackOutModule {
     public boolean inMineRange(BlockPos pos) {
         if (mc.player == null) {return false;}
 
-        double dist = miningRangeTo(pos);
-        return dist >= 0 && dist <= (SettingUtils.placeTrace(pos) ? placeRange.get() : placeRangeWalls.get());
+        double dist = miningRangeTo(pos, null);
+        return dist >= 0 && dist <= (SettingUtils.placeTrace(pos) ? miningRange.get() : miningRangeWalls.get());
     }
     public boolean inMineRangeNoTrace(BlockPos pos) {
         if (mc.player == null) {return false;}
 
-        double dist = placeRangeTo(pos);
-        return dist >= 0 && dist <= Math.max(placeRange.get(), placeRangeWalls.get());
+        double dist = miningRangeTo(pos, null);
+        return dist >= 0 && dist <= Math.max(miningRange.get(), miningRangeWalls.get());
     }
 
-    public double miningRangeTo(BlockPos pos) {
+    public double miningRangeTo(BlockPos pos, Vec3d from) {
         Box pBB = mc.player.getBoundingBox();
-        Vec3d from = mc.player.getEyePos();
         Vec3d pPos = mc.player.getPos();
-        switch (placeRangeFrom.get()) {
-            case Middle -> ((IVec3d)from).set((pBB.minX + pBB.maxX) / 2, (pBB.minY + pBB.maxY) / 2, (pBB.minX + pBB.maxX) / 2);
-            case Feet -> ((IVec3d)from).set(pPos.x, pPos.y, pPos.z);
+        if (from == null) {
+            from = mc.player.getEyePos();
+            switch (miningRangeFrom.get()) {
+                case Middle ->
+                    ((IVec3d) from).set((pBB.minX + pBB.maxX) / 2, (pBB.minY + pBB.maxY) / 2, (pBB.minX + pBB.maxX) / 2);
+                case Feet -> ((IVec3d) from).set(pPos.x, pPos.y, pPos.z);
+            }
         }
 
         Vec3d feet = new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
-        switch (placeRangeMode.get()) {
+        switch (miningRangeMode.get()) {
             case NCP -> {
                 return getRange(from, feet.add(0, 0.5, 0));
             }

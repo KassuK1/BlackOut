@@ -461,7 +461,7 @@ public class AutoMine extends BlackOutModule {
 
 
         if (waitingToStart != null) {
-            targetDir = SettingUtils.getPlaceOnDirection(targetPos);
+            targetDir = SettingUtils.getPlaceOnDirection(waitingToStart);
             if (targetDir != null) {
                 boolean rotated = !SettingUtils.startMineRot() || Managers.ROTATION.start(waitingToStart, 9, RotationType.Breaking);
                 if (rotated) {

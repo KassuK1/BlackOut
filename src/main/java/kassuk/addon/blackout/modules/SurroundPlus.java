@@ -54,10 +54,16 @@ public class SurroundPlus extends BlackOutModule {
         .defaultValue(true)
         .build()
     );
+    private final Setting<Boolean> onlyConfirmed = sgGeneral.add(new BoolSetting.Builder()
+        .name("Only Confirmed")
+        .description("Only places on blocks the server has confirmed to exist")
+        .defaultValue(false)
+        .build()
+    );
     private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
         .name("Switch Mode")
         .description(".")
-        .defaultValue(SwitchMode.SilentBypass)
+        .defaultValue(SwitchMode.Silent)
         .build()
     );
     private final Setting<List<Block>> blocks = sgGeneral.add(new BlockListSetting.Builder()
@@ -171,6 +177,7 @@ public class SurroundPlus extends BlackOutModule {
     double placeTimer = 0;
     int placesLeft = 0;
     List<Render> render = new ArrayList<>();
+    BlockTimerList placed = new BlockTimerList();
     boolean lastSneak = false;
 
     @Override
@@ -252,7 +259,7 @@ public class SurroundPlus extends BlackOutModule {
 
                 Map<PlaceData, BlockPos> toPlace = new HashMap<>();
                 for (BlockPos placement : placements) {
-                    PlaceData data = SettingUtils.getPlaceData(placement);
+                    PlaceData data = onlyConfirmed.get() ? SettingUtils.getPlaceData(placement) : SettingUtils.getPlaceDataOR(placement, pos -> placed.contains(pos));
                     if (toPlace.size() < placesLeft && data.valid()) {
                         toPlace.put(data, placement);
                     }
@@ -321,6 +328,8 @@ public class SurroundPlus extends BlackOutModule {
 
     void place(PlaceData d, BlockPos ogPos) {
         timers.add(ogPos, delay.get());
+        placed.add(ogPos, 1);
+
         placeTimer = 0;
         placesLeft--;
 
@@ -349,7 +358,7 @@ public class SurroundPlus extends BlackOutModule {
             for (BlockPos position : blocks) {
                 if (mc.world.getBlockState(position).getBlock().equals(Blocks.AIR)) {
                     if (!timers.contains(position) && !EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
-                        PlaceData data = SettingUtils.getPlaceData(position);
+                        PlaceData data = onlyConfirmed.get() ? SettingUtils.getPlaceData(position) : SettingUtils.getPlaceDataOR(position, pos -> placed.contains(pos));
                         if (data.valid()) {
                             list.add(position);
                         } else {
@@ -358,7 +367,7 @@ public class SurroundPlus extends BlackOutModule {
                             double dist = Double.MAX_VALUE;
                             for (Direction dir : Direction.values()) {
                                 if (mc.world.getBlockState(position.offset(dir)).getBlock() == Blocks.AIR) {
-                                    PlaceData placeData = SettingUtils.getPlaceData(position.offset(dir));
+                                    PlaceData placeData = onlyConfirmed.get() ? SettingUtils.getPlaceData(position.offset(dir)) : SettingUtils.getPlaceDataOR(position.offset(dir), pos -> placed.contains(pos));
                                     if (placeData.valid()) {
                                         if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
                                             double distance = OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(position.offset(dir)), mc.player.getPos());
@@ -412,11 +421,11 @@ public class SurroundPlus extends BlackOutModule {
                 for (int z = size[2] - 1; z <= size[3] + 1; z++) {
                     boolean isX = x == size[0] - 1 || x == size[1] + 1;
                     boolean isZ = z == size[2] - 1 || z == size[3] + 1;
-                    boolean ignore = (isX && !isZ ? !air(pPos.add(OLEPOSSUtils.closerToZero(x), 0, z)) :
-                        !isX && isZ && !air(pPos.add(x, 0, OLEPOSSUtils.closerToZero(z)))) && !(x == 0 && z == 0);
+                    boolean ignore = (isX && !isZ ? (!air(pPos.add(OLEPOSSUtils.closerToZero(x), 0, z)) || placed.contains(pPos.add(OLEPOSSUtils.closerToZero(x), 0, z))) :
+                        !isX && isZ && (!air(pPos.add(x, 0, OLEPOSSUtils.closerToZero(z)))) && !(x == 0 && z == 0) || placed.contains(pPos.add(x, 0, OLEPOSSUtils.closerToZero(z))));
                     if (isX != isZ && !ignore) {
                         list.add(pPos.add(x, 0, z));
-                    } else if (!isX && !isZ && floor.get() && air(pPos.add(x, 0, z))) {
+                    } else if (!isX && !isZ && floor.get() && air(pPos.add(x, 0, z)) && !placed.contains(pPos.add(x, 0, z))) {
                         list.add(pPos.add(x, -1, z));
                     }
                 }

@@ -39,6 +39,8 @@ import java.util.List;
 Made by OLEPOSSU / Raksamies
 */
 
+//TODO: Rewrite
+
 public class BedBomb extends BlackOutModule {
     public BedBomb() {super(BlackOut.BLACKOUT, "BedBomb", "Automatically places and breaks beds to cause damage to your opponents");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();

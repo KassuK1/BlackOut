@@ -14,5 +14,7 @@
   "injectors": {
     "defaultRequire": 1
   },
-  "mixins": []
+  "mixins": [
+    "MixinRaycastContext"
+  ]
 }

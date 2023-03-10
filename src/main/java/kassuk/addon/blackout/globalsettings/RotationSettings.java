@@ -4,14 +4,17 @@ import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.managers.RotationManager;
+import kassuk.addon.blackout.mixins.MixinRaycastContext;
+import kassuk.addon.blackout.utils.BODamageUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.mixininterface.IVec3d;
 import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.systems.modules.Module;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.RaycastContext;
 
 import java.util.List;
 
@@ -32,10 +35,22 @@ public class RotationSettings extends BlackOutModule {
     private final SettingGroup sgInteract = settings.createGroup("Interact");
 
     //  General Settings
-    private final Setting<RotationCheckMode> rotationCheckMode = sgGeneral.add(new EnumSetting.Builder<RotationCheckMode>()
+    public final Setting<RotationCheckMode> rotationCheckMode = sgGeneral.add(new EnumSetting.Builder<RotationCheckMode>()
         .name("Rotation Check Mode")
         .description(".")
         .defaultValue(RotationCheckMode.Raytrace)
+        .build()
+    );
+    public final Setting<Boolean> ghostRotation = sgCrystal.add(new BoolSetting.Builder()
+        .name("Ghost Rotation")
+        .description("Rotates at the closest seen point.")
+        .defaultValue(false)
+        .build()
+    );
+    public final Setting<Boolean> vanillaRotation = sgCrystal.add(new BoolSetting.Builder()
+        .name("Vanilla Rotation")
+        .description("Turns your head.")
+        .defaultValue(false)
         .build()
     );
     public final Setting<Double> yawStep = sgGeneral.add(new DoubleSetting.Builder()
@@ -152,8 +167,23 @@ public class RotationSettings extends BlackOutModule {
     }
 
     public enum RotationCheckMode {
-        Raytrace
+        Raytrace,
+        Ghost
     }
+
+    public RaycastContext raycastContext;
+    public BlockHitResult result;
+    public Vec3d vec = new Vec3d(0, 0, 0);
+
+    // Closest
+    double closestDistance = 0;
+    Vec3d closest = new Vec3d(0, 0, 0);
+
+    Vec3d eyePos = new Vec3d(0, 0, 0);
+    Vec3d offset = new Vec3d(0, 0, 0);
+
+    double distance = 0;
+
     public boolean shouldRotate(RotationType type) {
         switch (type) {
             case Crystal -> {return crystalRotate.get();}
@@ -222,11 +252,106 @@ public class RotationSettings extends BlackOutModule {
         }
         return false;
     }
+    public boolean raytraceCheck(Vec3d pos, double y, double p, BlockPos blockPos) {
+        updateContext();
+
+        double range = OLEPOSSUtils.distance(pos, OLEPOSSUtils.getMiddle(blockPos)) + 1;
+        Vec3d end = new Vec3d(range * Math.cos(Math.toRadians(y + 90)) * Math.abs(Math.cos(Math.toRadians(p))),
+            range * -Math.sin(Math.toRadians(p)),
+            range * Math.sin(Math.toRadians(y + 90)) * Math.abs(Math.cos(Math.toRadians(p)))).add(pos);
+
+        ((MixinRaycastContext) raycastContext).setEnd(end);
+        result = BODamageUtils.raycast(raycastContext);
+
+        return result.getBlockPos().equals(blockPos);
+    }
 
     public boolean endMineRot() {
         return mineRotate.get() == MiningRotMode.End || mineRotate.get() == MiningRotMode.Double;
     }
     public boolean startMineRot() {
         return mineRotate.get() == MiningRotMode.Start || mineRotate.get() == MiningRotMode.Double;
+    }
+
+    public Vec3d getGhostRot(BlockPos pos, Vec3d targetVec) {
+        updateContext();
+
+        ((MixinRaycastContext) raycastContext).setEnd(targetVec);
+        result = BODamageUtils.raycast(raycastContext);
+
+        if (result.getBlockPos().equals(pos)) {return targetVec;}
+
+
+        ((IVec3d) vec).set(pos.getX(), pos.getY(), pos.getZ());
+
+        closestDistance = Double.MAX_VALUE;
+        ((IVec3d) closest).set(-1, -1, -1);
+        eyePos = mc.player.getEyePos();
+
+        for (int x = 0; x <= 4; x += 1) {
+            for (int y = 0; y <= 4; y += 1) {
+                for (int z = 0; z <= 4; z += 1) {
+                    ((MixinRaycastContext) raycastContext).setEnd(vec.add(0.1 + x * 0.16, 0.1 + y * 0.16, 0.1 + z * 0.16));
+
+                    result = BODamageUtils.raycast(raycastContext);
+
+                    if (result.getBlockPos().equals(pos)) {
+                        offset = eyePos.subtract(vec.add(0.1 + x * 0.16, 0.1 + y * 0.16, 0.1 + z * 0.16));
+                        distance = offset.lengthSquared();
+
+                        if (closestDistance > distance) {
+                            closestDistance = distance;
+                            ((IVec3d) closest).set(x, y, z);
+                        }
+                    }
+                }
+            }
+        }
+        return closest.getX() == 0 && closest.getY() == 0 && closest.getZ() == 0 ? targetVec : vec.add(0.1 + closest.getX() * 0.16, 0.1 + closest.getY() * 0.16, 0.1 + closest.getZ() * 0.16);
+    }
+
+    public Vec3d getGhostRot(Box box, Vec3d targetVec) {
+        updateContext();
+
+        ((MixinRaycastContext) raycastContext).setEnd(targetVec);
+        result = BODamageUtils.raycast(raycastContext);
+
+        if (result.getType() != HitResult.Type.BLOCK) {return targetVec;}
+
+
+        ((IVec3d) vec).set(box.minX, box.minY, box.minZ);
+
+        closestDistance = Double.MAX_VALUE;
+        ((IVec3d) closest).set(-1, -1, -1);
+        eyePos = mc.player.getEyePos();
+
+        for (int x = 0; x <= 4; x += 1) {
+            for (int y = 0; y <= 4; y += 1) {
+                for (int z = 0; z <= 4; z += 1) {
+                    ((MixinRaycastContext) raycastContext).setEnd(vec.add(0.1 + x * 0.16, 0.1 + y * 0.16, 0.1 + z * 0.16));
+
+                    result = BODamageUtils.raycast(raycastContext);
+
+                    if (result.getType() != HitResult.Type.BLOCK) {
+                        offset = eyePos.subtract(vec.add(0.1 + x * 0.16, 0.1 + y * 0.16, 0.1 + z * 0.16));
+                        distance = offset.lengthSquared();
+
+                        if (closestDistance > distance) {
+                            closestDistance = distance;
+                            ((IVec3d) closest).set(x, y, z);
+                        }
+                    }
+                }
+            }
+        }
+        return closest.getX() == 0 && closest.getY() == 0 && closest.getZ() == 0 ? targetVec : vec.add(0.1 + closest.getX() * 0.16, 0.1 + closest.getY() * 0.16, 0.1 + closest.getZ() * 0.16);
+    }
+
+    void updateContext() {
+        if (raycastContext == null) {
+            raycastContext = new RaycastContext(mc.player.getEyePos(), null, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.ANY, mc.player);
+        } else {
+            ((MixinRaycastContext) raycastContext).setStart(mc.player.getEyePos());
+        }
     }
 }
