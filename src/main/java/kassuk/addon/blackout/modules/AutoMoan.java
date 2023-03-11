@@ -118,6 +118,7 @@ public class AutoMoan extends BlackOutModule {
         "My dick gets rock hard every time i see %s",
         "why wont u say the last message",
         //if anyone asks what I did during my vacation I can proudly tell them I wasted multiple hours writing things gay people can say during sex
+        //The fact that I have said a few of these frightens me : SigmaClientWasTaken 2023 wtf sigma
     };
     Random r = new Random();
 
