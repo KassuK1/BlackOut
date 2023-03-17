@@ -654,6 +654,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     Map<BlockPos, Long> existedTicksList = new HashMap<>();
     Map<BlockPos, Long> own = new HashMap<>();
     Map<PlayerEntity, Box> extPos = new HashMap<>();
+    Vec3d rangePos = null;
     Map<String, List<Vec3d>> motions = new HashMap<>();
     List<Box> blocked = new ArrayList<>();
     Map<Vec3d, double[][]> dmgCache = new HashMap<>();
@@ -789,6 +790,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
                 }
             }
             extPos = getExtPos();
+            rangePos = getRangeExt();
             if (debugRange.get()) {
                 debug(debugRangeHeight(1) + "  " + dist(debugRangePos(1)) + "\n" +
                     debugRangeHeight(2) + "  " + dist(debugRangePos(2)) + "\n" +
@@ -1355,6 +1357,14 @@ public class AutoCrystalRewrite extends BlackOutModule {
         return explodeDamageCheck(result[0], result[1], isOwn(vec));
     }
 
+    boolean canExplodePlacing(Vec3d vec) {
+        if (onlyOwn.get() && !isOwn(vec)) {return false;}
+        if (!inExplodeRangePlacing(vec)) {return false;}
+
+        double[][] result = getDmg(vec);
+        return explodeDamageCheck(result[0], result[1], isOwn(vec));
+    }
+
     Hand getHand(Item item) {
         return Managers.HOLDING.isHolding(item) ? Hand.MAIN_HAND:
             mc.player.getOffHandStack().getItem().equals(item) ? Hand.OFF_HAND : null;
@@ -1377,10 +1387,12 @@ public class AutoCrystalRewrite extends BlackOutModule {
         bestDir = null;
         highest = null;
 
+        BlockPos pPos = new BlockPos(mc.player.getEyePos());
+
         for (int x = -r; x <= r; x++) {
             for (int y = -r; y <= r; y++) {
                 for (int z = -r; z <= r; z++) {
-                    pos = mc.player.getBlockPos().add(x, y, z);
+                    pos = pPos.add(x, y, z);
                     // Checks if crystal can be placed
                     if (!air(pos) || !(!oldVerPlacements.get() || air(pos.up())) || !crystalBlock(pos.down())) {continue;}
 
@@ -1389,7 +1401,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
                     if (dir == null) {continue;}
 
                     // Checks if the placement is in range
-                    if (!inPlaceRange(pos.down()) || !inExplodeRange(new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5))) {continue;}
+                    if (!inPlaceRange(pos.down()) || !inExplodeRangePlacing(new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5))) {continue;}
 
                     // Calculates damages and healths
                     result = getDmg(new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5));
@@ -1399,7 +1411,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
 
                     // Checks if placement is blocked by other entities
                     Box box = new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + (ccPlacements.get() ? 1 : 2), pos.getZ() + 1);
-                    if (EntityUtils.intersectsWithEntity(box, entity -> !(entity.getType().equals(EntityType.END_CRYSTAL) && canExplode(entity.getPos())))) {continue;}
+                    if (EntityUtils.intersectsWithEntity(box, entity -> !(entity.getType().equals(EntityType.END_CRYSTAL) && canExplodePlacing(entity.getPos())))) {continue;}
 
                     // Sets best pos to calculated one
                     bestDir = dir;
@@ -1559,8 +1571,11 @@ public class AutoCrystalRewrite extends BlackOutModule {
     boolean inPlaceRange(BlockPos pos) {
         return SettingUtils.inPlaceRange(pos);
     }
+    boolean inExplodeRangePlacing(Vec3d vec) {
+        return SettingUtils.inAttackRange(new Box(vec.getX() - 1, vec.getY(), vec.getZ() - 1, vec.getX() + 1, vec.getY() + 2, vec.getZ() + 1), rangePos != null ? rangePos : null);
+    }
     boolean inExplodeRange(Vec3d vec) {
-        return SettingUtils.inAttackRange(new Box(vec.getX() - 1, vec.getY(), vec.getZ() - 1, vec.getX() + 1, vec.getY() + 2, vec.getZ() + 1), vec);
+        return SettingUtils.inAttackRange(new Box(vec.getX() - 1, vec.getY(), vec.getZ() - 1, vec.getX() + 1, vec.getY() + 2, vec.getZ() + 1));
     }
     double dist(Vec3d distances) {
         return Math.sqrt(distances.x * distances.x + distances.y * distances.y + distances.z * distances.z);
@@ -1650,6 +1665,50 @@ public class AutoCrystalRewrite extends BlackOutModule {
             }
         }
         return map;
+    }
+
+    Vec3d getRangeExt() {
+        if (!motions.containsKey(mc.player.getName().getString())) {return mc.player.getEyePos();}
+
+        Vec3d motion = average(motions.get(mc.player.getName().getString()));
+
+        double x = motion.x;
+        double y = motion.y;
+        double z = motion.z;
+
+        Box box = mc.player.getBoundingBox();
+
+        if (!inside(mc.player, box)) {
+            for (int i = 0; i < (mc.player == mc.player ? selfExt.get() : extrapolation.get()); i++) {
+
+                // y
+                if (!inside(mc.player, box.offset(0, -0.01, 0))) {
+                    y = (y - 0.08) * 0.98;
+                    if (!inside(mc.player, box.offset(0, y, 0))) {
+                        box = box.offset(0, y, 0);
+                    }
+                } else {
+                    y = -0.0784;
+                }
+
+                // half block step check
+                if (inside(mc.player, box.offset(x, 0, z)) && !inside(mc.player, box.offset(x, 0.5, z))) {
+                    box = box.offset(x, 0.5, z);
+                    continue;
+                }
+
+                // x
+                if (!inside(mc.player, box.offset(x, 0, 0))) {
+                    box = box.offset(x, 0, 0);
+                }
+
+                // z
+                if (!inside(mc.player, box.offset(0, 0, z))) {
+                    box = box.offset(0, 0, z);
+                }
+            }
+        }
+        return new Vec3d((box.minX + box.maxX) / 2, box.minY + mc.player.getEyeHeight(mc.player.getPose()), (box.minZ + box.maxZ) / 2);
     }
 
     Vec3d average(List<Vec3d> vec) {

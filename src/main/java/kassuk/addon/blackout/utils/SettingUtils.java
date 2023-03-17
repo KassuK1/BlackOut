@@ -44,16 +44,22 @@ public class SettingUtils extends Utils {
         return range.miningRangeWalls.get();
     }
     public static double placeRangeTo(BlockPos pos) {return range.placeRangeTo(pos, null);}
-    public static boolean inPlaceRange(BlockPos pos) {
-        return range.inPlaceRange(pos);
+    public static boolean inPlaceRange(BlockPos pos) {return range.inPlaceRange(pos, null);}
+    public static boolean inPlaceRange(BlockPos pos, Vec3d from) {
+        return range.inPlaceRange(pos, from);
     }
     public static boolean inPlaceRangeNoTrace(BlockPos pos) {
-        return range.inPlaceRangeNoTrace(pos);
+        return range.inPlaceRangeNoTrace(pos, null);
+    }
+    public static boolean inPlaceRangeNoTrace(BlockPos pos, Vec3d from) {
+        return range.inPlaceRangeNoTrace(pos, from);
     }
     public static boolean inAttackRange(Box bb) {
-        return range.inAttackRange(bb);
+        return range.inAttackRange(bb, null);
     }
-    public static boolean inAttackRange(Box bb, Vec3d feet) {return range.inAttackRange(bb, feet);}
+    public static boolean inAttackRange(Box bb, Vec3d from) {
+        return range.inAttackRange(bb, from);
+    }
     public static double mineRangeTo(BlockPos pos) {return range.miningRangeTo(pos, null);}
     public static boolean inMineRange(BlockPos pos) {
         return range.inMineRange(pos);
@@ -61,7 +67,8 @@ public class SettingUtils extends Utils {
     public static boolean inMineRangeNoTrace(BlockPos pos) {
         return range.inMineRangeNoTrace(pos);
     }
-    public static boolean inAttackRangeNoTrace(Box bb, double eyeHeight, Vec3d feet) {return range.inAttackRangeNoTrace(bb, feet);}
+    public static boolean inAttackRangeNoTrace(Box bb, double eyeHeight, Vec3d feet) {return range.inAttackRangeNoTrace(bb, feet, null);}
+    public static boolean inAttackRangeNoTrace(Box bb, double eyeHeight, Vec3d feet, Vec3d from) {return range.inAttackRangeNoTrace(bb, feet, from);}
     public static double attackRangeTo(Box bb, Vec3d feet) {return range.attackRangeTo(bb, feet, null);}
 
 

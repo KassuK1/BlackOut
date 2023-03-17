@@ -53,6 +53,12 @@ public class ScaffoldPlus extends BlackOutModule {
         .defaultValue(ScaffoldMode.Normal)
         .build()
     );
+    private final Setting<Boolean> onlyConfirmed = sgGeneral.add(new BoolSetting.Builder()
+        .name("Only Confirmed")
+        .description("Only places on blocks the server has confirmed to exist")
+        .defaultValue(true)
+        .build()
+    );
     // Normal
     private final Setting<Boolean> sSprint = sgGeneral.add(new BoolSetting.Builder()
         .name("Stop Sprint")
@@ -146,6 +152,7 @@ public class ScaffoldPlus extends BlackOutModule {
         SilentBypass
     }
     BlockTimerList timers = new BlockTimerList();
+    BlockTimerList placed = new BlockTimerList();
     Vec3d motion = null;
     double placeTimer;
     int placesLeft = 0;
@@ -244,7 +251,7 @@ public class ScaffoldPlus extends BlackOutModule {
                             }
 
                             for (int i = 0; i < Math.min(obsidian, toPlace.size()); i++) {
-                                PlaceData placeData = SettingUtils.getPlaceData(toPlace.get(i));
+                                PlaceData placeData = onlyConfirmed.get() ? SettingUtils.getPlaceData(toPlace.get(i)) : SettingUtils.getPlaceDataOR(toPlace.get(i), pos -> placed.contains(pos));
                                 if (placeData.valid()) {
                                     boolean rotated = !SettingUtils.shouldRotate(RotationType.Placing) || Managers.ROTATION.start(placeData.pos(), 1, RotationType.Placing);
 
@@ -281,7 +288,7 @@ public class ScaffoldPlus extends BlackOutModule {
     }
 
     boolean canPlace(BlockPos pos) {
-        return SettingUtils.getPlaceData(pos).valid();
+        return onlyConfirmed.get() ? SettingUtils.getPlaceData(pos).valid() : SettingUtils.getPlaceDataOR(pos, position -> placed.contains(position)).valid();
     }
 
     List<BlockPos> getBlocks() {
@@ -320,6 +327,7 @@ public class ScaffoldPlus extends BlackOutModule {
 
     void place(PlaceData d, BlockPos ogPos) {
         timers.add(ogPos, delay.get());
+        placed.add(ogPos, 1);
         placesLeft--;
 
         SettingUtils.swing(SwingState.Pre, SwingType.Placing);

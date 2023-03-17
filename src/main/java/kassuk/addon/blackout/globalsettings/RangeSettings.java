@@ -224,16 +224,16 @@ public class RangeSettings extends BlackOutModule {
     }
 
     // Place Range Checks
-    public boolean inPlaceRange(BlockPos pos) {
+    public boolean inPlaceRange(BlockPos pos, Vec3d from) {
         if (mc.player == null) {return false;}
 
-        double dist = placeRangeTo(pos, null);
+        double dist = placeRangeTo(pos, from);
         return dist >= 0 && dist <= (SettingUtils.placeTrace(pos) ? placeRange.get() : placeRangeWalls.get());
     }
-    public boolean inPlaceRangeNoTrace(BlockPos pos) {
+    public boolean inPlaceRangeNoTrace(BlockPos pos, Vec3d from) {
         if (mc.player == null) {return false;}
 
-        double dist = placeRangeTo(pos, null);
+        double dist = placeRangeTo(pos, from);
         return dist >= 0 && dist <= Math.max(placeRange.get(), placeRangeWalls.get());
     }
 
@@ -268,18 +268,18 @@ public class RangeSettings extends BlackOutModule {
     }
 
     // Attack Range Chesks
-    public boolean inAttackRange(Box bb) {
-        return inAttackRange(bb, getFeet(bb));
+    public boolean inAttackRange(Box bb, Vec3d from) {
+        return inAttackRange(bb, getFeet(bb), from);
     }
-    public boolean inAttackRange(Box bb, Vec3d feet) {
+    public boolean inAttackRange(Box bb, Vec3d feet, Vec3d from) {
         if (mc.player == null) {return false;}
 
-        return attackRangeTo(bb, feet, null) <= (SettingUtils.attackTrace(bb) ? attackRange.get() : attackRangeWalls.get());
+        return attackRangeTo(bb, feet, from) <= (SettingUtils.attackTrace(bb) ? attackRange.get() : attackRangeWalls.get());
     }
-    public boolean inAttackRangeNoTrace(Box bb, Vec3d feet) {
+    public boolean inAttackRangeNoTrace(Box bb, Vec3d feet, Vec3d from) {
         if (mc.player == null) {return false;}
 
-        return attackRangeTo(bb, feet, null) <= Math.max(attackRange.get(), attackRangeWalls.get());
+        return attackRangeTo(bb, feet, from) <= Math.max(attackRange.get(), attackRangeWalls.get());
     }
 
     public double attackRangeTo(Box bb, Vec3d feet, Vec3d from) {

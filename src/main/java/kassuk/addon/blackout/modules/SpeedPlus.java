@@ -53,6 +53,15 @@ public class SpeedPlus extends BlackOutModule {
         .visible(() -> mode.get() == SpeedMode.Accelerate)
         .build()
     );
+    private final Setting<Double> jumpForce = sgGeneral.add(new DoubleSetting.Builder()
+        .name("Jump Force")
+        .description(".")
+        .defaultValue(0.42)
+        .min(0)
+        .sliderMax(10)
+        .visible(() -> mode.get() == SpeedMode.Strafe)
+        .build()
+    );
     private final Setting<Double> speed = sgGeneral.add(new DoubleSetting.Builder()
         .name("Speed")
         .description("How many blocks to move every movement tick")
@@ -203,6 +212,12 @@ public class SpeedPlus extends BlackOutModule {
                     if (mc.player.isInLava() || mc.player.isSubmergedIn(FluidTags.LAVA)) {
                         return;
                     }
+                }
+            }
+
+            if (mode.get() == SpeedMode.Strafe) {
+                if (mc.player.isOnGround() && (Math.abs(mc.player.input.movementForward) > 0.01 || Math.abs(mc.player.input.movementSideways) > 0.01)) {
+                    ((IVec3d) mc.player.getVelocity()).setY(jumpForce.get());
                 }
             }
 
