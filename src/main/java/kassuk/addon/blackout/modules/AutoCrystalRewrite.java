@@ -30,6 +30,7 @@ import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Blocks;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.EndCrystalEntity;
@@ -412,7 +413,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
 
     //  Extrapolation Page
     private final Setting<Integer> selfExt = sgExtrapolation.add(new IntSetting.Builder()
-        .name("Self Extrapolation")
+        .name("Self DMG Extrapolation")
         .description("How many ticks of movement should be predicted, should be lower than normal.")
         .defaultValue(0)
         .range(0, 100)
@@ -420,19 +421,11 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .build()
     );
     private final Setting<Integer> extrapolation = sgExtrapolation.add(new IntSetting.Builder()
-        .name("Extrapolation")
+        .name("DMG Extrapolation")
         .description("How many ticks of movement should be predicted.")
         .defaultValue(0)
         .range(0, 100)
         .sliderMax(100)
-        .build()
-    );
-    private final Setting<Integer> extSmoothness = sgExtrapolation.add(new IntSetting.Builder()
-        .name("Extrapolation Smoothening")
-        .description("How many earlier ticks should be used in average calculation for extrapolation motion.")
-        .defaultValue(5)
-        .range(1, 20)
-        .sliderRange(1, 20)
         .build()
     );
     private final Setting<Integer> rangeExtrapolation = sgExtrapolation.add(new IntSetting.Builder()
@@ -441,6 +434,23 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .defaultValue(0)
         .range(0, 100)
         .sliderMax(100)
+        .build()
+    );
+    private final Setting<Integer> hitboxExtrapolation = sgExtrapolation.add(new IntSetting.Builder()
+        .name("Hitbox Extrapolation")
+        .description("How many ticks of movement should be predicted for hitboxes in placing checks.")
+        .defaultValue(0)
+        .range(0, 100)
+        .sliderMax(100)
+        .build()
+    );
+
+    private final Setting<Integer> extSmoothness = sgExtrapolation.add(new IntSetting.Builder()
+        .name("Extrapolation Smoothening")
+        .description("How many earlier ticks should be used in average calculation for extrapolation motion.")
+        .defaultValue(3)
+        .range(1, 20)
+        .sliderRange(1, 20)
         .build()
     );
 
@@ -654,6 +664,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     Map<BlockPos, Long> existedTicksList = new HashMap<>();
     Map<BlockPos, Long> own = new HashMap<>();
     Map<PlayerEntity, Box> extPos = new HashMap<>();
+    Map<PlayerEntity, Box> extHitbox = new HashMap<>();
     Vec3d rangePos = null;
     Map<String, List<Vec3d>> motions = new HashMap<>();
     List<Box> blocked = new ArrayList<>();
@@ -1382,6 +1393,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     }
 
     BlockPos getPlacePos() {
+
         r = (int) Math.ceil(Math.max(SettingUtils.getPlaceRange(), SettingUtils.getPlaceWallsRange()));
         bestPos = null;
         bestDir = null;
@@ -1409,9 +1421,12 @@ public class AutoCrystalRewrite extends BlackOutModule {
                     // Checks if damages are valid
                     if (!placeDamageCheck(result[0], result[1], highest)) {continue;}
 
-                    // Checks if placement is blocked by other entities
+                    // Checks if placement is blocked by other entities (other than players)
                     Box box = new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + (ccPlacements.get() ? 1 : 2), pos.getZ() + 1);
-                    if (EntityUtils.intersectsWithEntity(box, entity -> !(entity.getType().equals(EntityType.END_CRYSTAL) && canExplodePlacing(entity.getPos())))) {continue;}
+                    if (EntityUtils.intersectsWithEntity(box, this::validForIntersect)) {continue;}
+
+                    // Checks if placement is blocked by players
+                    if (intersectsWithPlayers(box)) {continue;}
 
                     // Sets best pos to calculated one
                     bestDir = dir;
@@ -1667,6 +1682,66 @@ public class AutoCrystalRewrite extends BlackOutModule {
         return map;
     }
 
+    Map<PlayerEntity, Box> getHotboxExt() {
+
+        Map<PlayerEntity, Box> map = new HashMap<>();
+
+        if (!mc.world.getPlayers().isEmpty()) {
+            if (!motions.isEmpty()) {
+                for (int p = 0; p < mc.world.getPlayers().size(); p++) {
+
+                    PlayerEntity en = mc.world.getPlayers().get(p);
+
+                    if (en == mc.player) {continue;}
+
+                    if (en.getHealth() <= 0 || en.isSpectator()) {continue;}
+
+                    Vec3d motion = average(motions.get(en.getName().getString()));
+
+                    double x = motion.x;
+                    double y = motion.y;
+                    double z = motion.z;
+
+                    Box box = en.getBoundingBox();
+
+                    if (!inside(en, box)) {
+                        for (int i = 0; i < hitboxExtrapolation.get(); i++) {
+
+                            // y
+                            if (!inside(en, box.offset(0, -0.01, 0))) {
+                                y = (y - 0.08) * 0.98;
+                                if (!inside(en, box.offset(0, y, 0))) {
+                                    box = box.offset(0, y, 0);
+                                }
+                            } else {
+                                y = -0.0784;
+                            }
+
+                            // half block step check
+                            if (inside(en, box.offset(x, 0, z)) && !inside(en, box.offset(x, 0.5, z))) {
+                                box = box.offset(x, 0.5, z);
+                                continue;
+                            }
+
+                            // x
+                            if (!inside(en, box.offset(x, 0, 0))) {
+                                box = box.offset(x, 0, 0);
+                            }
+
+                            // z
+                            if (!inside(en, box.offset(0, 0, z))) {
+                                box = box.offset(0, 0, z);
+                            }
+                        }
+                    }
+
+                    map.put(en, box);
+                }
+            }
+        }
+        return map;
+    }
+
     Vec3d getRangeExt() {
         if (!motions.containsKey(mc.player.getName().getString())) {return mc.player.getEyePos();}
 
@@ -1679,7 +1754,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         Box box = mc.player.getBoundingBox();
 
         if (!inside(mc.player, box)) {
-            for (int i = 0; i < (mc.player == mc.player ? selfExt.get() : extrapolation.get()); i++) {
+            for (int i = 0; i < rangeExtrapolation.get(); i++) {
 
                 // y
                 if (!inside(mc.player, box.offset(0, -0.01, 0))) {
@@ -1732,5 +1807,25 @@ public class AutoCrystalRewrite extends BlackOutModule {
         double d = target - current;
         double c = d * delta;
         return Math.abs(d) <= Math.abs(c) ? target : current + c;
+    }
+
+    boolean validForIntersect(Entity entity) {
+        if (entity instanceof EndCrystalEntity && canExplodePlacing(entity.getPos())) {return false;}
+
+        if (entity instanceof PlayerEntity && entity != mc.player && extHitbox.containsKey(entity)) {return false;}
+
+        return true;
+    }
+
+    boolean intersectsWithPlayers(Box box) {
+        if (extHitbox.isEmpty()) {return false;}
+
+        for (Map.Entry<PlayerEntity, Box> entry : extHitbox.entrySet()) {
+            if (box.intersects(entry.getValue())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

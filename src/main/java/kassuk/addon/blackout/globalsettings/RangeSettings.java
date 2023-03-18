@@ -364,7 +364,7 @@ public class RangeSettings extends BlackOutModule {
     }
 
     Vec3d getFeet(Box bb) {
-        return new Vec3d((bb.minX + bb.maxX) / 2, bb.minY, (bb.minX + bb.maxX) / 2);
+        return new Vec3d((bb.minX + bb.maxX) / 2, bb.minY, (bb.minZ + bb.maxZ) / 2);
     }
 
     // Mining Range Checks
