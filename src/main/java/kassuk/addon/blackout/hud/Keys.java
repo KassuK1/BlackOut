@@ -35,14 +35,14 @@ public class Keys extends HudElement {
         .defaultValue(true)
         .build()
     );
-    private final Setting<drawMode> drawingMode = sgGeneral.add(new EnumSetting.Builder<drawMode>()
-        .name("Draw mode")
+    private final Setting<Mode> mode = sgGeneral.add(new EnumSetting.Builder<Mode>()
+        .name("Mode")
         .description(".")
-        .defaultValue(drawMode.Basic)
+        .defaultValue(Mode.Basic)
         .build()
     );
 
-    public enum drawMode {
+    public enum Mode {
         Horizontal,
         Vertical,
         Basic,
@@ -54,7 +54,7 @@ public class Keys extends HudElement {
     @Override
     public void render(HudRenderer renderer) {
         setSize(50 * scale.get() * scale.get(),20 * scale.get() * scale.get());
-        if (drawingMode.get().equals(drawMode.Horizontal)){
+        if (mode.get().equals(Mode.Horizontal)){
             if (mc.options.forwardKey.isPressed()){
                 renderer.text("W",x,y,textcolor.get(),shadow.get(),scale.get());
             }
@@ -68,7 +68,7 @@ public class Keys extends HudElement {
                 renderer.text("D",x + 45 * scale.get() * scale.get(),y,textcolor.get(),shadow.get(),scale.get());
             }
         }
-        if (drawingMode.get().equals(drawMode.Vertical)){
+        if (mode.get().equals(Mode.Vertical)){
             if (mc.options.forwardKey.isPressed()){
                 renderer.text("W",x,y,textcolor.get(),shadow.get(),scale.get());
             }
@@ -82,7 +82,7 @@ public class Keys extends HudElement {
                 renderer.text("D",x,y + 45 * scale.get() * scale.get(),textcolor.get(),shadow.get(),scale.get());
             }
         }
-        if (drawingMode.get().equals(drawMode.Basic)){
+        if (mode.get().equals(Mode.Basic)){
             if (mc.options.forwardKey.isPressed()){
                 renderer.text("W",x,y -20 * scale.get() * scale.get(),textcolor.get(),shadow.get(),scale.get());
             }

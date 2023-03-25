@@ -24,6 +24,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
@@ -40,14 +41,21 @@ import java.util.*;
 
 /*
 Made by KassuK
-90% rewritten by OLEPOSSU
+95% rewritten by OLEPOSSU
 */
 
 public class SurroundPlus extends BlackOutModule {
     public SurroundPlus() {super(BlackOut.BLACKOUT, "Surround+", "KasumsSoft surround");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final SettingGroup sgAttack = settings.createGroup("Attack");
     private final SettingGroup sgToggle = settings.createGroup("Toggle");
     private final SettingGroup sgRender = settings.createGroup("Render");
+    private final Setting<SurroundMode> surroundMode = sgGeneral.add(new EnumSetting.Builder<SurroundMode>()
+        .name("Surround Mode")
+        .description(".")
+        .defaultValue(SurroundMode.Fat)
+        .build()
+    );
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
         .name("Pause Eat")
         .description("Pauses when you are eating")
@@ -172,13 +180,20 @@ public class SurroundPlus extends BlackOutModule {
         Down,
         Full
     }
+    public enum SurroundMode {
+        Fat,
+        Center
+    }
     BlockTimerList timers = new BlockTimerList();
     BlockPos startPos = null;
     double placeTimer = 0;
     int placesLeft = 0;
     List<Render> render = new ArrayList<>();
+    public static List<BlockPos> attack = new ArrayList<>();
     BlockTimerList placed = new BlockTimerList();
     boolean lastSneak = false;
+    List<BlockPos> placements = new ArrayList<>();
+    public static boolean placing = false;
 
     @Override
     public void onActivate() {
@@ -203,6 +218,7 @@ public class SurroundPlus extends BlackOutModule {
 
     void update() {
         if (mc.player != null && mc.world != null) {
+            placing = false;
 
             // Move Check
             if (toggleMove.get() && (mc.player.getBlockPos().getX() != startPos.getX() || mc.player.getBlockPos().getZ() != startPos.getZ())) {
@@ -247,7 +263,7 @@ public class SurroundPlus extends BlackOutModule {
                 lastSneak = isClicked;
             }
 
-            List<BlockPos> placements = check();
+            placements = check();
 
             FindItemResult hotbar = InvUtils.findInHotbar(item -> item.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) item.getItem()).getBlock()));
             FindItemResult inventory = InvUtils.find(item -> item.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) item.getItem()).getBlock()));
@@ -282,6 +298,7 @@ public class SurroundPlus extends BlackOutModule {
                     if (obsidian >= 0) {
                         boolean switched = false;
                         int i = 0;
+                        placing = true;
                         for (Map.Entry<PlaceData, BlockPos> entry : toPlace.entrySet()) {
                             if (i >= Math.min(obsidian, toPlace.size())) {continue;}
 
@@ -328,7 +345,9 @@ public class SurroundPlus extends BlackOutModule {
 
     void place(PlaceData d, BlockPos ogPos) {
         timers.add(ogPos, delay.get());
-        placed.add(ogPos, 1);
+        if (onlyConfirmed.get()) {
+            placed.add(ogPos, 1);
+        }
 
         placeTimer = 0;
         placesLeft--;
@@ -354,13 +373,21 @@ public class SurroundPlus extends BlackOutModule {
         List<BlockPos> list = new ArrayList<>();
         List<Render> renders = new ArrayList<>();
         List<BlockPos> blocks = getBlocks(getSize());
+        List<BlockPos> toAttack = new ArrayList<>();
+
         if (mc.player != null && mc.world != null) {
             for (BlockPos position : blocks) {
-                if (mc.world.getBlockState(position).getBlock().equals(Blocks.AIR)) {
-                    if (!timers.contains(position) && !EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
+                if (mc.world.getBlockState(position).getBlock().equals(Blocks.AIR) && !placed.contains(position)) {
+                    if (!timers.contains(position)) {
                         PlaceData data = onlyConfirmed.get() ? SettingUtils.getPlaceData(position) : SettingUtils.getPlaceDataOR(position, pos -> placed.contains(pos));
                         if (data.valid()) {
-                            list.add(position);
+                            if (EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
+                                if (EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> entity instanceof EndCrystalEntity)) {
+                                    toAttack.add(position);
+                                }
+                            } else {
+                                list.add(position);
+                            }
                         } else {
                             Direction best = null;
                             int value = -1;
@@ -402,6 +429,7 @@ public class SurroundPlus extends BlackOutModule {
                 }
             }
         }
+        attack = toAttack;
         render = renders;
         return list;
     }

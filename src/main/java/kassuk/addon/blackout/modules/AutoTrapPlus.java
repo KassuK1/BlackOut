@@ -2,18 +2,18 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
+import kassuk.addon.blackout.enums.HoleType;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.timers.BlockTimerList;
-import kassuk.addon.blackout.utils.BOInvUtils;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
-import kassuk.addon.blackout.utils.PlaceData;
-import kassuk.addon.blackout.utils.SettingUtils;
+import kassuk.addon.blackout.utils.*;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
+import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.world.Timer;
@@ -27,6 +27,7 @@ import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -40,14 +41,15 @@ import net.minecraft.util.math.Vec3d;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /*
 Made by OLEPOSSU / Raksamies
 */
 
-public class SelfTrapPlus extends BlackOutModule {
-    public SelfTrapPlus() {
-        super(BlackOut.BLACKOUT, "Self Trap+", "Traps yourself");
+public class AutoTrapPlus extends BlackOutModule {
+    public AutoTrapPlus() {
+        super(BlackOut.BLACKOUT, "Auto Trap+", "Traps enemies (literally selftrap but places on enemies)");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgToggle = settings.createGroup("Toggle");
@@ -80,6 +82,12 @@ public class SelfTrapPlus extends BlackOutModule {
         .name("Trap Mode")
         .description(".")
         .defaultValue(TrapMode.Both)
+        .build()
+    );
+    private final Setting<Boolean> onlyHole = sgGeneral.add(new BoolSetting.Builder()
+        .name("Only Hole")
+        .description("Only places if enemy is in a hole")
+        .defaultValue(false)
         .build()
     );
     private final Setting<Double> placeDelay = sgGeneral.add(new DoubleSetting.Builder()
@@ -194,6 +202,10 @@ public class SelfTrapPlus extends BlackOutModule {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
+    private void onTick(TickEvent.Pre event) {
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
         placing = false;
         placeTimer = Math.min(placeDelay.get(), placeTimer + event.frameTime);
@@ -247,7 +259,13 @@ public class SelfTrapPlus extends BlackOutModule {
                 lastSneak = isClicked;
             }
 
-            List<BlockPos> blocksList = getBlocks(getSize(mc.player.getBlockPos().up()), mc.player.getBoundingBox().intersects(OLEPOSSUtils.getBox(mc.player.getBlockPos().up(2))));
+            List<BlockPos> blocksList = new ArrayList<>();
+
+            for (PlayerEntity player : mc.world.getPlayers()) {
+                if (player != mc.player && !player.isSpectator() && player.getHealth() > 0 && !Friends.get().isFriend(player) && mc.player.distanceTo(player) < 10 && (!onlyHole.get() || holeCamping(player))) {
+                    blocksList.addAll(getBlocks(player, getSize(player.getBlockPos().up(), player), player.getBoundingBox().intersects(OLEPOSSUtils.getBox(player.getBlockPos().up(2)))));
+                }
+            }
 
             render.clear();
 
@@ -368,45 +386,46 @@ public class SelfTrapPlus extends BlackOutModule {
         List<BlockPos> list = new ArrayList<>();
         blocks.forEach(position -> {
             if (mc.world.getBlockState(position).getBlock().equals(Blocks.AIR) && !placed.contains(position)) {
-                if (!timers.contains(position) && !EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
-                    PlaceData data = onlyConfirmed.get() ? SettingUtils.getPlaceData(position) : SettingUtils.getPlaceDataOR(position, pos -> placed.contains(pos));
-
-                    if (data.valid()) {
-                        list.add(position);
-                    } else {
-                        Direction best = null;
-                        int value = -1;
-                        double dist = Double.MAX_VALUE;
-                        for (Direction dir : Direction.values()) {
-                            if (mc.world.getBlockState(position.offset(dir)).getBlock() == Blocks.AIR) {
-                                PlaceData placeData = onlyConfirmed.get() ? SettingUtils.getPlaceData(position.offset(dir)) : SettingUtils.getPlaceDataOR(position.offset(dir), pos -> placed.contains(pos));
-                                if (placeData.valid()) {
-                                    if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
-                                        double distance = OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(position.offset(dir)), mc.player.getPos());
-                                        if (distance < dist || value <= 1) {
-                                            dist = distance;
-                                            best = dir;
-                                            value = 2;
-                                        }
-                                    } else if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM && entity.getType() != EntityType.END_CRYSTAL)) {
-                                        if (value <= 1) {
+                PlaceData data = onlyConfirmed.get() ? SettingUtils.getPlaceData(position) : SettingUtils.getPlaceDataOR(position, pos -> placed.contains(pos));
+                if (SettingUtils.inPlaceRange(data.valid() ? data.pos() : position) && !timers.contains(position)) {
+                    if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
+                        if (data.valid()) {
+                            list.add(position);
+                        } else {
+                            Direction best = null;
+                            int value = -1;
+                            double dist = Double.MAX_VALUE;
+                            for (Direction dir : Direction.values()) {
+                                if (mc.world.getBlockState(position.offset(dir)).getBlock() == Blocks.AIR) {
+                                    PlaceData placeData = onlyConfirmed.get() ? SettingUtils.getPlaceData(position.offset(dir)) : SettingUtils.getPlaceDataOR(position.offset(dir), pos -> placed.contains(pos));
+                                    if (placeData.valid()) {
+                                        if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
                                             double distance = OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(position.offset(dir)), mc.player.getPos());
-                                            if (distance < dist || value <= 0) {
-                                                best = dir;
-                                                value = 1;
+                                            if (distance < dist || value <= 1) {
                                                 dist = distance;
+                                                best = dir;
+                                                value = 2;
+                                            }
+                                        } else if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM && entity.getType() != EntityType.END_CRYSTAL)) {
+                                            if (value <= 1) {
+                                                double distance = OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(position.offset(dir)), mc.player.getPos());
+                                                if (distance < dist || value <= 0) {
+                                                    best = dir;
+                                                    value = 1;
+                                                    dist = distance;
 
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
-                        }
-                        if (best != null) {
-                            if (!timers.contains(position.offset(best))) {
-                                list.add(position.offset(best));
+                            if (best != null) {
+                                if (!timers.contains(position.offset(best))) {
+                                    list.add(position.offset(best));
+                                }
+                                render.add(new Render(position.offset(best), true));
                             }
-                            render.add(new Render(position.offset(best), true));
                         }
                     }
                 }
@@ -416,28 +435,33 @@ public class SelfTrapPlus extends BlackOutModule {
         return list;
     }
 
-    List<BlockPos> getBlocks(int[] size, boolean higher) {
+    List<BlockPos> getBlocks(PlayerEntity player, int[] size, boolean higher) {
         List<BlockPos> list = new ArrayList<>();
-        BlockPos pos = mc.player.getBlockPos().up(higher ? 2 : 1);
-        if (mc.player != null && mc.world != null) {
-            for (int x = size[0] - 1; x <= size[1] + 1; x++) {
-                for (int z = size[2] - 1; z <= size[3] + 1; z++) {
-                    boolean isX = x == size[0] - 1 || x == size[1] + 1;
-                    boolean isZ = z == size[2] - 1 || z == size[3] + 1;
-                    boolean ignore = isX && !isZ ? (!air(pos.add(OLEPOSSUtils.closerToZero(x), 0, z)) || placed.contains(pos.add(OLEPOSSUtils.closerToZero(x), 0, z))) :
-                        !isX && isZ && (!air(pos.add(x, 0, OLEPOSSUtils.closerToZero(z))) || placed.contains(pos.add(x, 0, OLEPOSSUtils.closerToZero(z))));
-                    BlockPos bPos = null;
-                    if (eye() && isX != isZ && !ignore) {
-                        bPos = new BlockPos(x, pos.getY() ,z).add(pos.getX(), 0, pos.getZ());
-                    } else if (top() && !isX && !isZ && air(pos.add(x, 0, z)) && !placed.contains(pos.add(x, 0, z))) {
-                        bPos = new BlockPos(x, pos.getY() ,z).add(pos.getX(), 1, pos.getZ());
-                    }
-                    if (bPos != null) {
-                        list.add(bPos);
-                    }
+        BlockPos pos = player.getBlockPos().up(higher ? 2 : 1);
+
+        for (int x = size[0] - 1; x <= size[1] + 1; x++) {
+            for (int z = size[2] - 1; z <= size[3] + 1; z++) {
+
+                boolean isX = x == size[0] - 1 || x == size[1] + 1;
+                boolean isZ = z == size[2] - 1 || z == size[3] + 1;
+
+                boolean ignore = isX && !isZ ? (!air(pos.add(OLEPOSSUtils.closerToZero(x), 0, z)) || placed.contains(pos.add(OLEPOSSUtils.closerToZero(x), 0, z))) :
+                    !isX && isZ && (!air(pos.add(x, 0, OLEPOSSUtils.closerToZero(z))) || placed.contains(pos.add(x, 0, OLEPOSSUtils.closerToZero(z))));
+
+                BlockPos bPos = null;
+
+                if (eye() && isX != isZ && !ignore) {
+                    bPos = new BlockPos(x, pos.getY() ,z).add(pos.getX(), 0, pos.getZ());
+                } else if (top() && !isX && !isZ && air(pos.add(x, 0, z)) && !placed.contains(pos.add(x, 0, z))) {
+                    bPos = new BlockPos(x, pos.getY() ,z).add(pos.getX(), 1, pos.getZ());
+                }
+
+                if (bPos != null) {
+                    list.add(bPos);
                 }
             }
         }
+
         return list;
     }
 
@@ -451,13 +475,13 @@ public class SelfTrapPlus extends BlackOutModule {
 
     boolean air(BlockPos pos) {return mc.world.getBlockState(pos).getBlock().equals(Blocks.AIR);}
 
-    int[] getSize(BlockPos pos) {
+    int[] getSize(BlockPos pos, PlayerEntity player) {
         int minX = 0;
         int maxX = 0;
         int minZ = 0;
         int maxZ = 0;
-        if (mc.player != null && mc.world != null) {
-            Box box = mc.player.getBoundingBox();
+        if (mc.world != null) {
+            Box box = player.getBoundingBox();
             if (box.intersects(OLEPOSSUtils.getBox(pos.north()))) {
                 minZ--;
             }
@@ -473,7 +497,34 @@ public class SelfTrapPlus extends BlackOutModule {
         }
         return new int[]{minX, maxX, minZ, maxZ};
     }
+    boolean holeCamping(PlayerEntity player) {
+        BlockPos pos = player.getBlockPos();
 
+        if (HoleUtils.getHole(pos, 1).type == HoleType.Single) {
+            return true;
+        }
+        // DoubleX
+        if (HoleUtils.getHole(pos, 1).type == HoleType.DoubleX ||
+            HoleUtils.getHole(pos.add(-1, 0, 0), 1).type == HoleType.DoubleX) {
+            return true;
+        }
+
+        // DoubleZ
+        if (HoleUtils.getHole(pos, 1).type == HoleType.DoubleZ ||
+            HoleUtils.getHole(pos.add(0, 0, -1), 1).type == HoleType.DoubleZ) {
+            return true;
+        }
+
+        // Quad
+        if (HoleUtils.getHole(pos, 1).type == HoleType.Quad ||
+            HoleUtils.getHole(pos.add(-1, 0, -1), 1).type == HoleType.Quad ||
+            HoleUtils.getHole(pos.add(-1, 0, 0), 1).type == HoleType.Quad ||
+            HoleUtils.getHole(pos.add(0, 0, -1), 1).type == HoleType.Quad) {
+            return true;
+        }
+
+        return false;
+    }
 
     record Render(BlockPos pos, boolean support) {}
 }

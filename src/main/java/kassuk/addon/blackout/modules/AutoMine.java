@@ -107,19 +107,19 @@ public class AutoMine extends BlackOutModule {
     private final Setting<Boolean> resetOnPlace = sgGeneral.add(new BoolSetting.Builder()
         .name("Reset On Place")
         .description("Resets Speedmine position when placing a block.")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
     private final Setting<Boolean> resetOnCrystal = sgGeneral.add(new BoolSetting.Builder()
         .name("Reset On Crystal")
         .description("Resets Speedmine position when placing a crystal.")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
     private final Setting<Boolean> resetOnAttack = sgGeneral.add(new BoolSetting.Builder()
         .name("Reset On Attack")
         .description("Resets Speedmine position when attacking an entity.")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
     private final Setting<Boolean> debug = sgGeneral.add(new BoolSetting.Builder()
@@ -252,6 +252,12 @@ public class AutoMine extends BlackOutModule {
         .sliderRange(0, 1)
         .build()
     );
+    private final Setting<Boolean> forceHold = sgCrystal.add(new BoolSetting.Builder()
+        .name("Force Hold")
+        .description("Instantly places a new crystal at the block after attacking the crystal.")
+        .defaultValue(true)
+        .build()
+    );
 
     //  Render Page
     private final Setting<Double> exp = sgRender.add(new DoubleSetting.Builder()
@@ -309,6 +315,7 @@ public class AutoMine extends BlackOutModule {
     public static BlockPos targetPos;
     public Direction targetDir;
     BlockPos crystalPos;
+    boolean shouldForce = false;
     int targetValue;
     int lastValue;
     double timer = 0;
@@ -318,6 +325,7 @@ public class AutoMine extends BlackOutModule {
     public double civTimer = 0;
     public BlockPos waitingToStart = null;
     int civTries = 0;
+    boolean hold = false;
 
     @Override
     public void onActivate() {
@@ -502,13 +510,20 @@ public class AutoMine extends BlackOutModule {
             //Other Stuff
             if ((progress >= 1 || (mode.get() == AutoMineMode.CIV && shouldCIV && civTimer >= civDelay.get() && civPos == targetPos)) && (!pauseEat.get() || !mc.player.isUsingItem()) && targetDir != null) {
                 if (crystal.get() && crystalPos != null) {
+
                     Entity at = isAt(targetPos, crystalPos);
                     Hand hand = getHand(Items.END_CRYSTAL);
-                    int cSlot = InvUtils.find(itemStack -> itemStack.getItem() == Items.END_CRYSTAL).slot();
+
+                    int hotbar = InvUtils.findInHotbar(itemStack -> itemStack.getItem() == Items.END_CRYSTAL).slot();
+                    int inv = InvUtils.find(itemStack -> itemStack.getItem() == Items.END_CRYSTAL).slot();
+
                     if (at != null) {
                         boolean rotated = !SettingUtils.endMineRot() || Managers.ROTATION.start(targetPos, 9, RotationType.Breaking);
 
                         if (rotated) {
+                            if (debug.get()) {
+                                debug("holding-check");
+                            }
                             int holding = 0;
                             if (holdingBest(targetPos)) {
                                 holding = 1;
@@ -523,23 +538,47 @@ public class AutoMine extends BlackOutModule {
                                 BOInvUtils.swapBack();
                             }
                             if (expCrystal.get() && at instanceof EndCrystalEntity) {
-                                attackID(at);
+                                if (debug.get()) {
+                                    debug("attack");
+                                }
+                                attack(at);
                             }
+
+                            // Forcehold
+                            if (canForce()) {
+                                if (debug.get()) {
+                                    debug("force");
+                                }
+                                forcePlace();
+                            }
+
                             targetPos = null;
                             crystalPos = null;
+                            shouldForce = false;
                         }
-                    } else if ((cSlot >= 0 || hand != null) && timer >= placeDelay.get() && placeCrystal.get()
+                    } else if ((hand != null || (switchMode.get() == SwitchMode.Silent && hotbar > 0) || (switchMode.get() == SwitchMode.SilentBypass && inv > 0)) && timer >= placeDelay.get() && placeCrystal.get()
                         && placeCrystal.get() && !EntityUtils.intersectsWithEntity(new Box(crystalPos), entity -> !entity.isSpectator())) {
                         boolean rotated = !SettingUtils.shouldRotate(RotationType.Crystal) || Managers.ROTATION.start(crystalPos.down(), 9, RotationType.Crystal);
                         if (rotated) {
                             timer = 0;
 
                             int holding = 0;
-                            if (holdingBest(targetPos)) {
+                            if (hand == null) {
+                                switch (switchMode.get()) {
+                                    case Silent -> {
+                                        InvUtils.swap(hotbar, true);
+                                        holding = 2;
+                                    }
+                                    case SilentBypass -> {
+                                        if (BOInvUtils.invSwitch(inv)) {
+                                            holding = 2;
+                                        }
+                                    }
+                                }
+                            } else {
                                 holding = 1;
-                            } else if (BOInvUtils.invSwitch(cSlot)) {
-                                holding = 2;
                             }
+
                             if (holding == 0) {
                                 return;
                             }
@@ -555,7 +594,10 @@ public class AutoMine extends BlackOutModule {
                             SettingUtils.swing(SwingState.Post, SwingType.Crystal);
 
                             if (holding == 2) {
-                                BOInvUtils.swapBack();
+                                switch (switchMode.get()) {
+                                    case Silent -> InvUtils.swapBack();
+                                    case SilentBypass -> BOInvUtils.swapBack();
+                                }
                             }
 
                             if (SettingUtils.shouldRotate(RotationType.Crystal)) {
@@ -612,9 +654,60 @@ public class AutoMine extends BlackOutModule {
                         if (mode.get() == AutoMineMode.Smart && speedmining) {
                             speedmining = false;
                             targetPos = null;
+                            shouldForce = false;
                         }
                     }
                 }
+            }
+        }
+    }
+    boolean canForce() {
+        if (!shouldForce || !forceHold.get()) {return false;}
+        if (getBlock(targetPos.down()) == Blocks.AIR) {return false;}
+        if (oldVerPlacements.get() && getBlock(targetPos.up()) != Blocks.AIR) {return false;}
+
+        return !EntityUtils.intersectsWithEntity(new Box(targetPos), entity -> !entity.isSpectator() && !(entity instanceof EndCrystalEntity));
+    }
+
+    void forcePlace() {
+        Hand hand = getHand(Items.END_CRYSTAL);
+
+        int hotbar = InvUtils.findInHotbar(itemStack -> itemStack.getItem() == Items.END_CRYSTAL).slot();
+        int inv = InvUtils.find(itemStack -> itemStack.getItem() == Items.END_CRYSTAL).slot();
+
+        int holding = 0;
+        if (hand == null) {
+            switch (switchMode.get()) {
+                case Silent -> {
+                    InvUtils.swap(hotbar, true);
+                    holding = 2;
+                }
+                case SilentBypass -> {
+                    if (BOInvUtils.invSwitch(inv)) {
+                        holding = 2;
+                    }
+                }
+            }
+        } else {
+            holding = 1;
+        }
+
+        if (holding == 0) {
+            return;
+        }
+
+
+        SettingUtils.swing(SwingState.Pre, SwingType.Crystal);
+
+        mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand == null ? Hand.MAIN_HAND : hand,
+            new BlockHitResult(OLEPOSSUtils.getMiddle(targetPos.down()), Direction.UP, targetPos.down(), false), 0));
+
+        SettingUtils.swing(SwingState.Post, SwingType.Crystal);
+
+        if (holding == 2) {
+            switch (switchMode.get()) {
+                case Silent -> InvUtils.swapBack();
+                case SilentBypass -> BOInvUtils.swapBack();
             }
         }
     }
@@ -636,7 +729,7 @@ public class AutoMine extends BlackOutModule {
         }
     }
 
-    void attackID(Entity en) {
+    void attack(Entity en) {
         SettingUtils.swing(SwingState.Post, SwingType.Attacking);
 
         mc.getNetworkHandler().sendPacket(PlayerInteractEntityC2SPacket.attack(en, mc.player.isSneaking()));
@@ -677,6 +770,7 @@ public class AutoMine extends BlackOutModule {
                 miningFor = 0;
                 targetPos = pPos;
                 crystalPos = cPos;
+                shouldForce = hold;
                 boolean rotated = !SettingUtils.startMineRot() || Managers.ROTATION.start(targetPos, 9, RotationType.Breaking);
                 if (rotated) {
                     start(targetPos, dir);
@@ -713,6 +807,7 @@ public class AutoMine extends BlackOutModule {
                         value = antiSurround.get();
                         closest = pos.offset(dir);
                         crystal = null;
+                        hold = false;
                     }
 
                     // Surround Cev
@@ -723,6 +818,7 @@ public class AutoMine extends BlackOutModule {
                         value = surroundCev.get();
                         closest = pos.offset(dir);
                         crystal = pos.offset(dir).up();
+                        hold = true;
                     }
                     // Trap Cev
                     if (valueCheck(value, trapCev.get(), pos.offset(dir).up(), closest) &&
@@ -732,6 +828,7 @@ public class AutoMine extends BlackOutModule {
                         value = trapCev.get();
                         closest = pos.offset(dir).up();
                         crystal = pos.offset(dir).up(2);
+                        hold = false;
                     }
                     // Auto City
                     if (valueCheck(value, autoCity.get(), pos.offset(dir), closest) &&
@@ -742,6 +839,7 @@ public class AutoMine extends BlackOutModule {
                         value = autoCity.get();
                         closest = pos.offset(dir);
                         crystal = pos.offset(dir).offset(dir);
+                        hold = true;
                     }
                     // Cev
                     if (valueCheck(value, cev.get(), pos.up(2), closest)
@@ -751,6 +849,7 @@ public class AutoMine extends BlackOutModule {
                         value = cev.get();
                         closest = pos.up(2);
                         crystal = pos.up(3);
+                        hold = false;
                     }
                     // Anti Burrow
                     if (valueCheck(value, antiBurrow.get(), pos, closest)
@@ -759,6 +858,7 @@ public class AutoMine extends BlackOutModule {
                         value = antiBurrow.get();
                         closest = pl.getBlockPos();
                         crystal = null;
+                        hold = false;
                     }
                 }
             }

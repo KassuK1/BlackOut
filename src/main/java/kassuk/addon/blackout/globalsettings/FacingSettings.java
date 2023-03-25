@@ -48,6 +48,12 @@ public class FacingSettings extends BlackOutModule {
         .defaultValue(false)
         .build()
     );
+    public final Setting<Boolean> maxHeight = sgGeneral.add(new BoolSetting.Builder()
+        .name("Max Height")
+        .description("Doesn't place on top sides of blocks at max height.")
+        .defaultValue(true)
+        .build()
+    );
 
 
     public PlaceData getPlaceDataOR(BlockPos pos, Predicate<BlockPos> predicate, boolean ignoreContainers) {
@@ -59,6 +65,9 @@ public class FacingSettings extends BlackOutModule {
             } else {
                 double cDist = -1;
                 for (Direction dir : Direction.values()) {
+
+                    // Doesn't place on top of max height
+                    if (maxHeight.get() && pos.offset(dir).getY() > mc.world.getHeight()) {continue;}
 
                     // Checks if block is an entity (chests, shulkers)
                     if (ignoreContainers && mc.world.getBlockState(pos.offset(dir)).hasBlockEntity()) {continue;}
@@ -91,6 +100,9 @@ public class FacingSettings extends BlackOutModule {
                 double cDist = -1;
                 for (Direction dir : Direction.values()) {
 
+                    // Doesn't place on top of max height
+                    if (maxHeight.get() && pos.offset(dir).getY() > mc.world.getHeight()) {continue;}
+
                     // Checks if block is an entity (chests, shulkers)
                     if (ignoreContainers && mc.world.getBlockState(pos.offset(dir)).hasBlockEntity()) {continue;}
 
@@ -122,6 +134,9 @@ public class FacingSettings extends BlackOutModule {
                 double cDist = -1;
                 for (Direction dir : Direction.values()) {
 
+                    // Doesn't place on top of max height
+                    if (maxHeight.get() && pos.offset(dir).getY() > mc.world.getHeight()) {continue;}
+
                     // Checks if block is an entity (chests, shulkers)
                     if (ignoreContainers && mc.world.getBlockState(pos.offset(dir)).hasBlockEntity()) {continue;}
 
@@ -150,8 +165,12 @@ public class FacingSettings extends BlackOutModule {
         if (mc.world != null && mc.player != null) {
             double cDist = -1;
             for (Direction dir : Direction.values()) {
+
+                // Doesn't place on top of max height
+                if (maxHeight.get() && pos.offset(dir).getY() > mc.world.getHeight()) {continue;}
+
                 // Unblocked check (mostly for autocrystal placement facings)
-                if (unblocked.get() && !getBlock(pos.offset(dir)).equals(Blocks.AIR)) {continue;}
+                if (unblocked.get() && !(getBlock(pos.offset(dir)) == Blocks.AIR)) {continue;}
 
                 // Strict dir check (checks if face isnt on opposite side of the block to player)
                 if (strictDir.get() && !OLEPOSSUtils.strictDir(pos, dir)) {continue;}

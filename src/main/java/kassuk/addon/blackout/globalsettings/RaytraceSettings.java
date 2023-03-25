@@ -3,25 +3,14 @@ package kassuk.addon.blackout.globalsettings;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.mixins.MixinRaycastContext;
-import kassuk.addon.blackout.utils.BODamageUtils;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
-import meteordevelopment.meteorclient.events.game.GameJoinedEvent;
-import meteordevelopment.meteorclient.events.render.Render3DEvent;
+import kassuk.addon.blackout.utils.meteor.BODamageUtils;
 import meteordevelopment.meteorclient.mixininterface.IRaycastContext;
 import meteordevelopment.meteorclient.mixininterface.IVec3d;
 import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.systems.modules.Module;
-import meteordevelopment.orbit.EventHandler;
-import meteordevelopment.orbit.EventPriority;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.FluidBlock;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.*;
 import net.minecraft.world.RaycastContext;
-import net.minecraft.world.explosion.Explosion;
-
-import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 /*
 Made by OLEPOSSU

@@ -34,9 +34,11 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new AutoCraftingTable());
         Modules.get().add(new AutoCrystalRewrite());
         Modules.get().add(new AutoEz());
+        Modules.get().add(new AutoMend());
         Modules.get().add(new AutoMine());
         Modules.get().add(new AutoMoan());
         Modules.get().add(new AutoPearl());
+        Modules.get().add(new AutoTrapPlus());
         Modules.get().add(new BedBomb());
         Modules.get().add(new Clicker());
         Modules.get().add(new ButtonAura());
@@ -78,9 +80,6 @@ public class BlackOut extends MeteorAddon {
 
         // Commands
         Commands.get().add(new BlackoutGit());
-        Commands.get().add(new GearInfo());
-        Commands.get().add(new Kick());
-        Commands.get().add(new Panic());
         Commands.get().add(new Coords());
 
         // HUD

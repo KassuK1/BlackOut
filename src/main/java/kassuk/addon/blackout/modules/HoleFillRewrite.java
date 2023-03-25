@@ -2,15 +2,13 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
+import kassuk.addon.blackout.enums.HoleType;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.timers.BlockTimerList;
-import kassuk.addon.blackout.utils.BOInvUtils;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
-import kassuk.addon.blackout.utils.PlaceData;
-import kassuk.addon.blackout.utils.SettingUtils;
+import kassuk.addon.blackout.utils.*;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
@@ -51,6 +49,9 @@ public class HoleFillRewrite extends BlackOutModule {
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgRender = settings.createGroup("Render");
+    private final SettingGroup sgHole = settings.createGroup("Hole");
+
+    //   General Page
     private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
         .name("Switch Mode")
         .description(".")
@@ -95,14 +96,6 @@ public class HoleFillRewrite extends BlackOutModule {
         .sliderMax(10)
         .build()
     );
-    private final Setting<Integer> holeDepth = sgGeneral.add(new IntSetting.Builder()
-        .name("Hole Depth")
-        .description("Depth of the holes in blocks.")
-        .defaultValue(3)
-        .min(1)
-        .sliderRange(1, 10)
-        .build()
-    );
     private final Setting<Double> placeDelay = sgGeneral.add(new DoubleSetting.Builder()
         .name("Place Delay")
         .description("Delay between places.")
@@ -125,6 +118,26 @@ public class HoleFillRewrite extends BlackOutModule {
         .defaultValue(1)
         .range(0, 10)
         .sliderRange(0, 10)
+        .build()
+    );
+
+    //   Hole Page
+    private final Setting<Boolean> single = sgHole.add(new BoolSetting.Builder()
+        .name("Single")
+        .description("Fills 1x1 holes")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> doubleHole = sgHole.add(new BoolSetting.Builder()
+        .name("Double")
+        .description("Fills 2x1 block holes")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> quad = sgHole.add(new BoolSetting.Builder()
+        .name("Quad")
+        .description("Fills 2x2 block holes")
+        .defaultValue(true)
         .build()
     );
 
@@ -299,12 +312,19 @@ public class HoleFillRewrite extends BlackOutModule {
                 for(int z = (int) -Math.ceil(range); z <= Math.ceil(range); z++) {
                     BlockPos pos = mc.player.getBlockPos().add(x, y, z);
 
-                    if (OLEPOSSUtils.isHole(pos, mc.world, holeDepth.get()) && !EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(pos), entity -> !entity.isSpectator() && !(entity instanceof ItemEntity))) {
-                        double closest = closestDist(pos);
-                        PlaceData d = SettingUtils.getPlaceData(pos);
-                        if (d.valid() && closest >= 0 && closest <= holeRange.get() && (!efficient.get() || OLEPOSSUtils.distance(mc.player.getPos(), OLEPOSSUtils.getMiddle(pos)) > closest)) {
-                            if (SettingUtils.inPlaceRange(d.pos())) {
-                                holes.add(pos);
+                    Hole h = HoleUtils.getHole(pos, single.get(), doubleHole.get(), quad.get(), 3);
+
+                    if (h.type != HoleType.NotHole) {
+                        for (BlockPos p : h.positions()) {
+                            if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(p), entity -> !entity.isSpectator() && !(entity instanceof ItemEntity))) {
+                                double closest = closestDist(p);
+
+                                PlaceData d = SettingUtils.getPlaceData(p);
+                                if (d.valid() && closest >= 0 && closest <= holeRange.get() && (!efficient.get() || OLEPOSSUtils.distance(mc.player.getPos(), OLEPOSSUtils.getMiddle(p)) > closest)) {
+                                    if (SettingUtils.inPlaceRange(d.pos())) {
+                                        holes.add(p);
+                                    }
+                                }
                             }
                         }
                     }

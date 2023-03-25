@@ -5,7 +5,7 @@ import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.managers.RotationManager;
 import kassuk.addon.blackout.mixins.MixinRaycastContext;
-import kassuk.addon.blackout.utils.BODamageUtils;
+import kassuk.addon.blackout.utils.meteor.BODamageUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.mixininterface.IVec3d;
 import meteordevelopment.meteorclient.settings.*;

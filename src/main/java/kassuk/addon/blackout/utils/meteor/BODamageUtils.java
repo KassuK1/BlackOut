@@ -1,4 +1,4 @@
-package kassuk.addon.blackout.utils;
+package kassuk.addon.blackout.utils.meteor;
 
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.game.GameJoinedEvent;
@@ -36,7 +36,7 @@ import java.util.Objects;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 /*
-Code is from meteor client https://github.com/MeteorDevelopment/meteor-client/blob/fc3515b12eec41fdb419069050de51903d6b0e38/src/main/java/meteordevelopment/meteorclient/utils/player/DamageUtils.java
+Code is from meteor client https://github.com/MeteorDevelopment/meteor-client/blob/master/src/main/java/meteordevelopment/meteorclient/utils/player/DamageUtils.java
 got permission to use it from seasnail
  */
 

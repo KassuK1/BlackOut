@@ -5,20 +5,19 @@ import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
-import kassuk.addon.blackout.globalsettings.RangeSettings;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.mixins.MixinSound;
 import kassuk.addon.blackout.timers.IntTimerList;
-import kassuk.addon.blackout.utils.BODamageUtils;
+import kassuk.addon.blackout.utils.meteor.BODamageUtils;
 import kassuk.addon.blackout.utils.BOInvUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
+import kassuk.addon.blackout.utils.meteor.BOEntityUtils;
 import meteordevelopment.meteorclient.events.entity.EntityAddedEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.PlaySoundEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
-import meteordevelopment.meteorclient.mixininterface.IRaycastContext;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
@@ -30,9 +29,7 @@ import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Blocks;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
@@ -48,12 +45,12 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /*
 Made by OLEPOSSU / Raksamies
@@ -89,7 +86,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
         .name("Pause Eat")
         .description("Pauses while eating.")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
     private final Setting<Boolean> performance = sgGeneral.add(new BoolSetting.Builder()
@@ -121,7 +118,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     private final Setting<Boolean> ccPlacements = sgPlace.add(new BoolSetting.Builder()
         .name("CC Placements")
         .description("Uses crystalpvp.cc hitboxes.")
-        .defaultValue(false)
+        .defaultValue(true)
         .build()
     );
     private final Setting<Boolean> instantPlace = sgPlace.add(new BoolSetting.Builder()
@@ -150,7 +147,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .defaultValue(0)
         .min(0)
         .sliderRange(0, 1)
-            .visible(() -> placeDelayMode.get() == DelayMode.Seconds)
+        .visible(() -> placeDelayMode.get() == DelayMode.Seconds)
         .build()
     );
     private final Setting<SequentialMode> sequentialMode = sgPlace.add(new EnumSetting.Builder<SequentialMode>()
@@ -193,7 +190,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     private final Setting<Double> existed = sgExplode.add(new DoubleSetting.Builder()
         .name("Existed")
         .description("How many seconds should the crystal exist before attacking.")
-        .defaultValue(0.125)
+        .defaultValue(0)
         .min(0)
         .sliderRange(0, 1)
         .visible(() -> existedMode.get() == ExistedMode.Seconds)
@@ -202,7 +199,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     private final Setting<Integer> existedTicks = sgExplode.add(new IntSetting.Builder()
         .name("Existed Ticks")
         .description("How many ticks should the crystal exist before attacking.")
-        .defaultValue(2)
+        .defaultValue(0)
         .min(0)
         .sliderRange(0, 20)
         .visible(() -> existedMode.get() == ExistedMode.Ticks)
@@ -211,7 +208,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     private final Setting<Double> expSpeed = sgExplode.add(new DoubleSetting.Builder()
         .name("Explode Speed")
         .description("How many times to hit crystal each second.")
-        .defaultValue(2)
+        .defaultValue(4)
         .range(0.01, 20)
         .sliderRange(0.01, 20)
         .build()
@@ -263,7 +260,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     private final Setting<Double> switchPenalty = sgSwitch.add(new DoubleSetting.Builder()
         .name("Switch Penalty")
         .description("Time to wait after switching before hitting crystals.")
-        .defaultValue(0.125)
+        .defaultValue(0.25)
         .min(0)
         .sliderRange(0, 1)
         .build()
@@ -365,7 +362,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     private final Setting<Double> forcePop = sgDamage.add(new DoubleSetting.Builder()
         .name("Force Pop")
         .description("Ignores damage checks if any enemy will be popped in x hits.")
-        .defaultValue(2)
+        .defaultValue(1)
         .range(0, 10)
         .sliderRange(0, 10)
         .build()
@@ -373,7 +370,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     private final Setting<Double> antiFriendPop = sgDamage.add(new DoubleSetting.Builder()
         .name("Anti Friend Pop")
         .description("Cancels any action if any friend will be popped in x hits.")
-        .defaultValue(2)
+        .defaultValue(1)
         .range(0, 10)
         .sliderRange(0, 10)
         .build()
@@ -381,7 +378,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     private final Setting<Double> antiSelfPop = sgDamage.add(new DoubleSetting.Builder()
         .name("Anti Self Pop")
         .description("Cancels any action if you will be popped in x hits.")
-        .defaultValue(2)
+        .defaultValue(1)
         .range(0, 10)
         .sliderRange(0, 10)
         .build()
@@ -444,11 +441,10 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .sliderMax(100)
         .build()
     );
-
     private final Setting<Integer> extSmoothness = sgExtrapolation.add(new IntSetting.Builder()
         .name("Extrapolation Smoothening")
         .description("How many earlier ticks should be used in average calculation for extrapolation motion.")
-        .defaultValue(3)
+        .defaultValue(2)
         .range(1, 20)
         .sliderRange(1, 20)
         .build()
@@ -554,6 +550,12 @@ public class AutoCrystalRewrite extends BlackOutModule {
     );
 
     //  Compatibility Page
+    private final Setting<Boolean> surroundAttack = sgSound.add(new BoolSetting.Builder()
+        .name("Surround Attack")
+        .description("Attacks any crystal if surround placement is blocked.")
+        .defaultValue(true)
+        .build()
+    );
     private final Setting<Double> autoMineDamage = sgCompatibility.add(new DoubleSetting.Builder()
         .name("Auto Mine Damage")
         .description("Places at automine pos if it deals over 'highest dmg / x' damage.")
@@ -679,6 +681,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     int explosions = 0;
     long lastMillis = System.currentTimeMillis();
     boolean suicide = false;
+    public static boolean placing = false;
 
     //Used in placement calculation
     BlockPos bestPos;
@@ -802,6 +805,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
             }
             extPos = getExtPos();
             rangePos = getRangeExt();
+            extHitbox = getHitboxExt();
             if (debugRange.get()) {
                 debug(debugRangeHeight(1) + "  " + dist(debugRangePos(1)) + "\n" +
                     debugRangeHeight(2) + "  " + dist(debugRangePos(2)) + "\n" +
@@ -986,9 +990,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onEntity(EntityAddedEvent event) {
-        if (event.entity instanceof EndCrystalEntity entity) {
-            confirmed = entity.getId();
-        }
+        confirmed = event.entity.getId();
     }
 
     @EventHandler
@@ -1041,18 +1043,18 @@ public class AutoCrystalRewrite extends BlackOutModule {
     // Other stuff
 
     void update() {
+        placing = false;
         dmgCache.clear();
         Entity expEntity = null;
         double[] value = null;
+        boolean shouldProtectSurround = surroundProt();
         Hand hand = getHand(Items.END_CRYSTAL);
         if (!pausedCheck() && (hand != null || switchMode.get() == SwitchMode.Silent || switchMode.get() == SwitchMode.SilentBypass) && explode.get()) {
             for (Entity en : mc.world.getEntities()) {
                 if (en instanceof EndCrystalEntity) {
                     double[] dmg = getDmg(en.getPos())[0];
-                    if (switchTimer <= 0 && canExplode(en.getPos())) {
-                        if ((expEntity == null || value == null) ||
-                            (dmgCheckMode.get().equals(DmgCheckMode.Normal) && dmg[0] > value[0]) ||
-                            (dmgCheckMode.get().equals(DmgCheckMode.Safe) && dmg[2] / dmg[0] < value[2] / dmg[0])) {
+                    if (switchTimer <= 0 && canExplode(en.getPos(), shouldProtectSurround)) {
+                        if ((expEntity == null || value == null) || ((dmgCheckMode.get().equals(DmgCheckMode.Normal) && dmg[0] > value[0]) || (dmgCheckMode.get().equals(DmgCheckMode.Safe) && dmg[2] / dmg[0] < value[2] / dmg[0]))) {
                             expEntity = en;
                             value = dmg;
                         }
@@ -1122,6 +1124,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
                 int silentSlot = InvUtils.find(Items.END_CRYSTAL).slot();
                 int hotbar = InvUtils.findInHotbar(Items.END_CRYSTAL).slot();
                 if (handToUse != null || (switchMode.get() == SwitchMode.Silent && hotbar >= 0) || (switchMode.get() == SwitchMode.SilentBypass && silentSlot >= 0)) {
+                    placing = true;
                     if ((placeTimer <= 0 || (instantPlace.get() && !shouldSlow() && !isBlocked(placePos))) && delayCheck()) {
                         if (!SettingUtils.shouldRotate(RotationType.Crystal) || (Managers.ROTATION.start(placePos.down(), smartRot.get() ? new Vec3d(placePos.getX() + 0.5, placePos.getY(), placePos.getZ() + 0.5) : null, 5, RotationType.Crystal) && ghostCheck(placePos.down()))) {
                             placeTimer = 1;
@@ -1135,6 +1138,16 @@ public class AutoCrystalRewrite extends BlackOutModule {
         }
     }
 
+    boolean surroundProt() {
+        if (!surroundAttack.get() || !Modules.get().isActive(SurroundPlus.class)) {return false;}
+
+        for (int i = 0; i < SurroundPlus.attack.size(); i++) {
+            if (EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(SurroundPlus.attack.get(i)), entity -> entity instanceof EndCrystalEntity)) {
+                return true;
+            }
+        }
+        return false;
+    }
     boolean ghostCheck(BlockPos pos) {
         if (!SettingUtils.shouldGhostCheck()) {return true;}
         return SettingUtils.placeRangeTo(pos) <= (SettingUtils.raytraceCheck(mc.player.getEyePos(), Managers.ROTATION.lastDir[0], Managers.ROTATION.lastDir[1], pos) ? SettingUtils.getPlaceRange() : SettingUtils.getPlaceWallsRange());
@@ -1360,12 +1373,12 @@ public class AutoCrystalRewrite extends BlackOutModule {
         }
     }
 
-    boolean canExplode(Vec3d vec) {
+    boolean canExplode(Vec3d vec, boolean sProt) {
         if (onlyOwn.get() && !isOwn(vec)) {return false;}
         if (!inExplodeRange(vec)) {return false;}
 
         double[][] result = getDmg(vec);
-        return explodeDamageCheck(result[0], result[1], isOwn(vec));
+        return explodeDamageCheck(result[0], result[1], isOwn(vec), sProt);
     }
 
     boolean canExplodePlacing(Vec3d vec) {
@@ -1373,7 +1386,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         if (!inExplodeRangePlacing(vec)) {return false;}
 
         double[][] result = getDmg(vec);
-        return explodeDamageCheck(result[0], result[1], isOwn(vec));
+        return explodeDamageCheck(result[0], result[1], isOwn(vec), false);
     }
 
     Hand getHand(Item item) {
@@ -1423,10 +1436,8 @@ public class AutoCrystalRewrite extends BlackOutModule {
 
                     // Checks if placement is blocked by other entities (other than players)
                     Box box = new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + (ccPlacements.get() ? 1 : 2), pos.getZ() + 1);
-                    if (EntityUtils.intersectsWithEntity(box, this::validForIntersect)) {continue;}
 
-                    // Checks if placement is blocked by players
-                    if (intersectsWithPlayers(box)) {continue;}
+                    if (BOEntityUtils.intersectsWithEntity(box, this::validForIntersect, extHitbox)) {continue;}
 
                     // Sets best pos to calculated one
                     bestDir = dir;
@@ -1467,7 +1478,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         return true;
     }
 
-    boolean explodeDamageCheck(double[] dmg, double[] health, boolean own) {
+    boolean explodeDamageCheck(double[] dmg, double[] health, boolean own, boolean sProt) {
         boolean checkOwn = expMode.get() == ExplodeMode.FullCheck || expMode.get() == ExplodeMode.SelfDmgCheck
             || expMode.get() == ExplodeMode.SelfDmgOwn || expMode.get() == ExplodeMode.AlwaysOwn;
         boolean checkDmg = expMode.get() == ExplodeMode.FullCheck || (expMode.get() == ExplodeMode.SelfDmgOwn && !own) ||
@@ -1486,14 +1497,14 @@ public class AutoCrystalRewrite extends BlackOutModule {
             }
 
         }
-        if (checkDmg) {
+        if (checkDmg && !sProt) {
             if (health[0] >= 0 && dmg[0] * forcePop.get() >= health[0]) {
                 return true;
             }
 
         }
 
-        if (checkDmg) {
+        if (checkDmg && !sProt) {
             if (dmg[0] < minExplode.get()) {
                 return false;
             }
@@ -1507,7 +1518,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         }
 
 
-        if (checkOwn) {
+        if (checkOwn && !sProt) {
             if (dmg[1] > maxFriendExp.get()) {
                 return false;
             }
@@ -1632,7 +1643,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
 
                     PlayerEntity en = mc.world.getPlayers().get(p);
 
-                    if (en.getHealth() <= 0 || en.isSpectator()) {
+                    if (en.getHealth() <= 0) {
                         continue;
                     }
 
@@ -1682,7 +1693,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         return map;
     }
 
-    Map<PlayerEntity, Box> getHotboxExt() {
+    Map<PlayerEntity, Box> getHitboxExt() {
 
         Map<PlayerEntity, Box> map = new HashMap<>();
 
@@ -1694,7 +1705,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
 
                     if (en == mc.player) {continue;}
 
-                    if (en.getHealth() <= 0 || en.isSpectator()) {continue;}
+                    if (en.getHealth() <= 0) {continue;}
 
                     Vec3d motion = average(motions.get(en.getName().getString()));
 
@@ -1812,20 +1823,8 @@ public class AutoCrystalRewrite extends BlackOutModule {
     boolean validForIntersect(Entity entity) {
         if (entity instanceof EndCrystalEntity && canExplodePlacing(entity.getPos())) {return false;}
 
-        if (entity instanceof PlayerEntity && entity != mc.player && extHitbox.containsKey(entity)) {return false;}
+        if (entity instanceof PlayerEntity && entity.isSpectator()) {return false;}
 
         return true;
-    }
-
-    boolean intersectsWithPlayers(Box box) {
-        if (extHitbox.isEmpty()) {return false;}
-
-        for (Map.Entry<PlayerEntity, Box> entry : extHitbox.entrySet()) {
-            if (box.intersects(entry.getValue())) {
-                return true;
-            }
-        }
-
-        return false;
     }
 }
