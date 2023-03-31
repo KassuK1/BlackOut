@@ -5,5 +5,6 @@ public enum RotationType {
     Attacking,
     Placing,
     Breaking,
-    Interact
+    Interact,
+    Use
 }

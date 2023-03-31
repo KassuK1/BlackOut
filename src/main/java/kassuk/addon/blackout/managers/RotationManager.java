@@ -41,6 +41,7 @@ public class RotationManager {
     public static List<Rotation> history = new ArrayList<>();
     public double rotationsLeft = 0;
     public Target lastTarget = null;
+    public boolean stopping = false;
 
     public RotationManager() {
         MeteorClient.EVENT_BUS.subscribe(this);
@@ -48,6 +49,7 @@ public class RotationManager {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
+        stopping = false;
         if (mc.player == null) {return;}
         rotationsLeft = Math.min(rotationsLeft + event.frameTime * (SettingUtils.rotationPackets() - 20), Math.ceil((SettingUtils.rotationPackets() - 20) / 20f));
         if (settings == null) {
@@ -61,6 +63,7 @@ public class RotationManager {
                 mc.player.setPitch(lastDir[1]);
             }
         } else if (target != null) {
+            stopping = true;
             target = null;
             priority = 1000;
         } else {
@@ -82,21 +85,34 @@ public class RotationManager {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onPacket(PacketEvent.Send event) {
         if (event.packet instanceof PlayerMoveC2SPacket packet) {
+            boolean shouldModify = false;
+            float[] next = new float[0];
             if (target != null && timer > 0) {
                 unsent = false;
-                float[] next;
                 if (target instanceof BoxTarget) {
                     ((BoxTarget) target).vec = getTargetPos();
                     next = new float[]{(float) RotationUtils.nextYaw(lastDir[0], Rotations.getYaw(((BoxTarget) target).vec), settings.yawStep.get()), (float) RotationUtils.nextPitch(lastDir[1], Rotations.getPitch(((BoxTarget) target).vec), settings.pitchStep.get())};
                 } else {
                     next = new float[]{(float) RotationUtils.nextYaw(lastDir[0], ((AngleTarget)target).yaw, settings.yawStep.get()), (float) RotationUtils.nextPitch(lastDir[1], ((AngleTarget)target).pitch, settings.pitchStep.get())};
                 }
+                shouldModify = true;
 
+            } else if (stopping) {
+                unsent = false;
+                next = new float[]{(float) RotationUtils.nextYaw(lastDir[0], mc.player.getYaw(), settings.yawStep.get()), (float) RotationUtils.nextPitch(lastDir[1], mc.player.getPitch(), settings.pitchStep.get())};
+                shouldModify = true;
+                if (next[0] == mc.player.getYaw() && next[1] == mc.player.getPitch()) {
+                    stopping = false;
+                }
+            }
+
+            if (shouldModify) {
                 ((MixinPlayerMoveC2SPacket) packet).setLook(true);
                 ((MixinPlayerMoveC2SPacket) packet).setYaw(next[0]);
                 ((MixinPlayerMoveC2SPacket) packet).setPitch(next[1]);
                 addHistory(next[0], next[1]);
             }
+
             if (packet.changesLook()) {
                 lastDir = new float[]{((MixinPlayerMoveC2SPacket) packet).getYaw(), ((MixinPlayerMoveC2SPacket) packet).getPitch()};
             }
@@ -121,19 +137,39 @@ public class RotationManager {
     public void end(BlockPos pos) {
         end(OLEPOSSUtils.getBox(pos));
     }
-    public boolean startYaw(double yaw, double p) {
-        return start(yaw, lastDir[1], p);
+    public void endYaw(double yaw, boolean reset) {
+        if (!(target instanceof AngleTarget)) {return;}
+
+        if (yaw == ((AngleTarget) target).yaw) {
+            priority = 1000;
+            if (reset) {
+                target = null;
+            }
+        }
     }
-    public boolean startPitch(double pitch, double p) {
-        return start(lastDir[0], pitch, p);
+    public void endPitch(double pitch, boolean reset) {
+        if (!(target instanceof AngleTarget)) {return;}
+
+        if (pitch == ((AngleTarget) target).pitch) {
+            priority = 1000;
+            if (reset) {
+                target = null;
+            }
+        }
     }
-    public boolean start(double yaw, double pitch, double p) {
+    public boolean startYaw(double yaw, double p, RotationType type) {
+        return start(yaw, lastDir[1], p, type);
+    }
+    public boolean startPitch(double pitch, double p, RotationType type) {
+        return start(lastDir[0], pitch, p, type);
+    }
+    public boolean start(double yaw, double pitch, double p, RotationType type) {
         if (p <= priority && settings != null) {
             priority = p;
             lastTarget = target;
 
             target = new AngleTarget(yaw, pitch);
-            timer = 1;
+            timer = settings.getTime(type);
 
             if (lastDir[0] == yaw && lastDir[1] == pitch) {
                 return true;
@@ -155,7 +191,7 @@ public class RotationManager {
             lastTarget = target;
 
             target = pos != null ? new BoxTarget(pos, vec != null ? vec : OLEPOSSUtils.getMiddle(box), p, type) : new BoxTarget(box, vec != null ? vec : OLEPOSSUtils.getMiddle(box), p, type);
-            timer = 1;
+            timer = settings.getTime(type);
 
             ((BoxTarget)target).vec = getTargetPos();
 
@@ -187,8 +223,10 @@ public class RotationManager {
     }
     public void addHistory(double yaw, double pitch) {
         if (history.size() > 10) {
-            for (int i = history.size() - 9; i > 0; i++) {
+            int i = history.size() - 9;
+            while (i > 0) {
                 history.remove(history.size() - 1);
+                i++;
             }
         } else if (history.size() == 10) {
             history.remove(9);
@@ -212,10 +250,8 @@ public class RotationManager {
         return ((BoxTarget)target).vec;
     }
 
-
-
-    class Target {}
-    class BoxTarget extends Target {
+    static class Target {}
+    static class BoxTarget extends Target {
         public final BlockPos pos;
         public final Box box;
         public final Vec3d targetVec;
@@ -241,13 +277,15 @@ public class RotationManager {
         }
     }
 
-    class AngleTarget extends Target {
+    static class AngleTarget extends Target {
         public final double yaw;
         public final double pitch;
+        public boolean ended;
 
         public AngleTarget(double yaw, double pitch) {
             this.yaw = yaw;
             this.pitch = pitch;
+            this.ended = false;
         }
     }
 }

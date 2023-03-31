@@ -33,6 +33,7 @@ public class RotationSettings extends BlackOutModule {
     private final SettingGroup sgPlace = settings.createGroup("Place");
     private final SettingGroup sgMine = settings.createGroup("Mine");
     private final SettingGroup sgInteract = settings.createGroup("Interact");
+    private final SettingGroup sgUse = settings.createGroup("Use");
 
     //  General Settings
     public final Setting<RotationCheckMode> rotationCheckMode = sgGeneral.add(new EnumSetting.Builder<RotationCheckMode>()
@@ -93,6 +94,14 @@ public class RotationSettings extends BlackOutModule {
         .sliderRange(0, 10)
         .build()
     );
+    public final Setting<Double> crystalTime = sgCrystal.add(new DoubleSetting.Builder()
+        .name("Crystal Rotation Time")
+        .description("Keeps the rotation for x seconds after ending.")
+        .defaultValue(1)
+        .min(0)
+        .sliderRange(0, 2)
+        .build()
+    );
 
     // Attack Page
     private final Setting<Boolean> attackRotate = sgAttack.add(new BoolSetting.Builder()
@@ -107,6 +116,14 @@ public class RotationSettings extends BlackOutModule {
         .defaultValue(0)
         .range(0, 10)
         .sliderRange(0, 10)
+        .build()
+    );
+    public final Setting<Double> attackTime = sgAttack.add(new DoubleSetting.Builder()
+        .name("Attack Rotation Time")
+        .description("Keeps the rotation for x seconds after ending.")
+        .defaultValue(1)
+        .min(0)
+        .sliderRange(0, 2)
         .build()
     );
 
@@ -125,6 +142,14 @@ public class RotationSettings extends BlackOutModule {
         .sliderRange(0, 10)
         .build()
     );
+    public final Setting<Double> placeTime = sgPlace.add(new DoubleSetting.Builder()
+        .name("Place Rotation Time")
+        .description("Keeps the rotation for x seconds after ending.")
+        .defaultValue(1)
+        .min(0)
+        .sliderRange(0, 2)
+        .build()
+    );
 
     // Mine Page
     public final Setting<MiningRotMode> mineRotate = sgMine.add(new EnumSetting.Builder<MiningRotMode>()
@@ -141,6 +166,14 @@ public class RotationSettings extends BlackOutModule {
         .sliderRange(0, 10)
         .build()
     );
+    public final Setting<Double> mineTime = sgMine.add(new DoubleSetting.Builder()
+        .name("Mine Rotation Time")
+        .description("Keeps the rotation for x seconds after ending.")
+        .defaultValue(1)
+        .min(0)
+        .sliderRange(0, 2)
+        .build()
+    );
 
     // Interact Page
     private final Setting<Boolean> interactRotate = sgInteract.add(new BoolSetting.Builder()
@@ -155,6 +188,24 @@ public class RotationSettings extends BlackOutModule {
         .defaultValue(0)
         .range(0, 10)
         .sliderRange(0, 10)
+        .build()
+    );
+    public final Setting<Double> interactTime = sgInteract.add(new DoubleSetting.Builder()
+        .name("Interact Rotation Time")
+        .description("Keeps the rotation for x seconds after ending.")
+        .defaultValue(1)
+        .min(0)
+        .sliderRange(0, 2)
+        .build()
+    );
+
+    // Use Page
+    public final Setting<Double> useTime = sgUse.add(new DoubleSetting.Builder()
+        .name("Use Rotation Time")
+        .description("Keeps the rotation for x seconds after ending.")
+        .defaultValue(1)
+        .min(0)
+        .sliderRange(0, 2)
         .build()
     );
 
@@ -345,6 +396,17 @@ public class RotationSettings extends BlackOutModule {
             }
         }
         return closest.getX() == 0 && closest.getY() == 0 && closest.getZ() == 0 ? targetVec : vec.add(0.1 + closest.getX() * 0.16, 0.1 + closest.getY() * 0.16, 0.1 + closest.getZ() * 0.16);
+    }
+
+    public double getTime(RotationType type) {
+        return switch (type) {
+            case Crystal -> crystalTime.get();
+            case Attacking -> attackTime.get();
+            case Placing -> placeTime.get();
+            case Breaking -> mineTime.get();
+            case Interact -> interactTime.get();
+            case Use -> useTime.get();
+        };
     }
 
     void updateContext() {

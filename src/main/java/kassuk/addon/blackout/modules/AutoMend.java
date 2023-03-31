@@ -2,6 +2,7 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
+import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
@@ -169,6 +170,7 @@ public class AutoMend extends BlackOutModule {
     int bottleAmount = 0;
     BlockPos lastPos = null;
     boolean started = false;
+    boolean shouldRot = false;
 
     // Pause ticks
     int acTimer = 0;
@@ -229,7 +231,8 @@ public class AutoMend extends BlackOutModule {
 
 
             if (bottleSlot >= 0 && shouldThrow()) {
-                boolean rotated = !(switchMode.get() == SwitchMode.Disabled && hand == null) && Managers.ROTATION.startPitch(90, 10);
+                shouldRot = true;
+                boolean rotated = !(switchMode.get() == SwitchMode.Disabled && hand == null) && Managers.ROTATION.startPitch(90, 10, RotationType.Use);
 
                 if (rotated) {
                     boolean switched = hand != null;
@@ -267,6 +270,10 @@ public class AutoMend extends BlackOutModule {
                     }
                 }
             } else {
+                if (shouldRot) {
+                    Managers.ROTATION.endPitch(90, true);
+                    shouldRot = false;
+                }
                 started = false;
             }
         }

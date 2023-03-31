@@ -298,6 +298,24 @@ public class AutoMine extends BlackOutModule {
         .defaultValue(new SettingColor(255, 0, 0, 50))
         .build()
     );
+    private final Setting<ShapeMode> waitingShapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
+        .name("Waiting Shape Mode")
+        .description(".")
+        .defaultValue(ShapeMode.Both)
+        .build()
+    );
+    private final Setting<SettingColor> waitingLineColor = sgRender.add(new ColorSetting.Builder()
+        .name("Waiting Line Color")
+        .description(".")
+        .defaultValue(new SettingColor(255, 0, 0, 255))
+        .build()
+    );
+    private final Setting<SettingColor> waitingColor = sgRender.add(new ColorSetting.Builder()
+        .name("Waiting Color")
+        .description(".")
+        .defaultValue(new SettingColor(255, 0, 0, 50))
+        .build()
+    );
     public enum AutoMineMode {
         SpeedMine,
         Smart,
@@ -334,6 +352,7 @@ public class AutoMine extends BlackOutModule {
         progress = 0;
         targetPos = null;
         crystalPos = null;
+        waitingToStart = null;
         targetValue = -1;
         lastValue = -1;
         speedmining = false;
@@ -467,12 +486,28 @@ public class AutoMine extends BlackOutModule {
         civTimer += event.frameTime;
         timer = Math.min(placeDelay.get(), timer + event.frameTime);
 
+        //Render
+        if (targetPos != null) {
+            Vec3d v = OLEPOSSUtils.getMiddle(targetPos);
+            double p = 0.5 - (Math.pow((mode.get() == AutoMineMode.CIV && civPos == targetPos ? 0 : 1 - progress), exp.get())) / 2;
+
+            Box toRender = new Box(v.x - p, v.y - p, v.z - p, v.x + p, v.y + p, v.z + p);
+            event.renderer.box(toRender,
+                getColor(startColor.get(), endColor.get(), p * 2),
+                getColor(lineStartColor.get(), lineEndColor.get(), p * 2),
+                shapeMode.get(), 0);
+        } else if (waitingToStart != null) {
+            event.renderer.box(waitingToStart, waitingColor.get(), waitingLineColor.get(), waitingShapeMode.get(), 0);
+        }
 
         if (waitingToStart != null) {
             targetDir = SettingUtils.getPlaceOnDirection(waitingToStart);
             if (targetDir != null) {
                 boolean rotated = !SettingUtils.startMineRot() || Managers.ROTATION.start(waitingToStart, 9, RotationType.Breaking);
                 if (rotated) {
+                    if (debug.get()) {
+                        debug("accept-target");
+                    }
                     targetPos = waitingToStart;
                     waitingToStart = null;
                     start(targetPos, targetDir);
@@ -481,7 +516,6 @@ public class AutoMine extends BlackOutModule {
         } else if (targetPos != null) {
             targetDir = SettingUtils.getPlaceOnDirection(targetPos);
             miningFor += event.frameTime;
-            double r = 1 - progress;
             if (shouldRestart) {
                 boolean rotated = !SettingUtils.startMineRot() || Managers.ROTATION.start(targetPos, 9, RotationType.Breaking);
                 if (rotated) {
@@ -495,20 +529,8 @@ public class AutoMine extends BlackOutModule {
                 progress = 0;
             }
 
-            //Render
-            Vec3d v = OLEPOSSUtils.getMiddle(targetPos);
-            double p = 0.5 - (Math.pow((mode.get() == AutoMineMode.CIV && civPos == targetPos ? 0 : r), exp.get())) / 2;
-
-            Box toRender = new Box(v.x - p, v.y - p, v.z - p, v.x + p, v.y + p, v.z + p);
-            event.renderer.box(toRender,
-                getColor(startColor.get(), endColor.get(), p * 2),
-                getColor(lineStartColor.get(), lineEndColor.get(), p * 2),
-                shapeMode.get(), 0);
-
-            boolean shouldCIV = getBlock(targetPos) != Blocks.AIR;
-
             //Other Stuff
-            if ((progress >= 1 || (mode.get() == AutoMineMode.CIV && shouldCIV && civTimer >= civDelay.get() && civPos == targetPos)) && (!pauseEat.get() || !mc.player.isUsingItem()) && targetDir != null) {
+            if ((progress >= 1 || (mode.get() == AutoMineMode.CIV && getBlock(targetPos) != Blocks.AIR && civTimer >= civDelay.get() && civPos == targetPos)) && (!pauseEat.get() || !mc.player.isUsingItem()) && targetDir != null) {
                 if (crystal.get() && crystalPos != null) {
 
                     Entity at = isAt(targetPos, crystalPos);
@@ -516,6 +538,8 @@ public class AutoMine extends BlackOutModule {
 
                     int hotbar = InvUtils.findInHotbar(itemStack -> itemStack.getItem() == Items.END_CRYSTAL).slot();
                     int inv = InvUtils.find(itemStack -> itemStack.getItem() == Items.END_CRYSTAL).slot();
+
+                    Direction crystalDir = SettingUtils.getPlaceOnDirection(crystalPos.down());
 
                     if (at != null) {
                         boolean rotated = !SettingUtils.endMineRot() || Managers.ROTATION.start(targetPos, 9, RotationType.Breaking);
@@ -557,7 +581,7 @@ public class AutoMine extends BlackOutModule {
                             shouldForce = false;
                         }
                     } else if ((hand != null || (switchMode.get() == SwitchMode.Silent && hotbar > 0) || (switchMode.get() == SwitchMode.SilentBypass && inv > 0)) && timer >= placeDelay.get() && placeCrystal.get()
-                        && placeCrystal.get() && !EntityUtils.intersectsWithEntity(new Box(crystalPos), entity -> !entity.isSpectator())) {
+                        && placeCrystal.get() && !EntityUtils.intersectsWithEntity(new Box(crystalPos), entity -> !entity.isSpectator()) && crystalDir != null) {
                         boolean rotated = !SettingUtils.shouldRotate(RotationType.Crystal) || Managers.ROTATION.start(crystalPos.down(), 9, RotationType.Crystal);
                         if (rotated) {
                             timer = 0;
@@ -588,7 +612,7 @@ public class AutoMine extends BlackOutModule {
 
                             if (crystalPos != null) {
                                 mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand == null ? Hand.MAIN_HAND : hand,
-                                    new BlockHitResult(OLEPOSSUtils.getMiddle(crystalPos.down()), Direction.UP, crystalPos.down(), false), 0));
+                                    new BlockHitResult(OLEPOSSUtils.getMiddle(crystalPos.down()), crystalDir, crystalPos.down(), false), 0));
                             }
 
                             SettingUtils.swing(SwingState.Post, SwingType.Crystal);
@@ -732,6 +756,7 @@ public class AutoMine extends BlackOutModule {
     void attack(Entity en) {
         SettingUtils.swing(SwingState.Post, SwingType.Attacking);
 
+        SettingUtils.registerAttack(en.getBoundingBox());
         mc.getNetworkHandler().sendPacket(PlayerInteractEntityC2SPacket.attack(en, mc.player.isSneaking()));
 
         SettingUtils.swing(SwingState.Post, SwingType.Attacking);
@@ -768,15 +793,13 @@ public class AutoMine extends BlackOutModule {
             if (valid) {
                 progress = 0;
                 miningFor = 0;
-                targetPos = pPos;
+                targetPos = null;
+                waitingToStart = pPos;
                 crystalPos = cPos;
                 shouldForce = hold;
-                boolean rotated = !SettingUtils.startMineRot() || Managers.ROTATION.start(targetPos, 9, RotationType.Breaking);
-                if (rotated) {
-                    start(targetPos, dir);
-                }
             }
         } else {
+            waitingToStart = null;
             targetPos = null;
             lastValue = -1;
             targetValue = -1;

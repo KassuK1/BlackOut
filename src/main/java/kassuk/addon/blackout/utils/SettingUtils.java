@@ -25,6 +25,7 @@ public class SettingUtils extends Utils {
     private static final SwingSettings swing = Modules.get().get(SwingSettings.class);
 
     //  Range
+    public static void registerAttack(Box bb) {range.registerAttack(bb);}
     public static double getPlaceRange() {
         return range.placeRange.get();
     }
@@ -69,7 +70,7 @@ public class SettingUtils extends Utils {
     }
     public static boolean inAttackRangeNoTrace(Box bb, double eyeHeight, Vec3d feet) {return range.inAttackRangeNoTrace(bb, feet, null);}
     public static boolean inAttackRangeNoTrace(Box bb, double eyeHeight, Vec3d feet, Vec3d from) {return range.inAttackRangeNoTrace(bb, feet, from);}
-    public static double attackRangeTo(Box bb, Vec3d feet) {return range.attackRangeTo(bb, feet, null);}
+    public static double attackRangeTo(Box bb, Vec3d feet) {return range.attackRangeTo(bb, feet, null, true);}
 
 
     //  Rotate

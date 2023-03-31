@@ -29,7 +29,7 @@ public class AutoMoan extends BlackOutModule {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<MoanMode> moanmode = sgGeneral.add(new EnumSetting.Builder<MoanMode>()
-        .name("Kill Message Mode")
+        .name("Message Mode")
         .description("What kind of messages to send.")
         .defaultValue(MoanMode.Submissive)
         .build()
@@ -58,7 +58,6 @@ public class AutoMoan extends BlackOutModule {
     }
 
     int lastNum;
-    List<Message> messageQueue = new ArrayList<>();
 
     double timer = 0;
     static final String[] Submissive = new String[]{
@@ -122,6 +121,7 @@ public class AutoMoan extends BlackOutModule {
     };
     Random r = new Random();
 
+
     @EventHandler
     private void onRender(Render3DEvent event){
         timer = Math.min(delay.get(), timer + event.frameTime);
@@ -132,14 +132,9 @@ public class AutoMoan extends BlackOutModule {
         timer++;
         if (mc.player != null && mc.world != null) {
             //I fucking got perm  banned on a really important server to test this out you all better fucking enjoy using this
-            MOAN();
             if (timer >= delay.get()) {
-                Message msg = messageQueue.get(0);
-                ChatUtils.sendPlayerMsg(msg.message);
+                MOAN();
                 timer = 0;
-                if (!messageQueue.isEmpty()) {
-                    messageQueue.clear();
-                }
             }
         }
     }
@@ -156,7 +151,7 @@ public class AutoMoan extends BlackOutModule {
                 lastNum = num;
                 //the way i did the name is so ass bro pls fix this at one point
                 //please add the thing that prevents it from saying the same thing twice in a row
-                messageQueue.add(0, new Message(Submissive[num].replace("%s",getClosest().getName().getString() == null ? "You" : getClosest().getName().getString()),false));
+                ChatUtils.sendPlayerMsg(Submissive[num].replace("%s",getClosest().getName().getString() == null ? "You" : getClosest().getName().getString()));
             }
             case Dominant -> {
                 int num = r.nextInt(0, Dominant.length - 1);
@@ -164,7 +159,7 @@ public class AutoMoan extends BlackOutModule {
                     num = num < Dominant.length - 1 ? num + 1 : 0;
                 }
                 lastNum = num;
-                messageQueue.add(0, new Message(Dominant[num].replace("%s",getClosest().getName().getString() == null ? "You" : getClosest().getName().getString()),false));
+                ChatUtils.sendPlayerMsg(Dominant[num].replace("%s",getClosest().getName().getString() == null ? "You" : getClosest().getName().getString()));
             }
         }
     }
@@ -184,6 +179,5 @@ public class AutoMoan extends BlackOutModule {
         }
         return closest;
     }
-    record Message(String message, boolean kill) {}
 }
 

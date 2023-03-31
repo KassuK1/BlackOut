@@ -213,6 +213,14 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .sliderRange(0.01, 20)
         .build()
     );
+    private final Setting<Double> expSpeedLimit = sgExplode.add(new DoubleSetting.Builder()
+        .name("Explode Speed Limit")
+        .description("How many times to hit any crystal each second. 0 = no limiy")
+        .defaultValue(0)
+        .min(0)
+        .sliderRange(0, 20)
+        .build()
+    );
     private final Setting<Boolean> setDead = sgExplode.add(new BoolSetting.Builder()
         .name("Set Dead")
         .description("Hides the crystal after hitting it.")
@@ -673,6 +681,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     Map<Vec3d, double[][]> dmgCache = new HashMap<>();
     BlockPos lastPos = null;
     Map<BlockPos, Double[]> earthMap = new HashMap<>();
+    double attackTimer = 0;
     double switchTimer = 0;
     int confirmed = Integer.MIN_VALUE;
     double infoCps = 0;
@@ -864,6 +873,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         }
 
         attacked.update(d);
+        attackTimer = Math.max(attackTimer - d, 0);
         placeTimer = Math.max(placeTimer - d * getSpeed(), 0);
         delayTimer += d;
         switchTimer = Math.max(0, switchTimer - d);
@@ -1063,7 +1073,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
             }
         }
         if (expEntity != null) {
-            if (!isAttacked(expEntity.getId())) {
+            if (!isAttacked(expEntity.getId()) && attackTimer <= 0) {
                 if (existedCheck(expEntity.getBlockPos())) {
                     if (!SettingUtils.shouldRotate(RotationType.Attacking) || (Managers.ROTATION.start(expEntity.getBoundingBox(), smartRot.get() ? expEntity.getPos() : null, 5.1, RotationType.Attacking) && ghostCheck(expEntity.getBoundingBox(), expEntity.getPos()))) {
                         explode(expEntity.getId(), expEntity, expEntity.getPos());
@@ -1300,7 +1310,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
 
     void explode(int id, Entity en, Vec3d vec) {
         if (en != null) {
-            attackEntity(en);
+            attackEntity(en, en.getBoundingBox());
         } else {
             attackID(id, vec);
         }
@@ -1311,13 +1321,14 @@ public class AutoCrystalRewrite extends BlackOutModule {
         if (handToUse != null && !pausedCheck()) {
             EndCrystalEntity en = new EndCrystalEntity(mc.world, pos.x, pos.y, pos.z);
             en.setId(id);
-            attackEntity(en);
+            attackEntity(en, OLEPOSSUtils.getCrystalBox(pos));
         }
     }
 
-    void attackEntity(Entity en) {
+    void attackEntity(Entity en, Box bb) {
         if (mc.player != null) {
             attacked.add(en.getId(), 1 / expSpeed.get());
+            attackTimer = expSpeedLimit.get() <= 0 ? 0 : 1 / expSpeedLimit.get();
             delayTimer = 0;
             delayTicks = 0;
 
@@ -1327,6 +1338,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
 
             removeExisted(en.getBlockPos());
 
+            SettingUtils.registerAttack(bb);
             mc.player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(en, mc.player.isSneaking()));
 
             SettingUtils.swing(SwingState.Post, SwingType.Attacking);
