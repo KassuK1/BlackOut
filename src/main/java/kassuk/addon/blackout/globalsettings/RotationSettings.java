@@ -5,16 +5,19 @@ import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.managers.RotationManager;
 import kassuk.addon.blackout.mixins.MixinRaycastContext;
+import kassuk.addon.blackout.utils.RotationUtils;
 import kassuk.addon.blackout.utils.meteor.BODamageUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.mixininterface.IVec3d;
 import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.utils.player.Rotations;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
+import org.lwjgl.opengl.GL11;
 
 import java.util.List;
 
@@ -40,6 +43,24 @@ public class RotationSettings extends BlackOutModule {
         .name("Rotation Check Mode")
         .description(".")
         .defaultValue(RotationCheckMode.Raytrace)
+        .build()
+    );
+    public final Setting<Double> yawAngle = sgGeneral.add(new DoubleSetting.Builder()
+        .name("Yaw Angle")
+        .description(".")
+        .defaultValue(90)
+        .range(0, 180)
+        .sliderRange(0, 180)
+        .visible(() -> rotationCheckMode.get() == RotationCheckMode.Angle)
+        .build()
+    );
+    public final Setting<Double> pitchAngle = sgGeneral.add(new DoubleSetting.Builder()
+        .name("Pitch Angle")
+        .description(".")
+        .defaultValue(45)
+        .range(0, 180)
+        .sliderRange(0, 180)
+        .visible(() -> rotationCheckMode.get() == RotationCheckMode.Angle)
         .build()
     );
     public final Setting<Boolean> ghostRotation = sgCrystal.add(new BoolSetting.Builder()
@@ -219,6 +240,7 @@ public class RotationSettings extends BlackOutModule {
 
     public enum RotationCheckMode {
         Raytrace,
+        Angle,
         Ghost
     }
 
@@ -281,8 +303,25 @@ public class RotationSettings extends BlackOutModule {
                     }
                 }
             }
+            case Angle -> {
+                if (pPos != null) {
+                    if (!angleCheck(pPos, yaw, pitch, box)) {
+                        return false;
+                    }
+                }
+                for (int r = 0; r < existed; r++) {
+                    if (history.size() <= r) {break;}
+                    RotationManager.Rotation rot = history.get(r);
+                    if (!angleCheck(rot.vec(), rot.yaw(), rot.pitch(), box)) {
+                        return false;
+                    }
+                }
+            }
         }
         return true;
+    }
+    public boolean angleCheck(Vec3d pos, double y, double p, Box box) {
+        return RotationUtils.yawAngle(y, RotationUtils.getYaw(pos, box.getCenter())) <= yawAngle.get() && Math.abs(p - RotationUtils.getPitch(pos, box.getCenter())) <= pitchAngle.get();
     }
 
     public boolean raytraceCheck(Vec3d pos, double y, double p, Box box) {

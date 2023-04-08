@@ -193,11 +193,11 @@ public class AutoAnchorPlus extends BlackOutModule {
             InvUtils.swap(slot, false);
         }
 
-        SettingUtils.swing(SwingState.Pre, SwingType.Placing);
+        SettingUtils.swing(SwingState.Pre, SwingType.Placing, Hand.MAIN_HAND);
 
         mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
             new BlockHitResult(new Vec3d(d.pos().getX() + 0.5, d.pos().getY() + 0.5, d.pos().getZ() + 0.5), d.dir(), d.pos(), false), 0));
-        SettingUtils.swing(SwingState.Post, SwingType.Placing);
+        SettingUtils.swing(SwingState.Post, SwingType.Placing, Hand.MAIN_HAND);
 
         if (SettingUtils.shouldRotate(RotationType.Placing)) {
             Managers.ROTATION.end(d.pos());
@@ -208,12 +208,12 @@ public class AutoAnchorPlus extends BlackOutModule {
             InvUtils.swap(slot, false);
         }
 
-        SettingUtils.swing(SwingState.Pre, SwingType.Interact);
+        SettingUtils.swing(SwingState.Pre, SwingType.Interact, Hand.MAIN_HAND);
 
         mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
             new BlockHitResult(new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), dir, pos, false), 0));
 
-        SettingUtils.swing(SwingState.Post, SwingType.Interact);
+        SettingUtils.swing(SwingState.Post, SwingType.Interact, Hand.MAIN_HAND);
 
         if (SettingUtils.shouldRotate(RotationType.Interact)) {
             Managers.ROTATION.end(pos);
@@ -224,12 +224,12 @@ public class AutoAnchorPlus extends BlackOutModule {
             InvUtils.swap(slot, false);
         }
 
-        SettingUtils.swing(SwingState.Pre, SwingType.Interact);
+        SettingUtils.swing(SwingState.Pre, SwingType.Interact, Hand.MAIN_HAND);
 
         mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
             new BlockHitResult(new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), dir, pos, false), 0));
 
-        SettingUtils.swing(SwingState.Post, SwingType.Interact);
+        SettingUtils.swing(SwingState.Post, SwingType.Interact, Hand.MAIN_HAND);
 
         if (SettingUtils.shouldRotate(RotationType.Interact)) {
             Managers.ROTATION.end(pos);

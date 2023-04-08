@@ -117,21 +117,21 @@ public class Keys extends HudElement {
         }
 
         setSize(switch (mode.get()) {
-            case Horizontal -> 80;
-            case Vertical -> 20;
-            case Basic -> 60;
+            case Horizontal -> 160;
+            case Vertical -> 40;
+            case Basic -> 120;
         } * scale.get() * scale.get(),
             switch (mode.get()) {
-            case Horizontal -> 20;
-            case Vertical -> 80;
-            case Basic -> 40;
+            case Horizontal -> 40;
+            case Vertical -> 160;
+            case Basic -> 80;
         } * scale.get() * scale.get());
 
         keys.forEach(key -> {
             key.updatePos();
             key.checkClick();
             if (textBG.get()) {
-                renderer.quad(key.posX + scale.get() * scale.get(), key.posY + scale.get() * scale.get(), 18 * scale.get() * scale.get(), 18 * scale.get() * scale.get(), getBGColor(key));
+                renderer.quad(key.posX + 2 * scale.get() * scale.get(), key.posY + 2 * scale.get() * scale.get(), 36 * scale.get() * scale.get(), 36 * scale.get() * scale.get(), getBGColor(key));
             }
             renderer.text(key.key, key.posX + xOffset(key.key, renderer), key.posY + yOffset(renderer), getTextColor(key), false, scale.get());
         });
@@ -150,23 +150,23 @@ public class Keys extends HudElement {
             (int) Math.round(MathHelper.lerp(delta, s.a, e.a)));
     }
     double xOffset(String string, HudRenderer renderer) {
-        return (10 - renderer.textWidth(string, false) / 2) * scale.get() * scale.get();
+        return (20 - renderer.textWidth(string, false) / 2) * scale.get() * scale.get();
     }
     double yOffset(HudRenderer renderer) {
-        return (10 - renderer.textHeight(false) / 2) * scale.get() * scale.get();
+        return (20 - renderer.textHeight(false) / 2) * scale.get() * scale.get();
     }
     double getX(int i) {
         return switch (mode.get()) {
-            case Horizontal -> i * 20;
+            case Horizontal -> i * 40;
             case Vertical -> 0.0;
-            case Basic -> i == 0 ? 20 : (i - 1) * 20;
+            case Basic -> i == 0 ? 40 : (i - 1) * 40;
         };
     }
     double getY(int i) {
         return switch (mode.get()) {
             case Horizontal -> 0.0;
-            case Vertical -> i * 20;
-            case Basic -> i == 0 ? 0 : 20;
+            case Vertical -> i * 40;
+            case Basic -> i == 0 ? 0 : 40;
         };
     }
 
@@ -185,8 +185,8 @@ public class Keys extends HudElement {
         }
 
         public void updatePos() {
-            posX = x + getX(i) * scale.get() * scale.get();
-            posY = y + getY(i) * scale.get() * scale.get();
+            posX = x + (getX(i)) * scale.get() * scale.get();
+            posY = y + (getY(i)) * scale.get() * scale.get();
         }
         public void checkClick() {
             if (bind.isPressed()) {

@@ -91,12 +91,12 @@ public class ButtonAura extends BlackOutModule {
                 Managers.ROTATION.start(block, 10, RotationType.Interact);
             }
 
-            SettingUtils.swing(SwingState.Pre, SwingType.Interact);
+            SettingUtils.swing(SwingState.Pre, SwingType.Interact, Hand.MAIN_HAND);
 
             mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
                 new BlockHitResult(new Vec3d(block.getX() + 0.5, block.getY() + 0.5, block.getZ() + 0.5), OLEPOSSUtils.closestDir(block, mc.player.getEyePos()), block, false), 0));
 
-            SettingUtils.swing(SwingState.Post, SwingType.Interact);
+            SettingUtils.swing(SwingState.Post, SwingType.Interact, Hand.MAIN_HAND);
 
             if (SettingUtils.shouldRotate(RotationType.Interact)) {
                 Managers.ROTATION.end(block);

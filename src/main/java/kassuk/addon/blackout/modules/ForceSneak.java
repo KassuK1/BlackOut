@@ -12,6 +12,4 @@ public class ForceSneak extends BlackOutModule {
     public ForceSneak() {
         super(BlackOut.BLACKOUT, "ForceSneak", "Makes everyone sneak");
     }
-
-    private final SettingGroup sgGeneral = settings.getDefaultGroup();
 }

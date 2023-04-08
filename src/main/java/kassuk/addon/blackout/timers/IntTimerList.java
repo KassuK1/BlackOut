@@ -32,13 +32,7 @@ public class IntTimerList {
     }
 
     public void update(double delta) {
-        List<IntTimer> toRemove = new ArrayList<>();
-        timers.forEach(item -> {
-            if (!item.isValid()) {
-                toRemove.add(item);
-            }
-        });
-        toRemove.forEach(timers::remove);
+        timers.removeIf(item -> !item.isValid());
     }
 
     public boolean contains(int val) {
@@ -49,17 +43,15 @@ public class IntTimerList {
     }
 
     static class IntTimer {
-        public int value;
-        public double time;
-        public double ogTime;
-        public long startTime;
+        public final int value;
+        public final double endTime;
 
         public IntTimer(int value, double time) {
             this.value = value;
-            this.startTime = System.currentTimeMillis();
-            this.time = time;
-            this.ogTime = time;
+            this.endTime = System.currentTimeMillis() + time * 1000;
         }
-        public boolean isValid() {return System.currentTimeMillis() <= startTime + time * 1000;}
+        public boolean isValid() {
+            return System.currentTimeMillis() <= endTime;
+        }
     }
 }

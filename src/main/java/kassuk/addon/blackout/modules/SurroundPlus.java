@@ -323,7 +323,7 @@ public class SurroundPlus extends BlackOutModule {
                                         }
                                     }
                                 }
-                                place(placeData, pos);
+                                place(placeData, pos, hand == null ? Hand.MAIN_HAND : hand);
                             }
                         }
 
@@ -343,7 +343,7 @@ public class SurroundPlus extends BlackOutModule {
         }
     }
 
-    void place(PlaceData d, BlockPos ogPos) {
+    void place(PlaceData d, BlockPos ogPos, Hand hand) {
         timers.add(ogPos, delay.get());
         if (onlyConfirmed.get()) {
             placed.add(ogPos, 1);
@@ -352,13 +352,13 @@ public class SurroundPlus extends BlackOutModule {
         placeTimer = 0;
         placesLeft--;
 
-        SettingUtils.swing(SwingState.Pre, SwingType.Placing);
+        SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand);
 
-        mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
+        mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand,
             new BlockHitResult(new Vec3d(d.pos().getX() + 0.5, d.pos().getY() + 0.5, d.pos().getZ() + 0.5),
                 d.dir(), d.pos(), false), 0));
 
-        SettingUtils.swing(SwingState.Post, SwingType.Placing);
+        SettingUtils.swing(SwingState.Post, SwingType.Placing, hand);
 
         if (SettingUtils.shouldRotate(RotationType.Placing)) {
             Managers.ROTATION.end(d.pos());

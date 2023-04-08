@@ -333,10 +333,10 @@ public class AutoMend extends BlackOutModule {
     }
 
     void throwBottle(Hand hand) {
-        SettingUtils.swing(SwingState.Pre, SwingType.Using);
+        SettingUtils.swing(SwingState.Pre, SwingType.Using, hand);
 
         mc.getNetworkHandler().sendPacket(new PlayerInteractItemC2SPacket(hand, 0));
 
-        SettingUtils.swing(SwingState.Post, SwingType.Using);
+        SettingUtils.swing(SwingState.Post, SwingType.Using, hand);
     }
 }

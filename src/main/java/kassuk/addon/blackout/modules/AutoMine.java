@@ -370,7 +370,7 @@ public class AutoMine extends BlackOutModule {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onTick(TickEvent.Post event) {
         if (targetPos != null && getBlock(targetPos) != Blocks.AIR) {
-            SettingUtils.swing(SwingState.Post, SwingType.Mining);
+            SettingUtils.swing(SwingState.Post, SwingType.Mining, Hand.MAIN_HAND);
         }
     }
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -608,14 +608,14 @@ public class AutoMine extends BlackOutModule {
                             }
 
 
-                            SettingUtils.swing(SwingState.Pre, SwingType.Crystal);
+                            SettingUtils.swing(SwingState.Pre, SwingType.Crystal, hand == null ? Hand.MAIN_HAND : hand);
 
                             if (crystalPos != null) {
                                 mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand == null ? Hand.MAIN_HAND : hand,
                                     new BlockHitResult(OLEPOSSUtils.getMiddle(crystalPos.down()), crystalDir, crystalPos.down(), false), 0));
                             }
 
-                            SettingUtils.swing(SwingState.Post, SwingType.Crystal);
+                            SettingUtils.swing(SwingState.Post, SwingType.Crystal, hand == null ? Hand.MAIN_HAND : hand);
 
                             if (holding == 2) {
                                 switch (switchMode.get()) {
@@ -721,12 +721,12 @@ public class AutoMine extends BlackOutModule {
         }
 
 
-        SettingUtils.swing(SwingState.Pre, SwingType.Crystal);
+        SettingUtils.swing(SwingState.Pre, SwingType.Crystal, hand == null ? Hand.MAIN_HAND : hand);
 
         mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand == null ? Hand.MAIN_HAND : hand,
             new BlockHitResult(OLEPOSSUtils.getMiddle(targetPos.down()), Direction.UP, targetPos.down(), false), 0));
 
-        SettingUtils.swing(SwingState.Post, SwingType.Crystal);
+        SettingUtils.swing(SwingState.Post, SwingType.Crystal, hand == null ? Hand.MAIN_HAND : hand);
 
         if (holding == 2) {
             switch (switchMode.get()) {
@@ -754,12 +754,12 @@ public class AutoMine extends BlackOutModule {
     }
 
     void attack(Entity en) {
-        SettingUtils.swing(SwingState.Post, SwingType.Attacking);
+        SettingUtils.swing(SwingState.Post, SwingType.Attacking, Hand.MAIN_HAND);
 
         SettingUtils.registerAttack(en.getBoundingBox());
         mc.getNetworkHandler().sendPacket(PlayerInteractEntityC2SPacket.attack(en, mc.player.isSneaking()));
 
-        SettingUtils.swing(SwingState.Post, SwingType.Attacking);
+        SettingUtils.swing(SwingState.Post, SwingType.Attacking, Hand.MAIN_HAND);
 
         if (SettingUtils.shouldRotate(RotationType.Attacking)) {
             Managers.ROTATION.end(en.getBoundingBox());

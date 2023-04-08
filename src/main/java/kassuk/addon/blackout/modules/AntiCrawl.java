@@ -10,5 +10,4 @@ Made by OLEPOSSU / Raksamies
 
 public class AntiCrawl extends BlackOutModule {
     public AntiCrawl() {super(BlackOut.BLACKOUT, "Anti Crawl", "Doesn't crawl or sneak when in small space.");}
-    private final SettingGroup sgGeneral = settings.getDefaultGroup();
 }

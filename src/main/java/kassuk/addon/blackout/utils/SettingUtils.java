@@ -8,6 +8,7 @@ import kassuk.addon.blackout.managers.RotationManager;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.Utils;
 import net.minecraft.block.BlockState;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
@@ -95,8 +96,8 @@ public class SettingUtils extends Utils {
     public static boolean raytraceCheck(Vec3d vec, double yaw, double pitch, BlockPos pos) {return rotation.raytraceCheck(vec, yaw, pitch, pos);}
 
     //  Swing
-    public static void swing(SwingState state, SwingType type) {
-        swing.swing(state, type);
+    public static void swing(SwingState state, SwingType type, Hand hand) {
+        swing.swing(state, type, hand);
     }
     public static void mineSwing(SwingSettings.MiningSwingState state) {
         swing.mineSwing(state);

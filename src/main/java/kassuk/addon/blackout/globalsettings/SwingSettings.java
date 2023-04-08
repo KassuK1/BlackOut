@@ -131,19 +131,20 @@ public class SwingSettings extends BlackOutModule {
     }
     public enum SwingHand {
         MainHand,
-        OffHand
+        OffHand,
+        RealHand
     }
 
-    public void swing(SwingState state, SwingType type) {
+    public void swing(SwingState state, SwingType type, Hand hand) {
         if (mc.player == null) {return;}
         if (!state.equals(getState(type))) {return;}
-        Hand hand = gethand(type);
+        Hand renderHand = gethand(type, hand);
         switch (type) {
-            case Crystal -> swing(crystalPlace.get(), hand);
-            case Interact -> swing(interact.get(), hand);
-            case Placing -> swing(placing.get(), hand);
-            case Attacking -> swing(attacking.get(), hand);
-            case Using -> swing(using.get(), hand);
+            case Crystal -> swing(crystalPlace.get(), renderHand, hand);
+            case Interact -> swing(interact.get(), renderHand, hand);
+            case Placing -> swing(placing.get(), renderHand, hand);
+            case Attacking -> swing(attacking.get(), renderHand, hand);
+            case Using -> swing(using.get(), renderHand, hand);
         }
     }
     public void mineSwing(MiningSwingState state) {
@@ -165,60 +166,46 @@ public class SwingSettings extends BlackOutModule {
             }
         }
         if (mc.player == null) {return;}
-        Hand hand = gethand(SwingType.Mining);
-        swing(mining.get(), hand);
+        Hand hand = gethand(SwingType.Mining, Hand.MAIN_HAND);
+        swing(mining.get(), hand, Hand.MAIN_HAND);
     }
-    Hand gethand(SwingType type) {
-        SwingHand swingHand = SwingHand.MainHand;
-        switch (type) {
-            case Crystal -> swingHand = crystalHand.get();
-            case Interact -> swingHand = interactHand.get();
-            case Mining -> swingHand = miningHand.get();
-            case Placing -> swingHand = placinghand.get();
-            case Attacking -> swingHand = attackingHand.get();
-            case Using -> swingHand = usingHand.get();
-        }
-        return getHand(swingHand);
+    Hand gethand(SwingType type, Hand realHand) {
+        SwingHand swingHand = switch (type) {
+            case Crystal -> crystalHand.get();
+            case Interact -> interactHand.get();
+            case Mining -> miningHand.get();
+            case Placing -> placinghand.get();
+            case Attacking -> attackingHand.get();
+            case Using -> usingHand.get();
+        };
+        return getHand(swingHand, realHand);
     }
-    Hand getHand(SwingHand hand) {
-        switch (hand) {
-            case MainHand -> {
-                return Hand.MAIN_HAND;
-            }
-            case OffHand -> {
-                return Hand.OFF_HAND;
-            }
-        }
-        return Hand.MAIN_HAND;
+    Hand getHand(SwingHand hand, Hand realHand) {
+        return switch (hand) {
+            case MainHand -> Hand.MAIN_HAND;
+            case OffHand -> Hand.OFF_HAND;
+            case RealHand -> realHand;
+        };
     }
     SwingState getState(SwingType type) {
-        switch (type) {
-            case Crystal -> {
-                return crystalState.get();
-            }
-            case Interact -> {
-                return interactState.get();
-            }
-            case Mining -> {
-
-            }
-            case Placing -> {
-                return placingState.get();
-            }
-            case Attacking -> {
-                return attackingState.get();
-            }
-            case Using -> {
-                return usingState.get();
-            }
-        }
-        return SwingState.Post;
+        return switch (type) {
+            case Crystal -> crystalState.get();
+            case Interact -> interactState.get();
+            case Mining -> SwingState.Post;
+            case Placing -> placingState.get();
+            case Attacking -> attackingState.get();
+            case Using -> usingState.get();
+        };
     }
-    void swing(SwingMode mode, Hand hand) {
+    void swing(SwingMode mode, Hand renderHand, Hand hand) {
+        if (mc.player == null) {return;}
         switch (mode) {
-            case Full -> mc.player.swingHand(hand);
+            case Full -> {
+                mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(hand));
+                mc.player.swingHand(renderHand, true);
+            }
             case Packet -> mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(hand));
-            case Client -> mc.player.swingHand(hand, true);
+            case Client -> mc.player.swingHand(renderHand, true);
         }
     }
 }

@@ -2,6 +2,9 @@ package kassuk.addon.blackout.utils;
 
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
+import net.minecraft.util.math.Vec3d;
+
+import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class RotationUtils {
     public static double nextYaw(double current, double target, double step) {
@@ -34,5 +37,20 @@ public class RotationUtils {
         p /= Math.sqrt(vec1.x * vec1.x + vec1.y * vec1.y);
         p /= Math.sqrt(vec2.x * vec2.x + vec2.y * vec2.y);
         return Math.acos(p);
+    }
+
+    // These 2 are from meteor
+    public static double getYaw(Vec3d start, Vec3d target) {
+        return mc.player.getYaw() + MathHelper.wrapDegrees((float) Math.toDegrees(Math.atan2(target.getZ() - start.getZ(), target.getX() - start.getX())) - 90f - mc.player.getYaw());
+    }
+
+    public static double getPitch(Vec3d start, Vec3d target) {
+        double diffX = target.getX() - start.getX();
+        double diffY = target.getY() - start.getY();
+        double diffZ = target.getZ() - start.getZ();
+
+        double diffXZ = Math.sqrt(diffX * diffX + diffZ * diffZ);
+
+        return mc.player.getPitch() + MathHelper.wrapDegrees((float) -Math.toDegrees(Math.atan2(diffY, diffXZ)) - mc.player.getPitch());
     }
 }

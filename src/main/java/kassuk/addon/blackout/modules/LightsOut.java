@@ -4,6 +4,7 @@ import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
+import kassuk.addon.blackout.globalsettings.SwingSettings;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
@@ -14,7 +15,9 @@ import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.TorchBlock;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
@@ -38,12 +41,12 @@ public class LightsOut extends BlackOutModule {
         BlockPos block = getLightSource(mc.player.getEyePos(), SettingUtils.getMineRange());
         if (block != null && timer >= delay.get()) {
             timer = 0;
-            SettingUtils.swing(SwingState.Pre, SwingType.Mining);
+            SettingUtils.mineSwing(SwingSettings.MiningSwingState.End);
             mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK,
                 block, Direction.UP));
             mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
                 block, Direction.UP));
-            SettingUtils.swing(SwingState.Post, SwingType.Mining);
+            SettingUtils.mineSwing(SwingSettings.MiningSwingState.End);
         }
     }
 

@@ -88,11 +88,11 @@ public class AutoCraftingTable extends BlackOutModule {
     private void onBlock(BlockUpdateEvent event) {
         if (mc.player != null && mc.world != null && placePos != null) {
             if (event.newState.getBlock() == Blocks.CRAFTING_TABLE) {
-                SettingUtils.swing(SwingState.Pre, SwingType.Interact);
+                SettingUtils.swing(SwingState.Pre, SwingType.Interact, Hand.MAIN_HAND);
                 mc.getNetworkHandler().sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
                     new BlockHitResult(new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ()),
                         Direction.UP, placePos, false), 0));
-                SettingUtils.swing(SwingState.Post, SwingType.Interact);
+                SettingUtils.swing(SwingState.Post, SwingType.Interact, Hand.MAIN_HAND);
             }
         }
     }
@@ -154,13 +154,13 @@ public class AutoCraftingTable extends BlackOutModule {
                 Managers.ROTATION.start(pos, 4, RotationType.Placing);
             }
 
-            SettingUtils.swing(SwingState.Pre, SwingType.Placing);
+            SettingUtils.swing(SwingState.Pre, SwingType.Placing, Hand.MAIN_HAND);
 
             mc.getNetworkHandler().sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
                 new BlockHitResult(new Vec3d(pos.getX(), pos.getY(), pos.getZ()),
                     Direction.UP, pos, false), 0));
 
-            SettingUtils.swing(SwingState.Post, SwingType.Placing);
+            SettingUtils.swing(SwingState.Post, SwingType.Placing, Hand.MAIN_HAND);
 
             if (SettingUtils.shouldRotate(RotationType.Placing)) {
                 Managers.ROTATION.end(pos);

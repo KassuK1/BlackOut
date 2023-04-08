@@ -304,19 +304,19 @@ public class BedBomb extends BlackOutModule {
     void place(BlockPos pos, Direction dir, Hand hand) {
         mc.getNetworkHandler().sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(dir.asRotation(), 0, Managers.ONGROUND.isOnGround()));
 
-        SettingUtils.swing(SwingState.Pre, SwingType.Placing);
+        SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand);
 
         mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand,
             new BlockHitResult(OLEPOSSUtils.getMiddle(pos.down()), Direction.UP, pos.down(), false), 0));
-        SettingUtils.swing(SwingState.Post, SwingType.Placing);
+        SettingUtils.swing(SwingState.Post, SwingType.Placing, hand);
     }
 
     void explode(BlockPos position) {
         if (mc.player == null) {return;}
-        SettingUtils.swing(SwingState.Pre, SwingType.Interact);
+        SettingUtils.swing(SwingState.Pre, SwingType.Interact, Hand.MAIN_HAND);
         mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
             new BlockHitResult(OLEPOSSUtils.getMiddle(position), Direction.UP, position, false), 0));
-        SettingUtils.swing(SwingState.Post, SwingType.Interact);
+        SettingUtils.swing(SwingState.Post, SwingType.Interact, Hand.MAIN_HAND);
     }
 
     BlockPos findBestPos() {

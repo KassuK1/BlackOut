@@ -64,12 +64,12 @@ public class AutoPearl extends BlackOutModule {
 
             Managers.ROTATION.endAny();
 
-            SettingUtils.swing(SwingState.Pre, SwingType.Using);
+            SettingUtils.swing(SwingState.Pre, SwingType.Using, Hand.MAIN_HAND);
 
             mc.getNetworkHandler().sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(getYaw(pos), pitch.get(), mc.player.isOnGround()));
             mc.getNetworkHandler().sendPacket(new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, 0));
 
-            SettingUtils.swing(SwingState.Post, SwingType.Using);
+            SettingUtils.swing(SwingState.Post, SwingType.Using, Hand.MAIN_HAND);
 
             if (!invSwitch.get() && hand == null) {
                 InvUtils.swapBack();
