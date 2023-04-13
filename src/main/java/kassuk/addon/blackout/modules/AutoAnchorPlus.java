@@ -43,7 +43,7 @@ import java.util.Map;
 /*
 Made by OLEPOSSU / Raksamies
 */
-
+//TODO: Rewrite
 public class AutoAnchorPlus extends BlackOutModule {
     public AutoAnchorPlus() {super(BlackOut.BLACKOUT, "Auto Anchor+", ".");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();

@@ -6,6 +6,7 @@ import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
+import kassuk.addon.blackout.managers.RotationManager;
 import kassuk.addon.blackout.mixins.MixinSound;
 import kassuk.addon.blackout.timers.IntTimerList;
 import kassuk.addon.blackout.utils.BOInvUtils;
@@ -133,15 +134,6 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .min(0)
         .sliderRange(0, 20)
         .visible(instantPlace::get)
-        .build()
-    );
-    private final Setting<Double> attackSync = sgPlace.add(new DoubleSetting.Builder()
-        .name("Attack Sync Delay")
-        .description("Starts placing when x seconds have passed after instant placing (prevents spamming if crystal cant be broken instantly).")
-        .defaultValue(0.3)
-        .min(0)
-        .sliderRange(0, 20)
-        .visible(() -> instantPlace.get() && speedLimit.get() > 0)
         .build()
     );
     private final Setting<Double> placeSpeed = sgPlace.add(new DoubleSetting.Builder()
@@ -681,15 +673,14 @@ public class AutoCrystalRewrite extends BlackOutModule {
     double friendHP = 0;
     double self = 0;
     double placeTimer = 0;
-    double placeSyncTimer = 0;
     double placeLimitTimer = 0;
     double delayTimer = 0;
     int delayTicks = 0;
 
     BlockPos placePos = null;
     Direction placeDir = null;
-    Entity lastExpEntity = null;
     Entity expEntity = null;
+    Box expEntityBB = null;
     IntTimerList attacked = new IntTimerList(false);
     Map<BlockPos, Long> existedList = new HashMap<>();
     Map<BlockPos, Long> existedTicksList = new HashMap<>();
@@ -727,10 +718,6 @@ public class AutoCrystalRewrite extends BlackOutModule {
     Vec3d renderPos = null;
     double renderProgress = 0;
 
-    public enum PlaceSpeedMode {
-        Normal,
-        Strict
-    }
     public enum DmgCheckMode {
         Normal,
         Safe
@@ -903,9 +890,6 @@ public class AutoCrystalRewrite extends BlackOutModule {
         placeLimitTimer += d;
         delayTimer += d;
         switchTimer = Math.max(0, switchTimer - d);
-        if (placeSyncTimer >= 0) {
-            placeSyncTimer += d;
-        }
         update();
 
         //Rendering
@@ -1101,21 +1085,21 @@ public class AutoCrystalRewrite extends BlackOutModule {
                 }
             }
         }
-        if (expEntity != lastExpEntity) {
-            placeSyncTimer = -1;
-            lastExpEntity = expEntity;
-        }
 
         if (expEntity != null) {
             if (!isAttacked(expEntity.getId()) && attackTimer <= 0) {
                 if (existedCheck(expEntity.getBlockPos())) {
-                    if (!SettingUtils.shouldRotate(RotationType.Attacking) || (Managers.ROTATION.start(expEntity.getBoundingBox(), smartRot.get() ? expEntity.getPos() : null, 5.1, RotationType.Attacking) && ghostCheck(expEntity.getBoundingBox(), expEntity.getPos()))) {
+                    if (!SettingUtils.shouldRotate(RotationType.Attacking) || startAttackRot()) {
+                        if (SettingUtils.shouldRotate(RotationType.Attacking)) {
+                            expEntityBB = expEntity.getBoundingBox();
+                        }
                         explode(expEntity.getId(), expEntity, expEntity.getPos());
                     }
                 }
             }
-        } else {
-            placeSyncTimer = -1;
+        }
+        if (!isAlive(expEntityBB) && SettingUtils.shouldRotate(RotationType.Attacking)) {
+            Managers.ROTATION.end(expEntityBB);
         }
         Hand handToUse = hand;
         if (!performance.get()) {
@@ -1168,8 +1152,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
                 if (handToUse != null || (switchMode.get() == SwitchMode.Silent && hotbar >= 0) || (switchMode.get() == SwitchMode.SilentBypass && silentSlot >= 0)) {
                     placing = true;
                     if (speedCheck() && delayCheck()) {
-                        if (!SettingUtils.shouldRotate(RotationType.Crystal) || (Managers.ROTATION.start(placePos.down(), smartRot.get() ? new Vec3d(placePos.getX() + 0.5, placePos.getY(), placePos.getZ() + 0.5) : null, 5, RotationType.Crystal) && ghostCheck(placePos.down()))) {
-                            placeTimer = 1;
+                        if (!SettingUtils.shouldRotate(RotationType.Crystal) || (Managers.ROTATION.start(placePos.down(), smartRot.get() ? new Vec3d(placePos.getX() + 0.5, placePos.getY(), placePos.getZ() + 0.5) : null, priority - 0.1, RotationType.Crystal) && ghostCheck(placePos.down()))) {
                             placeCrystal(placePos.down(), placeDir, handToUse, silentSlot, hotbar);
                         }
                     }
@@ -1179,11 +1162,33 @@ public class AutoCrystalRewrite extends BlackOutModule {
             lastPos = null;
         }
     }
+    boolean startAttackRot() {
+        expEntityBB = expEntity.getBoundingBox();
+        return (Managers.ROTATION.start(expEntity.getBoundingBox(), smartRot.get() ? expEntity.getPos() : null, priority, RotationType.Attacking) && ghostCheck(expEntity.getBoundingBox(), expEntity.getPos()));
+    }
+    boolean isAlive(Box box) {
+        if (box == null) {return true;}
+
+        for (Entity en : mc.world.getEntities()) {
+            if (!(en instanceof EndCrystalEntity)) {continue;}
+
+            if (bbEquals(box, en.getBoundingBox())) {
+                return true;
+            }
+        }
+        return false;
+    }
+    boolean bbEquals(Box box1, Box box2) {
+        return box1.minX == box2.minX &&
+            box1.minY == box2.minY &&
+            box1.minZ == box2.minZ &&
+            box1.maxX == box2.maxX &&
+            box1.maxY == box2.maxY &&
+            box1.maxZ == box2.maxZ;
+    }
     boolean speedCheck() {
 
         if (speedLimit.get() > 0 && placeLimitTimer < 1 / speedLimit.get()) {return false;}
-
-        if (instantPlace.get() && speedLimit.get() > 0 && placeSyncTimer >= 0 && placeSyncTimer < attackSync.get()) {return false;}
 
         if (instantPlace.get() && !shouldSlow() && !isBlocked(placePos)) {return true;}
 
@@ -1274,10 +1279,8 @@ public class AutoCrystalRewrite extends BlackOutModule {
                 own.put(pos.up(), System.currentTimeMillis());
             }
 
-            if (placeSyncTimer < 0) {
-                placeSyncTimer = 0;
-            }
             placeLimitTimer = 0;
+            placeTimer = 1;
 
             mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(switched ? Hand.MAIN_HAND : handToUse,
                 new BlockHitResult(new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), dir, pos, false), 0));
@@ -1375,10 +1378,9 @@ public class AutoCrystalRewrite extends BlackOutModule {
         if (mc.player != null) {
             attacked.add(en.getId(), 1 / expSpeed.get());
             attackTimer = expSpeedLimit.get() <= 0 ? 0 : 1 / expSpeedLimit.get();
+
             delayTimer = 0;
             delayTicks = 0;
-
-            Box box = new Box(en.getX() - 1, en.getY(), en.getZ() - 1, en.getX() + 1, en.getY() + 2, en.getZ() + 1);
 
             SettingUtils.swing(SwingState.Pre, SwingType.Attacking, Hand.MAIN_HAND);
 
@@ -1388,10 +1390,6 @@ public class AutoCrystalRewrite extends BlackOutModule {
             mc.player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(en, mc.player.isSneaking()));
 
             SettingUtils.swing(SwingState.Post, SwingType.Attacking, Hand.MAIN_HAND);
-
-            if (SettingUtils.shouldRotate(RotationType.Attacking)) {
-                Managers.ROTATION.end(box);
-            }
 
             blocked.clear();
             if (setDead.get()) {

@@ -503,7 +503,7 @@ public class AutoMine extends BlackOutModule {
         if (waitingToStart != null) {
             targetDir = SettingUtils.getPlaceOnDirection(waitingToStart);
             if (targetDir != null) {
-                boolean rotated = !SettingUtils.startMineRot() || Managers.ROTATION.start(waitingToStart, 9, RotationType.Breaking);
+                boolean rotated = !SettingUtils.startMineRot() || Managers.ROTATION.start(waitingToStart, priority, RotationType.Breaking);
                 if (rotated) {
                     if (debug.get()) {
                         debug("accept-target");
@@ -517,7 +517,7 @@ public class AutoMine extends BlackOutModule {
             targetDir = SettingUtils.getPlaceOnDirection(targetPos);
             miningFor += event.frameTime;
             if (shouldRestart) {
-                boolean rotated = !SettingUtils.startMineRot() || Managers.ROTATION.start(targetPos, 9, RotationType.Breaking);
+                boolean rotated = !SettingUtils.startMineRot() || Managers.ROTATION.start(targetPos, priority, RotationType.Breaking);
                 if (rotated) {
                     start(targetPos, targetDir);
                     shouldRestart = false;
@@ -542,7 +542,7 @@ public class AutoMine extends BlackOutModule {
                     Direction crystalDir = SettingUtils.getPlaceOnDirection(crystalPos.down());
 
                     if (at != null) {
-                        boolean rotated = !SettingUtils.endMineRot() || Managers.ROTATION.start(targetPos, 9, RotationType.Breaking);
+                        boolean rotated = !SettingUtils.endMineRot() || Managers.ROTATION.start(targetPos, priority, RotationType.Breaking);
 
                         if (rotated) {
                             if (debug.get()) {
@@ -582,7 +582,7 @@ public class AutoMine extends BlackOutModule {
                         }
                     } else if ((hand != null || (switchMode.get() == SwitchMode.Silent && hotbar > 0) || (switchMode.get() == SwitchMode.SilentBypass && inv > 0)) && timer >= placeDelay.get() && placeCrystal.get()
                         && placeCrystal.get() && !EntityUtils.intersectsWithEntity(new Box(crystalPos), entity -> !entity.isSpectator()) && crystalDir != null) {
-                        boolean rotated = !SettingUtils.shouldRotate(RotationType.Crystal) || Managers.ROTATION.start(crystalPos.down(), 9, RotationType.Crystal);
+                        boolean rotated = !SettingUtils.shouldRotate(RotationType.Crystal) || Managers.ROTATION.start(crystalPos.down(), priority, RotationType.Crystal);
                         if (rotated) {
                             timer = 0;
 
@@ -630,7 +630,7 @@ public class AutoMine extends BlackOutModule {
                         }
                     }
                 } else {
-                    boolean rotated = !SettingUtils.endMineRot() || Managers.ROTATION.start(targetPos, 9, RotationType.Breaking);
+                    boolean rotated = !SettingUtils.endMineRot() || Managers.ROTATION.start(targetPos, priority, RotationType.Breaking);
 
                     if (rotated) {
                         int holding = 0;

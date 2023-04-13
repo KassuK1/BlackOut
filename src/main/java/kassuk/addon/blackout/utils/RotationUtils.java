@@ -7,13 +7,13 @@ import net.minecraft.util.math.Vec3d;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class RotationUtils {
-    public static double nextYaw(double current, double target, double step) {
+    public static float nextYaw(double current, double target, double step) {
         double i = yawAngle(current, target);
 
         if (step >= Math.abs(i)) {
-            return current + i;
+            return (float) (current + i);
         } else {
-            return current + (i < 0 ? -1 : 1) * step;
+            return (float) (current + (i < 0 ? -1 : 1) * step);
         }
     }
 
@@ -26,10 +26,10 @@ public class RotationUtils {
         }
     }
 
-    public static double nextPitch(double current, double target, double step) {
+    public static float nextPitch(double current, double target, double step) {
         double i = target - current;
 
-        return Math.abs(i) <= step ? target : i >= 0 ? current + step : current - step;
+        return (float) (Math.abs(i) <= step ? target : i >= 0 ? current + step : current - step);
     }
 
     public static double radAngle(Vec2f vec1, Vec2f vec2) {

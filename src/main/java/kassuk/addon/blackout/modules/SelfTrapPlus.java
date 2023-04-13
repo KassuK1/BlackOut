@@ -309,7 +309,7 @@ public class SelfTrapPlus extends BlackOutModule {
                         for (int i = 0; i < Math.min(obsidian, toPlace.size()); i++) {
                             PlaceData placeData = onlyConfirmed.get() ? SettingUtils.getPlaceData(toPlace.get(i)) : SettingUtils.getPlaceDataOR(toPlace.get(i), pos -> placed.contains(pos));
                             if (placeData.valid()) {
-                                boolean rotated = !SettingUtils.shouldRotate(RotationType.Placing) || Managers.ROTATION.start(placeData.pos().offset(placeData.dir()), 1, RotationType.Placing);
+                                boolean rotated = !SettingUtils.shouldRotate(RotationType.Placing) || Managers.ROTATION.start(placeData.pos(), 1, RotationType.Placing);
 
                                 if (!rotated) {
                                     break;

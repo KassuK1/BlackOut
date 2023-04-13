@@ -232,7 +232,7 @@ public class AutoMend extends BlackOutModule {
 
             if (bottleSlot >= 0 && shouldThrow()) {
                 shouldRot = true;
-                boolean rotated = !(switchMode.get() == SwitchMode.Disabled && hand == null) && Managers.ROTATION.startPitch(90, 10, RotationType.Use);
+                boolean rotated = !(switchMode.get() == SwitchMode.Disabled && hand == null) && Managers.ROTATION.startPitch(90, priority, RotationType.Use);
 
                 if (rotated) {
                     boolean switched = hand != null;

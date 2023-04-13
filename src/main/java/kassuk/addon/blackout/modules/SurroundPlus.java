@@ -50,12 +50,6 @@ public class SurroundPlus extends BlackOutModule {
     private final SettingGroup sgAttack = settings.createGroup("Attack");
     private final SettingGroup sgToggle = settings.createGroup("Toggle");
     private final SettingGroup sgRender = settings.createGroup("Render");
-    private final Setting<SurroundMode> surroundMode = sgGeneral.add(new EnumSetting.Builder<SurroundMode>()
-        .name("Surround Mode")
-        .description(".")
-        .defaultValue(SurroundMode.Fat)
-        .build()
-    );
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
         .name("Pause Eat")
         .description("Pauses when you are eating")
@@ -179,10 +173,6 @@ public class SurroundPlus extends BlackOutModule {
         Up,
         Down,
         Full
-    }
-    public enum SurroundMode {
-        Fat,
-        Center
     }
     BlockTimerList timers = new BlockTimerList();
     BlockPos startPos = null;

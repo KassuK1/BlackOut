@@ -21,7 +21,7 @@ import net.minecraft.world.World;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
-public class OLEPOSSUtils extends Utils {
+public class OLEPOSSUtils {
     public static double distance(Vec3d v1, Vec3d v2) {
         return Math.sqrt(PlayerUtils.squaredDistance(v1.x, v1.y, v1.z, v2.x, v2.y, v2.z));
     }
@@ -89,18 +89,6 @@ public class OLEPOSSUtils extends Utils {
     }
     public static int closerToZero(int x) {
         return (int) (x - Math.signum(x));
-    }
-    public static boolean isHole(BlockPos pos, World world, int height) {
-        if (world == null) return false;
-        for (Direction dir : horizontals) {
-            if (world.getBlockState(pos.offset(dir)).getBlock() == Blocks.AIR) return false;
-        }
-        for (int i = 0; i < height; i++) {
-            if (!world.getBlockState(pos.up(i)).getBlock().equals(Blocks.AIR)) {
-                return false;
-            }
-        }
-        return world.getBlockState(pos.down()).getBlock() != Blocks.AIR;
     }
     public static Direction closestDir(BlockPos pos, Vec3d vec) {
         Direction closest = null;

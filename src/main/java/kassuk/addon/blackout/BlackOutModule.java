@@ -1,10 +1,12 @@
 package kassuk.addon.blackout;
 
+import kassuk.addon.blackout.utils.PriorityUtils;
 import meteordevelopment.meteorclient.mixininterface.IChatHud;
 import meteordevelopment.meteorclient.systems.config.Config;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
+import net.minecraft.network.Packet;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 
@@ -14,8 +16,10 @@ public class BlackOutModule extends Module {
 
     public BlackOutModule(Category category, String name, String description) {
         super(category, name, description);
+        this.priority = PriorityUtils.get(this);
     }
 
+    public int priority;
     String prefix = Formatting.DARK_RED + "[BlackOut]";
 
     public void sendToggledMsg() {
@@ -51,5 +55,10 @@ public class BlackOutModule extends Module {
             Text message = Text.of(msg);
             ((IChatHud) mc.inGameHud.getChatHud()).add(message, 0);
         }
+    }
+
+    public void sendPacket(Packet<?> packet) {
+        if (mc.getNetworkHandler() == null) {return;}
+        mc.getNetworkHandler().sendPacket(packet);
     }
 }

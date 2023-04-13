@@ -2,6 +2,7 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
+import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -23,50 +24,89 @@ public class PacketFly extends BlackOutModule {
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private final Setting<Integer> packets = sgGeneral.add(new IntSetting.Builder()
-        .name("Packets")
+    private final SettingGroup sgFly = settings.createGroup("Fly");
+    private final SettingGroup sgPhase = settings.createGroup("Phase");
+
+    //  Fly Page
+    private final Setting<Integer> packets = sgFly.add(new IntSetting.Builder()
+        .name("Fly Packets")
         .description("How many packets to send every movement tick.")
-        .defaultValue(5)
+        .defaultValue(1)
         .min(1)
         .sliderRange(0, 10)
         .build()
     );
-    private final Setting<Double> speed = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Speed")
+    private final Setting<Double> speed = sgFly.add(new DoubleSetting.Builder()
+        .name("Fly Speed")
         .description("Distance to travel each packet.")
         .defaultValue(0.2873)
         .min(0)
         .sliderRange(0, 10)
         .build()
     );
-    private final Setting<Boolean> fastVertical = sgGeneral.add(new BoolSetting.Builder()
-        .name("Fast Vertical")
-        .description("Sends multiple packets every movement tick.")
+    private final Setting<Boolean> fastVertical = sgFly.add(new BoolSetting.Builder()
+        .name("Fast Vertical Fly")
+        .description("Sends multiple packets every movement tick while going up.")
         .defaultValue(false)
         .build()
     );
-    private final Setting<Boolean> noClip = sgGeneral.add(new BoolSetting.Builder()
-        .name("No Clip")
-        .description("Lets you walk trough walls and stuff.")
-        .defaultValue(false)
-        .build()
-    );
-    private final Setting<Double> downSpeed = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Down Speed")
+    private final Setting<Double> downSpeed = sgFly.add(new DoubleSetting.Builder()
+        .name("Fly Down Speed")
         .description("How fast to fly down.")
         .defaultValue(0.062)
         .min(0)
         .sliderRange(0, 10)
         .build()
     );
-    private final Setting<Double> upSpeed = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Up Speed")
+    private final Setting<Double> upSpeed = sgFly.add(new DoubleSetting.Builder()
+        .name("Fly Up Speed")
         .description("How fast to fly up.")
         .defaultValue(0.062)
         .min(0)
         .sliderRange(0, 10)
         .build()
     );
+
+    //  Phase Page
+    private final Setting<Integer> phasePackets = sgPhase.add(new IntSetting.Builder()
+        .name("Phase Packets")
+        .description("How many packets to send every movement tick.")
+        .defaultValue(1)
+        .min(1)
+        .sliderRange(0, 10)
+        .build()
+    );
+    private final Setting<Double> phaseSpeed = sgPhase.add(new DoubleSetting.Builder()
+        .name("Phase Speed")
+        .description("Distance to travel each packet.")
+        .defaultValue(0.2873)
+        .min(0)
+        .sliderRange(0, 10)
+        .build()
+    );
+    private final Setting<Boolean> phaseFastVertical = sgPhase.add(new BoolSetting.Builder()
+        .name("Fast Vertical Phase")
+        .description("Sends multiple packets every movement tick while going up.")
+        .defaultValue(false)
+        .build()
+    );
+    private final Setting<Double> phaseDownSpeed = sgPhase.add(new DoubleSetting.Builder()
+        .name("Phase Down Speed")
+        .description("How fast to fly down.")
+        .defaultValue(0.062)
+        .min(0)
+        .sliderRange(0, 10)
+        .build()
+    );
+    private final Setting<Double> phaseUpSpeed = sgPhase.add(new DoubleSetting.Builder()
+        .name("Phase Up Speed")
+        .description("How fast to fly up.")
+        .defaultValue(0.062)
+        .min(0)
+        .sliderRange(0, 10)
+        .build()
+    );
+    //  General Page
     private final Setting<Boolean> onGroundSpoof = sgGeneral.add(new BoolSetting.Builder()
         .name("On Ground Spoof")
         .description("Spoofs on ground in packets.")
@@ -114,9 +154,13 @@ public class PacketFly extends BlackOutModule {
     int id = -1;
     int sent = 0;
     int rur = 0;
+    int packetsToSend = 0;
+    Random random = new Random();
     String info = null;
     Map<Integer, Vec3d> validPos = new HashMap<>();
     List<PlayerMoveC2SPacket> validPackets = new ArrayList<>();
+
+    public boolean moving = false;
 
     @Override
     public void onActivate() {
@@ -137,29 +181,65 @@ public class PacketFly extends BlackOutModule {
     @EventHandler
     private void onMove(PlayerMoveEvent e) {
         if (mc.player == null || mc.world == null) {return;}
-        mc.player.noClip = noClip.get();
+
+        boolean phasing = isPhasing();
+        mc.player.noClip = phasing;
+
+        packetsToSend += phasing ? phasePackets.get() : packets.get();
+
         boolean shouldAntiKick = ticks % antiKickDelay.get() == 0;
-        double x = 0, y = shouldAntiKick ? -0.04 * antiKick.get() : 0, z = 0;
-        double[] result = getYaw(mc.player.input.movementForward, mc.player.input.movementSideways);
 
-        if (mc.options.jumpKey.isPressed() && y == 0) {y = upSpeed.get();}
-        else if (mc.options.sneakKey.isPressed()) {
-            shouldAntiKick = false;
-            y = -downSpeed.get();
-        }
-        if (result[1] != 0 && y == 0) {
-            x = Math.cos(Math.toRadians(result[0] + 90));
-            z = Math.sin(Math.toRadians(result[0] + 90));
-        }
-        Vec3d motion = new Vec3d(0, 0, 0);
+        double yaw = getYaw();
+        double motion = phasing ? phaseSpeed.get() : speed.get();
 
-        for (int i = 0; i < (shouldAntiKick ? 1 : (y == 0 || fastVertical.get() ? packets.get() : 1)); i++) {
-            motion = motion.add(x * speed.get(), y, z * speed.get());
-            send(motion.add(mc.player.getPos()), new Vec3d(xzBound.get() * Math.cos(Math.toRadians(result[0] + 90)), yBound.get(), xzBound.get() * Math.sin(Math.toRadians(result[0] + 90))),
-                onGroundSpoof.get() ? onGround.get() : mc.player.isOnGround());
+        double x = 0, y = 0, z = 0;
+
+        if (jumping()) {
+            y = phasing ? phaseUpSpeed.get() : upSpeed.get();
+        } else if (sneaking()) {
+            y = phasing ? -phaseDownSpeed.get() : -downSpeed.get();
         }
 
-        ((IVec3d) e.movement).set(motion.x, motion.y, motion.z);
+        if (y != 0) {
+            moving = false;
+        }
+
+        if (moving) {
+            x = Math.cos(Math.toRadians(yaw + 90)) * motion;
+            z = Math.sin(Math.toRadians(yaw + 90)) * motion;
+        } else {
+            if (phasing && !phaseFastVertical.get()) {
+                packetsToSend = Math.min(packetsToSend, 1);
+            }
+            if (!phasing && !fastVertical.get()){
+                packetsToSend = Math.min(packetsToSend, 1);
+            }
+        }
+
+        Vec3d newPosition = new Vec3d(0, 0, 0);
+        boolean antiKickSent = false;
+        for (; packetsToSend >= 1; packetsToSend--) {
+            newPosition = newPosition.add(x, 0, z);
+
+            if (shouldAntiKick && !phasing && y >= 0 && !antiKickSent) {
+                newPosition = newPosition.add(0, antiKick.get() * -0.04, 0);
+                antiKickSent = true;
+            } else {
+                newPosition = newPosition.add(0, y, 0);
+            }
+
+            send(newPosition.add(mc.player.getPos()), getBounds(), getOnGround());
+
+            if (x == 0 && z == 0 && y == 0) {
+                break;
+            }
+        }
+
+        ((IVec3d) e.movement).set(newPosition.x, newPosition.y, newPosition.z);
+
+        packetsToSend = Math.min(packetsToSend, 1);
+
+
     }
 
     @EventHandler
@@ -195,8 +275,19 @@ public class PacketFly extends BlackOutModule {
     public String getInfoString() {
         return info;
     }
-
-    private void send(Vec3d pos, Vec3d bounds, boolean onGround) {
+    Vec3d getBounds() {
+        int yaw = random.nextInt(0, 360);
+        return new Vec3d(Math.cos(Math.toRadians(yaw)) * xzBound.get(), yBound.get(), Math.sin(Math.toRadians(yaw)) * xzBound.get());
+    }
+    boolean getOnGround() {
+        return onGroundSpoof.get() ? onGround.get() : mc.player.isOnGround();
+    }
+    boolean isPhasing() {
+        return OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox());
+    }
+    boolean jumping() {return mc.options.jumpKey.isPressed();}
+    boolean sneaking() {return mc.options.sneakKey.isPressed();}
+    void send(Vec3d pos, Vec3d bounds, boolean onGround) {
         PlayerMoveC2SPacket.PositionAndOnGround normal = new PlayerMoveC2SPacket.PositionAndOnGround(pos.x, pos.y, pos.z, onGround);
         PlayerMoveC2SPacket.PositionAndOnGround bound = new PlayerMoveC2SPacket.PositionAndOnGround(pos.x + bounds.x, pos.y + bounds.y, pos.z + bounds.z, onGround);
 
@@ -212,19 +303,20 @@ public class PacketFly extends BlackOutModule {
         mc.player.networkHandler.sendPacket(new TeleportConfirmC2SPacket(id));
     }
 
-    double[] getYaw(double f, double s) {
+    double getYaw() {
+        double f = mc.player.input.movementForward, s = mc.player.input.movementSideways;
+
         double yaw = mc.player.getYaw();
-        double move;
         if (f > 0) {
-            move = 1;
+            moving = true;
             yaw += s > 0 ? -45 : s < 0 ? 45 : 0;
         } else if (f < 0) {
-            move = 1;
+            moving = true;
             yaw += s > 0 ? -135 : s < 0 ? 135 : 180;
         } else {
-            move = s != 0 ? 1 : 0;
+            moving = s != 0;
             yaw += s > 0 ? -90 : s < 0 ? 90 : 0;
         }
-        return new double[]{yaw, move};
+        return yaw;
     }
 }

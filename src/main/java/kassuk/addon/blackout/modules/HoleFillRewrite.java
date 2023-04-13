@@ -266,7 +266,7 @@ public class HoleFillRewrite extends BlackOutModule {
                         for (int i = 0; i < Math.min(obsidian, toPlace.size()); i++) {
                             PlaceData placeData = SettingUtils.getPlaceData(toPlace.get(i));
                             if (placeData.valid()) {
-                                boolean rotated = !SettingUtils.shouldRotate(RotationType.Placing) || Managers.ROTATION.start(placeData.pos().offset(placeData.dir()), 1, RotationType.Placing);
+                                boolean rotated = !SettingUtils.shouldRotate(RotationType.Placing) || Managers.ROTATION.start(placeData.pos(), priority, RotationType.Placing);
 
                                 if (!rotated) {
                                     break;

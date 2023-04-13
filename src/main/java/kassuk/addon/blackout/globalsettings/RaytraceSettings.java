@@ -21,7 +21,6 @@ public class RaytraceSettings extends BlackOutModule {
         super(BlackOut.SETTINGS, "Raytrace", "Global raytrace settings for every blackout module");
     }
 
-    private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgPlace = settings.createGroup("Placing");
     private final SettingGroup sgAttack = settings.createGroup("Attacking");
 

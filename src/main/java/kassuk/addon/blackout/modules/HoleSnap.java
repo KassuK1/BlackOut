@@ -2,6 +2,9 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
+import kassuk.addon.blackout.enums.HoleType;
+import kassuk.addon.blackout.utils.Hole;
+import kassuk.addon.blackout.utils.HoleUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
@@ -105,7 +108,7 @@ public class HoleSnap extends BlackOutModule {
         .sliderRange(0, 100)
         .build()
     );
-    BlockPos singleHole;
+    Hole singleHole;
     int collisions;
     int rubberbands;
     int ticks;
@@ -139,18 +142,15 @@ public class HoleSnap extends BlackOutModule {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onMove(PlayerMoveEvent event) {
         if (mc.player != null && mc.world != null) {
-            BlockPos hole = single.get() ? singleHole : findHole();
-            if (hole != null && mc.world.getBlockState(singleHole).getBlock() == Blocks.AIR) {
-                Modules.get().get(Timer.class).setOverride(timer.get());
-                double yaw =
-                    Math.cos(Math.toRadians(
-                        getAngle(new Vec3d(hole.getX() + 0.5, hole.getY(), hole.getZ() + 0.5)) + 90.0f));
-                double pit =
-                    Math.sin(Math.toRadians(
-                        getAngle(new Vec3d(hole.getX() + 0.5, hole.getY(), hole.getZ() + 0.5)) + 90.0f));
+            Hole hole = single.get() ? singleHole : findHole();
 
-                if (mc.player.getX() == hole.getX() + 0.5 && mc.player.getZ() == hole.getZ() + 0.5) {
-                    if (mc.player.getY() == hole.getY()) {
+            if (hole != null && !singleBlocked()) {
+                Modules.get().get(Timer.class).setOverride(timer.get());
+                double yaw = Math.cos(Math.toRadians(getAngle(hole.middle) + 90.0f));
+                double pit = Math.sin(Math.toRadians(getAngle(hole.middle) + 90.0f));
+
+                if (mc.player.getX() == hole.middle.x && mc.player.getZ() == hole.middle.z) {
+                    if (mc.player.getY() == hole.middle.y) {
                         this.toggle();
                         sendDisableMsg("in hole");
                     } else if (OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox().offset(0, -0.05, 0))){
@@ -161,9 +161,9 @@ public class HoleSnap extends BlackOutModule {
                     }
                 } else {
                     double x = speed.get() * yaw;
-                    double dX = hole.getX() + 0.5 - mc.player.getX();
+                    double dX = hole.middle.x - mc.player.getX();
                     double z = speed.get() * pit;
-                    double dZ = hole.getZ() + 0.5 - mc.player.getZ();
+                    double dZ = hole.middle.z - mc.player.getZ();
                     if (OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox().offset(x, 0, z))) {
                         collisions++;
                         if (collisions >= coll.get() && coll.get() > 0) {
@@ -188,26 +188,50 @@ public class HoleSnap extends BlackOutModule {
         }
     }
 
-    BlockPos findHole() {
-        BlockPos closest = null;
-        if (OLEPOSSUtils.isHole(mc.player.getBlockPos(), mc.world, depth.get())) {return mc.player.getBlockPos();}
-        for (int y = -downRange.get(); y <= 0; y++) {
-            for (int x = -range.get(); x <= range.get(); x++) {
-                for (int z = -range.get(); z <= range.get(); z++) {
-                    BlockPos position = mc.player.getBlockPos().add(x, y, z);
-                    if (OLEPOSSUtils.isHole(position, mc.world, depth.get()) && y < 0) {
-                        if (closest == null || OLEPOSSUtils.distance(mc.player.getPos(), new Vec3d(position.getX() + 0.5, mc.player.getY(), position.getZ() + 0.5)) <
-                        OLEPOSSUtils.distance(mc.player.getPos(), new Vec3d(closest.getX() + 0.5, mc.player.getY(), closest.getZ() + 0.5))) {
-                            closest = position;
-                        }
+    boolean singleBlocked() {
+        for (BlockPos pos : singleHole.positions) {
+            if (mc.world.getBlockState(pos).getBlock() != Blocks.AIR) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    Hole findHole() {
+        Hole closest = null;
+
+        for (int x = -range.get(); x <= range.get(); x++) {
+            for (int y = -downRange.get(); y < 1; y++) {
+                for (int z = -range.get(); z < range.get(); z++) {
+                    BlockPos pos = mc.player.getBlockPos().add(x, y, z);
+
+                    Hole hole = HoleUtils.getHole(pos, depth.get());
+
+                    if (hole.type == HoleType.NotHole) {continue;}
+
+                    if (y == 0 && inHole(hole)) {
+                        return hole;
+                    }
+                    if (closest == null ||
+                        OLEPOSSUtils.distance(hole.middle, mc.player.getPos()) <
+                        OLEPOSSUtils.distance(closest.middle, mc.player.getPos())) {
+                        closest = hole;
                     }
                 }
             }
         }
+
         return closest;
     }
 
-    boolean air(BlockPos pos) {return mc.world.getBlockState(pos).getBlock().equals(Blocks.AIR);}
+    boolean inHole(Hole hole) {
+        for (BlockPos pos : hole.positions) {
+            if (mc.player.getBlockPos().equals(pos)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     float getAngle(Vec3d pos)
     {

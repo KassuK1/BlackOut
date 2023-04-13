@@ -20,7 +20,6 @@ public class SwingSettings extends BlackOutModule {
         super(BlackOut.SETTINGS, "Swing", "Global swing settings for every blackout module");
     }
 
-    private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgCrystal = settings.createGroup("Crystal");
     private final SettingGroup sgInteract = settings.createGroup("Interact");
     private final SettingGroup sgMining = settings.createGroup("Mining");

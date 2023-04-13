@@ -217,7 +217,7 @@ public class SpeedPlus extends BlackOutModule {
 
             if (mode.get() == SpeedMode.Strafe) {
                 if (mc.player.isOnGround() && (Math.abs(mc.player.input.movementForward) > 0.01 || Math.abs(mc.player.input.movementSideways) > 0.01)) {
-                    ((IVec3d) mc.player.getVelocity()).setY(jumpForce.get());
+                    ((IVec3d) mc.player.getVelocity()).setY(mc.player.input.jumping ? 0.42 : jumpForce.get());
                 }
             }
 
@@ -228,6 +228,9 @@ public class SpeedPlus extends BlackOutModule {
             }
             if (mc.player.hasStatusEffect(StatusEffects.SPEED)) {
                 motion *= 1.2 + mc.player.getStatusEffect(StatusEffects.SPEED).getAmplifier() * 0.2;
+            }
+            if (mc.player.hasStatusEffect(StatusEffects.SLOWNESS)) {
+                motion /= 1.2 + mc.player.getStatusEffect(StatusEffects.SLOWNESS).getAmplifier() * 0.2;
             }
 
             double forward = mc.player.input.movementForward;

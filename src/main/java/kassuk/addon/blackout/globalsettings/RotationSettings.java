@@ -27,7 +27,7 @@ Made by OLEPOSSU
 
 public class RotationSettings extends BlackOutModule {
     public RotationSettings() {
-        super(BlackOut.SETTINGS, "Rotation", "Global rotation settings for every blackout module");
+        super(BlackOut.SETTINGS, "Rotate", "Global rotation settings for every blackout module");
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -91,12 +91,18 @@ public class RotationSettings extends BlackOutModule {
         .sliderRange(0, 180)
         .build()
     );
-    public final Setting<Integer> packets = sgGeneral.add(new IntSetting.Builder()
-        .name("Packets")
-        .description("Max amount of rotation packets every second.")
-        .defaultValue(20)
-        .min(20)
-        .sliderRange(0, 40)
+    public final Setting<Boolean> NCPRotation = sgGeneral.add(new BoolSetting.Builder()
+        .name("NCP Rotations")
+        .description(".")
+        .defaultValue(false)
+        .build()
+    );
+    public final Setting<Integer> NCPPackets = sgGeneral.add(new IntSetting.Builder()
+        .name("NCP Rotation packets")
+        .description(".")
+        .defaultValue(10)
+        .range(0, 10)
+        .sliderRange(0, 10)
         .build()
     );
 
@@ -281,39 +287,63 @@ public class RotationSettings extends BlackOutModule {
     public boolean rotationCheckHistory(Box box, int existed) {
         if (box == null){return false;}
         if (mc.player == null) {return false;}
-        return rotationCheck(null, 0.0, 0.0, box, existed);
+        return rotationCheck(null, 0.0, 0.0, box, existed, NCPRotation.get());
     }
 
-    public boolean rotationCheck(Vec3d pPos, double yaw, double pitch, Box box, int existed) {
+    public boolean rotationCheck(Vec3d pPos, double yaw, double pitch, Box box, int existed, boolean ncp) {
         List<RotationManager.Rotation> history = RotationManager.history;
         if (box == null){return false;}
 
         switch (rotationCheckMode.get()) {
             case Raytrace -> {
                 if (pPos != null) {
-                    if (!raytraceCheck(pPos, yaw, pitch, box)) {
-                        return false;
+                    if (ncp) {
+                        if (raytraceCheck(pPos, yaw, pitch, box)) {
+                            return true;
+                        }
+                    } else {
+                        if (!raytraceCheck(pPos, yaw, pitch, box)) {
+                            return false;
+                        }
                     }
                 }
                 for (int r = 0; r < existed; r++) {
                     if (history.size() <= r) {break;}
                     RotationManager.Rotation rot = history.get(r);
-                    if (!raytraceCheck(rot.vec(), rot.yaw(), rot.pitch(), box)) {
-                        return false;
+                    if (ncp) {
+                        if (raytraceCheck(rot.vec(), rot.yaw(), rot.pitch(), box)) {
+                            return true;
+                        }
+                    } else {
+                        if (!raytraceCheck(rot.vec(), rot.yaw(), rot.pitch(), box)) {
+                            return false;
+                        }
                     }
                 }
             }
             case Angle -> {
                 if (pPos != null) {
-                    if (!angleCheck(pPos, yaw, pitch, box)) {
-                        return false;
+                    if (ncp) {
+                        if (angleCheck(pPos, yaw, pitch, box)) {
+                            return true;
+                        }
+                    } else {
+                        if (!angleCheck(pPos, yaw, pitch, box)) {
+                            return false;
+                        }
                     }
                 }
                 for (int r = 0; r < existed; r++) {
                     if (history.size() <= r) {break;}
                     RotationManager.Rotation rot = history.get(r);
-                    if (!angleCheck(rot.vec(), rot.yaw(), rot.pitch(), box)) {
-                        return false;
+                    if (ncp) {
+                        if (angleCheck(rot.vec(), rot.yaw(), rot.pitch(), box)) {
+                            return true;
+                        }
+                    } else {
+                        if (!angleCheck(rot.vec(), rot.yaw(), rot.pitch(), box)) {
+                            return false;
+                        }
                     }
                 }
             }
