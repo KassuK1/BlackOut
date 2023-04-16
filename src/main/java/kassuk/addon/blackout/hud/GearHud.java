@@ -49,7 +49,7 @@ public class GearHud extends HudElement {
     public void render(HudRenderer renderer) {
         setSize(55 * scale.get() * scale.get(), 20 * scale.get() * scale.get() * items.get().size());
         for (int i = 0; i < items.get().size(); i++) {
-            RenderUtils.drawItem(new ItemStack(items.get().get(i).asItem()), x, (int) Math.round(y + i * 20 * scale.get() * scale.get()), scale.get() * scale.get(), true);
+            RenderUtils.drawItem(new ItemStack(items.get().get(i).asItem()), x, (int) Math.round(y + i * 20 * scale.get() * scale.get()), (float) (scale.get() * scale.get()), true);
             renderer.text(getText(items.get().get(i).asItem()), x + 25 * scale.get() * scale.get(), (int) Math.round(y + i * 20 * scale.get() * scale.get()), color.get(), true, scale.get());
         }
     }
