@@ -2,6 +2,7 @@ package kassuk.addon.blackout.globalsettings;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
+import kassuk.addon.blackout.mixins.MixinDirection;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.PlaceData;
 import kassuk.addon.blackout.utils.SettingUtils;
@@ -62,7 +63,7 @@ public class FacingSettings extends BlackOutModule {
                 return new PlaceData(pos, Direction.UP, true);
             } else {
                 double cDist = -1;
-                for (Direction dir : Direction.values()) {
+                for (Direction dir : MixinDirection.getAll()) {
 
                     // Doesn't place on top of max height
                     if (maxHeight.get() && pos.offset(dir).getY() > mc.world.getHeight()) {continue;}
@@ -96,7 +97,7 @@ public class FacingSettings extends BlackOutModule {
                 return new PlaceData(pos, Direction.UP, true);
             } else {
                 double cDist = -1;
-                for (Direction dir : Direction.values()) {
+                for (Direction dir : MixinDirection.getAll()) {
 
                     // Doesn't place on top of max height
                     if (maxHeight.get() && pos.offset(dir).getY() > mc.world.getHeight()) {continue;}
@@ -130,7 +131,7 @@ public class FacingSettings extends BlackOutModule {
                 return new PlaceData(pos, Direction.UP, true);
             } else {
                 double cDist = -1;
-                for (Direction dir : Direction.values()) {
+                for (Direction dir : MixinDirection.getAll()) {
 
                     // Doesn't place on top of max height
                     if (maxHeight.get() && pos.offset(dir).getY() > mc.world.getHeight()) {continue;}
@@ -162,7 +163,7 @@ public class FacingSettings extends BlackOutModule {
         Direction best = null;
         if (mc.world != null && mc.player != null) {
             double cDist = -1;
-            for (Direction dir : Direction.values()) {
+            for (Direction dir : MixinDirection.getAll()) {
 
                 // Doesn't place on top of max height
                 if (maxHeight.get() && pos.offset(dir).getY() > mc.world.getHeight()) {continue;}

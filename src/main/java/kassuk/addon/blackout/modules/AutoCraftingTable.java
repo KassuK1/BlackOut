@@ -4,6 +4,7 @@ import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.managers.Managers;
+import kassuk.addon.blackout.mixins.MixinDirection;
 import kassuk.addon.blackout.utils.BOInvUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.PlaceData;
@@ -250,7 +251,7 @@ public class AutoCraftingTable extends BlackOutModule {
     }
     double value(BlockPos pos) {
         double val = 0;
-        for (Direction dir : Direction.values()) {
+        for (Direction dir : MixinDirection.getAll()) {
             val += getBlastRes(getBlock(pos.offset(dir)));
         }
         return val;

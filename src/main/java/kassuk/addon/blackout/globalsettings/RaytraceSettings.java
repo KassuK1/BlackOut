@@ -2,15 +2,13 @@ package kassuk.addon.blackout.globalsettings;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
-import kassuk.addon.blackout.mixins.MixinRaycastContext;
+import kassuk.addon.blackout.mixins.MixinDirection;
 import kassuk.addon.blackout.utils.meteor.BODamageUtils;
-import meteordevelopment.meteorclient.mixininterface.IRaycastContext;
 import meteordevelopment.meteorclient.mixininterface.IVec3d;
 import meteordevelopment.meteorclient.settings.*;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.*;
-import net.minecraft.world.RaycastContext;
 
 /*
 Made by OLEPOSSU
@@ -134,42 +132,22 @@ public class RaytraceSettings extends BlackOutModule {
     }
 
     Vec3d vec = new Vec3d(0, 0, 0);
-    public RaycastContext raycastContext;
-    public BlockHitResult result;
-    public int hit = 0;
 
     public boolean placeTrace(BlockPos pos) {
-
         if (!placeTrace.get()) {return true;}
-
-        updateContext();
 
         switch (placeMode.get()) {
             case SinglePoint -> {
-                ((MixinRaycastContext) raycastContext).setEnd(new Vec3d(pos.getX() + 0.5, pos.getY() + placeHeight.get(), pos.getZ() + 0.5));
-
-                result = BODamageUtils.raycast(raycastContext);
-                return result.getBlockPos().equals(pos);
+                return BODamageUtils.raycast(new Vec3d(pos.getX() + 0.5, pos.getY() + placeHeight.get(), pos.getZ() + 0.5)).getBlockPos().equals(pos);
             }
             case DoublePoint -> {
-                ((MixinRaycastContext) raycastContext).setEnd(new Vec3d(pos.getX() + 0.5, pos.getY() + placeHeight1.get(), pos.getZ() + 0.5));
-
-                result = BODamageUtils.raycast(raycastContext);
-                if (result.getBlockPos().equals(pos)) {
-                    return true;
-                }
-
-                ((MixinRaycastContext) raycastContext).setEnd(new Vec3d(pos.getX() + 0.5, pos.getY() + placeHeight2.get(), pos.getZ() + 0.5));
-
-                result = BODamageUtils.raycast(raycastContext);
-                return result.getBlockPos().equals(pos);
+                return BODamageUtils.raycast(new Vec3d(pos.getX() + 0.5, pos.getY() + placeHeight1.get(), pos.getZ() + 0.5)).getBlockPos().equals(pos) ||
+                    BODamageUtils.raycast(new Vec3d(pos.getX() + 0.5, pos.getY() + placeHeight2.get(), pos.getZ() + 0.5)).getBlockPos().equals(pos);
             }
             case Sides -> {
                 ((IVec3d) vec).set(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
-                for (Direction dir : Direction.values()) {
-                    ((MixinRaycastContext) raycastContext).setEnd(vec.add(dir.getOffsetX() / 2f, dir.getOffsetY() / 2f, dir.getOffsetZ() / 2f));
-
-                    result = BODamageUtils.raycast(raycastContext);
+                for (Direction dir : MixinDirection.getAll()) {
+                    BlockHitResult result = BODamageUtils.raycast(vec.add(dir.getOffsetX() / 2f, dir.getOffsetY() / 2f, dir.getOffsetZ() / 2f));
                     if (result.getBlockPos().equals(pos)) {
                         return true;
                     }
@@ -178,14 +156,11 @@ public class RaytraceSettings extends BlackOutModule {
             case Exposure -> {
                 ((IVec3d) vec).set(pos.getX(), pos.getY(), pos.getZ());
 
-                hit = 0;
+                int hit = 0;
                 for (int x = 0; x <= 2; x += 1) {
                     for (int y = 0; y <= 2; y += 1) {
                         for (int z = 0; z <= 2; z += 1) {
-                            ((MixinRaycastContext) raycastContext).setEnd(vec.add(0.1 + x * 0.4, 0.1 + y * 0.4, 0.1 + z * 0.4));
-
-                            result = BODamageUtils.raycast(raycastContext);
-                            if (result.getBlockPos().equals(pos)) {
+                            if (BODamageUtils.raycast(vec.add(0.1 + x * 0.4, 0.1 + y * 0.4, 0.1 + z * 0.4)).getBlockPos().equals(pos)) {
                                 hit++;
                                 if (hit >= exposure.get() / 100 * 27) {
                                     return true;
@@ -198,14 +173,10 @@ public class RaytraceSettings extends BlackOutModule {
             case Any -> {
                 ((IVec3d) vec).set(pos.getX(), pos.getY(), pos.getZ());
 
-                hit = 0;
                 for (int x = 0; x <= 2; x += 1) {
                     for (int y = 0; y <= 2; y += 1) {
                         for (int z = 0; z <= 2; z += 1) {
-                            ((MixinRaycastContext) raycastContext).setEnd(vec.add(0.1 + x * 0.4, 0.1 + y * 0.4, 0.1 + z * 0.4));
-
-                            result = BODamageUtils.raycast(raycastContext);
-                            if (result.getBlockPos().equals(pos)) {
+                            if (BODamageUtils.raycast(vec.add(0.1 + x * 0.4, 0.1 + y * 0.4, 0.1 + z * 0.4)).getBlockPos().equals(pos)) {
                                 return true;
                             }
                         }
@@ -219,22 +190,13 @@ public class RaytraceSettings extends BlackOutModule {
     public boolean attackTrace(Box box) {
         if (!attackTrace.get()) {return true;}
 
-        updateContext();
-
         switch (attackMode.get()) {
             case SinglePoint -> {
-                ((IRaycastContext) BODamageUtils.raycastContext).set(mc.player.getEyePos(), new Vec3d((box.minX + box.maxX) / 2f, box.minY + attackHeight.get(), (box.minZ + box.maxZ) / 2f), RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player);
-
-                return BODamageUtils.raycast(BODamageUtils.raycastContext).getType() != HitResult.Type.BLOCK;
+                return BODamageUtils.raycast(new Vec3d((box.minX + box.maxX) / 2f, box.minY + attackHeight.get(), (box.minZ + box.maxZ) / 2f)).getType() != HitResult.Type.BLOCK;
             }
             case DoublePoint -> {
-                ((IRaycastContext) BODamageUtils.raycastContext).set(mc.player.getEyePos(), new Vec3d((box.minX + box.maxX) / 2f, box.minY + attackHeight1.get(), (box.minZ + box.maxZ) / 2f), RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player);
-                if (BODamageUtils.raycast(BODamageUtils.raycastContext).getType() != HitResult.Type.BLOCK) {
-                    return true;
-                }
-
-                ((IRaycastContext) BODamageUtils.raycastContext).set(mc.player.getEyePos(), new Vec3d((box.minX + box.maxX) / 2f, box.minY + attackHeight2.get(), (box.minZ + box.maxZ) / 2f), RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player);
-                return BODamageUtils.raycast(BODamageUtils.raycastContext).getType() != HitResult.Type.BLOCK;
+                return BODamageUtils.raycast(new Vec3d((box.minX + box.maxX) / 2f, box.minY + attackHeight1.get(), (box.minZ + box.maxZ) / 2f)).getType() != HitResult.Type.BLOCK ||
+                    BODamageUtils.raycast(new Vec3d((box.minX + box.maxX) / 2f, box.minY + attackHeight2.get(), (box.minZ + box.maxZ) / 2f)).getType() != HitResult.Type.BLOCK;
             }
             case Exposure -> {
                 ((IVec3d) vec).set(box.minX, box.minY, box.maxZ);
@@ -242,13 +204,11 @@ public class RaytraceSettings extends BlackOutModule {
                 double yh = box.maxY - box.minY;
                 double zw = box.maxZ - box.minZ;
 
-                hit = 0;
+                int hit = 0;
                 for (int x = 0; x <= 2; x += 1) {
                     for (int y = 0; y <= 2; y += 1) {
                         for (int z = 0; z <= 2; z += 1) {
-                            ((MixinRaycastContext) raycastContext).setEnd(vec.add(MathHelper.lerp(x / 2f, 0.1, xw - 0.1), MathHelper.lerp(y / 2f, 0.0, yh - 0.1), MathHelper.lerp(z / 2f, 0.1, zw - 0.1)));
-
-                            result = BODamageUtils.raycast(raycastContext);
+                            BlockHitResult result = BODamageUtils.raycast(vec.add(MathHelper.lerp(x / 2f, 0.1, xw - 0.1), MathHelper.lerp(y / 2f, 0.0, yh - 0.1), MathHelper.lerp(z / 2f, 0.1, zw - 0.1)));
                             if (result.getType() != HitResult.Type.BLOCK) {
                                 hit++;
                                 if (hit >= exposure.get() / 100 * 27) {
@@ -268,9 +228,7 @@ public class RaytraceSettings extends BlackOutModule {
                 for (int x = 0; x <= 2; x += 1) {
                     for (int y = 0; y <= 2; y += 1) {
                         for (int z = 0; z <= 2; z += 1) {
-                            ((MixinRaycastContext) raycastContext).setEnd(vec.add(MathHelper.lerp(x / 2f, 0.1, xw - 0.1), MathHelper.lerp(y / 2f, 0.0, yh - 0.1), MathHelper.lerp(z / 2f, 0.1, zw - 0.1)));
-
-                            result = BODamageUtils.raycast(raycastContext);
+                            BlockHitResult result = BODamageUtils.raycast(vec.add(MathHelper.lerp(x / 2f, 0.1, xw - 0.1), MathHelper.lerp(y / 2f, 0.0, yh - 0.1), MathHelper.lerp(z / 2f, 0.1, zw - 0.1)));
                             if (result.getType() != HitResult.Type.BLOCK) {
                                 return true;
                             }
@@ -280,13 +238,5 @@ public class RaytraceSettings extends BlackOutModule {
             }
         }
         return false;
-    }
-
-    void updateContext() {
-        if (raycastContext == null) {
-            raycastContext = new RaycastContext(mc.player.getEyePos(), null, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.ANY, mc.player);
-        } else {
-            ((MixinRaycastContext) raycastContext).setStart(mc.player.getEyePos());
-        }
     }
 }

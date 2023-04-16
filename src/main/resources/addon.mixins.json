@@ -4,7 +4,9 @@
   "compatibilityLevel": "JAVA_17",
   "client": [
     "MixinBackground",
+    "MixinBlockSettings",
     "MixinClientPlayerEntity",
+    "MixinDirection",
     "MixinEntity",
     "MixinHeldItemRenderer",
     "MixinLivingEntityRenderer",
@@ -13,9 +15,5 @@
   ],
   "injectors": {
     "defaultRequire": 1
-  },
-  "mixins": [
-    "MixinBlockSettings",
-    "MixinRaycastContext"
-  ]
+  }
 }

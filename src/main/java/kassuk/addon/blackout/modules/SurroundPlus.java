@@ -6,6 +6,7 @@ import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
+import kassuk.addon.blackout.mixins.MixinDirection;
 import kassuk.addon.blackout.timers.BlockTimerList;
 import kassuk.addon.blackout.utils.BOInvUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
@@ -382,7 +383,7 @@ public class SurroundPlus extends BlackOutModule {
                             Direction best = null;
                             int value = -1;
                             double dist = Double.MAX_VALUE;
-                            for (Direction dir : Direction.values()) {
+                            for (Direction dir : MixinDirection.getAll()) {
                                 if (OLEPOSSUtils.replaceable(position.offset(dir))) {
                                     PlaceData placeData = onlyConfirmed.get() ? SettingUtils.getPlaceData(position.offset(dir)) : SettingUtils.getPlaceDataOR(position.offset(dir), pos -> placed.contains(pos));
                                     if (placeData.valid()) {

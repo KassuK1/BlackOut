@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.utils;
 
 import kassuk.addon.blackout.mixins.MixinBlockSettings;
+import kassuk.addon.blackout.mixins.MixinDirection;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import net.minecraft.block.*;
@@ -90,7 +91,7 @@ public class OLEPOSSUtils {
     public static Direction closestDir(BlockPos pos, Vec3d vec) {
         Direction closest = null;
         double closestDist = -1;
-        for (Direction dir : Direction.values()) {
+        for (Direction dir : MixinDirection.getAll()) {
             double dist = distance(new Vec3d(pos.getX() + 0.5 + dir.getOffsetX() / 2f, pos.getY() + 0.5 + dir.getOffsetY() / 2f, pos.getZ() + 0.5 + dir.getOffsetZ() / 2f), vec);
 
             if (closest == null || dist < closestDist) {

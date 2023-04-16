@@ -4,20 +4,16 @@ import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.managers.RotationManager;
-import kassuk.addon.blackout.mixins.MixinRaycastContext;
 import kassuk.addon.blackout.utils.RotationUtils;
 import kassuk.addon.blackout.utils.meteor.BODamageUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.mixininterface.IVec3d;
 import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.utils.player.Rotations;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
-import org.lwjgl.opengl.GL11;
 
 import java.util.List;
 
@@ -250,8 +246,6 @@ public class RotationSettings extends BlackOutModule {
         Ghost
     }
 
-    public RaycastContext raycastContext;
-    public BlockHitResult result;
     public Vec3d vec = new Vec3d(0, 0, 0);
 
     // Closest
@@ -372,17 +366,12 @@ public class RotationSettings extends BlackOutModule {
         return false;
     }
     public boolean raytraceCheck(Vec3d pos, double y, double p, BlockPos blockPos) {
-        updateContext();
-
         double range = OLEPOSSUtils.distance(pos, OLEPOSSUtils.getMiddle(blockPos)) + 1;
         Vec3d end = new Vec3d(range * Math.cos(Math.toRadians(y + 90)) * Math.abs(Math.cos(Math.toRadians(p))),
             range * -Math.sin(Math.toRadians(p)),
             range * Math.sin(Math.toRadians(y + 90)) * Math.abs(Math.cos(Math.toRadians(p)))).add(pos);
 
-        ((MixinRaycastContext) raycastContext).setEnd(end);
-        result = BODamageUtils.raycast(raycastContext);
-
-        return result.getBlockPos().equals(blockPos);
+        return BODamageUtils.raycast(end).getBlockPos().equals(blockPos);
     }
 
     public boolean endMineRot() {
@@ -393,12 +382,7 @@ public class RotationSettings extends BlackOutModule {
     }
 
     public Vec3d getGhostRot(BlockPos pos, Vec3d targetVec) {
-        updateContext();
-
-        ((MixinRaycastContext) raycastContext).setEnd(targetVec);
-        result = BODamageUtils.raycast(raycastContext);
-
-        if (result.getBlockPos().equals(pos)) {return targetVec;}
+        if (BODamageUtils.raycast(targetVec).getBlockPos().equals(pos)) {return targetVec;}
 
 
         ((IVec3d) vec).set(pos.getX(), pos.getY(), pos.getZ());
@@ -410,9 +394,7 @@ public class RotationSettings extends BlackOutModule {
         for (int x = 0; x <= 4; x += 1) {
             for (int y = 0; y <= 4; y += 1) {
                 for (int z = 0; z <= 4; z += 1) {
-                    ((MixinRaycastContext) raycastContext).setEnd(vec.add(0.1 + x * 0.16, 0.1 + y * 0.16, 0.1 + z * 0.16));
-
-                    result = BODamageUtils.raycast(raycastContext);
+                    BlockHitResult result = BODamageUtils.raycast(vec.add(0.1 + x * 0.16, 0.1 + y * 0.16, 0.1 + z * 0.16));
 
                     if (result.getBlockPos().equals(pos)) {
                         offset = eyePos.subtract(vec.add(0.1 + x * 0.16, 0.1 + y * 0.16, 0.1 + z * 0.16));
@@ -430,12 +412,7 @@ public class RotationSettings extends BlackOutModule {
     }
 
     public Vec3d getGhostRot(Box box, Vec3d targetVec) {
-        updateContext();
-
-        ((MixinRaycastContext) raycastContext).setEnd(targetVec);
-        result = BODamageUtils.raycast(raycastContext);
-
-        if (result.getType() != HitResult.Type.BLOCK) {return targetVec;}
+        if (BODamageUtils.raycast(targetVec).getType() != HitResult.Type.BLOCK) {return targetVec;}
 
 
         ((IVec3d) vec).set(box.minX, box.minY, box.minZ);
@@ -447,9 +424,7 @@ public class RotationSettings extends BlackOutModule {
         for (int x = 0; x <= 4; x += 1) {
             for (int y = 0; y <= 4; y += 1) {
                 for (int z = 0; z <= 4; z += 1) {
-                    ((MixinRaycastContext) raycastContext).setEnd(vec.add(0.1 + x * 0.16, 0.1 + y * 0.16, 0.1 + z * 0.16));
-
-                    result = BODamageUtils.raycast(raycastContext);
+                    BlockHitResult result = BODamageUtils.raycast(vec.add(0.1 + x * 0.16, 0.1 + y * 0.16, 0.1 + z * 0.16));
 
                     if (result.getType() != HitResult.Type.BLOCK) {
                         offset = eyePos.subtract(vec.add(0.1 + x * 0.16, 0.1 + y * 0.16, 0.1 + z * 0.16));
@@ -476,13 +451,5 @@ public class RotationSettings extends BlackOutModule {
             case Use -> useTime.get();
             case Other -> 1;
         };
-    }
-
-    void updateContext() {
-        if (raycastContext == null) {
-            raycastContext = new RaycastContext(mc.player.getEyePos(), null, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.ANY, mc.player);
-        } else {
-            ((MixinRaycastContext) raycastContext).setStart(mc.player.getEyePos());
-        }
     }
 }
