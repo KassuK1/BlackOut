@@ -11,9 +11,6 @@ import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.player.PlayerEntity;
 
-
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
 
 /*

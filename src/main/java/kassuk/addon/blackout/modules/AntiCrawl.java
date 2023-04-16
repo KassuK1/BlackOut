@@ -2,7 +2,6 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
-import meteordevelopment.meteorclient.settings.*;
 
 /*
 Made by OLEPOSSU / Raksamies

@@ -1,6 +1,5 @@
 package kassuk.addon.blackout.modules;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import meteordevelopment.meteorclient.events.game.OpenScreenEvent;

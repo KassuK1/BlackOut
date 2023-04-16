@@ -4,8 +4,6 @@ import kassuk.addon.blackout.enums.HoleType;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
-import java.util.List;
-
 public class Hole {
     public final BlockPos pos;
     public final HoleType type;
