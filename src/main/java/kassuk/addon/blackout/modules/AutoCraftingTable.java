@@ -3,51 +3,29 @@ package kassuk.addon.blackout.modules;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
-import kassuk.addon.blackout.enums.SwingState;
-import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.utils.BOInvUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.PlaceData;
 import kassuk.addon.blackout.utils.SettingUtils;
-import meteordevelopment.meteorclient.events.packets.InventoryEvent;
-import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
-import meteordevelopment.meteorclient.events.world.BlockUpdateEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
-import meteordevelopment.meteorclient.systems.modules.Module;
-import meteordevelopment.meteorclient.utils.entity.EntityUtils;
-import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
-import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
-import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.CraftingInventory;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
-import net.minecraft.recipe.Recipe;
 import net.minecraft.screen.CraftingScreenHandler;
 import net.minecraft.screen.ScreenHandler;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-
-import java.util.List;
-import java.util.Map;
 
 /*
 Made by OLEPOSSU / Raksamies
@@ -215,9 +193,7 @@ public class AutoCraftingTable extends BlackOutModule {
                     InvUtils.swap(InvUtils.findInHotbar(Items.CRAFTING_TABLE).slot(), true);
                     switched = true;
                 }
-                case SilentBypass -> {
-                    switched = BOInvUtils.invSwitch(InvUtils.findInHotbar(Items.CRAFTING_TABLE).slot());
-                }
+                case SilentBypass -> switched = BOInvUtils.invSwitch(InvUtils.findInHotbar(Items.CRAFTING_TABLE).slot());
             }
         } else {
             switched = true;
@@ -229,12 +205,8 @@ public class AutoCraftingTable extends BlackOutModule {
 
         if (hand == null) {
             switch (switchMode.get()) {
-                case Silent -> {
-                    InvUtils.swapBack();
-                }
-                case SilentBypass -> {
-                    BOInvUtils.swapBack();
-                }
+                case Silent -> InvUtils.swapBack();
+                case SilentBypass -> BOInvUtils.swapBack();
             }
         }
         return true;
