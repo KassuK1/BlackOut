@@ -6,7 +6,6 @@ import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
-import kassuk.addon.blackout.managers.RotationManager;
 import kassuk.addon.blackout.mixins.MixinSound;
 import kassuk.addon.blackout.timers.IntTimerList;
 import kassuk.addon.blackout.utils.BOInvUtils;
@@ -14,6 +13,7 @@ import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
 import kassuk.addon.blackout.utils.meteor.BODamageUtils;
 import kassuk.addon.blackout.utils.meteor.BOEntityUtils;
+import kassuk.addon.blackout.utils.tympanicUtils;
 import meteordevelopment.meteorclient.events.entity.EntityAddedEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
@@ -601,7 +601,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .defaultValue(false)
         .build()
     );
-    private final Setting<Double> debugRangeX = sgDebug.add(new DoubleSetting.Builder()
+    private final Setting<Integer> debugRangeX = sgDebug.add(new IntSetting.Builder()
         .name("Range Pos X")
         .description(".")
         .defaultValue(0)
@@ -609,7 +609,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .visible(debugRange::get)
         .build()
     );
-    private final Setting<Double> debugRangeY = sgDebug.add(new DoubleSetting.Builder()
+    private final Setting<Integer> debugRangeY = sgDebug.add(new IntSetting.Builder()
         .name("Range Pos Y")
         .description(".")
         .defaultValue(0)
@@ -617,7 +617,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .visible(debugRange::get)
         .build()
     );
-    private final Setting<Double> debugRangeZ = sgDebug.add(new DoubleSetting.Builder()
+    private final Setting<Integer> debugRangeZ = sgDebug.add(new IntSetting.Builder()
         .name("Range Pos Z")
         .description(".")
         .defaultValue(0)
@@ -808,8 +808,8 @@ public class AutoCrystalRewrite extends BlackOutModule {
                     if (vec != null) {
                         if (vec.size() >= extSmoothness.get()) {
                             int p = vec.size() - extSmoothness.get();
-                            for (int i = 0; i < p; i++) {
-                                vec.remove(0);
+                            if (p > 0) {
+                                vec.subList(0, p).clear();
                             }
                         }
                         vec.add(motionCalc(pl));
@@ -1468,7 +1468,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         bestDir = null;
         highest = null;
 
-        BlockPos pPos = new BlockPos(mc.player.getEyePos());
+        BlockPos pPos = new BlockPos(tympanicUtils.vec3dToVec3i(mc.player.getEyePos()));
 
         for (int x = -r; x <= r; x++) {
             for (int y = -r; y <= r; y++) {
@@ -1586,7 +1586,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     }
 
     boolean isOwn(Vec3d vec) {
-        return isOwn(new BlockPos(vec));
+        return isOwn(new BlockPos(tympanicUtils.vec3dToVec3i(vec)));
     }
     boolean isOwn(BlockPos pos) {
         for (Map.Entry<BlockPos, Long> entry : own.entrySet()) {
@@ -1619,7 +1619,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
             }
 
             double dmg = BODamageUtils.crystalDamage(player, box, vec, null, ignoreTerrain.get());
-            if (new BlockPos(vec).down().equals(AutoMine.targetPos)) {
+            if (new BlockPos(tympanicUtils.vec3dToVec3i(vec)).down().equals(AutoMine.targetPos)) {
                 dmg *= autoMineDamage.get();
             }
             double hp = player.getHealth() + player.getAbsorptionAmount();
