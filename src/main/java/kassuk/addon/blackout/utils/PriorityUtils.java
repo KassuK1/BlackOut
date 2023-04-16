@@ -13,7 +13,7 @@ public class PriorityUtils {
         if (module instanceof AutoMine) {return 9;}
         if (module instanceof AutoPearl) {return 6;}
         if (module instanceof AutoTrapPlus) {return 5;}
-        if (module instanceof BedBomb) {return 8;}
+        if (module instanceof BedAuraPlus) {return 8;}
         if (module instanceof ButtonAura) {return 11;}
         if (module instanceof FastXP) {return 3;}
         if (module instanceof HoleFillRewrite) {return 7;}

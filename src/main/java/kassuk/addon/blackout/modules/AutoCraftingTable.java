@@ -38,12 +38,6 @@ public class AutoCraftingTable extends BlackOutModule {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
-    private final Setting<Boolean> instant = sgGeneral.add(new BoolSetting.Builder()
-        .name("Instant")
-        .description("Opens the table before server has confirmed placing")
-        .defaultValue(true)
-        .build()
-    );
     private final Setting<Double> placeSpeed = sgGeneral.add(new DoubleSetting.Builder()
         .name("Place Speed")
         .description("Places x times every second")
@@ -224,7 +218,7 @@ public class AutoCraftingTable extends BlackOutModule {
                 for (int z = -i; z <= i; z++) {
                     BlockPos pos = new BlockPos(mc.player.getEyePos()).add(x, y, z);
 
-                    if (getBlock(pos) != Blocks.AIR) {continue;}
+                    if (!OLEPOSSUtils.replaceable(pos)) {continue;}
                     if (getBlock(pos) == Blocks.CRAFTING_TABLE) {
                         tablePos = pos;
                         return null;

@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.hud;
 
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.utils.RenderUtils;
 import meteordevelopment.meteorclient.settings.ColorSetting;
 import meteordevelopment.meteorclient.settings.DoubleSetting;
 import meteordevelopment.meteorclient.settings.Setting;
@@ -38,5 +39,6 @@ public class HudWaterMark extends HudElement {
         setSize(renderer.textWidth(BlackOut.BLACKOUT_NAME + " v" + BlackOut.BLACKOUT_VERSION, true) * scale.get() * scale.get(), renderer.textHeight(true) * scale.get() * scale.get());
 
         renderer.text(BlackOut.BLACKOUT_NAME + " v" + BlackOut.BLACKOUT_VERSION, x, y, color.get(), true, scale.get());
+        RenderUtils.renderText(null, "Large garge sus sus maximus");
     }
 }

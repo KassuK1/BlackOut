@@ -41,7 +41,7 @@ public class HoleUtils {
     }
 
     static boolean isBlock(BlockPos pos) {
-        return mc.world.getBlockState(pos).getBlock() != Blocks.AIR;
+        return !OLEPOSSUtils.replaceable(pos);
     }
 
     static boolean isHole(BlockPos pos, int depth) {

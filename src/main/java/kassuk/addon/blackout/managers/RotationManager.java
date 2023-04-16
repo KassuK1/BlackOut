@@ -79,6 +79,10 @@ public class RotationManager {
         }
         timer -= event.frameTime;
         if (timer > 0 && target != null && lastDir != null) {
+            if (SettingUtils.shouldVanillaRotate()) {
+                mc.player.setYaw(lastDir[0]);
+                mc.player.setPitch(lastDir[1]);
+            }
         } else if (target != null) {
             stopping = true;
             target = null;

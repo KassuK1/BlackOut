@@ -44,6 +44,7 @@ public class BODamageUtils {
     private static final Vec3d vec3d = new Vec3d(0, 0, 0);
     private static Explosion explosion;
     public static RaycastContext raycastContext;
+    public static RaycastContext bedRaycast;
 
     @PreInit
     public static void init() {
@@ -54,6 +55,7 @@ public class BODamageUtils {
     private static void onGameJoined(GameJoinedEvent event) {
         explosion = new Explosion(mc.world, null, 0, 0, 0, 6, false, Explosion.DestructionType.DESTROY);
         raycastContext = new RaycastContext(null, null, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.ANY, mc.player);
+        bedRaycast = new RaycastContext(null, null, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.ANY, mc.player);
     }
 
     // Crystal damage
@@ -142,7 +144,7 @@ public class BODamageUtils {
         double modDistance = Math.sqrt(player.squaredDistanceTo(bed));
         if (modDistance > 10) return 0;
 
-        double exposure = Explosion.getExposure(bed, player);
+        double exposure = getExposure(bed, player, player.getBoundingBox(), raycastContext, null, true);
         double impact = (1.0 - (modDistance / 10.0)) * exposure;
         double damage = (impact * impact + impact) / 2 * 7 * (5 * 2) + 1;
 
