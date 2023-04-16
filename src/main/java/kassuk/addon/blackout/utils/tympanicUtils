@@ -1,0 +1,11 @@
+package kassuk.addon.blackout.utils;
+
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.Vec3i;
+
+public class tympanicUtils {
+    public static Vec3i vec3dToVec3i(Vec3d vec) {
+        return new Vec3i((int) vec.x, (int) vec.y, (int) vec.z);
+    }
+}
