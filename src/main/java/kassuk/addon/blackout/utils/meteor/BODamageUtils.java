@@ -1,5 +1,6 @@
 package kassuk.addon.blackout.utils.meteor;
 
+import kassuk.addon.blackout.utils.tympanicUtils;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.game.GameJoinedEvent;
 import meteordevelopment.meteorclient.mixininterface.IExplosion;
@@ -17,7 +18,6 @@ import net.minecraft.entity.DamageUtil;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
@@ -166,10 +166,10 @@ public class BODamageUtils {
     // Anchor damage
 
     public static double anchorDamage(LivingEntity player, Vec3d anchor) {
-        if (mc.world.getBlockState(new BlockPos(anchor)).getBlock().equals(Blocks.RESPAWN_ANCHOR)) {
-            mc.world.removeBlock(new BlockPos(anchor), false);
+        if (mc.world.getBlockState(new BlockPos(tympanicUtils.vec3dToVec3i(anchor))).getBlock().equals(Blocks.RESPAWN_ANCHOR)) {
+            mc.world.removeBlock(new BlockPos(tympanicUtils.vec3dToVec3i(anchor)), false);
             double damage = bedDamage(player, anchor);
-            mc.world.setBlockState(new BlockPos(anchor), Blocks.RESPAWN_ANCHOR.getDefaultState());
+            mc.world.setBlockState(new BlockPos(tympanicUtils.vec3dToVec3i(anchor)), Blocks.RESPAWN_ANCHOR.getDefaultState());
             return damage;
         }
         return bedDamage(player, anchor);
@@ -178,7 +178,7 @@ public class BODamageUtils {
     // Utils
 
     private static double normalProtReduction(Entity player, double damage) {
-        int protLevel = EnchantmentHelper.getProtectionAmount(player.getArmorItems(), DamageSource.GENERIC);
+        int protLevel = EnchantmentHelper.getProtectionAmount(player.getArmorItems(), player.getDamageSources().generic());
         if (protLevel > 20) protLevel = 20;
 
         damage *= 1 - (protLevel / 25.0);
@@ -186,7 +186,7 @@ public class BODamageUtils {
     }
 
     private static double blastProtReduction(Entity player, double damage, Explosion explosion) {
-        int protLevel = EnchantmentHelper.getProtectionAmount(player.getArmorItems(), DamageSource.explosion(explosion));
+        int protLevel = EnchantmentHelper.getProtectionAmount(player.getArmorItems(), player.getDamageSources().explosion(explosion));
         if (protLevel > 20) protLevel = 20;
 
         damage *= (1 - (protLevel / 25.0));
@@ -254,7 +254,7 @@ public class BODamageUtils {
             return d <= e ? blockHitResult : blockHitResult2;
         }, (raycastContext) -> {
             Vec3d vec3d = raycastContext.getStart().subtract(raycastContext.getEnd());
-            return BlockHitResult.createMissed(raycastContext.getEnd(), Direction.getFacing(vec3d.x, vec3d.y, vec3d.z), new BlockPos(raycastContext.getEnd()));
+            return BlockHitResult.createMissed(raycastContext.getEnd(), Direction.getFacing(vec3d.x, vec3d.y, vec3d.z), new BlockPos(tympanicUtils.vec3dToVec3i(raycastContext.getEnd())));
         });
     }
 
@@ -281,7 +281,7 @@ public class BODamageUtils {
             return d <= e ? blockHitResult : blockHitResult2;
         }, (raycastContext) -> {
             Vec3d vec3d = raycastContext.getStart().subtract(raycastContext.getEnd());
-            return BlockHitResult.createMissed(raycastContext.getEnd(), Direction.getFacing(vec3d.x, vec3d.y, vec3d.z), new BlockPos(raycastContext.getEnd()));
+            return BlockHitResult.createMissed(raycastContext.getEnd(), Direction.getFacing(vec3d.x, vec3d.y, vec3d.z), new BlockPos(tympanicUtils.vec3dToVec3i(raycastContext.getEnd())));
         });
     }
 }
