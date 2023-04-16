@@ -34,8 +34,6 @@ import java.util.List;
 Made by OLEPOSSU / Raksamies
 */
 
-//TODO: Rewrite
-
 public class BedAuraPlus extends BlackOutModule {
     public BedAuraPlus() {super(BlackOut.BLACKOUT, "Bed Aura+", "Automatically places and breaks beds to cause damage to your opponents but better");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
