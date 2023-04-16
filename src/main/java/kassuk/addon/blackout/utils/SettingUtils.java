@@ -104,10 +104,14 @@ public class SettingUtils extends Utils {
 
     //  Facing
     public static PlaceData getPlaceData(BlockPos pos) {return facing.getPlaceData(pos, true);}
-    public static PlaceData getPlaceDataAND(BlockPos pos, Predicate<BlockPos> predicate) {return facing.getPlaceDataAND(pos, predicate, true);}
+    public static PlaceData getPlaceDataANDDir(BlockPos pos, Predicate<Direction> predicate) {return facing.getPlaceDataAND(pos, predicate, null, true);}
+    public static PlaceData getPlaceDataANDPos(BlockPos pos, Predicate<BlockPos> predicate) {return facing.getPlaceDataAND(pos, null, predicate,true);}
+    public static PlaceData getPlaceDataAND(BlockPos pos, Predicate<Direction> predicateDir, Predicate<BlockPos> predicate) {return facing.getPlaceDataAND(pos, predicateDir, predicate,true);}
     public static PlaceData getPlaceDataOR(BlockPos pos, Predicate<BlockPos> predicate) {return facing.getPlaceDataOR(pos, predicate, true);}
     public static PlaceData getPlaceData(BlockPos pos, boolean ignoreContainers) {return facing.getPlaceData(pos, ignoreContainers);}
-    public static PlaceData getPlaceDataAND(BlockPos pos, Predicate<BlockPos> predicate, boolean ignoreContainers) {return facing.getPlaceDataAND(pos, predicate, ignoreContainers);}
+    public static PlaceData getPlaceDataANDDir(BlockPos pos, Predicate<Direction> predicate, boolean ignoreContainers) {return facing.getPlaceDataAND(pos, predicate, null, ignoreContainers);}
+    public static PlaceData getPlaceDataANDPos(BlockPos pos, Predicate<BlockPos> predicate, boolean ignoreContainers) {return facing.getPlaceDataAND(pos, null, predicate, ignoreContainers);}
+    public static PlaceData getPlaceDataAND(BlockPos pos, Predicate<Direction> predicateDir, Predicate<BlockPos> predicate, boolean ignoreContainers) {return facing.getPlaceDataAND(pos, predicateDir, predicate, ignoreContainers);}
     public static PlaceData getPlaceDataOR(BlockPos pos, Predicate<BlockPos> predicate, boolean ignoreContainers) {return facing.getPlaceDataOR(pos, predicate, ignoreContainers);}
     public static Direction getPlaceOnDirection(BlockPos pos) {
         return facing.getPlaceOnDirection(pos);

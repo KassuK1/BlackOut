@@ -1,23 +1,20 @@
 package kassuk.addon.blackout.utils;
 
-import meteordevelopment.meteorclient.utils.Utils;
+import kassuk.addon.blackout.mixins.MixinBlockSettings;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
-import net.minecraft.block.AnvilBlock;
-import net.minecraft.block.BedBlock;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
+import net.minecraft.block.*;
 import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.*;
+import net.minecraft.item.ArmorItem;
+import net.minecraft.item.BedItem;
+import net.minecraft.item.Item;
+import net.minecraft.item.SwordItem;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
@@ -129,7 +126,14 @@ public class OLEPOSSUtils {
     public static Box getCrystalBox(Vec3d pos) {
         return new Box(pos.getX() - 1, pos.getY(), pos.getZ() - 1, pos.getX() + 1, pos.getY() + 2, pos.getZ() + 1);
     }
-    public static boolean canPlaceOn(BlockPos block) {
-        return mc.world != null && mc.world.getBlockState(block).getBlock().hasDynamicBounds();
+    public static boolean replaceable(BlockPos block) {
+        return ((MixinBlockSettings) AbstractBlock.Settings.copy(mc.world.getBlockState(block).getBlock())).getMaterial().isReplaceable();
+    }
+    public static boolean solid(BlockPos block) {
+        Block b = mc.world.getBlockState(block).getBlock();
+        return !(b instanceof AbstractFireBlock || b instanceof FluidBlock || b instanceof AirBlock);
+    }
+    public static boolean solid(Block b) {
+        return !(b instanceof AbstractFireBlock || b instanceof FluidBlock || b instanceof AirBlock);
     }
 }

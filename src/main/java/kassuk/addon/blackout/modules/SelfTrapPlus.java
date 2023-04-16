@@ -14,11 +14,9 @@ import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.world.Timer;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
-import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
@@ -29,7 +27,6 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -367,7 +364,7 @@ public class SelfTrapPlus extends BlackOutModule {
     List<BlockPos> getValid(List<BlockPos> blocks) {
         List<BlockPos> list = new ArrayList<>();
         blocks.forEach(position -> {
-            if (mc.world.getBlockState(position).getBlock().equals(Blocks.AIR) && !placed.contains(position)) {
+            if (OLEPOSSUtils.replaceable(position) && !placed.contains(position)) {
                 if (!timers.contains(position) && !EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
                     PlaceData data = onlyConfirmed.get() ? SettingUtils.getPlaceData(position) : SettingUtils.getPlaceDataOR(position, pos -> placed.contains(pos));
 
@@ -378,7 +375,7 @@ public class SelfTrapPlus extends BlackOutModule {
                         int value = -1;
                         double dist = Double.MAX_VALUE;
                         for (Direction dir : Direction.values()) {
-                            if (mc.world.getBlockState(position.offset(dir)).getBlock() == Blocks.AIR) {
+                            if (OLEPOSSUtils.replaceable(position.offset(dir))) {
                                 PlaceData placeData = onlyConfirmed.get() ? SettingUtils.getPlaceData(position.offset(dir)) : SettingUtils.getPlaceDataOR(position.offset(dir), pos -> placed.contains(pos));
                                 if (placeData.valid()) {
                                     if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
@@ -424,12 +421,12 @@ public class SelfTrapPlus extends BlackOutModule {
                 for (int z = size[2] - 1; z <= size[3] + 1; z++) {
                     boolean isX = x == size[0] - 1 || x == size[1] + 1;
                     boolean isZ = z == size[2] - 1 || z == size[3] + 1;
-                    boolean ignore = isX && !isZ ? (!air(pos.add(OLEPOSSUtils.closerToZero(x), 0, z)) || placed.contains(pos.add(OLEPOSSUtils.closerToZero(x), 0, z))) :
-                        !isX && isZ && (!air(pos.add(x, 0, OLEPOSSUtils.closerToZero(z))) || placed.contains(pos.add(x, 0, OLEPOSSUtils.closerToZero(z))));
+                    boolean ignore = isX && !isZ ? (!OLEPOSSUtils.replaceable(pos.add(OLEPOSSUtils.closerToZero(x), 0, z)) || placed.contains(pos.add(OLEPOSSUtils.closerToZero(x), 0, z))) :
+                        !isX && isZ && (!OLEPOSSUtils.replaceable(pos.add(x, 0, OLEPOSSUtils.closerToZero(z))) || placed.contains(pos.add(x, 0, OLEPOSSUtils.closerToZero(z))));
                     BlockPos bPos = null;
                     if (eye() && isX != isZ && !ignore) {
                         bPos = new BlockPos(x, pos.getY() ,z).add(pos.getX(), 0, pos.getZ());
-                    } else if (top() && !isX && !isZ && air(pos.add(x, 0, z)) && !placed.contains(pos.add(x, 0, z))) {
+                    } else if (top() && !isX && !isZ && OLEPOSSUtils.replaceable(pos.add(x, 0, z)) && !placed.contains(pos.add(x, 0, z))) {
                         bPos = new BlockPos(x, pos.getY() ,z).add(pos.getX(), 1, pos.getZ());
                     }
                     if (bPos != null) {
@@ -448,8 +445,6 @@ public class SelfTrapPlus extends BlackOutModule {
     boolean eye() {
         return trapMode.get() == TrapMode.Both || trapMode.get() == TrapMode.Eyes;
     }
-
-    boolean air(BlockPos pos) {return mc.world.getBlockState(pos).getBlock().equals(Blocks.AIR);}
 
     int[] getSize(BlockPos pos) {
         int minX = 0;

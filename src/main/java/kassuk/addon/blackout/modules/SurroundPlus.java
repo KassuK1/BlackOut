@@ -22,13 +22,10 @@ import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.item.BlockItem;
-import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -37,7 +34,10 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /*
 Made by KassuK
@@ -367,7 +367,7 @@ public class SurroundPlus extends BlackOutModule {
 
         if (mc.player != null && mc.world != null) {
             for (BlockPos position : blocks) {
-                if (mc.world.getBlockState(position).getBlock().equals(Blocks.AIR) && !placed.contains(position)) {
+                if (OLEPOSSUtils.replaceable(position) && !placed.contains(position)) {
                     if (!timers.contains(position)) {
                         PlaceData data = onlyConfirmed.get() ? SettingUtils.getPlaceData(position) : SettingUtils.getPlaceDataOR(position, pos -> placed.contains(pos));
                         if (data.valid()) {
@@ -383,7 +383,7 @@ public class SurroundPlus extends BlackOutModule {
                             int value = -1;
                             double dist = Double.MAX_VALUE;
                             for (Direction dir : Direction.values()) {
-                                if (mc.world.getBlockState(position.offset(dir)).getBlock() == Blocks.AIR) {
+                                if (OLEPOSSUtils.replaceable(position.offset(dir))) {
                                     PlaceData placeData = onlyConfirmed.get() ? SettingUtils.getPlaceData(position.offset(dir)) : SettingUtils.getPlaceDataOR(position.offset(dir), pos -> placed.contains(pos));
                                     if (placeData.valid()) {
                                         if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
@@ -439,11 +439,11 @@ public class SurroundPlus extends BlackOutModule {
                 for (int z = size[2] - 1; z <= size[3] + 1; z++) {
                     boolean isX = x == size[0] - 1 || x == size[1] + 1;
                     boolean isZ = z == size[2] - 1 || z == size[3] + 1;
-                    boolean ignore = (isX && !isZ ? (!air(pPos.add(OLEPOSSUtils.closerToZero(x), 0, z)) || placed.contains(pPos.add(OLEPOSSUtils.closerToZero(x), 0, z))) :
-                        !isX && isZ && (!air(pPos.add(x, 0, OLEPOSSUtils.closerToZero(z)))) && !(x == 0 && z == 0) || placed.contains(pPos.add(x, 0, OLEPOSSUtils.closerToZero(z))));
+                    boolean ignore = (isX && !isZ ? (!OLEPOSSUtils.replaceable(pPos.add(OLEPOSSUtils.closerToZero(x), 0, z)) || placed.contains(pPos.add(OLEPOSSUtils.closerToZero(x), 0, z))) :
+                        !isX && isZ && (!OLEPOSSUtils.replaceable(pPos.add(x, 0, OLEPOSSUtils.closerToZero(z)))) && !(x == 0 && z == 0) || placed.contains(pPos.add(x, 0, OLEPOSSUtils.closerToZero(z))));
                     if (isX != isZ && !ignore) {
                         list.add(pPos.add(x, 0, z));
-                    } else if (!isX && !isZ && floor.get() && air(pPos.add(x, 0, z)) && !placed.contains(pPos.add(x, 0, z))) {
+                    } else if (!isX && !isZ && floor.get() && OLEPOSSUtils.replaceable(pPos.add(x, 0, z)) && !placed.contains(pPos.add(x, 0, z))) {
                         list.add(pPos.add(x, -1, z));
                     }
                 }
@@ -479,8 +479,6 @@ public class SurroundPlus extends BlackOutModule {
 
         return map;
     }
-
-    boolean air(BlockPos pos) {return mc.world.getBlockState(pos).getBlock().equals(Blocks.AIR);}
 
     record Render(BlockPos pos, boolean support) {}
 }

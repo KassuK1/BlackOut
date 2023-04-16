@@ -94,13 +94,13 @@ public class RotationSettings extends BlackOutModule {
     public final Setting<Boolean> NCPRotation = sgGeneral.add(new BoolSetting.Builder()
         .name("NCP Rotations")
         .description(".")
-        .defaultValue(false)
+        .defaultValue(true)
         .build()
     );
     public final Setting<Integer> NCPPackets = sgGeneral.add(new IntSetting.Builder()
         .name("NCP Rotation packets")
         .description(".")
-        .defaultValue(10)
+        .defaultValue(5)
         .range(0, 10)
         .sliderRange(0, 10)
         .build()
@@ -322,8 +322,7 @@ public class RotationSettings extends BlackOutModule {
                 }
             }
             case Angle -> {
-                if (pPos != null) {
-                    if (ncp) {
+                if (pPos != null) {if (ncp) {
                         if (angleCheck(pPos, yaw, pitch, box)) {
                             return true;
                         }
@@ -475,6 +474,7 @@ public class RotationSettings extends BlackOutModule {
             case Breaking -> mineTime.get();
             case Interact -> interactTime.get();
             case Use -> useTime.get();
+            case Other -> 1;
         };
     }
 

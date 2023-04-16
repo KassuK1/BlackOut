@@ -16,7 +16,6 @@ import meteordevelopment.meteorclient.settings.ColorSetting;
 import meteordevelopment.meteorclient.settings.DoubleSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
-import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
@@ -32,7 +31,7 @@ import java.util.Map;
 
 public class ButtonAura extends BlackOutModule {
 
-    public ButtonAura() {super(BlackOut.BLACKOUT, "ButtonAura", ".");}
+    public ButtonAura() {super(BlackOut.BLACKOUT, "ButtonAura", "Presses nearby buttons.");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
