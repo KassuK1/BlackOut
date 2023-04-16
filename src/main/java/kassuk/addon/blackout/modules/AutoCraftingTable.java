@@ -187,9 +187,7 @@ public class AutoCraftingTable extends BlackOutModule {
                     InvUtils.swap(InvUtils.findInHotbar(Items.CRAFTING_TABLE).slot(), true);
                     switched = true;
                 }
-                case SilentBypass -> {
-                    switched = BOInvUtils.invSwitch(InvUtils.findInHotbar(Items.CRAFTING_TABLE).slot());
-                }
+                case SilentBypass -> switched = BOInvUtils.invSwitch(InvUtils.findInHotbar(Items.CRAFTING_TABLE).slot());
             }
         } else {
             switched = true;
@@ -201,12 +199,8 @@ public class AutoCraftingTable extends BlackOutModule {
 
         if (hand == null) {
             switch (switchMode.get()) {
-                case Silent -> {
-                    InvUtils.swapBack();
-                }
-                case SilentBypass -> {
-                    BOInvUtils.swapBack();
-                }
+                case Silent -> InvUtils.swapBack();
+                case SilentBypass -> BOInvUtils.swapBack();
             }
         }
         return true;
