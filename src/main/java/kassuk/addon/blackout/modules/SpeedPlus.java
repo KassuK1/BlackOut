@@ -11,14 +11,10 @@ import meteordevelopment.meteorclient.systems.modules.world.Timer;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.fluid.Fluids;
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
 import net.minecraft.registry.tag.FluidTags;
-import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec2f;
-import net.minecraft.util.math.Vec3d;
 
 public class SpeedPlus extends BlackOutModule {
     public SpeedPlus() {super(BlackOut.BLACKOUT, "Speed+", "Speeeeeeeed");}
@@ -152,8 +148,7 @@ public class SpeedPlus extends BlackOutModule {
     @EventHandler
     private void onKB(PacketEvent.Receive event) {
         if (mc.player != null && mc.world != null) {
-            if (knockBack.get() && event.packet instanceof EntityVelocityUpdateS2CPacket) {
-                EntityVelocityUpdateS2CPacket packet = (EntityVelocityUpdateS2CPacket) event.packet;
+            if (knockBack.get() && event.packet instanceof EntityVelocityUpdateS2CPacket packet) {
                 if (packet.getId() == mc.player.getId()) {
                     double x = packet.getVelocityX() / 8000f;
                     double z = packet.getVelocityZ() / 8000f;
@@ -263,7 +258,7 @@ public class SpeedPlus extends BlackOutModule {
         if (moving) {
             return 1;
         }
-        return mc.player.isOnGround() ? mc.world.getBlockState(new BlockPos(mc.player.getX(), Math.ceil(mc.player.getY() - 1), mc.player.getZ())).getBlock().getSlipperiness() : 0.98;
+        return mc.player.isOnGround() ? mc.world.getBlockState(new BlockPos((int)mc.player.getX(), (int)Math.ceil(mc.player.getY() - 1), (int)mc.player.getZ())).getBlock().getSlipperiness() : 0.98;
     }
 
     double getYaw(double f, double s) {
