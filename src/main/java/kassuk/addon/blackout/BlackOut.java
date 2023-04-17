@@ -27,6 +27,7 @@ public class BlackOut extends MeteorAddon {
         LOG.info("Initializing Blackout");
 
         // Modules
+        Modules.get().add(new AnchorAuraPlus());
         Modules.get().add(new AnteroTaateli());
         Modules.get().add(new AntiAim());
         Modules.get().add(new AntiCrawl());
@@ -39,7 +40,6 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new AutoMoan());
         Modules.get().add(new AutoPearl());
         Modules.get().add(new AutoTrapPlus());
-        Modules.get().add(new BedAuraPlus());
         Modules.get().add(new BedAuraPlus());
         Modules.get().add(new ButtonAura());
         Modules.get().add(new CustomFOV());
