@@ -46,7 +46,7 @@ public class SoundModifier extends BlackOutModule {
         .build()
     );
     public final Setting<Double> explosionVolume = sgCrystal.add(new DoubleSetting.Builder()
-        .name("Explosion Pitch")
+        .name("Explosion Volume")
         .description(".")
         .defaultValue(1)
         .sliderRange(0, 10)
