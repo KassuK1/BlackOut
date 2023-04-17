@@ -6,7 +6,7 @@ public class PriorityUtils {
     // Tell me a better way to do this pls
     public static int get(Object module) {
         if (module instanceof AntiAim) {return 12;}
-        if (module instanceof AutoAnchorPlus) {return 9;}
+        if (module instanceof AnchorAuraPlus) {return 9;}
         if (module instanceof AutoCraftingTable) {return 4;}
         if (module instanceof AutoCrystalRewrite) {return 10;}
         if (module instanceof AutoMend) {return 4;}

@@ -65,7 +65,6 @@ public class AutoCrystalRewrite extends BlackOutModule {
     private final SettingGroup sgID = settings.createGroup("ID-Predict");
     private final SettingGroup sgExtrapolation = settings.createGroup("Extrapolation");
     private final SettingGroup sgRender = settings.createGroup("Render");
-    private final SettingGroup sgSound = settings.createGroup("Sound");
     private final SettingGroup sgCompatibility = settings.createGroup("Compatibility");
     private final SettingGroup sgDebug = settings.createGroup("Debug");
 
@@ -557,16 +556,8 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .build()
     );
 
-    //  Sound Page
-    private final Setting<Boolean> explodeSound = sgSound.add(new BoolSetting.Builder()
-        .name("Explode Sound")
-        .description("Sets crystal explode sound to high pitch anvil mining.")
-        .defaultValue(false)
-        .build()
-    );
-
     //  Compatibility Page
-    private final Setting<Boolean> surroundAttack = sgSound.add(new BoolSetting.Builder()
+    private final Setting<Boolean> surroundAttack = sgCompatibility.add(new BoolSetting.Builder()
         .name("Surround Attack")
         .description("Attacks any crystal if surround placement is blocked.")
         .defaultValue(true)
@@ -1013,22 +1004,6 @@ public class AutoCrystalRewrite extends BlackOutModule {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onEntity(EntityAddedEvent event) {
         confirmed = event.entity.getId();
-    }
-
-    @EventHandler
-    private void onSound(PlaySoundEvent event) {
-        if (explodeSound.get()) {
-            if (event.sound.getId() == SoundEvents.ENTITY_GENERIC_EXPLODE.getId()) {
-                ((MixinSound) event.sound).setID(SoundEvents.BLOCK_ANVIL_FALL.getId());
-                ((MixinSound) event.sound).setVolume(1);
-                ((MixinSound) event.sound).setPitch(10);
-
-            }
-            if (event.sound.getId() == SoundEvents.ENTITY_PLAYER_ATTACK_NODAMAGE.getId() ||
-                event.sound.getId() == SoundEvents.ENTITY_PLAYER_ATTACK_WEAK.getId()) {
-                event.cancel();
-            }
-        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

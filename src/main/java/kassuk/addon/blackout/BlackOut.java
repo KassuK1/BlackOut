@@ -61,6 +61,7 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new RPC());
         Modules.get().add(new ScaffoldPlus());
         Modules.get().add(new SelfTrapPlus());
+        Modules.get().add(new SoundModifier());
         Modules.get().add(new SpeedPlus());
         Modules.get().add(new SprintPlus());
         Modules.get().add(new StrictNoSlow());

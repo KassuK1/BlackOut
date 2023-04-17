@@ -9,13 +9,14 @@
     "MixinHeldItemRenderer",
     "MixinLivingEntityRenderer",
     "MixinPlayerMoveC2SPacket",
-    "MixinSound"
+    "MixinSound",
+    "MixinBlockSettings",
+    "MixinExplosion",
+    "MixinPlayerEntity",
+    "MixinRaycastContext"
   ],
   "injectors": {
     "defaultRequire": 1
   },
-  "mixins": [
-    "MixinBlockSettings",
-    "MixinRaycastContext"
-  ]
+  "mixins": []
 }
