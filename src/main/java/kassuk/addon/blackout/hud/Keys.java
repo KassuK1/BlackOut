@@ -15,8 +15,9 @@ import java.util.List;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
-// Spaghetti by KassuK
-
+/**
+ * @author KassuK
+ */
 public class Keys extends HudElement {
     public static final HudElementInfo<Keys> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "Keys", "Draws current movement keys", Keys::new);
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -84,18 +85,13 @@ public class Keys extends HudElement {
         .build()
     );
 
-    public enum Mode {
-        Horizontal,
-        Vertical,
-        Basic,
-    }
-
-    List<Key> keys = null;
-    KeyBinding[] binds = null;
+    private List<Key> keys = null;
+    private KeyBinding[] binds = null;
 
     public Keys() {
         super(INFO);
     }
+
     @Override
     public void render(HudRenderer renderer) {
         if (keys == null) {
@@ -114,8 +110,7 @@ public class Keys extends HudElement {
             case Horizontal -> 160;
             case Vertical -> 40;
             case Basic -> 120;
-        } * scale.get() * scale.get(),
-            switch (mode.get()) {
+        } * scale.get() * scale.get(), switch (mode.get()) {
             case Horizontal -> 40;
             case Vertical -> 160;
             case Basic -> 80;
@@ -130,33 +125,36 @@ public class Keys extends HudElement {
             renderer.text(key.key, key.posX + xOffset(key.key, renderer), key.posY + yOffset(renderer), getTextColor(key), false, scale.get());
         });
     }
-    Color getBGColor(Key k) {
+
+    private Color getBGColor(Key k) {
         return lerpColor(MathHelper.clamp((k.sinceClick() - renderTime.get() * 1000) / fadeTime.get() / 1000, 0, 1), cbgColor.get(), bgColor.get());
     }
-    Color getTextColor(Key k) {
+
+    private Color getTextColor(Key k) {
         return lerpColor(MathHelper.clamp((k.sinceClick() - renderTime.get() * 1000) / fadeTime.get() / 1000, 0, 1), cTextColor.get(), textColor.get());
     }
 
-    Color lerpColor(double delta, Color s, Color e) {
-        return new Color((int) Math.round(MathHelper.lerp(delta, s.r, e.r)),
-            (int) Math.round(MathHelper.lerp(delta, s.g, e.g)),
-            (int) Math.round(MathHelper.lerp(delta, s.b, e.b)),
-            (int) Math.round(MathHelper.lerp(delta, s.a, e.a)));
+    private Color lerpColor(double delta, Color s, Color e) {
+        return new Color((int) Math.round(MathHelper.lerp(delta, s.r, e.r)), (int) Math.round(MathHelper.lerp(delta, s.g, e.g)), (int) Math.round(MathHelper.lerp(delta, s.b, e.b)), (int) Math.round(MathHelper.lerp(delta, s.a, e.a)));
     }
-    double xOffset(String string, HudRenderer renderer) {
+
+    private double xOffset(String string, HudRenderer renderer) {
         return (20 - renderer.textWidth(string, false) / 2) * scale.get() * scale.get();
     }
-    double yOffset(HudRenderer renderer) {
+
+    private double yOffset(HudRenderer renderer) {
         return (20 - renderer.textHeight(false) / 2) * scale.get() * scale.get();
     }
-    double getX(int i) {
+
+    private double getX(int i) {
         return switch (mode.get()) {
             case Horizontal -> i * 40;
             case Vertical -> 0.0;
             case Basic -> i == 0 ? 40 : (i - 1) * 40;
         };
     }
-    double getY(int i) {
+
+    private double getY(int i) {
         return switch (mode.get()) {
             case Horizontal -> 0.0;
             case Vertical -> i * 40;
@@ -164,7 +162,7 @@ public class Keys extends HudElement {
         };
     }
 
-    class Key {
+    private class Key {
         public final String key;
         public final KeyBinding bind;
         public final int i;
@@ -182,13 +180,21 @@ public class Keys extends HudElement {
             posX = x + (getX(i)) * scale.get() * scale.get();
             posY = y + (getY(i)) * scale.get() * scale.get();
         }
+
         public void checkClick() {
             if (bind.isPressed()) {
                 lastClicked = System.currentTimeMillis();
             }
         }
+
         public long sinceClick() {
             return System.currentTimeMillis() - lastClicked;
         }
+    }
+
+    public enum Mode {
+        Horizontal,
+        Vertical,
+        Basic,
     }
 }

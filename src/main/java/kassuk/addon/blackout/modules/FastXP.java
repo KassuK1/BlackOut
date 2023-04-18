@@ -10,10 +10,9 @@ import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.item.Items;
 
-/*
-Made by KassuK
-*/
-
+/**
+ * @author KassuK
+ */
 public class FastXP extends BlackOutModule {
     public FastXP() {
         super(BlackOut.BLACKOUT, "FastXP", "XP spamming moment");

@@ -38,10 +38,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/*
-Made by OLEPOSSU / Raksamies
-*/
-
+/**
+ * @author OLEPOSSU
+ */
 public class HoleFillRewrite extends BlackOutModule {
     public HoleFillRewrite() {
         super(BlackOut.BLACKOUT, "Hole Fill+", "Automatically is a cunt to your enemies");
@@ -204,7 +203,7 @@ public class HoleFillRewrite extends BlackOutModule {
                 if (alpha[0] <= d) {
                     toRemove.add(pos);
                 } else {
-                    event.renderer.box(OLEPOSSUtils.getBox(pos),
+                    event.renderer.box(WorldUtils.getBox(pos),
                         new Color(color.get().r, color.get().g, color.get().b, (int) Math.round(color.get().a * Math.min(1, alpha[0] / alpha[1]))),
                         new Color(lineColor.get().r, lineColor.get().g, lineColor.get().b, (int) Math.round(lineColor.get().a * Math.min(1, alpha[0] / alpha[1]))), shapeMode.get(), 0);
                     entry.setValue(new Double[]{alpha[0] - d, alpha[1]});
@@ -315,11 +314,11 @@ public class HoleFillRewrite extends BlackOutModule {
 
                     if (h.type != HoleType.NotHole) {
                         for (BlockPos p : h.positions()) {
-                            if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(p), entity -> !entity.isSpectator() && !(entity instanceof ItemEntity))) {
+                            if (!EntityUtils.intersectsWithEntity(WorldUtils.getBox(p), entity -> !entity.isSpectator() && !(entity instanceof ItemEntity))) {
                                 double closest = closestDist(p);
 
                                 PlaceData d = SettingUtils.getPlaceData(p);
-                                if (d.valid() && closest >= 0 && closest <= holeRange.get() && (!efficient.get() || OLEPOSSUtils.distance(mc.player.getPos(), OLEPOSSUtils.getMiddle(p)) > closest)) {
+                                if (d.valid() && closest >= 0 && closest <= holeRange.get() && (!efficient.get() || DistanceUtils.distance(mc.player.getPos(), WorldUtils.getMiddle(p)) > closest)) {
                                     if (SettingUtils.inPlaceRange(d.pos())) {
                                         holes.add(p);
                                     }
@@ -335,7 +334,7 @@ public class HoleFillRewrite extends BlackOutModule {
     double closestDist(BlockPos pos) {
         double closest = -1;
         for (PlayerEntity pl : mc.world.getPlayers()) {
-            double dist = OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(pos), pl.getPos());
+            double dist = DistanceUtils.distance(WorldUtils.getMiddle(pos), pl.getPos());
 
             if (/* In hole check */ (!iHole.get() || !inHole(pl)) &&
                 /* Above Check */ (!above.get() || pl.getY() > pos.getY()) &&
@@ -347,7 +346,7 @@ public class HoleFillRewrite extends BlackOutModule {
     }
 
     boolean inHole(PlayerEntity pl) {
-        for (Direction dir : OLEPOSSUtils.horizontals) {
+        for (Direction dir : DirectionUtils.horizontals) {
             if (mc.world.getBlockState(pl.getBlockPos().offset(dir)).getBlock().equals(Blocks.AIR)) {
                 return false;
             }

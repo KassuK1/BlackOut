@@ -5,6 +5,10 @@ import kassuk.addon.blackout.commands.*;
 import kassuk.addon.blackout.globalsettings.*;
 import kassuk.addon.blackout.hud.*;
 import kassuk.addon.blackout.modules.*;
+import kassuk.addon.blackout.modules.CustomFOV;
+import kassuk.addon.blackout.modules.FeetESP;
+import kassuk.addon.blackout.modules.Fog;
+import kassuk.addon.blackout.modules.SwingModifier;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
 import meteordevelopment.meteorclient.systems.commands.Commands;
 import meteordevelopment.meteorclient.systems.hud.Hud;
@@ -92,7 +96,6 @@ public class BlackOut extends MeteorAddon {
         Hud.get().register(OnTope.INFO);
 
         // Theme
-        // add a fucking theme  // no
     }
 
     @Override
@@ -100,11 +103,6 @@ public class BlackOut extends MeteorAddon {
         Modules.registerCategory(BLACKOUT);
         Modules.registerCategory(SETTINGS);
     }
-
-    @Override
-    public String getWebsite() {
-        return "https://bigrat.monster";
-    }//what the fuck is this it is not even funny
 
     @Override
     public String getPackage() {

@@ -7,10 +7,7 @@ import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.timers.BlockTimerList;
-import kassuk.addon.blackout.utils.BOInvUtils;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
-import kassuk.addon.blackout.utils.PlaceData;
-import kassuk.addon.blackout.utils.SettingUtils;
+import kassuk.addon.blackout.utils.*;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.settings.*;
@@ -34,11 +31,10 @@ import net.minecraft.util.math.Vec3d;
 import java.util.ArrayList;
 import java.util.List;
 
-/*
-Made by KassuK
-Updated by OLEPOSSU
-*/
-
+/**
+ * @author KassuK
+ * @author OLEPOSSU
+ */
 public class ScaffoldPlus extends BlackOutModule {
     public ScaffoldPlus() {
         super(BlackOut.BLACKOUT, "Scaffold+", "KasumsSoft blockwalk");
@@ -166,9 +162,7 @@ public class ScaffoldPlus extends BlackOutModule {
                     Modules.get().get(SafeWalk.class).toggle();
                 }
             }
-            case Legit -> {
-                mc.options.sneakKey.setPressed(false);
-            }
+            case Legit -> mc.options.sneakKey.setPressed(false);
         }
     }
 
@@ -226,12 +220,8 @@ public class ScaffoldPlus extends BlackOutModule {
 
                         if (hand == null) {
                             switch (switchMode.get()) {
-                                case Silent, Normal -> {
-                                    obsidian = hotbar.count();
-                                }
-                                case SilentBypass -> {
-                                    obsidian = inventory.slot() >= 0 ? inventory.count() : -1;
-                                }
+                                case Silent, Normal -> obsidian = hotbar.count();
+                                case SilentBypass -> obsidian = inventory.slot() >= 0 ? inventory.count() : -1;
                             }
                         }
 
@@ -242,9 +232,7 @@ public class ScaffoldPlus extends BlackOutModule {
                                         obsidian = hotbar.count();
                                         InvUtils.swap(hotbar.slot(), true);
                                     }
-                                    case SilentBypass -> {
-                                        obsidian = BOInvUtils.invSwitch(inventory.slot()) ? inventory.count() : -1;
-                                    }
+                                    case SilentBypass -> obsidian = BOInvUtils.invSwitch(inventory.slot()) ? inventory.count() : -1;
                                 }
                             }
 
@@ -262,12 +250,8 @@ public class ScaffoldPlus extends BlackOutModule {
 
                             if (hand == null) {
                                 switch (switchMode.get()) {
-                                    case Silent -> {
-                                        InvUtils.swapBack();
-                                    }
-                                    case SilentBypass -> {
-                                        BOInvUtils.swapBack();
-                                    }
+                                    case Silent -> InvUtils.swapBack();
+                                    case SilentBypass -> BOInvUtils.swapBack();
                                 }
                             }
                         }
@@ -307,7 +291,7 @@ public class ScaffoldPlus extends BlackOutModule {
 
     void addBlocks(List<BlockPos> list, Vec3d vec) {
         BlockPos pos = new BlockPos(Math.floor(vec.x), Math.floor(vec.y), Math.floor(vec.z)).down();
-        if (!timers.contains(pos) && OLEPOSSUtils.replaceable(pos) && !list.contains(pos)) {
+        if (!timers.contains(pos) && BlockUtils.replaceable(pos) && !list.contains(pos)) {
             list.add(pos);
         }
     }

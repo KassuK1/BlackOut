@@ -10,9 +10,14 @@ import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.util.Hand;
 
+/**
+ * @author OLEPOSSU
+ */
 public class SwingModifier extends BlackOutModule {
-    public SwingModifier() {super(BlackOut.BLACKOUT, "Swing Modifier", "Modifies swing rendering");}
-    private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    public SwingModifier() {
+        super(BlackOut.BLACKOUT, "Swing Modifier", "Modifies swing rendering");
+    }
+
     private final SettingGroup sgMainHand = settings.createGroup("Main Hand");
     private final SettingGroup sgOffHand = settings.createGroup("Off Hand");
     // Main
@@ -103,11 +108,11 @@ public class SwingModifier extends BlackOutModule {
         .build()
     );
 
-    public static boolean mainSwinging = false;
-    public float mainProgress = 0;
+    private static boolean mainSwinging = false;
+    private float mainProgress = 0;
 
-    public boolean offSwinging = false;
-    public float offProgress = 0;
+    private boolean offSwinging = false;
+    private float offProgress = 0;
 
     public void startSwing(Hand hand) {
         if (hand == Hand.MAIN_HAND) {

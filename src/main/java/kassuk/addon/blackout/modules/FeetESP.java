@@ -2,7 +2,7 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
+import kassuk.addon.blackout.utils.DistanceUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
@@ -18,10 +18,9 @@ import net.minecraft.util.math.Vec3d;
 import java.util.ArrayList;
 import java.util.List;
 
-/*
-Made by OLEPOSSU / Raksamies
-*/
-
+/**
+ * @author OLEPOSSU
+ */
 public class FeetESP extends BlackOutModule {
     public FeetESP() {
         super(BlackOut.BLACKOUT, "FeetESP", "No, it doesn't show you pictures of feet");
@@ -59,7 +58,8 @@ public class FeetESP extends BlackOutModule {
         .sliderRange(0, 25)
         .build()
     );
-    List<Render> renders = new ArrayList<>();
+
+    private final List<Render> renders = new ArrayList<>();
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
@@ -72,7 +72,7 @@ public class FeetESP extends BlackOutModule {
             }
         });
         mc.world.getPlayers().forEach(player -> {
-            if (OLEPOSSUtils.distance(player.getPos(), mc.player.getEyePos()) <= range.get() &&
+            if (DistanceUtils.distance(player.getPos(), mc.player.getEyePos()) <= range.get() &&
                 player != mc.player && (!Friends.get().isFriend(player) || friend.get()) &&
                 (Friends.get().isFriend(player) || player == mc.player || other.get())) {
                 Render render = getByEntity(player);

@@ -7,6 +7,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(PlayerMoveC2SPacket.class)
 public interface MixinPlayerMoveC2SPacket {
+
     @Mutable
     @Accessor("yaw")
     void setYaw(float yaw);

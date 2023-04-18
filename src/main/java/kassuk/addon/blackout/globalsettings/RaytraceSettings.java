@@ -12,10 +12,9 @@ import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.*;
 import net.minecraft.world.RaycastContext;
 
-/*
-Made by OLEPOSSU
-*/
-
+/**
+ * @author OLEPOSSU
+ */
 public class RaytraceSettings extends BlackOutModule {
     public RaytraceSettings() {
         super(BlackOut.SETTINGS, "Raytrace", "Global raytrace settings for every blackout module");
@@ -119,6 +118,7 @@ public class RaytraceSettings extends BlackOutModule {
         .visible(() -> placeMode.get() == PlaceTraceMode.Exposure)
         .build()
     );
+
     public enum PlaceTraceMode {
         SinglePoint,
         DoublePoint,
@@ -126,6 +126,7 @@ public class RaytraceSettings extends BlackOutModule {
         Exposure,
         Any
     }
+
     public enum AttackTraceMode {
         SinglePoint,
         DoublePoint,
@@ -140,7 +141,9 @@ public class RaytraceSettings extends BlackOutModule {
 
     public boolean placeTrace(BlockPos pos) {
 
-        if (!placeTrace.get()) {return true;}
+        if (!placeTrace.get()) {
+            return true;
+        }
 
         updateContext();
 
@@ -217,7 +220,9 @@ public class RaytraceSettings extends BlackOutModule {
     }
 
     public boolean attackTrace(Box box) {
-        if (!attackTrace.get()) {return true;}
+        if (!attackTrace.get()) {
+            return true;
+        }
 
         updateContext();
 

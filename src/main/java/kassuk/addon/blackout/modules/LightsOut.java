@@ -3,8 +3,9 @@ package kassuk.addon.blackout.modules;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.globalsettings.SwingSettings;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
+import kassuk.addon.blackout.utils.DistanceUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
+import kassuk.addon.blackout.utils.WorldUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.DoubleSetting;
@@ -17,8 +18,14 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
+/**
+ * @author KassuK
+ */
 public class LightsOut extends BlackOutModule {
-    public LightsOut(){super(BlackOut.BLACKOUT,"LightsOut","a tribute to Reliant");}
+    public LightsOut() {
+        super(BlackOut.BLACKOUT, "LightsOut", "a tribute to Reliant");
+    }
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
         .name("Delay")
@@ -29,7 +36,7 @@ public class LightsOut extends BlackOutModule {
         .build()
     );
 
-    double timer = 0;
+    private double timer = 0;
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
@@ -47,9 +54,10 @@ public class LightsOut extends BlackOutModule {
 
     @EventHandler
     private void onRender(Render3DEvent event) {
-        timer = Math.min(delay.get(), timer + event.frameTime);}
+        timer = Math.min(delay.get(), timer + event.frameTime);
+    }
 
-    BlockPos getLightSource(Vec3d vec, double r) {
+    private BlockPos getLightSource(Vec3d vec, double r) {
         int c = (int) (Math.ceil(r) + 1);
         BlockPos closest = null;
         float closestDist = -1;
@@ -59,12 +67,12 @@ public class LightsOut extends BlackOutModule {
                     BlockPos pos = mc.player.getBlockPos().add(x, y, z);
                     //best code ever fr
                     if (mc.world.getBlockState(pos).getBlock() == Blocks.TORCH
-                    || mc.world.getBlockState(pos).getBlock() == Blocks.REDSTONE_TORCH
-                    || mc.world.getBlockState(pos).getBlock() == Blocks.SOUL_TORCH
-                    || mc.world.getBlockState(pos).getBlock() == Blocks.WALL_TORCH
-                    || mc.world.getBlockState(pos).getBlock() == Blocks.REDSTONE_WALL_TORCH
-                    || mc.world.getBlockState(pos).getBlock() == Blocks.SOUL_WALL_TORCH){
-                        float dist = (float) OLEPOSSUtils.distance(vec, OLEPOSSUtils.getMiddle(pos));
+                        || mc.world.getBlockState(pos).getBlock() == Blocks.REDSTONE_TORCH
+                        || mc.world.getBlockState(pos).getBlock() == Blocks.SOUL_TORCH
+                        || mc.world.getBlockState(pos).getBlock() == Blocks.WALL_TORCH
+                        || mc.world.getBlockState(pos).getBlock() == Blocks.REDSTONE_WALL_TORCH
+                        || mc.world.getBlockState(pos).getBlock() == Blocks.SOUL_WALL_TORCH) {
+                        float dist = (float) DistanceUtils.distance(vec, WorldUtils.getMiddle(pos));
                         if (dist <= r && (closest == null || dist < closestDist)) {
                             closest = pos;
                             closestDist = dist;

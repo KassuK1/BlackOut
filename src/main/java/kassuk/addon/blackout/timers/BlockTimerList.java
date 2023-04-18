@@ -23,7 +23,10 @@ public class BlockTimerList {
         timers = new ArrayList<>();
     }
 
-    public void add(BlockPos pos, double time) {timers.add(new BlockTimer(pos, time));}
+    public void add(BlockPos pos, double time) {
+        timers.add(new BlockTimer(pos, time));
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
         List<BlockTimer> toRemove = new ArrayList<>();
@@ -45,7 +48,9 @@ public class BlockTimerList {
 
     public boolean contains(BlockPos pos) {
         for (BlockTimer timer : timers) {
-            if (timer.pos.equals(pos)) {return true;}
+            if (timer.pos.equals(pos)) {
+                return true;
+            }
         }
         return false;
     }
@@ -63,6 +68,8 @@ public class BlockTimerList {
             this.ogTime = time;
         }
 
-        public boolean isValid() {return System.currentTimeMillis() <= startTime + time * 1000;}
+        public boolean isValid() {
+            return System.currentTimeMillis() <= startTime + time * 1000;
+        }
     }
 }

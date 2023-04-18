@@ -2,7 +2,7 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
+import kassuk.addon.blackout.utils.DistanceUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.mixin.PlayerPositionLookS2CPacketAccessor;
@@ -19,10 +19,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-/*
-Made by OLEPOSSU / Raksamies
-*/
-
+/**
+ * @author OLEPOSSU
+ */
 public class Disabler extends BlackOutModule {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
@@ -52,7 +51,7 @@ public class Disabler extends BlackOutModule {
         if (mc.player != null && mc.world != null) {
             if (event.packet instanceof PlayerMoveC2SPacket packet) {
                 if (packet.changesPosition()) {
-                    if (OLEPOSSUtils.distance(new Vec3d(packet.getX(mc.player.getX()), packet.getY(mc.player.getY()), packet.getZ(mc.player.getY())), mc.player.getPos()) < 30){
+                    if (DistanceUtils.distance(new Vec3d(packet.getX(mc.player.getX()), packet.getY(mc.player.getY()), packet.getZ(mc.player.getY())), mc.player.getPos()) < 30){
                         if (!ignore) {
                             event.cancel();
                             validPos.put(id + 1, new Vec3d(packet.getX(mc.player.getX()), packet.getY(mc.player.getY()), packet.getZ(mc.player.getZ())));

@@ -2,7 +2,7 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
+import kassuk.addon.blackout.utils.DistanceUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
@@ -15,10 +15,13 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.util.Hand;
 
-//Made by KassuK
-
+/**
+ * @author KassuK
+ */
 public class KassuKAura extends BlackOutModule {
-    public KassuKAura(){super(BlackOut.BLACKOUT,"ForceField", "An Killaura made by KassuK probably should not be used");}
+    public KassuKAura() {
+        super(BlackOut.BLACKOUT, "ForceField", "An Killaura made by KassuK probably should not be used");
+    }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
@@ -113,38 +116,29 @@ public class KassuKAura extends BlackOutModule {
         .build()
     );
 
-    public enum RotationMode {
-        Snap,
-        Constant,
-    }
-    public enum BlockMode{
-        Constant,
-        NotOnHit,
-    }
-
-    double timer = 0;
-    int health = 0;
-
-    PlayerEntity target = null;
+    private double timer = 0;
+    private int health = 0;
 
     @EventHandler
-    private void onRender(Render3DEvent event){
-        timer = Math.min(delay.get(),timer + event.frameTime);
+    private void onRender(Render3DEvent event) {
+        timer = Math.min(delay.get(), timer + event.frameTime);
     }
 
     @EventHandler
-    private void onTick(TickEvent.Pre event){
-        if (mc.player != null && mc.world != null){
-            if (debug.get()){info("timer" + timer);}
-            target = getClosest();
+    private void onTick(TickEvent.Pre event) {
+        if (mc.player != null && mc.world != null) {
+            if (debug.get()) {
+                info("timer" + timer);
+            }
+            PlayerEntity target = getClosest();
             if (target != null) {
                 double rotYaw = Rotations.getYaw(target.getEyePos());
                 double rotPitch = Rotations.getPitch(target.getEyePos());
-                if (rotate.get() && rotMode.get().equals(RotationMode.Constant)){
+                if (rotate.get() && rotMode.get().equals(RotationMode.Constant)) {
                     Rotations.rotate(rotYaw, rotPitch);
                 }
-                if (autoBlock.get()){
-                    if (mc.player.getOffHandStack().getItem().equals(Items.SHIELD)){
+                if (autoBlock.get()) {
+                    if (mc.player.getOffHandStack().getItem().equals(Items.SHIELD)) {
                         mc.options.useKey.setPressed(true);
                     }
                 }
@@ -172,41 +166,55 @@ public class KassuKAura extends BlackOutModule {
                     }
                     if (blockMode.get().equals(BlockMode.NotOnHit))
                         mc.options.useKey.setPressed(false);
+                    //noinspection DataFlowIssue
                     mc.interactionManager.attackEntity(mc.player, target);
                     mc.player.swingHand(Hand.MAIN_HAND);
                     if (debug.get()) {
                         info("Tried to hit target");
                     }
                 }
-            }
-            else {
-                if (autoBlock.get()) {mc.options.useKey.setPressed(false);}
+            } else {
+                if (autoBlock.get()) {
+                    mc.options.useKey.setPressed(false);
+                }
             }
         }
     }
+
     @Override
     public void onDeactivate() {
-        if (mc.player != null && mc.world != null){
+        if (mc.player != null && mc.world != null) {
             if (autoBlock.get())
                 mc.options.useKey.setPressed(false);
         }
     }
 
 
-    PlayerEntity getClosest() {
+    @SuppressWarnings("DataFlowIssue")
+    private PlayerEntity getClosest() {
         PlayerEntity closest = null;
         float distance = -1;
         if (!mc.world.getPlayers().isEmpty()) {
             for (PlayerEntity player : mc.world.getPlayers()) {
                 if (player != mc.player && (!iFriends.get() || !Friends.get().isFriend(player))) {
-                    float dist = (float) OLEPOSSUtils.distance(mc.player.getEyePos(), player.getPos());
-                    if ((closest == null || OLEPOSSUtils.distance(mc.player.getPos(), player.getPos()) < distance) && dist <= range.get()) {
+                    float dist = (float) DistanceUtils.distance(mc.player.getEyePos(), player.getPos());
+                    if ((closest == null || DistanceUtils.distance(mc.player.getPos(), player.getPos()) < distance) && dist <= range.get()) {
                         closest = player;
-                        distance = (float) OLEPOSSUtils.distance(mc.player.getPos(), player.getPos());
+                        distance = (float) DistanceUtils.distance(mc.player.getPos(), player.getPos());
                     }
                 }
             }
         }
         return closest;
+    }
+
+    public enum RotationMode {
+        Snap,
+        Constant,
+    }
+
+    public enum BlockMode {
+        Constant,
+        NotOnHit,
     }
 }

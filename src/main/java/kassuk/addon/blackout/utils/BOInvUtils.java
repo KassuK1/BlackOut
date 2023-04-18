@@ -11,8 +11,9 @@ import net.minecraft.screen.slot.SlotActionType;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
+@SuppressWarnings("DataFlowIssue")
 public class BOInvUtils {
-    static int[] slots;
+    private static int[] slots;
 
     // Credits to rickyracuun
     public static boolean invSwitch(int slot) {

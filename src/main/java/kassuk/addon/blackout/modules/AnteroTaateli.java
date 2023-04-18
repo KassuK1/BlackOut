@@ -2,7 +2,7 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
+import kassuk.addon.blackout.utils.DistanceUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.BoolSetting;
@@ -17,9 +17,14 @@ import net.minecraft.entity.player.PlayerEntity;
 import java.util.Random;
 
 
-//Made by KassuK
+/**
+ * @author KassuK
+ */
 public class AnteroTaateli extends BlackOutModule {
-    public AnteroTaateli() {super(BlackOut.BLACKOUT, "AutoAndrewTate", "What colour is your bugatti?");}
+    public AnteroTaateli() {
+        super(BlackOut.BLACKOUT, "AutoAndrewTate", "What colour is your bugatti?");
+    }
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<Boolean> iFriends = sgGeneral.add(new BoolSetting.Builder()
@@ -37,8 +42,8 @@ public class AnteroTaateli extends BlackOutModule {
         .build()
     );
 
-    double timer = 0;
-    String[] messages = new String[] {
+    private double timer = 0;
+    private final String[] messages = new String[]{
         "Hey brokies top G here",
         "Top G eats raw meat and breathes air",
         "I hate dead people all you do is fucking laying down like pussies",
@@ -46,37 +51,40 @@ public class AnteroTaateli extends BlackOutModule {
         "Top G is never late time is just running ahead of schedule",
         "<NAME>, what color is your Bugatti?"
     };
-    Random r = new Random();
+    private final Random r = new Random();
 
     @EventHandler
-    private void onRender(Render3DEvent event){
+    private void onRender(Render3DEvent event) {
         timer = Math.min(delay.get(), timer + event.frameTime);
     }
 
     @EventHandler
-    private void onTick(TickEvent.Pre event){
-        if (mc.player != null && mc.world != null){
+    private void onTick(TickEvent.Pre event) {
+        if (mc.player != null && mc.world != null) {
             PlayerEntity bugatti = getClosest();
-            if (timer >=delay.get() && bugatti != null){
+            if (timer >= delay.get() && bugatti != null) {
                 timer = 0;
                 ChatUtils.sendPlayerMsg(getMessage(bugatti));
             }
         }
     }
-    String getMessage(PlayerEntity pl) {
+
+    private String getMessage(PlayerEntity pl) {
         int index = r.nextInt(0, messages.length);
         String msg = messages[index];
         return msg.replace("<NAME>", pl.getName().getString());
     }
-    PlayerEntity getClosest() {
+
+    private PlayerEntity getClosest() {
         PlayerEntity closest = null;
         float distance = -1;
         if (!mc.world.getPlayers().isEmpty()) {
             for (PlayerEntity player : mc.world.getPlayers()) {
                 if (player != mc.player && (!iFriends.get() || !Friends.get().isFriend(player))) {
-                    if (closest == null || OLEPOSSUtils.distance(mc.player.getPos(), player.getPos()) < distance) {
+                    if (closest == null || DistanceUtils.distance(mc.player.getPos(), player.getPos()) < distance) {
                         closest = player;
-                        distance = (float) OLEPOSSUtils.distance(mc.player.getPos(), player.getPos());
+                        assert mc.player != null;
+                        distance = (float) DistanceUtils.distance(mc.player.getPos(), player.getPos());
                     }
                 }
             }

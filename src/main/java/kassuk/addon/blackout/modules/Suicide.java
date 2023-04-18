@@ -9,8 +9,14 @@ import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.gui.screen.DeathScreen;
 
+/**
+ * @author OLEPOSSU
+ */
 public class Suicide extends BlackOutModule {
-    public Suicide() {super(BlackOut.BLACKOUT, "Suicide", "Speeeeeeeed");}
+    public Suicide() {
+        super(BlackOut.BLACKOUT, "Suicide", "Speeeeeeeed");
+    }
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     public final Setting<Boolean> offhand = sgGeneral.add(new BoolSetting.Builder()

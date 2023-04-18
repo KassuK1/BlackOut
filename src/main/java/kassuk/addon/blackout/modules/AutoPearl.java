@@ -19,10 +19,9 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.Vec3d;
 
-/*
-Made by OLEPOSSU / Raksamies
-*/
-
+/**
+ * @author OLEPOSSU
+ */
 public class AutoPearl extends BlackOutModule {
     public AutoPearl() {
         super(BlackOut.BLACKOUT, "AutoPearl", "Easily clip inside walls");

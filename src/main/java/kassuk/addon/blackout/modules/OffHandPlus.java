@@ -2,7 +2,7 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
+import kassuk.addon.blackout.utils.ItemUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Modules;
@@ -15,15 +15,17 @@ import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 
-/*
-Made by OLEPOSSU / Raksamies and KassuK(KassuK's version was better)
-*/
-
+/**
+ * @author OLEPOSSU
+ * @author KassuK
+ */
 public class OffHandPlus extends BlackOutModule {
     public OffHandPlus() {
         super(BlackOut.BLACKOUT, "Offhand+", "Better offhand");
     }
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+
     private final Setting<Boolean> onlyInInv = sgGeneral.add(new BoolSetting.Builder()
         .name("Only in inventory")
         .description("Will only switch if you are in your inventory")
@@ -70,7 +72,6 @@ public class OffHandPlus extends BlackOutModule {
         .sliderMax(36)
         .build()
     );
-
     private final Setting<Integer> hp = sgGeneral.add(new IntSetting.Builder()
         .name("Health")
         .description("At what health value we will switch")
@@ -79,23 +80,8 @@ public class OffHandPlus extends BlackOutModule {
         .sliderMax(36)
         .build()
     );
-    public enum switchModes {
-        Hotbar,
-        Inventory,
-    }
-    public enum swordGapModes {
-        Disabled,
-        Always,
-        Pressing,
-        Smart
-    }
-    public enum itemModes {
-        Crystal,
-        Gapple,
-        Totem
-    }
 
-    double timer = 0;
+    private double timer = 0;
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
@@ -103,7 +89,7 @@ public class OffHandPlus extends BlackOutModule {
         if (mc.player != null && mc.world != null) {
             Item item = getItem();
             if (!mc.player.getOffHandStack().getItem().equals(item) && item != null) {
-                if (onlyInInv.get() && !(mc.currentScreen instanceof InventoryScreen)){
+                if (onlyInInv.get() && !(mc.currentScreen instanceof InventoryScreen)) {
                     return;
                 }
                 FindItemResult slot = find(item, switchMode.get().equals(switchModes.Hotbar));
@@ -116,16 +102,16 @@ public class OffHandPlus extends BlackOutModule {
         }
     }
 
-    Item getItem() {
+    private Item getItem() {
         if (mc.player != null) {
             Suicide suicide = Modules.get().get(Suicide.class);
 
             boolean crystalAvailable = InvUtils.find(itemStack -> itemStack.getItem().equals(Items.END_CRYSTAL)).count() > 0;
             boolean totemAvailable = !(suicide.isActive() && suicide.offhand.get()) && InvUtils.find(itemStack -> itemStack.getItem().equals(Items.TOTEM_OF_UNDYING)).count() > 0;
             boolean gapAvailable = InvUtils.find(itemStack -> itemStack.getItem().equals(Items.ENCHANTED_GOLDEN_APPLE)).count() > 0;
-            boolean shouldGap = (swordGapple.get().equals(swordGapModes.Always) && OLEPOSSUtils.isSword(mc.player.getMainHandStack().getItem())) ||
-                (swordGapple.get().equals(swordGapModes.Pressing) && OLEPOSSUtils.isSword(mc.player.getMainHandStack().getItem()) && mc.options.useKey.isPressed()) ||
-                (swordGapple.get().equals(swordGapModes.Smart) && OLEPOSSUtils.isSword(mc.player.getMainHandStack().getItem()) && mc.options.useKey.isPressed());
+            boolean shouldGap = (swordGapple.get().equals(swordGapModes.Always) && ItemUtils.isSword(mc.player.getMainHandStack().getItem())) ||
+                (swordGapple.get().equals(swordGapModes.Pressing) && ItemUtils.isSword(mc.player.getMainHandStack().getItem()) && mc.options.useKey.isPressed()) ||
+                (swordGapple.get().equals(swordGapModes.Smart) && ItemUtils.isSword(mc.player.getMainHandStack().getItem()) && mc.options.useKey.isPressed());
             boolean firstAvailable = itemMode.get().equals(itemModes.Crystal) ? crystalAvailable : gapAvailable;
             boolean secondAvailable = itemMode.get().equals(itemModes.Crystal) ? gapAvailable : crystalAvailable;
 
@@ -161,11 +147,29 @@ public class OffHandPlus extends BlackOutModule {
         return null;
     }
 
-    FindItemResult find(Item i, boolean hotbar) {
+    private FindItemResult find(Item i, boolean hotbar) {
         return InvUtils.find(itemStack -> itemStack.getItem().equals(i), hotbar ? 0 : 9, hotbar ? 8 : mc.player.getInventory().size());
     }
 
-    boolean isSafe(double playerHP) {
+    private boolean isSafe(double playerHP) {
         return !safety.get() || PlayerUtils.possibleHealthReductions() < playerHP - safetyHealth.get();
+    }
+
+    public enum switchModes {
+        Hotbar,
+        Inventory,
+    }
+
+    public enum swordGapModes {
+        Disabled,
+        Always,
+        Pressing,
+        Smart
+    }
+
+    public enum itemModes {
+        Crystal,
+        Gapple,
+        Totem
     }
 }

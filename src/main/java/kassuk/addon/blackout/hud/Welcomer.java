@@ -9,6 +9,9 @@ import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
+/**
+ * @author KassuK
+ */
 public class Welcomer extends HudElement {
 
     public static final HudElementInfo<Welcomer> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "Welcomer", "Welcomes you", Welcomer::new);
@@ -43,12 +46,12 @@ public class Welcomer extends HudElement {
 
     @Override
     public void render(HudRenderer renderer) {
-        if (mc.player != null && mc.world != null){
-        setSize(50 * scale.get() * scale.get(),20 * scale.get() * scale.get());
-        renderer.text("Welcome " + mc.player.getName(),x,y,textcolor.get(),shadow.get(),scale.get());
+        if (mc.player != null && mc.world != null) {
+            setSize(50 * scale.get() * scale.get(), 20 * scale.get() * scale.get());
+            renderer.text("Welcome " + mc.player.getName(), x, y, textcolor.get(), shadow.get(), scale.get());
         }
-        if (isInEditor()){
-            renderer.text("BlackOut Welcomer",x,y,textcolor.get(),shadow.get(),scale.get());
+        if (isInEditor()) {
+            renderer.text("BlackOut Welcomer", x, y, textcolor.get(), shadow.get(), scale.get());
         }
     }
 }

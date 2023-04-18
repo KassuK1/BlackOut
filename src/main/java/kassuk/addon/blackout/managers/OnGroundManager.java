@@ -6,13 +6,13 @@ import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 
-/*
-Made by OLEPOSSU / Raksamies
-*/
-
+/**
+ * @author OLEPOSSU
+ */
 public class OnGroundManager {
 
     private boolean onGround;
+
     public OnGroundManager() {
         MeteorClient.EVENT_BUS.subscribe(this);
         this.onGround = false;
@@ -25,7 +25,9 @@ public class OnGroundManager {
         }
     }
 
-    public boolean isOnGround() {return onGround;}
+    public boolean isOnGround() {
+        return onGround;
+    }
 }
 
 

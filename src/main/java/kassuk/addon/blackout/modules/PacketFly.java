@@ -2,7 +2,7 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
+import kassuk.addon.blackout.utils.EntityUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -16,6 +16,9 @@ import net.minecraft.util.math.Vec3d;
 
 import java.util.*;
 
+/**
+ * @author OLEPOSSU
+ */
 public class PacketFly extends BlackOutModule {
 
     public PacketFly() {
@@ -167,6 +170,7 @@ public class PacketFly extends BlackOutModule {
         ticks = 0;
         validPos = new HashMap<>();
     }
+
     @EventHandler
     private void onTick(TickEvent.Post e) {
         ticks++;
@@ -179,7 +183,9 @@ public class PacketFly extends BlackOutModule {
 
     @EventHandler
     private void onMove(PlayerMoveEvent e) {
-        if (mc.player == null || mc.world == null) {return;}
+        if (mc.player == null || mc.world == null) {
+            return;
+        }
 
         boolean phasing = isPhasing();
         mc.player.noClip = phasing;
@@ -210,7 +216,7 @@ public class PacketFly extends BlackOutModule {
             if (phasing && !phaseFastVertical.get()) {
                 packetsToSend = Math.min(packetsToSend, 1);
             }
-            if (!phasing && !fastVertical.get()){
+            if (!phasing && !fastVertical.get()) {
                 packetsToSend = Math.min(packetsToSend, 1);
             }
         }
@@ -270,23 +276,34 @@ public class PacketFly extends BlackOutModule {
             }
         }
     }
+
     @Override
     public String getInfoString() {
         return info;
     }
-    Vec3d getBounds() {
+
+    private Vec3d getBounds() {
         int yaw = random.nextInt(0, 360);
         return new Vec3d(Math.cos(Math.toRadians(yaw)) * xzBound.get(), yBound.get(), Math.sin(Math.toRadians(yaw)) * xzBound.get());
     }
-    boolean getOnGround() {
+
+    private boolean getOnGround() {
         return onGroundSpoof.get() ? onGround.get() : mc.player.isOnGround();
     }
-    boolean isPhasing() {
-        return OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox());
+
+    private boolean isPhasing() {
+        return EntityUtils.inside(mc.player, mc.player.getBoundingBox());
     }
-    boolean jumping() {return mc.options.jumpKey.isPressed();}
-    boolean sneaking() {return mc.options.sneakKey.isPressed();}
-    void send(Vec3d pos, Vec3d bounds, boolean onGround) {
+
+    private boolean jumping() {
+        return mc.options.jumpKey.isPressed();
+    }
+
+    private boolean sneaking() {
+        return mc.options.sneakKey.isPressed();
+    }
+
+    private void send(Vec3d pos, Vec3d bounds, boolean onGround) {
         PlayerMoveC2SPacket.PositionAndOnGround normal = new PlayerMoveC2SPacket.PositionAndOnGround(pos.x, pos.y, pos.z, onGround);
         PlayerMoveC2SPacket.PositionAndOnGround bound = new PlayerMoveC2SPacket.PositionAndOnGround(pos.x + bounds.x, pos.y + bounds.y, pos.z + bounds.z, onGround);
 
@@ -296,13 +313,15 @@ public class PacketFly extends BlackOutModule {
 
         validPackets.add(bound);
         mc.player.networkHandler.sendPacket(bound);
-        if (id < 0) {return;}
+        if (id < 0) {
+            return;
+        }
 
         id++;
         mc.player.networkHandler.sendPacket(new TeleportConfirmC2SPacket(id));
     }
 
-    double getYaw() {
+    private double getYaw() {
         double f = mc.player.input.movementForward, s = mc.player.input.movementSideways;
 
         double yaw = mc.player.getYaw();

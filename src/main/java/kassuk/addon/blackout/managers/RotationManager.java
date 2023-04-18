@@ -2,23 +2,18 @@ package kassuk.addon.blackout.managers;
 
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.globalsettings.RotationSettings;
-import kassuk.addon.blackout.mixins.MixinPlayerMoveC2SPacket;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
-import kassuk.addon.blackout.utils.RotationResult;
 import kassuk.addon.blackout.utils.RotationUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
+import kassuk.addon.blackout.utils.WorldUtils;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.entity.player.SendMovementPacketsEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.systems.modules.Modules;
-import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
-import net.minecraft.network.packet.c2s.play.CustomPayloadC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
@@ -28,10 +23,9 @@ import java.util.List;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
-/*
-Made by OLEPOSSU / Raksamies
-*/
-
+/**
+ * @author OLEPOSSU
+ */
 public class RotationManager {
 
     public Target target = null;
@@ -59,6 +53,7 @@ public class RotationManager {
     private void onMovePre(SendMovementPacketsEvent.Pre event) {
         unsent = true;
     }
+
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onMovePost(SendMovementPacketsEvent.Post event) {
         if (unsent && updateShouldRotate()) {
@@ -69,10 +64,13 @@ public class RotationManager {
             }
         }
     }
+
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
         stopping = false;
-        if (mc.player == null) {return;}
+        if (mc.player == null) {
+            return;
+        }
 
         if (settings == null) {
             settings = Modules.get().get(RotationSettings.class);
@@ -94,7 +92,9 @@ public class RotationManager {
 
     public PlayerMoveC2SPacket onFull(PlayerMoveC2SPacket.Full packet) {
         unsent = false;
-        if (!updateShouldRotate()) {return packet;}
+        if (!updateShouldRotate()) {
+            return packet;
+        }
         updateNextRotation();
 
         if (rotated) {
@@ -106,7 +106,9 @@ public class RotationManager {
 
     public PlayerMoveC2SPacket onPositionOnGround(PlayerMoveC2SPacket.PositionAndOnGround packet) {
         unsent = false;
-        if (!updateShouldRotate()) {return packet;}
+        if (!updateShouldRotate()) {
+            return packet;
+        }
         updateNextRotation();
 
         if (rotated) {
@@ -118,7 +120,9 @@ public class RotationManager {
 
     public PlayerMoveC2SPacket onLookAndOnGround(PlayerMoveC2SPacket.LookAndOnGround packet) {
         unsent = false;
-        if (!updateShouldRotate()) {return packet;}
+        if (!updateShouldRotate()) {
+            return packet;
+        }
         updateNextRotation();
 
         if (rotated) {
@@ -133,7 +137,9 @@ public class RotationManager {
 
     public PlayerMoveC2SPacket onOnlyOnground(PlayerMoveC2SPacket.OnGroundOnly packet) {
         unsent = false;
-        if (!updateShouldRotate()) {return packet;}
+        if (!updateShouldRotate()) {
+            return packet;
+        }
         updateNextRotation();
 
         if (rotated) {
@@ -142,6 +148,7 @@ public class RotationManager {
             return new PlayerMoveC2SPacket.OnGroundOnly(packet.isOnGround());
         }
     }
+
     @EventHandler(priority = EventPriority.HIGHEST + 100)
     private void onSend(PacketEvent.Sent event) {
         if (event.packet instanceof PlayerMoveC2SPacket packet) {
@@ -152,17 +159,19 @@ public class RotationManager {
             }
         }
     }
+
     boolean updateShouldRotate() {
         shouldRotate = target != null && timer > 0;
         return shouldRotate || stopping;
     }
+
     void updateNextRotation() {
         if (shouldRotate) {
             if (target instanceof BoxTarget) {
                 ((BoxTarget) target).vec = getTargetPos();
                 next = new float[]{RotationUtils.nextYaw(lastDir[0], Rotations.getYaw(((BoxTarget) target).vec), settings.yawStep.get()), RotationUtils.nextPitch(lastDir[1], Rotations.getPitch(((BoxTarget) target).vec), settings.pitchStep.get())};
             } else {
-                next = new float[]{RotationUtils.nextYaw(lastDir[0], ((AngleTarget)target).yaw, settings.yawStep.get()), RotationUtils.nextPitch(lastDir[1], ((AngleTarget)target).pitch, settings.pitchStep.get())};
+                next = new float[]{RotationUtils.nextYaw(lastDir[0], ((AngleTarget) target).yaw, settings.yawStep.get()), RotationUtils.nextPitch(lastDir[1], ((AngleTarget) target).pitch, settings.pitchStep.get())};
             }
             rotated = Math.abs(next[0] - lastDir[0]) > 0 || Math.abs(next[1] - lastDir[1]) > 0;
 
@@ -171,27 +180,37 @@ public class RotationManager {
         // Stopping
         next = new float[]{RotationUtils.nextYaw(lastDir[0], mc.player.getYaw(), settings.yawStep.get()), RotationUtils.nextPitch(lastDir[1], mc.player.getPitch(), settings.pitchStep.get())};
     }
-    public boolean isTarget(Box box) {
-        if (!(lastTarget instanceof BoxTarget)) {return false;}
 
-        return box.minX == ((BoxTarget)lastTarget).box.minX && box.minY == ((BoxTarget)lastTarget).box.minY && box.minZ == ((BoxTarget)lastTarget).box.minZ &&
-            box.maxX == ((BoxTarget)lastTarget).box.maxX && box.maxY == ((BoxTarget)lastTarget).box.maxY && box.maxZ == ((BoxTarget)lastTarget).box.maxZ;
+    public boolean isTarget(Box box) {
+        if (!(lastTarget instanceof BoxTarget)) {
+            return false;
+        }
+
+        return box.minX == ((BoxTarget) lastTarget).box.minX && box.minY == ((BoxTarget) lastTarget).box.minY && box.minZ == ((BoxTarget) lastTarget).box.minZ && box.maxX == ((BoxTarget) lastTarget).box.maxX && box.maxY == ((BoxTarget) lastTarget).box.maxY && box.maxZ == ((BoxTarget) lastTarget).box.maxZ;
     }
+
     public boolean isTarget(double yaw, double pitch) {
-        if (!(lastTarget instanceof AngleTarget)) {return false;}
+        if (!(lastTarget instanceof AngleTarget)) {
+            return false;
+        }
 
         return yaw == ((AngleTarget) lastTarget).yaw && pitch == ((AngleTarget) lastTarget).pitch;
     }
+
     public void end(Box box) {
         if (isTarget(box)) {
             priority = 1000;
         }
     }
+
     public void end(BlockPos pos) {
-        end(OLEPOSSUtils.getBox(pos));
+        end(WorldUtils.getBox(pos));
     }
+
     public void endYaw(double yaw, boolean reset) {
-        if (!(target instanceof AngleTarget)) {return;}
+        if (!(target instanceof AngleTarget)) {
+            return;
+        }
 
         if (yaw == ((AngleTarget) target).yaw) {
             priority = 1000;
@@ -200,8 +219,11 @@ public class RotationManager {
             }
         }
     }
+
     public void endPitch(double pitch, boolean reset) {
-        if (!(target instanceof AngleTarget)) {return;}
+        if (!(target instanceof AngleTarget)) {
+            return;
+        }
 
         if (pitch == ((AngleTarget) target).pitch) {
             priority = 1000;
@@ -210,14 +232,19 @@ public class RotationManager {
             }
         }
     }
+
     public boolean startYaw(double yaw, double p, RotationType type) {
         return start(yaw, lastDir[1], p, type);
     }
+
     public boolean startPitch(double pitch, double p, RotationType type) {
         return start(lastDir[0], pitch, p, type);
     }
+
     public boolean start(double yaw, double pitch, double p, RotationType type) {
-        if (settings == null) {return false;}
+        if (settings == null) {
+            return false;
+        }
         boolean alreadyRotated = lastDir[0] == yaw && lastDir[1] == pitch;
         if (p <= priority) {
             priority = p;
@@ -230,14 +257,16 @@ public class RotationManager {
     }
 
     public boolean start(BlockPos pos, Box box, Vec3d vec, double p, RotationType type) {
-        if (settings == null) {return false;}
+        if (settings == null) {
+            return false;
+        }
         boolean alreadyRotated = SettingUtils.rotationCheckHistory(box, type);
 
         if (p < priority || (p == priority && (!(target instanceof BoxTarget) || SettingUtils.rotationCheckHistory(((BoxTarget) target).box, type)))) {
             priority = p;
             lastTarget = target;
 
-            target = pos != null ? new BoxTarget(pos, vec != null ? vec : OLEPOSSUtils.getMiddle(box), p, type) : new BoxTarget(box, vec != null ? vec : OLEPOSSUtils.getMiddle(box), p, type);
+            target = pos != null ? new BoxTarget(pos, vec != null ? vec : WorldUtils.getMiddle(box), p, type) : new BoxTarget(box, vec != null ? vec : WorldUtils.getMiddle(box), p, type);
             timer = settings.getTime(type);
         }
         return alreadyRotated;
@@ -246,15 +275,19 @@ public class RotationManager {
     public boolean start(Box box, Vec3d vec, double p, RotationType type) {
         return start(null, box, vec, p, type);
     }
+
     public boolean start(Box box, double p, RotationType type) {
-        return start(box, OLEPOSSUtils.getMiddle(box), p, type);
+        return start(box, WorldUtils.getMiddle(box), p, type);
     }
+
     public boolean start(BlockPos pos, double p, RotationType type) {
-        return start(OLEPOSSUtils.getBox(pos), p, type);
+        return start(WorldUtils.getBox(pos), p, type);
     }
+
     public boolean start(BlockPos pos, Vec3d vec, double p, RotationType type) {
         return start(pos, new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1), vec, p, type);
     }
+
     public void addHistory(double yaw, double pitch) {
         if (history.size() > 10) {
             int i = history.size() - 9;
@@ -267,24 +300,29 @@ public class RotationManager {
         }
         history.add(0, new Rotation(yaw, pitch, mc.player.getEyePos()));
     }
+
     public void endAny() {
         target = null;
         timer = 0;
     }
-    public record Rotation(double yaw, double pitch, Vec3d vec) {}
+
+    public record Rotation(double yaw, double pitch, Vec3d vec) {
+    }
 
     public Vec3d getTargetPos() {
         if (SettingUtils.shouldGhostRotate()) {
-            if (((BoxTarget)target).pos == null) {
-                return SettingUtils.getGhostRot(((BoxTarget)target).box, ((BoxTarget)target).vec);
+            if (((BoxTarget) target).pos == null) {
+                return SettingUtils.getGhostRot(((BoxTarget) target).box, ((BoxTarget) target).vec);
             } else {
-                return SettingUtils.getGhostRot(((BoxTarget)target).pos, ((BoxTarget)target).vec);
+                return SettingUtils.getGhostRot(((BoxTarget) target).pos, ((BoxTarget) target).vec);
             }
         }
-        return ((BoxTarget)target).vec;
+        return ((BoxTarget) target).vec;
     }
 
-    private static class Target {}
+    private static class Target {
+    }
+
     private static class BoxTarget extends Target {
         public final BlockPos pos;
         public final Box box;
@@ -301,6 +339,7 @@ public class RotationManager {
             this.priority = priority;
             this.type = type;
         }
+
         public BoxTarget(Box box, Vec3d vec, double priority, RotationType type) {
             this.pos = null;
             this.box = box;

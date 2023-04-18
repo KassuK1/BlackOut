@@ -10,14 +10,14 @@ import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 
-/*
-Made by KassuK
-*/
-
+/**
+ * @author KassuK
+ */
 public class SprintPlus extends BlackOutModule {
     public SprintPlus() {
-        super(BlackOut.BLACKOUT, "Sprint+", "Non shit sprint");
+        super(BlackOut.BLACKOUT, "Sprint+", "Non shit sprint!");
     }
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     public final Setting<SprintMode> sprintmode = sgGeneral.add(new EnumSetting.Builder<SprintMode>()
@@ -26,21 +26,30 @@ public class SprintPlus extends BlackOutModule {
         .defaultValue(SprintMode.Vanilla)
         .build()
     );
+
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onTick(TickEvent.Pre event) {
         if (mc.player != null && mc.world != null) {
-            switch (sprintmode.get()){
-                case Vanilla -> {if (mc.options.forwardKey.isPressed()) mc.player.setSprinting(true);}
-                case Omni -> {if (PlayerUtils.isMoving()){mc.player.setSprinting(true);}}
-                case Rage ->mc.player.setSprinting(true);
+            switch (sprintmode.get()) {
+                case Vanilla -> {
+                    if (mc.options.forwardKey.isPressed()) mc.player.setSprinting(true);
+                }
+                case Omni -> {
+                    if (PlayerUtils.isMoving()) {
+                        mc.player.setSprinting(true);
+                    }
+                }
+                case Rage -> mc.player.setSprinting(true);
             }
         }
     }
+
     @Override
     public void onDeactivate() {
         if (mc.player != null && mc.world != null)
             mc.player.setSprinting(false);
     }
+
     public enum SprintMode {
         Vanilla,
         Omni,

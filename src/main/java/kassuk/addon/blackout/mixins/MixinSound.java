@@ -8,6 +8,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(AbstractSoundInstance.class)
 public interface MixinSound {
+
     @Mutable
     @Accessor("id")
     void setID(Identifier id);

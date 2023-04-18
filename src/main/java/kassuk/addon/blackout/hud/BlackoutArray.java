@@ -11,163 +11,169 @@ import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import net.minecraft.util.math.MathHelper;
 
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
+/**
+ * @author KassuK
+ * @author OLEPOSSU
+ * @author ccetl
+ */
 public class BlackoutArray extends HudElement {
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
         .name("Module Color")
-        .description("The color the ArrayList will use for module names")
+        .description("The color the ArrayList will use for module names.")
         .defaultValue(new SettingColor(255, 0, 0, 255))
         .build()
     );
     private final Setting<SettingColor> infoColor = sgGeneral.add(new ColorSetting.Builder()
         .name("Info Color")
-        .description("The color the ArrayList will use for info strings")
+        .description("The color the ArrayList will use for info strings.")
         .defaultValue(new SettingColor(255, 255, 255, 255))
         .build()
     );
     private final Setting<Boolean> wave = sgGeneral.add(new BoolSetting.Builder()
         .name("Wave")
-        .description("Wave color")
+        .description("The wave color.")
         .defaultValue(false)
         .build()
     );
     private final Setting<SettingColor> waveColor = sgGeneral.add(new ColorSetting.Builder()
         .name("Module Wave Color")
-        .description("The color the ArrayList will use for module names")
+        .description("The color the ArrayList will use for module names.")
         .defaultValue(new SettingColor(255, 255, 255, 255))
         .build()
     );
     private final Setting<SettingColor> infoWaveColor = sgGeneral.add(new ColorSetting.Builder()
         .name("Info Wave Color")
-        .description("The color the ArrayList will use for info strings")
+        .description("The color the ArrayList will use for info strings.")
         .defaultValue(new SettingColor(255, 255, 255, 255))
         .build()
     );
     private final Setting<Double> speed = sgGeneral.add(new DoubleSetting.Builder()
         .name("Wave Speed")
-        .description("Speed of color waves")
+        .description("The speed of the color waves.")
         .defaultValue(1)
         .sliderRange(1, 10)
         .build()
     );
     private final Setting<Side> side = sgGeneral.add(new EnumSetting.Builder<Side>()
         .name("Side")
-        .description(".")
+        .description("The alignment.")
         .defaultValue(Side.Right)
         .build()
     );
     private final Setting<From> from = sgGeneral.add(new EnumSetting.Builder<From>()
         .name("From")
-        .description(".")
+        .description("The sorting direction.")
         .defaultValue(From.Top)
+        .build()
+    );
+    private final Setting<Boolean> infoCare = sgGeneral.add(new BoolSetting.Builder()
+        .name("InfoLength")
+        .description("Should the list care about the the info text length when sorting?")
+        .defaultValue(false)
         .build()
     );
     private final Setting<Boolean> onlyBlackout = sgGeneral.add(new BoolSetting.Builder()
         .name("Only Blackout")
-        .description("Only shows blackout modules in hud")
+        .description("Only shows blackout modules in the hud.")
         .defaultValue(false)
+        .build()
+    );
+    private final Setting<Boolean> shadow = sgGeneral.add(new BoolSetting.Builder()
+        .name("Shadow")
+        .description("Renders a shadow behind the chars.")
+        .defaultValue(true)
         .build()
     );
     private final Setting<Double> scale = sgGeneral.add(new DoubleSetting.Builder()
         .name("Scale")
-        .description("The scale the ArrayList will be rendered at")
+        .description("The scale the ArrayList will be rendered at.")
         .defaultValue(1)
         .build()
     );
+
+    public static final HudElementInfo<BlackoutArray> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "BlackoutArray", "An ArrayList for blackout features.", BlackoutArray::new);
+
+    public BlackoutArray() {
+        super(INFO);
+    }
+
+    @Override
+    public void render(HudRenderer renderer) {
+        double height = height(renderer);
+
+        List<Line> lines = getModules()
+            .stream()
+            .sorted(Comparator.comparingInt(module -> module.title.length() + (infoCare.get() ? getInfo(module).length() : 0)))
+            .map(module -> new Line(module.title, getInfo(module)))
+            .collect(Collectors.toList());
+
+        if (from.get() == From.Top) {
+            Collections.reverse(lines);
+        }
+
+        setSize(lines.isEmpty() ? 120 * scale.get() * scale.get() : width(renderer, lines.stream().max(Comparator.comparingInt(line -> line.toString().length())).get().toString()), lines.size() > 0 ? height * lines.size() : 30 * scale.get() * scale.get());
+
+        for (int i = 0; i < lines.size(); i++) {
+            Line line = lines.get(i);
+            double f = 0;
+            if (wave.get()) {
+                f = (Math.sin(i * 6 + System.currentTimeMillis() / 1000D * speed.get()) + 1) / 2D;
+            }
+            renderer.text(line.name, side.get() == Side.Left ? x : x + getWidth() - width(renderer, line.name + (line.info.isEmpty() ? "" : " " + line.info)), y + i * height * scale.get() * scale.get(), getColor(color.get(), waveColor.get(), f), shadow.get(), scale.get());
+            renderer.text(line.info, side.get() == Side.Left ? x + width(renderer, line.name + " ") : x + getWidth() - width(renderer, line.info), y + i * height * scale.get() * scale.get(), getColor(infoColor.get(), infoWaveColor.get(), f), shadow.get(), scale.get());
+        }
+    }
+
+    private String getInfo(Module module) {
+        return module.getInfoString() == null ? "" : module.getInfoString();
+    }
+
+    private List<Module> getModules() {
+        return Modules.get().getActive()
+            .stream()
+            .filter(module -> !onlyBlackout.get() || module.category.equals(BlackOut.BLACKOUT))
+            .collect(Collectors.toList());
+    }
+
+    private Color getColor(SettingColor color, SettingColor waveColor, double f) {
+        return wave.get() ? new Color(colorVal(color.r, waveColor.r, f), colorVal(color.g, waveColor.g, f), colorVal(color.b, waveColor.b, f), color.a) : color;
+    }
+
+    private int colorVal(int original, int wave, double f) {
+        return MathHelper.clamp((int) Math.round(original + (wave - original) * f), 0, 255);
+    }
+
+    private record Line(String name, String info) {
+        @Override
+        public String toString() {
+            return name + (info.isEmpty() ? "" : " " + info);
+        }
+    }
+
+    private double width(HudRenderer renderer, String text) {
+        return renderer.textWidth(text) * scale.get() * scale.get();
+    }
+
+    private double height(HudRenderer renderer) {
+        return renderer.textHeight(true) * scale.get() * scale.get();
+    }
 
     public enum Side {
         Right,
         Left
     }
+
     public enum From {
         Top,
+        @SuppressWarnings("unused")
         Bottom
-    }
-
-    List<Line> sorted = new ArrayList<>();
-    List<Line> unsorted = new ArrayList<>();
-    double length;
-    double longest;
-    Line longestLine;
-
-    public static final HudElementInfo<BlackoutArray> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "BlackoutArray", "ArrayList for blackout features",BlackoutArray::new);
-
-    public BlackoutArray(){super(INFO);}
-    List<Module> getModules() {
-        List<Module> list = new ArrayList<>();
-        Modules.get().getActive().forEach(it -> {
-            if (onlyBlackout.get() && !it.category.equals(BlackOut.BLACKOUT)) {return;}
-            list.add(it);
-        });
-        return list;
-    }
-
-    @Override
-    public void render(HudRenderer renderer) {
-        List<Module> list = getModules();
-
-        sorted.clear();
-        unsorted.clear();
-
-        list.forEach(item -> {
-            unsorted.add(new Line(item.name, item.getInfoString() == null ? "" : item.getInfoString(), width(renderer, item.name)));
-        });
-
-        setSize(120 * scale.get() * scale.get(), unsorted.size() > 0 ? height(renderer) * unsorted.size() : 30 * scale.get() * scale.get());
-
-
-        for (int i = unsorted.size(); i > 0; i--) {
-            length = 0;
-            longest = -1;
-            longestLine = null;
-
-            if (from.get() == From.Top) {
-                unsorted.forEach(item -> {
-                    if (item.length > longest) {
-                        longestLine = item;
-                        longest = item.length;
-                    }
-                });
-            } else {
-                unsorted.forEach(item -> {
-                    if (longest < 0 || item.length < longest) {
-                        longestLine = item;
-                        longest = item.length;
-                    }
-                });
-            }
-
-            sorted.add(longestLine);
-            unsorted.remove(longestLine);
-        }
-
-        for (int i = 0; i < sorted.size(); i++) {
-            Line line = sorted.get(i);
-            renderer.text(line.name, side.get() == Side.Left ? x : x + 120 - width(renderer, line.name + " " + line.info), y + i * height(renderer) * scale.get() * scale.get(), getColor(color.get(), waveColor.get(), (Math.sin(i * 6 + System.currentTimeMillis() / 1000D * speed.get()) + 1) / 2D), true, scale.get());
-            renderer.text(line.info, side.get() == Side.Left ? x + width(renderer, line.name + " ") : x + 120 - width(renderer, line.info), y + i * height(renderer) * scale.get() * scale.get(), getColor(infoColor.get(), infoWaveColor.get(), (Math.sin(i * 6 + System.currentTimeMillis() / 1000D * speed.get()) + 1) / 2D), true, scale.get());
-        }
-    }
-
-    Color getColor(SettingColor color, SettingColor waveColor, double f) {
-        if (!wave.get()) {return color;}
-        return new Color(colorVal(color.r, waveColor.r, f), colorVal(color.g, waveColor.g, f), colorVal(color.b, waveColor.b, f), color.a);
-    }
-
-    int colorVal(int original, int wave, double f) {
-        return MathHelper.clamp((int) Math.round(original + (wave - original) * f), 0, 255);
-    }
-
-    public record Line(String name, String info, double length) {};
-
-    double width(HudRenderer renderer, String text) {
-        return renderer.textWidth(text) * scale.get() * scale.get();
-    }
-
-    double height(HudRenderer renderer) {
-        return renderer.textHeight(true) * scale.get() * scale.get();
     }
 }

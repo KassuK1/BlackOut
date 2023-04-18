@@ -1,6 +1,9 @@
 package kassuk.addon.blackout.utils;
 
 import kassuk.addon.blackout.modules.*;
+import kassuk.addon.blackout.modules.AntiAim;
+import kassuk.addon.blackout.modules.AutoPearl;
+import kassuk.addon.blackout.modules.ScaffoldPlus;
 
 public class PriorityUtils {
     // Tell me a better way to do this pls

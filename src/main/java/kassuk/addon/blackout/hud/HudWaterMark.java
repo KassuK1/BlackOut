@@ -1,7 +1,6 @@
 package kassuk.addon.blackout.hud;
 
 import kassuk.addon.blackout.BlackOut;
-import kassuk.addon.blackout.utils.RenderUtils;
 import meteordevelopment.meteorclient.settings.ColorSetting;
 import meteordevelopment.meteorclient.settings.DoubleSetting;
 import meteordevelopment.meteorclient.settings.Setting;
@@ -10,21 +9,21 @@ import meteordevelopment.meteorclient.systems.hud.HudElement;
 import meteordevelopment.meteorclient.systems.hud.HudElementInfo;
 import meteordevelopment.meteorclient.systems.hud.HudRenderer;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
-/*
-Made by KassuK
-*/
 
+/**
+ * @author KassuK
+ */
 public class HudWaterMark extends HudElement {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
         .name("Color")
-        .description("U blind?")
+        .description("Are you blind?")
         .defaultValue(new SettingColor(255, 255, 255, 255))
         .build()
     );
     private final Setting<Double> scale = sgGeneral.add(new DoubleSetting.Builder()
         .name("Scale")
-        .description("Size of the text")
+        .description("Modify the size of the text.")
         .defaultValue(1)
         .build()
     );
@@ -39,6 +38,5 @@ public class HudWaterMark extends HudElement {
         setSize(renderer.textWidth(BlackOut.BLACKOUT_NAME + " v" + BlackOut.BLACKOUT_VERSION, true) * scale.get() * scale.get(), renderer.textHeight(true) * scale.get() * scale.get());
 
         renderer.text(BlackOut.BLACKOUT_NAME + " v" + BlackOut.BLACKOUT_VERSION, x, y, color.get(), true, scale.get());
-        RenderUtils.renderText(null, "Large garge sus sus maximus");
     }
 }

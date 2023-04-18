@@ -3,9 +3,10 @@ package kassuk.addon.blackout.modules;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.HoleType;
+import kassuk.addon.blackout.utils.DistanceUtils;
+import kassuk.addon.blackout.utils.EntityUtils;
 import kassuk.addon.blackout.utils.Hole;
 import kassuk.addon.blackout.utils.HoleUtils;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.mixininterface.IVec3d;
@@ -20,13 +21,9 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
-import java.util.ArrayList;
-import java.util.List;
-
-/*
-Made by OLEPOSSU / Raksamies
-*/
-
+/**
+ * @author OLEPOSSU
+ */
 public class HoleSnap extends BlackOutModule {
     public HoleSnap() {
         super(BlackOut.BLACKOUT, "HoleSnap", "For the time when you cant even press W");
@@ -106,11 +103,11 @@ public class HoleSnap extends BlackOutModule {
         .sliderRange(0, 100)
         .build()
     );
-    Hole singleHole;
-    int collisions;
-    int rubberbands;
-    int ticks;
-    List<BlockPos> holes = new ArrayList<>();
+
+    private Hole singleHole;
+    private int collisions;
+    private int rubberbands;
+    private int ticks;
 
     @Override
     public void onActivate() {
@@ -151,7 +148,7 @@ public class HoleSnap extends BlackOutModule {
                     if (mc.player.getY() == hole.middle.y) {
                         this.toggle();
                         sendDisableMsg("in hole");
-                    } else if (OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox().offset(0, -0.05, 0))){
+                    } else if (EntityUtils.inside(mc.player, mc.player.getBoundingBox().offset(0, -0.05, 0))){
                         this.toggle();
                         sendDisableMsg("hole unreachable");
                     } else {
@@ -162,7 +159,7 @@ public class HoleSnap extends BlackOutModule {
                     double dX = hole.middle.x - mc.player.getX();
                     double z = speed.get() * pit;
                     double dZ = hole.middle.z - mc.player.getZ();
-                    if (OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox().offset(x, 0, z))) {
+                    if (EntityUtils.inside(mc.player, mc.player.getBoundingBox().offset(x, 0, z))) {
                         collisions++;
                         if (collisions >= coll.get() && coll.get() > 0) {
                             this.toggle();
@@ -173,7 +170,7 @@ public class HoleSnap extends BlackOutModule {
                     }
                     if (ticks > 0) {
                         ticks--;
-                    } else if (OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox().offset(0, -0.05, 0)) && jump.get()) {
+                    } else if (EntityUtils.inside(mc.player, mc.player.getBoundingBox().offset(0, -0.05, 0)) && jump.get()) {
                         ticks = jumpCoolDown.get();
                         ((IVec3d) event.movement).setY(0.42);
                     }
@@ -211,8 +208,8 @@ public class HoleSnap extends BlackOutModule {
                         return hole;
                     }
                     if (closest == null ||
-                        OLEPOSSUtils.distance(hole.middle, mc.player.getPos()) <
-                        OLEPOSSUtils.distance(closest.middle, mc.player.getPos())) {
+                        DistanceUtils.distance(hole.middle, mc.player.getPos()) <
+                        DistanceUtils.distance(closest.middle, mc.player.getPos())) {
                         closest = hole;
                     }
                 }

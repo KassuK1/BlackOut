@@ -7,8 +7,7 @@ import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.timers.BlockTimerList;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
-import kassuk.addon.blackout.utils.SettingUtils;
+import kassuk.addon.blackout.utils.*;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -29,6 +28,9 @@ import net.minecraft.util.math.Vec3d;
 
 import java.util.Map;
 
+/**
+ * @author OLEPOSSU
+ */
 public class ButtonAura extends BlackOutModule {
 
     public ButtonAura() {super(BlackOut.BLACKOUT, "ButtonAura", "Presses nearby buttons.");}
@@ -93,7 +95,7 @@ public class ButtonAura extends BlackOutModule {
             SettingUtils.swing(SwingState.Pre, SwingType.Interact, Hand.MAIN_HAND);
 
             mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
-                new BlockHitResult(new Vec3d(block.getX() + 0.5, block.getY() + 0.5, block.getZ() + 0.5), OLEPOSSUtils.closestDir(block, mc.player.getEyePos()), block, false), 0));
+                new BlockHitResult(new Vec3d(block.getX() + 0.5, block.getY() + 0.5, block.getZ() + 0.5), DirectionUtils.closestDir(block, mc.player.getEyePos()), block, false), 0));
 
             SettingUtils.swing(SwingState.Post, SwingType.Interact, Hand.MAIN_HAND);
 
@@ -112,7 +114,7 @@ public class ButtonAura extends BlackOutModule {
                 for (int z = -c; z <= c; z++) {
                     BlockPos pos = mc.player.getBlockPos().add(x, y, z);
                     if (mc.world.getBlockState(pos).getBlock().equals(Blocks.DARK_OAK_BUTTON) && !timers.contains(pos)) {
-                        float dist = (float) OLEPOSSUtils.distance(vec, OLEPOSSUtils.getMiddle(pos));
+                        float dist = (float) DistanceUtils.distance(vec, WorldUtils.getMiddle(pos));
                         if (dist <= r && (closest == null || dist < closestDist)) {
                             closest = pos;
                             closestDist = dist;

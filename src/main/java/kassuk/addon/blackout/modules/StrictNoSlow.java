@@ -16,14 +16,14 @@ import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 import net.minecraft.util.Hand;
 
-/*
-Made by OLEPOSSU
-*/
-
+/**
+ * @author OLEPOSSU
+ */
 public class StrictNoSlow extends BlackOutModule {
     public StrictNoSlow() {
         super(BlackOut.BLACKOUT, "Strict No Slow", "Should be used with meteor noslow");
     }
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     public final Setting<Boolean> onlyGap = sgGeneral.add(new BoolSetting.Builder()
         .name("Only Gapples")
@@ -46,7 +46,7 @@ public class StrictNoSlow extends BlackOutModule {
         .visible(() -> !single.get())
         .build()
     );
-    int timer = 0;
+    private int timer = 0;
 
 
     @EventHandler
@@ -68,7 +68,10 @@ public class StrictNoSlow extends BlackOutModule {
         }
     }
 
-    void send() {mc.getNetworkHandler().sendPacket(new UpdateSelectedSlotC2SPacket(Managers.HOLDING.slot));}
+    private void send() {
+        //noinspection DataFlowIssue
+        mc.getNetworkHandler().sendPacket(new UpdateSelectedSlotC2SPacket(Managers.HOLDING.slot));
+    }
 
     boolean shouldSend(ItemStack stack) {
         return mc.player != null && (onlyGap.get() || (stack != null && !stack.isEmpty() && stack.getItem() == Items.ENCHANTED_GOLDEN_APPLE || stack.getItem() == Items.GOLDEN_APPLE));

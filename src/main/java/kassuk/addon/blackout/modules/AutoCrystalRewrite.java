@@ -6,17 +6,15 @@ import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
-import kassuk.addon.blackout.mixins.MixinSound;
 import kassuk.addon.blackout.timers.IntTimerList;
 import kassuk.addon.blackout.utils.BOInvUtils;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
+import kassuk.addon.blackout.utils.WorldUtils;
 import kassuk.addon.blackout.utils.meteor.BODamageUtils;
 import kassuk.addon.blackout.utils.meteor.BOEntityUtils;
 import meteordevelopment.meteorclient.events.entity.EntityAddedEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
-import meteordevelopment.meteorclient.events.world.PlaySoundEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
@@ -38,7 +36,6 @@ import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -51,10 +48,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/*
-Made by OLEPOSSU / Raksamies
-*/
-
+/**
+ * @author OLEPOSSU
+ */
 public class AutoCrystalRewrite extends BlackOutModule {
     public AutoCrystalRewrite() {super(BlackOut.BLACKOUT, "Auto Crystal Rewrite", "Breaks and places crystals automatically (but better).");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -823,7 +819,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
                     debugRangeHeight(3) + "  " + dist(debugRangePos(3)) + "\n" +
                     debugRangeHeight(4) + "  " + dist(debugRangePos(4)) + "\n" +
                     debugRangeHeight(5) + "  " + dist(debugRangePos(5)) + "\n" +
-                    SettingUtils.attackRangeTo(OLEPOSSUtils.getCrystalBox(new BlockPos(debugRangeX.get(), debugRangeY.get(), debugRangeZ.get())), new Vec3d(debugRangeX.get() + 0.5, debugRangeY.get(), debugRangeZ.get() + 0.5)));
+                    SettingUtils.attackRangeTo(kassuk.addon.blackout.utils.EntityUtils.getCrystalBox(new BlockPos(debugRangeX.get(), debugRangeY.get(), debugRangeZ.get())), new Vec3d(debugRangeX.get() + 0.5, debugRangeY.get(), debugRangeZ.get() + 0.5)));
             }
         }
 
@@ -1172,7 +1168,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         if (!surroundAttack.get() || !Modules.get().isActive(SurroundPlus.class)) {return false;}
 
         for (int i = 0; i < SurroundPlus.attack.size(); i++) {
-            if (EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(SurroundPlus.attack.get(i)), entity -> entity instanceof EndCrystalEntity)) {
+            if (EntityUtils.intersectsWithEntity(WorldUtils.getBox(SurroundPlus.attack.get(i)), entity -> entity instanceof EndCrystalEntity)) {
                 return true;
             }
         }
@@ -1262,7 +1258,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
             SettingUtils.swing(SwingState.Post, SwingType.Crystal, switched ? Hand.MAIN_HAND : handToUse);
 
             if (SettingUtils.shouldRotate(RotationType.Crystal)) {
-                Managers.ROTATION.end(OLEPOSSUtils.getBox(pos));
+                Managers.ROTATION.end(WorldUtils.getBox(pos));
             }
 
             if (switched) {
@@ -1344,7 +1340,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         if (handToUse != null && !pausedCheck()) {
             EndCrystalEntity en = new EndCrystalEntity(mc.world, pos.x, pos.y, pos.z);
             en.setId(id);
-            attackEntity(en, OLEPOSSUtils.getCrystalBox(pos));
+            attackEntity(en, kassuk.addon.blackout.utils.EntityUtils.getCrystalBox(pos));
         }
     }
 

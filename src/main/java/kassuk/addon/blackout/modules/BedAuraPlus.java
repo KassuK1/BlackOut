@@ -32,10 +32,9 @@ import net.minecraft.util.math.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/*
-Made by OLEPOSSU / Raksamies
-*/
-
+/**
+ * @author OLEPOSSU
+ */
 public class BedAuraPlus extends BlackOutModule {
     public BedAuraPlus() {super(BlackOut.BLACKOUT, "Bed Aura+", "Automatically places and breaks beds to cause damage to your opponents but better");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -243,12 +242,12 @@ public class BedAuraPlus extends BlackOutModule {
 
             if (!dmgCheck(dmg, self)) {continue;}
 
-            for (Direction dir : OLEPOSSUtils.horizontals) {
+            for (Direction dir : DirectionUtils.horizontals) {
                 PlaceData data = SettingUtils.getPlaceDataAND(pos.offset(dir), direction -> direction != dir, pos1 -> !(mc.world.getBlockState(pos1).getBlock() instanceof BedBlock));
 
                 if (!data.valid()) {continue;}
 
-                if (!OLEPOSSUtils.replaceable(pos.offset(dir)) && !(mc.world.getBlockState(pos.offset(dir)).getBlock() instanceof BedBlock)) {continue;}
+                if (!BlockUtils.replaceable(pos.offset(dir)) && !(mc.world.getBlockState(pos.offset(dir)).getBlock() instanceof BedBlock)) {continue;}
 
                 if (!SettingUtils.inPlaceRange(data.pos())) {continue;}
 
@@ -300,7 +299,7 @@ public class BedAuraPlus extends BlackOutModule {
                 for (int z = -i; z <= i; z++) {
                     pos = new BlockPos(Math.floor(middle.x) + x, Math.floor(middle.y) + y, Math.floor(middle.z) + z);
 
-                    if (!OLEPOSSUtils.replaceable(pos) && !(mc.world.getBlockState(pos).getBlock() instanceof BedBlock)) {continue;}
+                    if (!BlockUtils.replaceable(pos) && !(mc.world.getBlockState(pos).getBlock() instanceof BedBlock)) {continue;}
 
                     if (!inRangeToTargets(pos)) {continue;}
                     result.add(pos);
@@ -312,7 +311,7 @@ public class BedAuraPlus extends BlackOutModule {
 
     boolean inRangeToTargets(BlockPos pos) {
         for (PlayerEntity target : targets) {
-            if (OLEPOSSUtils.distance(target.getPos().add(0, 1, 0), new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5)) < 3.5) {
+            if (DistanceUtils.distance(target.getPos().add(0, 1, 0), new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5)) < 3.5) {
                 return true;
             }
         }
@@ -377,7 +376,7 @@ public class BedAuraPlus extends BlackOutModule {
     void place(Hand hand) {
         SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand);
 
-        sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(OLEPOSSUtils.getMiddle(placeData.pos()), placeData.dir(), placeData.pos(), false), 0));
+        sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(WorldUtils.getMiddle(placeData.pos()), placeData.dir(), placeData.pos(), false), 0));
 
         SettingUtils.swing(SwingState.Post, SwingType.Placing, hand);
     }
@@ -392,7 +391,7 @@ public class BedAuraPlus extends BlackOutModule {
 
         SettingUtils.swing(SwingState.Pre, SwingType.Interact, Hand.MAIN_HAND);
 
-        sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, new BlockHitResult(OLEPOSSUtils.getMiddle(interactPos), interactDir, interactPos, false), 0));
+        sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, new BlockHitResult(WorldUtils.getMiddle(interactPos), interactDir, interactPos, false), 0));
 
         SettingUtils.swing(SwingState.Post, SwingType.Interact, Hand.OFF_HAND);
 
