@@ -111,7 +111,7 @@ public class BlackoutArray extends HudElement {
 
         List<Line> lines = getModules()
             .stream()
-            .sorted(Comparator.comparingInt(module -> module.title.length() + (infoCare.get() ? getInfo(module).length() : 0)))
+            .sorted(Comparator.comparing(module -> width(renderer, module.title + (infoCare.get() ? getInfo(module) : ""))))
             .map(module -> new Line(module.title, getInfo(module)))
             .collect(Collectors.toList());
 
