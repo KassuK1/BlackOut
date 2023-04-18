@@ -44,30 +44,118 @@ public class SurroundPlus extends BlackOutModule {
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private final SettingGroup sgAttack = settings.createGroup("Attack");
     private final SettingGroup sgToggle = settings.createGroup("Toggle");
     private final SettingGroup sgRender = settings.createGroup("Render");
-    private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder().name("Pause Eat").description("Pauses when you are eating").defaultValue(true).build());
-    private final Setting<Boolean> onlyConfirmed = sgGeneral.add(new BoolSetting.Builder().name("Only Confirmed").description("Only places on blocks the server has confirmed to exist").defaultValue(false).build());
-    private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>().name("Switch Mode").description(".").defaultValue(SwitchMode.Silent).build());
-    private final Setting<List<Block>> blocks = sgGeneral.add(new BlockListSetting.Builder().name("Blocks").description("Blocks to use.").defaultValue(Blocks.OBSIDIAN, Blocks.CRYING_OBSIDIAN, Blocks.NETHERITE_BLOCK).build());
-    private final Setting<Boolean> floor = sgGeneral.add(new BoolSetting.Builder().name("Floor").description("Places blocks under your feet.").defaultValue(true).build());
-    private final Setting<Double> placeDelay = sgGeneral.add(new DoubleSetting.Builder().name("Place Delay").description("Delay between places.").defaultValue(0).range(0, 10).sliderRange(0, 10).build());
-    private final Setting<Integer> places = sgGeneral.add(new IntSetting.Builder().name("Places").description("Blocks placed per place").defaultValue(1).range(1, 10).sliderRange(1, 10).build());
-    private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder().name("Delay").description("Delay between placing at each spot.").defaultValue(0.3).range(0, 10).sliderRange(0, 10).build());
+    private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
+        .name("Pause Eat")
+        .description("Pauses when you are eating")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> onlyConfirmed = sgGeneral.add(new BoolSetting.Builder()
+        .name("Only Confirmed")
+        .description("Only places on blocks the server has confirmed to exist")
+        .defaultValue(false)
+        .build()
+    );
+    private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
+        .name("Switch Mode")
+        .description(".")
+        .defaultValue(SwitchMode.Silent)
+        .build()
+    );
+    private final Setting<List<Block>> blocks = sgGeneral.add(new BlockListSetting.Builder()
+        .name("Blocks")
+        .description("Blocks to use.")
+        .defaultValue(Blocks.OBSIDIAN, Blocks.CRYING_OBSIDIAN, Blocks.NETHERITE_BLOCK)
+        .build()
+    );
+    private final Setting<Boolean> floor = sgGeneral.add(new BoolSetting.Builder()
+        .name("Floor")
+        .description("Places blocks under your feet.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Double> placeDelay = sgGeneral.add(new DoubleSetting.Builder()
+        .name("Place Delay")
+        .description("Delay between places.")
+        .defaultValue(0).range(0, 10)
+        .sliderRange(0, 10)
+        .build()
+    );
+    private final Setting<Integer> places = sgGeneral.add(new IntSetting.Builder()
+        .name("Places")
+        .description("Blocks placed per place")
+        .defaultValue(1).range(1, 10)
+        .sliderRange(1, 10)
+        .build()
+    );
+    private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
+        .name("Delay")
+        .description("Delay between placing at each spot.")
+        .defaultValue(0.3)
+        .range(0, 10)
+        .sliderRange(0, 10)
+        .build()
+    );
 
     //  Toggle Page
-    private final Setting<Boolean> toggleMove = sgToggle.add(new BoolSetting.Builder().name("Toggle Move").description("Toggles when you move horizontally").defaultValue(true).build());
-    private final Setting<ToggleYMode> toggleY = sgToggle.add(new EnumSetting.Builder<ToggleYMode>().name("Toggle Y").description("Toggles when you move vertically").defaultValue(ToggleYMode.Full).build());
-    private final Setting<Boolean> toggleSneak = sgToggle.add(new BoolSetting.Builder().name("Toggle Sneak").description("Toggles when you sneak").defaultValue(false).build());
+    private final Setting<Boolean> toggleMove = sgToggle.add(new BoolSetting.Builder()
+        .name("Toggle Move")
+        .description("Toggles when you move horizontally")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<ToggleYMode> toggleY = sgToggle.add(new EnumSetting.Builder<ToggleYMode>()
+        .name("Toggle Y")
+        .description("Toggles when you move vertically")
+        .defaultValue(ToggleYMode.Full)
+        .build()
+    );
+    private final Setting<Boolean> toggleSneak = sgToggle.add(new BoolSetting.Builder()
+        .name("Toggle Sneak")
+        .description("Toggles when you sneak")
+        .defaultValue(false)
+        .build()
+    );
 
     //  Render Page
-    private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>().name("Shape Mode").description(".").defaultValue(ShapeMode.Both).build());
-    private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder().name("Line Color").description("Color of the outlines").defaultValue(new SettingColor(255, 0, 0, 150)).build());
-    private final Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder().name("Side Color").description(".").defaultValue(new SettingColor(255, 0, 0, 50)).build());
-    private final Setting<ShapeMode> supportShapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>().name("Support Shape Mode").description(".").defaultValue(ShapeMode.Both).build());
-    private final Setting<SettingColor> supportLineColor = sgRender.add(new ColorSetting.Builder().name("Support Line Color").description("Color of the outlines").defaultValue(new SettingColor(255, 0, 0, 150)).build());
-    private final Setting<SettingColor> supportSideColor = sgRender.add(new ColorSetting.Builder().name("Support Side Color").description(".").defaultValue(new SettingColor(255, 0, 0, 50)).build());
+    private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
+        .name("Shape Mode")
+        .description(".")
+        .defaultValue(ShapeMode.Both)
+        .build()
+    );
+    private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder()
+        .name("Line Color")
+        .description("Color of the outlines")
+        .defaultValue(new SettingColor(255, 0, 0, 150))
+        .build()
+    );
+    private final Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder()
+        .name("Side Color")
+        .description(".")
+        .defaultValue(new SettingColor(255, 0, 0, 50))
+        .build()
+    );
+    private final Setting<ShapeMode> supportShapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
+        .name("Support Shape Mode")
+        .description(".")
+        .defaultValue(ShapeMode.Both)
+        .build()
+    );
+    private final Setting<SettingColor> supportLineColor = sgRender.add(new ColorSetting.Builder()
+        .name("Support Line Color")
+        .description("Color of the outlines")
+        .defaultValue(new SettingColor(255, 0, 0, 150))
+        .build()
+    );
+    private final Setting<SettingColor> supportSideColor = sgRender.add(new ColorSetting.Builder()
+        .name("Support Side Color")
+        .description(".")
+        .defaultValue(new SettingColor(255, 0, 0, 50))
+        .build()
+    );
 
     private final BlockTimerList timers = new BlockTimerList();
     private BlockPos startPos = null;
@@ -178,6 +266,7 @@ public class SurroundPlus extends BlackOutModule {
     }
 
     private void switchItems(Hand hand, FindItemResult hotbar, FindItemResult inventory, Map<PlaceData, BlockPos> toPlace) {
+        @SuppressWarnings("DataFlowIssue")
         int obsidian = hand == Hand.MAIN_HAND ? Managers.HOLDING.getStack().getCount() : hand == Hand.OFF_HAND ? mc.player.getOffHandStack().getCount() : -1;
 
         switch (switchMode.get()) {
