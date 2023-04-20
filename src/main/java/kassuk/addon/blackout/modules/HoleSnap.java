@@ -3,10 +3,9 @@ package kassuk.addon.blackout.modules;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.HoleType;
-import kassuk.addon.blackout.utils.DistanceUtils;
-import kassuk.addon.blackout.utils.EntityUtils;
 import kassuk.addon.blackout.utils.Hole;
 import kassuk.addon.blackout.utils.HoleUtils;
+import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.mixininterface.IVec3d;
@@ -26,11 +25,11 @@ import net.minecraft.util.math.Vec3d;
  */
 public class HoleSnap extends BlackOutModule {
     public HoleSnap() {
-        super(BlackOut.BLACKOUT, "HoleSnap", "For the time when you cant even press W");
+        super(BlackOut.BLACKOUT, "Hole Snap", "For the time when you cant even press W");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private final Setting<Boolean> single = sgGeneral.add(new BoolSetting.Builder()
-        .name("Single")
+    private final Setting<Boolean> singleTarget = sgGeneral.add(new BoolSetting.Builder()
+        .name("Single Target")
         .description("Only chooses target hole once")
         .defaultValue(true)
         .build()
@@ -60,7 +59,7 @@ public class HoleSnap extends BlackOutModule {
     private final Setting<Double> timer = sgGeneral.add(new DoubleSetting.Builder()
         .name("Timer")
         .description("Sends packets faster")
-        .defaultValue(30)
+        .defaultValue(10)
         .min(0)
         .sliderMax(100)
         .build()
@@ -103,6 +102,24 @@ public class HoleSnap extends BlackOutModule {
         .sliderRange(0, 100)
         .build()
     );
+    private final Setting<Boolean> singleHoles = sgGeneral.add(new BoolSetting.Builder()
+        .name("Single Holes")
+        .description(".")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> doubleHoles = sgGeneral.add(new BoolSetting.Builder()
+        .name("Double Holes")
+        .description(".")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> quadHoles = sgGeneral.add(new BoolSetting.Builder()
+        .name("Quad Holes")
+        .description(".")
+        .defaultValue(true)
+        .build()
+    );
 
     private Hole singleHole;
     private int collisions;
@@ -137,7 +154,7 @@ public class HoleSnap extends BlackOutModule {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onMove(PlayerMoveEvent event) {
         if (mc.player != null && mc.world != null) {
-            Hole hole = single.get() ? singleHole : findHole();
+            Hole hole = singleTarget.get() ? singleHole : findHole();
 
             if (hole != null && !singleBlocked()) {
                 Modules.get().get(Timer.class).setOverride(timer.get());
@@ -148,7 +165,7 @@ public class HoleSnap extends BlackOutModule {
                     if (mc.player.getY() == hole.middle.y) {
                         this.toggle();
                         sendDisableMsg("in hole");
-                    } else if (EntityUtils.inside(mc.player, mc.player.getBoundingBox().offset(0, -0.05, 0))){
+                    } else if (OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox().offset(0, -0.05, 0))){
                         this.toggle();
                         sendDisableMsg("hole unreachable");
                     } else {
@@ -159,7 +176,7 @@ public class HoleSnap extends BlackOutModule {
                     double dX = hole.middle.x - mc.player.getX();
                     double z = speed.get() * pit;
                     double dZ = hole.middle.z - mc.player.getZ();
-                    if (EntityUtils.inside(mc.player, mc.player.getBoundingBox().offset(x, 0, z))) {
+                    if (OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox().offset(x, 0, z))) {
                         collisions++;
                         if (collisions >= coll.get() && coll.get() > 0) {
                             this.toggle();
@@ -170,7 +187,7 @@ public class HoleSnap extends BlackOutModule {
                     }
                     if (ticks > 0) {
                         ticks--;
-                    } else if (EntityUtils.inside(mc.player, mc.player.getBoundingBox().offset(0, -0.05, 0)) && jump.get()) {
+                    } else if (OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox().offset(0, -0.05, 0)) && jump.get()) {
                         ticks = jumpCoolDown.get();
                         ((IVec3d) event.movement).setY(0.42);
                     }
@@ -200,7 +217,7 @@ public class HoleSnap extends BlackOutModule {
                 for (int z = -range.get(); z < range.get(); z++) {
                     BlockPos pos = mc.player.getBlockPos().add(x, y, z);
 
-                    Hole hole = HoleUtils.getHole(pos, depth.get());
+                    Hole hole = HoleUtils.getHole(pos, singleHoles.get(), doubleHoles.get(), quadHoles.get(), depth.get());
 
                     if (hole.type == HoleType.NotHole) {continue;}
 
@@ -208,8 +225,8 @@ public class HoleSnap extends BlackOutModule {
                         return hole;
                     }
                     if (closest == null ||
-                        DistanceUtils.distance(hole.middle, mc.player.getPos()) <
-                        DistanceUtils.distance(closest.middle, mc.player.getPos())) {
+                        OLEPOSSUtils.distance(hole.middle, mc.player.getPos()) <
+                        OLEPOSSUtils.distance(closest.middle, mc.player.getPos())) {
                         closest = hole;
                     }
                 }

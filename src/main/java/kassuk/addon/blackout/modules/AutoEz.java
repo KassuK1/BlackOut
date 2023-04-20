@@ -2,7 +2,7 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
-import kassuk.addon.blackout.utils.DistanceUtils;
+import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
@@ -23,9 +23,8 @@ import java.util.Random;
  */
 public class AutoEz extends BlackOutModule {
     public AutoEz() {
-        super(BlackOut.BLACKOUT, "AutoEZ", "Sends message after enemy dies(too EZ nn's)");
+        super(BlackOut.BLACKOUT, "Auto EZ", "Sends message after enemy dies(too EZ nn's)");
     }
-
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgKill = settings.getDefaultGroup();
     private final SettingGroup sgPop = settings.getDefaultGroup();
@@ -300,7 +299,7 @@ public class AutoEz extends BlackOutModule {
                 Entity entity = packet.getEntity(mc.world);
                 if (pop.get() && mc.player != null && mc.world != null && entity instanceof PlayerEntity) {
                     if (entity != mc.player && !Friends.get().isFriend((PlayerEntity) entity) &&
-                        DistanceUtils.distance(entity.getPos(), mc.player.getPos()) <= range.get()) {
+                        OLEPOSSUtils.distance(entity.getPos(), mc.player.getPos()) <= range.get()) {
                         sendPopMessage(entity.getName().getString());
                     }
                 }
@@ -311,7 +310,7 @@ public class AutoEz extends BlackOutModule {
     @SuppressWarnings("DataFlowIssue")
     private boolean anyDead(double range) {
         for (PlayerEntity pl : mc.world.getPlayers()) {
-            if (pl != mc.player && !Friends.get().isFriend(pl) && DistanceUtils.distance(pl.getPos(), mc.player.getPos()) <= range) {
+            if (pl != mc.player && !Friends.get().isFriend(pl) && OLEPOSSUtils.distance(pl.getPos(), mc.player.getPos()) <= range) {
                 if (pl.getHealth() <= 0) {
                     name = pl.getName().getString();
                     return true;
@@ -329,7 +328,7 @@ public class AutoEz extends BlackOutModule {
                     num = num < exhibobo.length - 1 ? num + 1 : 0;
                 }
                 lastNum = num;
-                messageQueue.add(0, new Message(exhibobo[num].replace("%s", name == null ? "You" : name), true));
+                messageQueue.add(0, new Message(exhibobo[num].replace("%s",name == null ? "You" : name), true));
             }
 
             case Blackout -> {

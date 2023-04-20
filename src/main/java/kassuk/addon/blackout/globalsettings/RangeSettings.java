@@ -2,7 +2,7 @@ package kassuk.addon.blackout.globalsettings;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
-import kassuk.addon.blackout.utils.DistanceUtils;
+import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.RotationUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.mixininterface.IVec3d;
@@ -284,10 +284,10 @@ public class RangeSettings extends BlackOutModule {
                 return getRange(from, feet.add(0, placeHeight.get(), 0));
             }
             case Vanilla -> {
-                return getRange(from, DistanceUtils.getClosest(mc.player.getEyePos(), feet, 1, 1));
+                return getRange(from, OLEPOSSUtils.getClosest(mc.player.getEyePos(), feet, 1, 1));
             }
             case CustomBox -> {
-                return getRange(from, DistanceUtils.getClosest(mc.player.getEyePos(), feet, blockWidth.get(), blockHeight.get()));
+                return getRange(from, OLEPOSSUtils.getClosest(mc.player.getEyePos(), feet, blockWidth.get(), blockHeight.get()));
             }
         }
         return -1;
@@ -330,13 +330,13 @@ public class RangeSettings extends BlackOutModule {
             case NCP -> getRange(from, new Vec3d(feet.x, Math.min(Math.max(from.getY(), bb.minY), bb.maxY), feet.z));
 
             case Vanilla ->
-                getRange(from, DistanceUtils.getClosest(mc.player.getEyePos(), feet, Math.abs(bb.minX - bb.maxX), Math.abs(bb.minY - bb.maxY)));
+                getRange(from, OLEPOSSUtils.getClosest(mc.player.getEyePos(), feet, Math.abs(bb.minX - bb.maxX), Math.abs(bb.minY - bb.maxY)));
 
             case Middle ->
                 getRange(from, new Vec3d((bb.minX + bb.maxX) / 2, (bb.minY + bb.maxY) / 2, (bb.minZ + bb.maxZ) / 2));
 
             case CustomBox ->
-                getRange(from, DistanceUtils.getClosest(mc.player.getEyePos(), feet, Math.abs(bb.minX - bb.maxX) * closestAttackWidth.get(), Math.abs(bb.minY - bb.maxY) * closestAttackHeight.get()));
+                getRange(from, OLEPOSSUtils.getClosest(mc.player.getEyePos(), feet, Math.abs(bb.minX - bb.maxX) * closestAttackWidth.get(), Math.abs(bb.minY - bb.maxY) * closestAttackHeight.get()));
 
             case UpdatedNCP ->
                 getRange(from, new Vec3d(feet.x, Math.min(Math.max(from.getY(), bb.minY), bb.maxY), feet.z)) - getDistFromCenter(bb, feet, from);
@@ -437,10 +437,10 @@ public class RangeSettings extends BlackOutModule {
                 return getRange(from, feet.add(0, placeHeight.get(), 0));
             }
             case Vanilla -> {
-                return getRange(from, DistanceUtils.getClosest(mc.player.getEyePos(), feet, 1, 1));
+                return getRange(from, OLEPOSSUtils.getClosest(mc.player.getEyePos(), feet, 1, 1));
             }
             case CustomBox -> {
-                return getRange(from, DistanceUtils.getClosest(mc.player.getEyePos(), feet, blockWidth.get(), blockHeight.get()));
+                return getRange(from, OLEPOSSUtils.getClosest(mc.player.getEyePos(), feet, blockWidth.get(), blockHeight.get()));
             }
         }
         return -1;

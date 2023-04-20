@@ -4,8 +4,7 @@ import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.timers.IntTimerList;
-import kassuk.addon.blackout.utils.DistanceUtils;
-import kassuk.addon.blackout.utils.WorldUtils;
+import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
@@ -101,68 +100,70 @@ public class PurpleSpinnyThingBlowerUpererAndPlacer extends BlackOutModule {
     @EventHandler
     private void onTick(TickEvent.Pre event) {
         if (mc.player != null && mc.world != null) {
-            target = getClosest();
+            return;
+        }
 
-            BlockPos bPos = null;
-            double highest = -1;
-            int c = (int) Math.ceil(pRange.get());
-            for (int x = -c; x <= c; x++) {
-                for (int y = -c; y <= c; y++) {
-                    for (int z = -c; z <= c; z++) {
-                        BlockPos pos = mc.player.getBlockPos().add(x, y, z);
-                        if (mc.world.getBlockState(pos).getBlock() == Blocks.AIR && mc.world.getBlockState(pos.down()).getBlock() == Blocks.OBSIDIAN || mc.world.getBlockState(pos.down()).getBlock() == Blocks.BEDROCK) {
-                            if (DistanceUtils.distance(mc.player.getEyePos(), WorldUtils.getMiddle(pos)) <= pRange.get() && !EntityUtils.intersectsWithEntity(new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 2, pos.getZ() + 1),
-                                entity -> !entity.isSpectator() && !(entity instanceof EndCrystalEntity))) {
-                                double dmg = DamageUtils.crystalDamage(target, new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5));
-                                if (dmg > highest && dmg > minDamage.get()) {
-                                    bPos = pos;
-                                    highest = dmg;
-                                }
+        target = getClosest();
+
+        BlockPos bPos = null;
+        double highest = -1;
+        int c = (int) Math.ceil(pRange.get());
+        for (int x = -c; x <= c; x++) {
+            for (int y = -c; y <= c; y++) {
+                for (int z = -c; z <= c; z++) {
+                    BlockPos pos = mc.player.getBlockPos().add(x, y, z);
+                    if (mc.world.getBlockState(pos).getBlock() == Blocks.AIR && mc.world.getBlockState(pos.down()).getBlock() == Blocks.OBSIDIAN || mc.world.getBlockState(pos.down()).getBlock() == Blocks.BEDROCK) {
+                        if (OLEPOSSUtils.distance(mc.player.getEyePos(), OLEPOSSUtils.getMiddle(pos)) <= pRange.get() && !EntityUtils.intersectsWithEntity(new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 2, pos.getZ() + 1),
+                            entity -> !entity.isSpectator() && !(entity instanceof EndCrystalEntity))) {
+                            double dmg = DamageUtils.crystalDamage(target, new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5));
+                            if (dmg > highest && dmg > minDamage.get()) {
+                                bPos = pos;
+                                highest = dmg;
                             }
                         }
                     }
                 }
             }
-            Entity best = null;
-            highest = -1;
-            for (Entity entity : mc.world.getEntities()) {
-                if (entity instanceof EndCrystalEntity) {
-                    double dmg = DamageUtils.crystalDamage(target, entity.getPos());
-                    if (dmg > highest && dmg >= minDamage.get()) {
-                        best = entity;
-                        highest = dmg;
-                    }
+        }
+        Entity best = null;
+        highest = -1;
+        for (Entity entity : mc.world.getEntities()) {
+            if (entity instanceof EndCrystalEntity) {
+                double dmg = DamageUtils.crystalDamage(target, entity.getPos());
+                if (dmg > highest && dmg >= minDamage.get()) {
+                    best = entity;
+                    highest = dmg;
                 }
             }
-            if (best != null && !attacked.contains(best.getId())) {
-                mc.player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(best, mc.player.isSneaking()));
-                mc.player.swingHand(Hand.MAIN_HAND);
-                attacked.add(best.getId(), bDelay.get());
-            }
+        }
+        if (best != null && !attacked.contains(best.getId())) {
+            mc.player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(best, mc.player.isSneaking()));
+            mc.player.swingHand(Hand.MAIN_HAND);
+            attacked.add(best.getId(), bDelay.get());
+        }
 
-            if (bPos != null && timer >= pDelay.get() && Managers.HOLDING.isHolding(Items.END_CRYSTAL)) {
-                mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
-                    new BlockHitResult(new Vec3d(bPos.getX() + 0.5, bPos.getY() - 0.5, bPos.getZ() + 0.5), Direction.UP, bPos.down(), false), 0));
-                mc.player.swingHand(Hand.MAIN_HAND);
-                if (debug.get()) {
-                    info("tried to place at" + bPos);
-                }
-                timer = 0;
+        if (bPos != null && timer >= pDelay.get() && Managers.HOLDING.isHolding(Items.END_CRYSTAL)) {
+            mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
+                new BlockHitResult(new Vec3d(bPos.getX() + 0.5, bPos.getY() - 0.5, bPos.getZ() + 0.5), Direction.UP, bPos.down(), false), 0));
+            mc.player.swingHand(Hand.MAIN_HAND);
+            if (debug.get()) {
+                info("tried to place at" + bPos);
             }
-
+            timer = 0;
         }
     }
 
-    PlayerEntity getClosest() {
+    @SuppressWarnings("DataFlowIssue")
+    private PlayerEntity getClosest() {
         PlayerEntity closest = null;
         float distance = -1;
         if (!mc.world.getPlayers().isEmpty()) {
             for (PlayerEntity player : mc.world.getPlayers()) {
                 if (player != mc.player && (!iFriends.get() || !Friends.get().isFriend(player))) {
-                    float dist = (float) DistanceUtils.distance(mc.player.getEyePos(), player.getPos());
-                    if ((closest == null || DistanceUtils.distance(mc.player.getPos(), player.getPos()) < distance) && dist <= 30) {
+                    float dist = (float) OLEPOSSUtils.distance(mc.player.getEyePos(), player.getPos());
+                    if ((closest == null || OLEPOSSUtils.distance(mc.player.getPos(), player.getPos()) < distance) && dist <= 30) {
                         closest = player;
-                        distance = (float) DistanceUtils.distance(mc.player.getPos(), player.getPos());
+                        distance = (float) OLEPOSSUtils.distance(mc.player.getPos(), player.getPos());
                     }
                 }
             }

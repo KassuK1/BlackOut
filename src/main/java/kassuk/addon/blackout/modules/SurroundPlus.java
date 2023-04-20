@@ -186,7 +186,7 @@ public class SurroundPlus extends BlackOutModule {
             placesLeft = places.get();
             placeTimer = 0;
         }
-        render.forEach(item -> event.renderer.box(WorldUtils.getBox(item.pos), item.support ? supportSideColor.get() : sideColor.get(), item.support ? supportLineColor.get() : lineColor.get(), item.support ? supportShapeMode.get() : shapeMode.get(), 0));
+        render.forEach(item -> event.renderer.box(OLEPOSSUtils.getBox(item.pos), item.support ? supportSideColor.get() : sideColor.get(), item.support ? supportLineColor.get() : lineColor.get(), item.support ? supportShapeMode.get() : shapeMode.get(), 0));
         update();
     }
 
@@ -351,12 +351,12 @@ public class SurroundPlus extends BlackOutModule {
 
         getBlocks(getSize())
             .stream()//maybe use a parallel stream here
-            .filter(pos -> BlockUtils.replaceable(pos) && !placed.contains(pos))
+            .filter(pos -> OLEPOSSUtils.replaceable(pos) && !placed.contains(pos))
             .forEach(position -> {
                 if (!timers.contains(position)) {
                     PlaceData data = onlyConfirmed.get() ? SettingUtils.getPlaceData(position) : SettingUtils.getPlaceDataOR(position, placed::contains);
                     if (data.valid()) {
-                        if ((EntityUtils.intersectsWithEntity(WorldUtils.getBox(position), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) && (EntityUtils.intersectsWithEntity(WorldUtils.getBox(position), entity -> entity instanceof EndCrystalEntity))) {
+                        if ((EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) && (EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> entity instanceof EndCrystalEntity))) {
                             toAttack.add(position);
                         } else {
                             list.add(position);
@@ -366,7 +366,7 @@ public class SurroundPlus extends BlackOutModule {
                         int value = -1;
                         double dist = Double.MAX_VALUE;
                         for (Direction dir : Direction.values()) {
-                            if (!BlockUtils.replaceable(position.offset(dir))) {
+                            if (!OLEPOSSUtils.replaceable(position.offset(dir))) {
                                 continue;
                             }
 
@@ -376,19 +376,19 @@ public class SurroundPlus extends BlackOutModule {
                                 continue;
                             }
 
-                            if (!EntityUtils.intersectsWithEntity(WorldUtils.getBox(position.offset(dir)), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
-                                double distance = DistanceUtils.distance(WorldUtils.getMiddle(position.offset(dir)), mc.player.getPos());
+                            if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
+                                double distance = OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(position.offset(dir)), mc.player.getPos());
                                 if (distance < dist || value <= 1) {
                                     dist = distance;
                                     best = dir;
                                     value = 2;
                                 }
-                            } else if (!EntityUtils.intersectsWithEntity(WorldUtils.getBox(position.offset(dir)), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM && entity.getType() != EntityType.END_CRYSTAL)) {
+                            } else if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM && entity.getType() != EntityType.END_CRYSTAL)) {
                                 if (value > 1) {
                                     continue;
                                 }
 
-                                double distance = DistanceUtils.distance(WorldUtils.getMiddle(position.offset(dir)), mc.player.getPos());
+                                double distance = OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(position.offset(dir)), mc.player.getPos());
                                 if (distance < dist || value <= 0) {
                                     value = 1;
                                     best = dir;
@@ -430,10 +430,10 @@ public class SurroundPlus extends BlackOutModule {
                 for (int z = size[2] - 1; z <= size[3] + 1; z++) {
                     boolean isX = x == size[0] - 1 || x == size[1] + 1;
                     boolean isZ = z == size[2] - 1 || z == size[3] + 1;
-                    boolean ignore = (isX && !isZ ? (!BlockUtils.replaceable(pPos.add(DistanceUtils.closerToZero(x), 0, z)) || placed.contains(pPos.add(DistanceUtils.closerToZero(x), 0, z))) : !isX && isZ && (!BlockUtils.replaceable(pPos.add(x, 0, DistanceUtils.closerToZero(z)))) && !(x == 0 && z == 0) || placed.contains(pPos.add(x, 0, DistanceUtils.closerToZero(z))));
+                    boolean ignore = (isX && !isZ ? (!OLEPOSSUtils.replaceable(pPos.add(OLEPOSSUtils.closerToZero(x), 0, z)) || placed.contains(pPos.add(OLEPOSSUtils.closerToZero(x), 0, z))) : !isX && isZ && (!OLEPOSSUtils.replaceable(pPos.add(x, 0, OLEPOSSUtils.closerToZero(z)))) && !(x == 0 && z == 0) || placed.contains(pPos.add(x, 0, OLEPOSSUtils.closerToZero(z))));
                     if (isX != isZ && !ignore) {
                         list.add(pPos.add(x, 0, z));
-                    } else if (!isX && !isZ && floor.get() && BlockUtils.replaceable(pPos.add(x, 0, z)) && !placed.contains(pPos.add(x, 0, z))) {
+                    } else if (!isX && !isZ && floor.get() && OLEPOSSUtils.replaceable(pPos.add(x, 0, z)) && !placed.contains(pPos.add(x, 0, z))) {
                         list.add(pPos.add(x, -1, z));
                     }
                 }

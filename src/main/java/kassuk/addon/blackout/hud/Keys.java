@@ -32,13 +32,13 @@ public class Keys extends HudElement {
     );
     private final Setting<SettingColor> cTextColor = sgGeneral.add(new ColorSetting.Builder()
         .name("Clicked Text color")
-        .description(".")
+        .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(255, 255, 255, 255))
         .build()
     );
     private final Setting<SettingColor> textColor = sgGeneral.add(new ColorSetting.Builder()
         .name("Text color")
-        .description(".")
+        .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(0, 0, 0, 155))
         .build()
     );
@@ -50,14 +50,14 @@ public class Keys extends HudElement {
     );
     private final Setting<SettingColor> cbgColor = sgGeneral.add(new ColorSetting.Builder()
         .name("Clicked BG color")
-        .description(".")
+        .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(160, 160, 160, 155))
         .visible(textBG::get)
         .build()
     );
     private final Setting<SettingColor> bgColor = sgGeneral.add(new ColorSetting.Builder()
         .name("BG color")
-        .description(".")
+        .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(120, 120, 120, 155))
         .visible(textBG::get)
         .build()
@@ -86,7 +86,6 @@ public class Keys extends HudElement {
     );
 
     private List<Key> keys = null;
-    private KeyBinding[] binds = null;
 
     public Keys() {
         super(INFO);
@@ -96,7 +95,7 @@ public class Keys extends HudElement {
     public void render(HudRenderer renderer) {
         if (keys == null) {
             keys = new ArrayList<>();
-            binds = new KeyBinding[]{mc.options.forwardKey, mc.options.leftKey, mc.options.backKey, mc.options.rightKey};
+            KeyBinding[] binds = new KeyBinding[]{mc.options.forwardKey, mc.options.leftKey, mc.options.backKey, mc.options.rightKey};
             for (int i = 0; i < 4; i++) {
                 KeyBinding bind = binds[i];
 

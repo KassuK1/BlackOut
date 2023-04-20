@@ -7,7 +7,9 @@ import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.globalsettings.SwingSettings;
 import kassuk.addon.blackout.managers.Managers;
-import kassuk.addon.blackout.utils.*;
+import kassuk.addon.blackout.utils.BOInvUtils;
+import kassuk.addon.blackout.utils.OLEPOSSUtils;
+import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlaceBlockEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
@@ -53,9 +55,8 @@ import net.minecraft.util.math.Vec3d;
  */
 public class AutoMine extends BlackOutModule {
     public AutoMine() {
-        super(BlackOut.BLACKOUT, "AutoMine", "For the times your too lazy or bad to press your break bind");
+        super(BlackOut.BLACKOUT, "Auto Mine", "For the times your too lazy or bad to press your break bind");
     }
-
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgValue = settings.createGroup("Value");
     private final SettingGroup sgSpeed = settings.createGroup("Speed");
@@ -367,7 +368,7 @@ public class AutoMine extends BlackOutModule {
         if (targetPos != null && getBlock(targetPos) != Blocks.AIR) {
             SettingUtils.mineSwing(SwingSettings.MiningSwingState.Full);
             if (SettingUtils.shouldRotate(RotationType.Breaking)) {
-                Managers.ROTATION.start(WorldUtils.getBox(targetPos), 9, RotationType.Breaking);
+                Managers.ROTATION.start(OLEPOSSUtils.getBox(targetPos), 9, RotationType.Breaking);
             }
         }
     }
@@ -496,7 +497,7 @@ public class AutoMine extends BlackOutModule {
 
         //Render
         if (targetPos != null) {
-            Vec3d v = WorldUtils.getMiddle(targetPos);
+            Vec3d v = OLEPOSSUtils.getMiddle(targetPos);
             double p = 0.5 - (Math.pow((mode.get() == AutoMineMode.CIV && civPos == targetPos ? 0 : 1 - progress), exp.get())) / 2;
 
             Box toRender = new Box(v.x - p, v.y - p, v.z - p, v.x + p, v.y + p, v.z + p);
@@ -615,7 +616,7 @@ public class AutoMine extends BlackOutModule {
                             SettingUtils.swing(SwingState.Pre, SwingType.Crystal, hand == null ? Hand.MAIN_HAND : hand);
 
                             if (crystalPos != null) {
-                                mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand == null ? Hand.MAIN_HAND : hand, new BlockHitResult(WorldUtils.getMiddle(crystalPos.down()), crystalDir, crystalPos.down(), false), 0));
+                                mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand == null ? Hand.MAIN_HAND : hand, new BlockHitResult(OLEPOSSUtils.getMiddle(crystalPos.down()), crystalDir, crystalPos.down(), false), 0));
                             }
 
                             SettingUtils.swing(SwingState.Post, SwingType.Crystal, hand == null ? Hand.MAIN_HAND : hand);
@@ -733,7 +734,8 @@ public class AutoMine extends BlackOutModule {
 
         SettingUtils.swing(SwingState.Pre, SwingType.Crystal, hand == null ? Hand.MAIN_HAND : hand);
 
-        mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand == null ? Hand.MAIN_HAND : hand, new BlockHitResult(WorldUtils.getMiddle(targetPos.down()), Direction.UP, targetPos.down(), false), 0));
+        mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand == null ? Hand.MAIN_HAND : hand,
+            new BlockHitResult(OLEPOSSUtils.getMiddle(targetPos.down()), Direction.UP, targetPos.down(), false), 0));
 
         SettingUtils.swing(SwingState.Post, SwingType.Crystal, hand == null ? Hand.MAIN_HAND : hand);
 
@@ -777,7 +779,8 @@ public class AutoMine extends BlackOutModule {
 
     Entity isAt(BlockPos pos, BlockPos crystalPos) {
         for (Entity en : mc.world.getEntities()) {
-            if ((en.getBlockPos().equals(crystalPos) && en.getType().equals(EntityType.END_CRYSTAL)) || (!(en instanceof ItemEntity) && en.getBoundingBox().intersects(WorldUtils.getBox(pos)))) {
+            if ((en.getBlockPos().equals(crystalPos) && en.getType().equals(EntityType.END_CRYSTAL)) ||
+                (!(en instanceof ItemEntity) &&  en.getBoundingBox().intersects(OLEPOSSUtils.getBox(pos)))) {
                 return en;
             }
         }
@@ -794,7 +797,7 @@ public class AutoMine extends BlackOutModule {
 
         Direction dir = SettingUtils.getPlaceOnDirection(pPos);
 
-        if (crystalPos != null && (!kassuk.addon.blackout.utils.EntityUtils.isCrystalBlock(getBlock(crystalPos.down())) || !SettingUtils.inPlaceRange(crystalPos.down()) || !canPlaceCrystal(crystalPos))) {
+        if (crystalPos != null && (!OLEPOSSUtils.isCrystalBlock(getBlock(crystalPos.down())) || !SettingUtils.inPlaceRange(crystalPos.down()) || !canPlaceCrystal(crystalPos))) {
             valid = true;
         }
         if (pPos != null && SettingUtils.inMineRange(pPos) && dir != null) {
@@ -830,7 +833,7 @@ public class AutoMine extends BlackOutModule {
         for (PlayerEntity pl : mc.world.getPlayers()) {
             if (pl != mc.player && !Friends.get().isFriend(pl)) {
                 BlockPos pos = pl.getBlockPos();
-                for (Direction dir : DirectionUtils.horizontals) {
+                for (Direction dir : OLEPOSSUtils.horizontals) {
                     // Anti Surround
                     if (valueCheck(value, antiSurround.get(), pos.offset(dir), closest) && getBlock(pos.offset(dir)) != Blocks.AIR && getBlock(pos.offset(dir)) != Blocks.BEDROCK && SettingUtils.inMineRange(pos.offset(dir)) && SettingUtils.getPlaceOnDirection(pos.offset(dir)) != null) {
                         value = antiSurround.get();
@@ -889,7 +892,7 @@ public class AutoMine extends BlackOutModule {
         if (closest == null) {
             rur = true;
         } else {
-            rur = DistanceUtils.distance(WorldUtils.getMiddle(pos), mc.player.getEyePos()) < DistanceUtils.distance(WorldUtils.getMiddle(closest), mc.player.getEyePos());
+            rur = OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(pos), mc.player.getEyePos()) < OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(closest), mc.player.getEyePos());
         }
         return ((currentValue <= value && rur) || currentValue < value) && SettingUtils.inPlaceRange(pos);
     }

@@ -2,7 +2,7 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
-import kassuk.addon.blackout.utils.DistanceUtils;
+import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
@@ -20,7 +20,7 @@ import net.minecraft.util.Hand;
  */
 public class KassuKAura extends BlackOutModule {
     public KassuKAura() {
-        super(BlackOut.BLACKOUT, "ForceField", "An Killaura made by KassuK probably should not be used");
+        super(BlackOut.BLACKOUT, "Force Field", "An Killaura made by KassuK probably should not be used");
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -197,10 +197,10 @@ public class KassuKAura extends BlackOutModule {
         if (!mc.world.getPlayers().isEmpty()) {
             for (PlayerEntity player : mc.world.getPlayers()) {
                 if (player != mc.player && (!iFriends.get() || !Friends.get().isFriend(player))) {
-                    float dist = (float) DistanceUtils.distance(mc.player.getEyePos(), player.getPos());
-                    if ((closest == null || DistanceUtils.distance(mc.player.getPos(), player.getPos()) < distance) && dist <= range.get()) {
+                    float dist = (float) OLEPOSSUtils.distance(mc.player.getEyePos(), player.getPos());
+                    if ((closest == null || OLEPOSSUtils.distance(mc.player.getPos(), player.getPos()) < distance) && dist <= range.get()) {
                         closest = player;
-                        distance = (float) DistanceUtils.distance(mc.player.getPos(), player.getPos());
+                        distance = (float) OLEPOSSUtils.distance(mc.player.getPos(), player.getPos());
                     }
                 }
             }

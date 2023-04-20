@@ -4,7 +4,7 @@ import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.globalsettings.RotationSettings;
 import kassuk.addon.blackout.utils.RotationUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
-import kassuk.addon.blackout.utils.WorldUtils;
+import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.entity.player.SendMovementPacketsEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
@@ -204,7 +204,7 @@ public class RotationManager {
     }
 
     public void end(BlockPos pos) {
-        end(WorldUtils.getBox(pos));
+        end(OLEPOSSUtils.getBox(pos));
     }
 
     public void endYaw(double yaw, boolean reset) {
@@ -266,7 +266,7 @@ public class RotationManager {
             priority = p;
             lastTarget = target;
 
-            target = pos != null ? new BoxTarget(pos, vec != null ? vec : WorldUtils.getMiddle(box), p, type) : new BoxTarget(box, vec != null ? vec : WorldUtils.getMiddle(box), p, type);
+            target = pos != null ? new BoxTarget(pos, vec != null ? vec : OLEPOSSUtils.getMiddle(box), p, type) : new BoxTarget(box, vec != null ? vec : OLEPOSSUtils.getMiddle(box), p, type);
             timer = settings.getTime(type);
         }
         return alreadyRotated;
@@ -277,11 +277,11 @@ public class RotationManager {
     }
 
     public boolean start(Box box, double p, RotationType type) {
-        return start(box, WorldUtils.getMiddle(box), p, type);
+        return start(box, OLEPOSSUtils.getMiddle(box), p, type);
     }
 
     public boolean start(BlockPos pos, double p, RotationType type) {
-        return start(WorldUtils.getBox(pos), p, type);
+        return start(OLEPOSSUtils.getBox(pos), p, type);
     }
 
     public boolean start(BlockPos pos, Vec3d vec, double p, RotationType type) {

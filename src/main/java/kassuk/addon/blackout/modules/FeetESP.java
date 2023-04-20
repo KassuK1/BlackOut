@@ -2,7 +2,7 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
-import kassuk.addon.blackout.utils.DistanceUtils;
+import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
@@ -23,7 +23,7 @@ import java.util.List;
  */
 public class FeetESP extends BlackOutModule {
     public FeetESP() {
-        super(BlackOut.BLACKOUT, "FeetESP", "No, it doesn't show you pictures of feet");
+        super(BlackOut.BLACKOUT, "Feet ESP", "No, it doesn't show you pictures of feet");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Boolean> friend = sgGeneral.add(new BoolSetting.Builder()
@@ -72,7 +72,7 @@ public class FeetESP extends BlackOutModule {
             }
         });
         mc.world.getPlayers().forEach(player -> {
-            if (DistanceUtils.distance(player.getPos(), mc.player.getEyePos()) <= range.get() &&
+            if (OLEPOSSUtils.distance(player.getPos(), mc.player.getEyePos()) <= range.get() &&
                 player != mc.player && (!Friends.get().isFriend(player) || friend.get()) &&
                 (Friends.get().isFriend(player) || player == mc.player || other.get())) {
                 Render render = getByEntity(player);

@@ -4,7 +4,10 @@ import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.managers.Managers;
-import kassuk.addon.blackout.utils.*;
+import kassuk.addon.blackout.utils.BOInvUtils;
+import kassuk.addon.blackout.utils.OLEPOSSUtils;
+import kassuk.addon.blackout.utils.PlaceData;
+import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
@@ -29,7 +32,7 @@ import net.minecraft.util.math.Direction;
  */
 public class AutoCraftingTable extends BlackOutModule {
     public AutoCraftingTable() {
-        super(BlackOut.BLACKOUT, "AutoCraftingTable", "Automatically places and opens an Crafting table.");
+        super(BlackOut.BLACKOUT, "Auto Crafting Table", "Automatically places and opens an Crafting table.");
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -156,7 +159,7 @@ public class AutoCraftingTable extends BlackOutModule {
         boolean rotated = !SettingUtils.shouldRotate(RotationType.Placing) || Managers.ROTATION.start(tablePos, priority - 0.1, RotationType.Interact);
         if (!rotated) {return false;}
 
-        sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, new BlockHitResult(WorldUtils.getMiddle(tablePos), tableDir, tablePos, false), 0));
+        sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, new BlockHitResult(OLEPOSSUtils.getMiddle(tablePos), tableDir, tablePos, false), 0));
 
         return true;
     }
@@ -191,7 +194,7 @@ public class AutoCraftingTable extends BlackOutModule {
 
         if (!switched) {return false;}
 
-        sendPacket(new PlayerInteractBlockC2SPacket(hand != null ? hand : Hand.MAIN_HAND, new BlockHitResult(WorldUtils.getMiddle(placeData.pos()), placeData.dir(), placeData.pos(), false), 0));
+        sendPacket(new PlayerInteractBlockC2SPacket(hand != null ? hand : Hand.MAIN_HAND, new BlockHitResult(OLEPOSSUtils.getMiddle(placeData.pos()), placeData.dir(), placeData.pos(), false), 0));
 
         if (hand == null) {
             switch (switchMode.get()) {
@@ -214,7 +217,7 @@ public class AutoCraftingTable extends BlackOutModule {
                 for (int z = -i; z <= i; z++) {
                     BlockPos pos = new BlockPos(mc.player.getEyePos()).add(x, y, z);
 
-                    if (!BlockUtils.replaceable(pos)) {continue;}
+                    if (!OLEPOSSUtils.replaceable(pos)) {continue;}
                     if (getBlock(pos) == Blocks.CRAFTING_TABLE) {
                         tablePos = pos;
                         return null;
@@ -260,7 +263,7 @@ public class AutoCraftingTable extends BlackOutModule {
             if (player == mc.player) {continue;}
             if (Friends.get().isFriend(player)) {continue;}
 
-            double dist = DistanceUtils.distance(player.getEyePos(), WorldUtils.getMiddle(pos));
+            double dist = OLEPOSSUtils.distance(player.getEyePos(), OLEPOSSUtils.getMiddle(pos));
 
             if (dist < closest) {
                 closest = dist;

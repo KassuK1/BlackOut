@@ -33,7 +33,7 @@ import java.util.Map;
  */
 public class ButtonAura extends BlackOutModule {
 
-    public ButtonAura() {super(BlackOut.BLACKOUT, "ButtonAura", "Presses nearby buttons.");}
+    public ButtonAura() {super(BlackOut.BLACKOUT, "Button Aura", "Presses nearby buttons.");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
@@ -95,7 +95,7 @@ public class ButtonAura extends BlackOutModule {
             SettingUtils.swing(SwingState.Pre, SwingType.Interact, Hand.MAIN_HAND);
 
             mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND,
-                new BlockHitResult(new Vec3d(block.getX() + 0.5, block.getY() + 0.5, block.getZ() + 0.5), DirectionUtils.closestDir(block, mc.player.getEyePos()), block, false), 0));
+                new BlockHitResult(new Vec3d(block.getX() + 0.5, block.getY() + 0.5, block.getZ() + 0.5), OLEPOSSUtils.closestDir(block, mc.player.getEyePos()), block, false), 0));
 
             SettingUtils.swing(SwingState.Post, SwingType.Interact, Hand.MAIN_HAND);
 
@@ -114,7 +114,7 @@ public class ButtonAura extends BlackOutModule {
                 for (int z = -c; z <= c; z++) {
                     BlockPos pos = mc.player.getBlockPos().add(x, y, z);
                     if (mc.world.getBlockState(pos).getBlock().equals(Blocks.DARK_OAK_BUTTON) && !timers.contains(pos)) {
-                        float dist = (float) DistanceUtils.distance(vec, WorldUtils.getMiddle(pos));
+                        float dist = (float) OLEPOSSUtils.distance(vec, OLEPOSSUtils.getMiddle(pos));
                         if (dist <= r && (closest == null || dist < closestDist)) {
                             closest = pos;
                             closestDist = dist;

@@ -17,7 +17,7 @@ public class Coords extends Command {
     public void build(LiteralArgumentBuilder<CommandSource> builder) {
         builder.executes(context -> {
             if (mc.player != null) {
-                String text = "x: " + Math.round(mc.player.getX()) + "; y:" + Math.round(mc.player.getY()) + "; z:" + Math.round(mc.player.getZ()) + ";";
+                String text = "x: " + Math.floor(mc.player.getX()) + "; y:" + Math.floor(mc.player.getY()) + "; z:" + Math.floor(mc.player.getZ()) + ";";
                 mc.keyboard.setClipboard(text);
             }
             return SINGLE_SUCCESS;

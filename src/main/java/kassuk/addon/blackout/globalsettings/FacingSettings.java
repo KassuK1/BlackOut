@@ -2,8 +2,7 @@ package kassuk.addon.blackout.globalsettings;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
-import kassuk.addon.blackout.utils.BlockUtils;
-import kassuk.addon.blackout.utils.DirectionUtils;
+import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.PlaceData;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.settings.BoolSetting;
@@ -77,12 +76,12 @@ public class FacingSettings extends BlackOutModule {
                     }
 
                     // Test if there is block in the side and if predicate is valid
-                    if (!BlockUtils.solid(pos.offset(dir)) && (predicate != null && !predicate.test(pos.offset(dir)))) {
+                    if (!OLEPOSSUtils.solid(pos.offset(dir)) && (predicate != null && !predicate.test(pos.offset(dir)))) {
                         continue;
                     }
 
                     // Strict dir check (checks if face is on opposite side of the block to player)
-                    if (strictDir.get() && !DirectionUtils.strictDir(pos.offset(dir), dir.getOpposite())) {
+                    if (strictDir.get() && !OLEPOSSUtils.strictDir(pos.offset(dir), dir.getOpposite())) {
                         continue;
                     }
 
@@ -121,12 +120,12 @@ public class FacingSettings extends BlackOutModule {
                     }
 
                     // Test if there is block in the side and if predicate is valid
-                    if (!BlockUtils.solid(pos.offset(dir)) || (predicate != null && !predicate.test(dir)) || (predicatePos != null && !predicatePos.test(pos.offset(dir)))) {
+                    if (!OLEPOSSUtils.solid(pos.offset(dir)) || (predicate != null && !predicate.test(dir)) || (predicatePos != null && !predicatePos.test(pos.offset(dir)))) {
                         continue;
                     }
 
                     // Strict dir check (checks if face is on opposite side of the block to player)
-                    if (strictDir.get() && !DirectionUtils.strictDir(pos.offset(dir), dir.getOpposite())) {
+                    if (strictDir.get() && !OLEPOSSUtils.strictDir(pos.offset(dir), dir.getOpposite())) {
                         continue;
                     }
 
@@ -165,12 +164,12 @@ public class FacingSettings extends BlackOutModule {
                     }
 
                     // Test if there is block in the side and if predicate is valid
-                    if (!BlockUtils.solid(pos.offset(dir))) {
+                    if (!OLEPOSSUtils.solid(pos.offset(dir))) {
                         continue;
                     }
 
                     // Strict dir check (checks if face is on opposite side of the block to player)
-                    if (strictDir.get() && !DirectionUtils.strictDir(pos.offset(dir), dir.getOpposite())) {
+                    if (strictDir.get() && !OLEPOSSUtils.strictDir(pos.offset(dir), dir.getOpposite())) {
                         continue;
                     }
 
@@ -209,7 +208,7 @@ public class FacingSettings extends BlackOutModule {
                 }
 
                 // Strict dir check (checks if face isnt on opposite side of the block to player)
-                if (strictDir.get() && !DirectionUtils.strictDir(pos, dir)) {
+                if (strictDir.get() && !OLEPOSSUtils.strictDir(pos, dir)) {
                     continue;
                 }
 
@@ -224,7 +223,7 @@ public class FacingSettings extends BlackOutModule {
         return best;
     }
 
-    double dist(BlockPos pos, Direction dir) {
+    private double dist(BlockPos pos, Direction dir) {
         if (mc.player == null) {
             return 0;
         }
@@ -233,7 +232,8 @@ public class FacingSettings extends BlackOutModule {
         return Math.sqrt(dist.x * dist.x + dist.y * dist.y + dist.z * dist.z);
     }
 
-    Block getBlock(BlockPos pos) {
+    private Block getBlock(BlockPos pos) {
+        assert mc.world != null;
         return mc.world.getBlockState(pos).getBlock();
     }
 }

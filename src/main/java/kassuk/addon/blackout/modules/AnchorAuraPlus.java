@@ -6,7 +6,10 @@ import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
-import kassuk.addon.blackout.utils.*;
+import kassuk.addon.blackout.utils.BOInvUtils;
+import kassuk.addon.blackout.utils.OLEPOSSUtils;
+import kassuk.addon.blackout.utils.PlaceData;
+import kassuk.addon.blackout.utils.SettingUtils;
 import kassuk.addon.blackout.utils.meteor.BODamageUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -294,7 +297,7 @@ public class AnchorAuraPlus extends BlackOutModule {
                 for (int z = -i; z <= i; z++) {
                     pos = new BlockPos(Math.floor(middle.x) + x, Math.floor(middle.y) + y, Math.floor(middle.z) + z);
 
-                    if (!BlockUtils.replaceable(pos) && !(mc.world.getBlockState(pos).getBlock() == Blocks.RESPAWN_ANCHOR)) {
+                    if (!OLEPOSSUtils.replaceable(pos) && !(mc.world.getBlockState(pos).getBlock() == Blocks.RESPAWN_ANCHOR)) {
                         continue;
                     }
 
@@ -315,7 +318,7 @@ public class AnchorAuraPlus extends BlackOutModule {
 
     boolean inRangeToTargets(BlockPos pos) {
         for (PlayerEntity target : targets) {
-            if (DistanceUtils.distance(target.getPos().add(0, 1, 0), new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5)) < 3.5) {
+            if (OLEPOSSUtils.distance(target.getPos().add(0, 1, 0), new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5)) < 3.5) {
                 return true;
             }
         }
@@ -392,7 +395,7 @@ public class AnchorAuraPlus extends BlackOutModule {
     void place(Hand hand) {
         SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand);
 
-        sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(WorldUtils.getMiddle(placeData.pos()), placeData.dir(), placeData.pos(), false), 0));
+        sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(OLEPOSSUtils.getMiddle(placeData.pos()), placeData.dir(), placeData.pos(), false), 0));
 
         SettingUtils.swing(SwingState.Post, SwingType.Placing, hand);
     }
@@ -593,7 +596,7 @@ public class AnchorAuraPlus extends BlackOutModule {
     void interact(BlockPos pos, Direction dir, Hand hand) {
         SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand);
 
-        sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(WorldUtils.getMiddle(pos), dir, pos, false), 0));
+        sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(OLEPOSSUtils.getMiddle(pos), dir, pos, false), 0));
 
         SettingUtils.swing(SwingState.Post, SwingType.Interact, hand);
     }

@@ -17,7 +17,7 @@ public class HudWaterMark extends HudElement {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
         .name("Color")
-        .description("Are you blind?")
+        .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(255, 255, 255, 255))
         .build()
     );

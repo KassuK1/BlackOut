@@ -2,7 +2,7 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
-import kassuk.addon.blackout.utils.DistanceUtils;
+import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
@@ -21,7 +21,7 @@ import java.util.Random;
  */
 public class AntiAim extends BlackOutModule {
     public AntiAim() {
-        super(BlackOut.BLACKOUT, "AntiAim", "Funi conter stik module");
+        super(BlackOut.BLACKOUT, "Anti Aim", "Funi conter stik module");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgIgnore = settings.createGroup("Ignore");
@@ -221,12 +221,12 @@ public class AntiAim extends BlackOutModule {
     PlayerEntity getClosest() {
         PlayerEntity closest = null;
         for (PlayerEntity pl : mc.world.getPlayers()) {
-            if (pl != mc.player && !Friends.get().isFriend(pl) && DistanceUtils.distance(mc.player.getPos(), pl.getPos()) <= enemyRange.get()) {
+            if (pl != mc.player && !Friends.get().isFriend(pl) && OLEPOSSUtils.distance(mc.player.getPos(), pl.getPos()) <= enemyRange.get()) {
                 if (closest == null) {
                     closest = pl;
                 } else {
-                    if (DistanceUtils.distance(pl.getPos(), mc.player.getPos()) <
-                        DistanceUtils.distance(closest.getPos(), mc.player.getPos())) {
+                    if (OLEPOSSUtils.distance(pl.getPos(), mc.player.getPos()) <
+                        OLEPOSSUtils.distance(closest.getPos(), mc.player.getPos())) {
                         closest = pl;
                     }
                 }

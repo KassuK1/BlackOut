@@ -1,7 +1,7 @@
 package kassuk.addon.blackout.hud;
 
 import kassuk.addon.blackout.BlackOut;
-import kassuk.addon.blackout.utils.DistanceUtils;
+import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.hud.HudElement;
@@ -38,21 +38,21 @@ public class TargetHud extends HudElement {
 
     private final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
         .name("Backround color")
-        .description(".")
+        .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(0, 0, 0, 155))
         .build()
     );
 
     private final Setting<SettingColor> textcolor = sgGeneral.add(new ColorSetting.Builder()
         .name("Text color")
-        .description(".")
+        .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(255, 255, 255, 155))
         .build()
     );
 
     private final Setting<SettingColor> bar = sgGeneral.add(new ColorSetting.Builder()
         .name("HealthBar color")
-        .description(".")
+        .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(0, 255, 0, 200))
         .build()
     );
@@ -79,7 +79,7 @@ public class TargetHud extends HudElement {
 
     private final Setting<SettingColor> outlineColor = sgGeneral.add(new ColorSetting.Builder()
         .name("Outline color")
-        .description(".")
+        .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(255, 255, 255, 255))
         .visible(outline::get)
         .build()
@@ -153,9 +153,9 @@ public class TargetHud extends HudElement {
         if (!mc.world.getPlayers().isEmpty()) {
             for (PlayerEntity player : mc.world.getPlayers()) {
                 if (player != mc.player && !Friends.get().isFriend(player)) {
-                    if (closest == null || DistanceUtils.distance(mc.player.getPos(), player.getPos()) < distance) {
+                    if (closest == null || OLEPOSSUtils.distance(mc.player.getPos(), player.getPos()) < distance) {
                         closest = player;
-                        distance = (float) DistanceUtils.distance(mc.player.getPos(), player.getPos());
+                        distance = (float) OLEPOSSUtils.distance(mc.player.getPos(), player.getPos());
                     }
                 }
             }
@@ -164,7 +164,7 @@ public class TargetHud extends HudElement {
     }
 
     private Color getColor(int dmg, int a) {
-        int c = (int) Math.min(255, Math.max(0, Math.round(dmg * -15) + 122.5f));
+        int c = (int) Math.min(255, Math.max(0, dmg * -15 + 122.5f));
         return new Color(c, 255 - c, 0, a);
     }
 }

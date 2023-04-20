@@ -2,7 +2,7 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
-import kassuk.addon.blackout.utils.DistanceUtils;
+import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
@@ -19,7 +19,7 @@ import java.util.Random;
  */
 public class AutoMoan extends BlackOutModule {
 
-    public AutoMoan() {super(BlackOut.BLACKOUT, "AutoMoan","Moans sexual things to the closest person");}
+    public AutoMoan() {super(BlackOut.BLACKOUT, "Auto Moan","Moans sexual things to the closest person");}
 
     //Where the fuck did I go so wrong in life to end up coding fucking AutoMoan
 
@@ -136,6 +136,10 @@ public class AutoMoan extends BlackOutModule {
     }
 
     private void MOAN() {
+        PlayerEntity target = getClosest();
+        if (target == null) {return;}
+
+        String name = target.getName().getString();
         switch (moanmode.get()){
             //Skidding AutoEz for this is harder than just making this fully myself but what I start I finish
             case Submissive -> {
@@ -147,7 +151,7 @@ public class AutoMoan extends BlackOutModule {
                 lastNum = num;
                 //the way i did the name is so ass bro pls fix this at one point
                 //please add the thing that prevents it from saying the same thing twice in a row
-                ChatUtils.sendPlayerMsg(Submissive[num].replace("%s",getClosest().getName().getString() == null ? "You" : getClosest().getName().getString()));
+                ChatUtils.sendPlayerMsg(Submissive[num].replace("%s", name));
             }
             case Dominant -> {
                 int num = r.nextInt(0, Dominant.length - 1);
@@ -155,7 +159,7 @@ public class AutoMoan extends BlackOutModule {
                     num = num < Dominant.length - 1 ? num + 1 : 0;
                 }
                 lastNum = num;
-                ChatUtils.sendPlayerMsg(Dominant[num].replace("%s",getClosest().getName().getString() == null ? "You" : getClosest().getName().getString()));
+                ChatUtils.sendPlayerMsg(Dominant[num].replace("%s", name));
             }
         }
     }
@@ -166,10 +170,10 @@ public class AutoMoan extends BlackOutModule {
         if (!mc.world.getPlayers().isEmpty()) {
             for (PlayerEntity player : mc.world.getPlayers()) {
                 if (player != mc.player && (!iFriends.get() || !Friends.get().isFriend(player))) {
-                    if (closest == null || DistanceUtils.distance(mc.player.getPos(), player.getPos()) < distance) {
+                    if (closest == null || OLEPOSSUtils.distance(mc.player.getPos(), player.getPos()) < distance) {
                         closest = player;
                         assert mc.player != null;
-                        distance = (float) DistanceUtils.distance(mc.player.getPos(), player.getPos());
+                        distance = (float) OLEPOSSUtils.distance(mc.player.getPos(), player.getPos());
                     }
                 }
             }

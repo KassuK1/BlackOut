@@ -291,7 +291,7 @@ public class ScaffoldPlus extends BlackOutModule {
 
     void addBlocks(List<BlockPos> list, Vec3d vec) {
         BlockPos pos = new BlockPos(Math.floor(vec.x), Math.floor(vec.y), Math.floor(vec.z)).down();
-        if (!timers.contains(pos) && BlockUtils.replaceable(pos) && !list.contains(pos)) {
+        if (!timers.contains(pos) && OLEPOSSUtils.replaceable(pos) && !list.contains(pos)) {
             list.add(pos);
         }
     }

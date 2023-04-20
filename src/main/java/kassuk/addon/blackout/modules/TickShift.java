@@ -10,12 +10,12 @@ import meteordevelopment.meteorclient.systems.modules.world.Timer;
 import meteordevelopment.orbit.EventHandler;
 
 /**
- * @author KassuK
+ * @author OLEPOSSU
  */
 public class TickShift extends BlackOutModule {
 
     public TickShift() {
-        super(BlackOut.BLACKOUT, "TickShift", ".");
+        super(BlackOut.BLACKOUT, "Tick Shift", ".");
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();

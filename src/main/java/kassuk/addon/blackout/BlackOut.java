@@ -25,6 +25,7 @@ public class BlackOut extends MeteorAddon {
     public static final HudGroup HUD_BLACKOUT = new HudGroup("BlackOut");
     public static final String BLACKOUT_NAME = "BlackOut";
     public static final String BLACKOUT_VERSION = "0.3.2";
+    public static final String COLOR = "Color is the visual perception of different wavelengths of light as hue, saturation, and brightness";
 
     @Override
     public void onInitialize() {
@@ -46,7 +47,6 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new BedAuraPlus());
         Modules.get().add(new ButtonAura());
         Modules.get().add(new CustomFOV());
-        Modules.get().add(new Disabler());
         Modules.get().add(new FastXP());
         Modules.get().add(new FeetESP());
         Modules.get().add(new FlightPlus());

@@ -240,13 +240,13 @@ public class SelfTrapPlus extends BlackOutModule {
                 lastSneak = isClicked;
             }
 
-            List<BlockPos> blocksList = getBlocks(getSize(mc.player.getBlockPos().up()), mc.player.getBoundingBox().intersects(WorldUtils.getBox(mc.player.getBlockPos().up(2))));
+            List<BlockPos> blocksList = getBlocks(getSize(mc.player.getBlockPos().up()), mc.player.getBoundingBox().intersects(OLEPOSSUtils.getBox(mc.player.getBlockPos().up(2))));
 
             render.clear();
 
             List<BlockPos> placements = getValid(blocksList);
 
-            render.forEach(item -> event.renderer.box(WorldUtils.getBox(item.pos), item.support ? supportSideColor.get() : sideColor.get(), item.support ? supportLineColor.get() : lineColor.get(), shapeMode.get(), 0));
+            render.forEach(item -> event.renderer.box(OLEPOSSUtils.getBox(item.pos), item.support ? supportSideColor.get() : sideColor.get(), item.support ? supportLineColor.get() : lineColor.get(), shapeMode.get(), 0));
 
             FindItemResult hotbar = InvUtils.findInHotbar(item -> item.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) item.getItem()).getBlock()));
             FindItemResult inventory = InvUtils.find(item -> item.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) item.getItem()).getBlock()));
@@ -271,12 +271,8 @@ public class SelfTrapPlus extends BlackOutModule {
 
                     if (hand == null) {
                         switch (switchMode.get()) {
-                            case Silent, Normal -> {
-                                obsidian = hotbar.count();
-                            }
-                            case SilentBypass -> {
-                                obsidian = inventory.slot() >= 0 ? inventory.count() : -1;
-                            }
+                            case Silent, Normal -> obsidian = hotbar.count();
+                            case SilentBypass -> obsidian = inventory.slot() >= 0 ? inventory.count() : -1;
                         }
                     }
 
@@ -287,9 +283,7 @@ public class SelfTrapPlus extends BlackOutModule {
                                     obsidian = hotbar.count();
                                     InvUtils.swap(hotbar.slot(), true);
                                 }
-                                case SilentBypass -> {
-                                    obsidian = BOInvUtils.invSwitch(inventory.slot()) ? inventory.count() : -1;
-                                }
+                                case SilentBypass -> obsidian = BOInvUtils.invSwitch(inventory.slot()) ? inventory.count() : -1;
                             }
                         }
 
@@ -313,12 +307,8 @@ public class SelfTrapPlus extends BlackOutModule {
 
                         if (hand == null) {
                             switch (switchMode.get()) {
-                                case Silent -> {
-                                    InvUtils.swapBack();
-                                }
-                                case SilentBypass -> {
-                                    BOInvUtils.swapBack();
-                                }
+                                case Silent -> InvUtils.swapBack();
+                                case SilentBypass -> BOInvUtils.swapBack();
                             }
                         }
                     }
@@ -360,8 +350,8 @@ public class SelfTrapPlus extends BlackOutModule {
     List<BlockPos> getValid(List<BlockPos> blocks) {
         List<BlockPos> list = new ArrayList<>();
         blocks.forEach(position -> {
-            if (BlockUtils.replaceable(position) && !placed.contains(position)) {
-                if (!timers.contains(position) && !EntityUtils.intersectsWithEntity(WorldUtils.getBox(position), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
+            if (OLEPOSSUtils.replaceable(position) && !placed.contains(position)) {
+                if (!timers.contains(position) && !EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
                     PlaceData data = onlyConfirmed.get() ? SettingUtils.getPlaceData(position) : SettingUtils.getPlaceDataOR(position, pos -> placed.contains(pos));
 
                     if (data.valid()) {
@@ -371,19 +361,19 @@ public class SelfTrapPlus extends BlackOutModule {
                         int value = -1;
                         double dist = Double.MAX_VALUE;
                         for (Direction dir : Direction.values()) {
-                            if (BlockUtils.replaceable(position.offset(dir))) {
+                            if (OLEPOSSUtils.replaceable(position.offset(dir))) {
                                 PlaceData placeData = onlyConfirmed.get() ? SettingUtils.getPlaceData(position.offset(dir)) : SettingUtils.getPlaceDataOR(position.offset(dir), pos -> placed.contains(pos));
                                 if (placeData.valid()) {
-                                    if (!EntityUtils.intersectsWithEntity(WorldUtils.getBox(position.offset(dir)), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
-                                        double distance = DistanceUtils.distance(WorldUtils.getMiddle(position.offset(dir)), mc.player.getPos());
+                                    if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
+                                        double distance = OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(position.offset(dir)), mc.player.getPos());
                                         if (distance < dist || value <= 1) {
                                             dist = distance;
                                             best = dir;
                                             value = 2;
                                         }
-                                    } else if (!EntityUtils.intersectsWithEntity(WorldUtils.getBox(position.offset(dir)), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM && entity.getType() != EntityType.END_CRYSTAL)) {
+                                    } else if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM && entity.getType() != EntityType.END_CRYSTAL)) {
                                         if (value <= 1) {
-                                            double distance = DistanceUtils.distance(WorldUtils.getMiddle(position.offset(dir)), mc.player.getPos());
+                                            double distance = OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(position.offset(dir)), mc.player.getPos());
                                             if (distance < dist || value <= 0) {
                                                 best = dir;
                                                 value = 1;
@@ -417,12 +407,12 @@ public class SelfTrapPlus extends BlackOutModule {
                 for (int z = size[2] - 1; z <= size[3] + 1; z++) {
                     boolean isX = x == size[0] - 1 || x == size[1] + 1;
                     boolean isZ = z == size[2] - 1 || z == size[3] + 1;
-                    boolean ignore = isX && !isZ ? (!BlockUtils.replaceable(pos.add(DistanceUtils.closerToZero(x), 0, z)) || placed.contains(pos.add(DistanceUtils.closerToZero(x), 0, z))) :
-                        !isX && isZ && (!BlockUtils.replaceable(pos.add(x, 0, DistanceUtils.closerToZero(z))) || placed.contains(pos.add(x, 0, DistanceUtils.closerToZero(z))));
+                    boolean ignore = isX && !isZ ? (!OLEPOSSUtils.replaceable(pos.add(OLEPOSSUtils.closerToZero(x), 0, z)) || placed.contains(pos.add(OLEPOSSUtils.closerToZero(x), 0, z))) :
+                        !isX && isZ && (!OLEPOSSUtils.replaceable(pos.add(x, 0, OLEPOSSUtils.closerToZero(z))) || placed.contains(pos.add(x, 0, OLEPOSSUtils.closerToZero(z))));
                     BlockPos bPos = null;
                     if (eye() && isX != isZ && !ignore) {
                         bPos = new BlockPos(x, pos.getY() ,z).add(pos.getX(), 0, pos.getZ());
-                    } else if (top() && !isX && !isZ && BlockUtils.replaceable(pos.add(x, 0, z)) && !placed.contains(pos.add(x, 0, z))) {
+                    } else if (top() && !isX && !isZ && OLEPOSSUtils.replaceable(pos.add(x, 0, z)) && !placed.contains(pos.add(x, 0, z))) {
                         bPos = new BlockPos(x, pos.getY() ,z).add(pos.getX(), 1, pos.getZ());
                     }
                     if (bPos != null) {
@@ -449,16 +439,16 @@ public class SelfTrapPlus extends BlackOutModule {
         int maxZ = 0;
         if (mc.player != null && mc.world != null) {
             Box box = mc.player.getBoundingBox();
-            if (box.intersects(WorldUtils.getBox(pos.north()))) {
+            if (box.intersects(OLEPOSSUtils.getBox(pos.north()))) {
                 minZ--;
             }
-            if (box.intersects(WorldUtils.getBox(pos.south()))) {
+            if (box.intersects(OLEPOSSUtils.getBox(pos.south()))) {
                 maxZ++;
             }
-            if (box.intersects(WorldUtils.getBox(pos.west()))) {
+            if (box.intersects(OLEPOSSUtils.getBox(pos.west()))) {
                 minX--;
             }
-            if (box.intersects(WorldUtils.getBox(pos.east()))) {
+            if (box.intersects(OLEPOSSUtils.getBox(pos.east()))) {
                 maxX++;
             }
         }

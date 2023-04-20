@@ -9,7 +9,7 @@ import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.timers.IntTimerList;
 import kassuk.addon.blackout.utils.BOInvUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
-import kassuk.addon.blackout.utils.WorldUtils;
+import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.meteor.BODamageUtils;
 import kassuk.addon.blackout.utils.meteor.BOEntityUtils;
 import meteordevelopment.meteorclient.events.entity.EntityAddedEvent;
@@ -58,7 +58,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     private final SettingGroup sgExplode = settings.createGroup("Explode");
     private final SettingGroup sgSwitch = settings.createGroup("Switch");
     private final SettingGroup sgDamage = settings.createGroup("Damage");
-    private final SettingGroup sgID = settings.createGroup("ID-Predict");
+    private final SettingGroup sgID = settings.createGroup("ID Predict");
     private final SettingGroup sgExtrapolation = settings.createGroup("Extrapolation");
     private final SettingGroup sgRender = settings.createGroup("Render");
     private final SettingGroup sgCompatibility = settings.createGroup("Compatibility");
@@ -1168,7 +1168,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         if (!surroundAttack.get() || !Modules.get().isActive(SurroundPlus.class)) {return false;}
 
         for (int i = 0; i < SurroundPlus.attack.size(); i++) {
-            if (EntityUtils.intersectsWithEntity(WorldUtils.getBox(SurroundPlus.attack.get(i)), entity -> entity instanceof EndCrystalEntity)) {
+            if (EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(SurroundPlus.attack.get(i)), entity -> entity instanceof EndCrystalEntity)) {
                 return true;
             }
         }
@@ -1229,12 +1229,8 @@ public class AutoCrystalRewrite extends BlackOutModule {
             boolean switched = handToUse == null;
             if (switched) {
                 switch (switchMode.get()) {
-                    case SilentBypass -> {
-                        BOInvUtils.invSwitch(sl);
-                    }
-                    case Silent -> {
-                        InvUtils.swap(hsl, true);
-                    }
+                    case SilentBypass -> BOInvUtils.invSwitch(sl);
+                    case Silent -> InvUtils.swap(hsl, true);
                 }
             }
 
@@ -1258,17 +1254,13 @@ public class AutoCrystalRewrite extends BlackOutModule {
             SettingUtils.swing(SwingState.Post, SwingType.Crystal, switched ? Hand.MAIN_HAND : handToUse);
 
             if (SettingUtils.shouldRotate(RotationType.Crystal)) {
-                Managers.ROTATION.end(WorldUtils.getBox(pos));
+                Managers.ROTATION.end(OLEPOSSUtils.getBox(pos));
             }
 
             if (switched) {
                 switch (switchMode.get()) {
-                    case SilentBypass -> {
-                        BOInvUtils.swapBack();
-                    }
-                    case Silent -> {
-                        InvUtils.swapBack();
-                    }
+                    case SilentBypass -> BOInvUtils.swapBack();
+                    case Silent -> InvUtils.swapBack();
                 }
             }
             if (idPredict.get()) {
@@ -1847,10 +1839,10 @@ public class AutoCrystalRewrite extends BlackOutModule {
     }
 
     boolean validForIntersect(Entity entity) {
-        if (entity instanceof EndCrystalEntity && canExplodePlacing(entity.getPos())) {return false;}
+        if (entity instanceof EndCrystalEntity && canExplodePlacing(entity.getPos())) {
+            return false;
+        }
 
-        if (entity instanceof PlayerEntity && entity.isSpectator()) {return false;}
-
-        return true;
+        return !(entity instanceof PlayerEntity) || !entity.isSpectator();
     }
 }
