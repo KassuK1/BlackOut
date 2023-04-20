@@ -12,7 +12,7 @@ import meteordevelopment.orbit.EventHandler;
 import net.minecraft.util.math.Vec3d;
 
 public class JumpModify extends BlackOutModule {
-    public JumpModify() {super(BlackOut.BLACKOUT, "JumpModify", "Allows you to modify jumping");}
+    public JumpModify() {super(BlackOut.BLACKOUT, "Jump Modify", "Allows you to modify jumping");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Double> jumpForce = sgGeneral.add(new DoubleSetting.Builder()
         .name("JumpForce")

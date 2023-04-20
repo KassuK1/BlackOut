@@ -23,7 +23,7 @@ Made by OLEPOSSU / Raksamies
 */
 
 public class AutoEz extends BlackOutModule {
-    public AutoEz() {super(BlackOut.BLACKOUT, "AutoEZ", "Sends message after enemy dies(too EZ nn's)");}
+    public AutoEz() {super(BlackOut.BLACKOUT, "Auto EZ", "Sends message after enemy dies(too EZ nn's)");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgKill = settings.getDefaultGroup();
     private final SettingGroup sgPop = settings.getDefaultGroup();

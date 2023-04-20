@@ -25,7 +25,7 @@ public class Welcomer extends HudElement {
     );
     private final Setting<SettingColor> textcolor = sgGeneral.add(new ColorSetting.Builder()
         .name("Text color")
-        .description(".")
+        .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(255, 255, 255, 155))
         .build()
     );

@@ -18,7 +18,7 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
 public class LightsOut extends BlackOutModule {
-    public LightsOut(){super(BlackOut.BLACKOUT,"LightsOut","a tribute to Reliant");}
+    public LightsOut(){super(BlackOut.BLACKOUT,"Lights Out","a tribute to Reliant");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
         .name("Delay")

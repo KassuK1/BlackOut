@@ -18,7 +18,7 @@ import net.minecraft.util.Hand;
 //Made by KassuK
 
 public class KassuKAura extends BlackOutModule {
-    public KassuKAura(){super(BlackOut.BLACKOUT,"ForceField", "An Killaura made by KassuK probably should not be used");}
+    public KassuKAura(){super(BlackOut.BLACKOUT,"Force Field", "An Killaura made by KassuK probably should not be used");}
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 

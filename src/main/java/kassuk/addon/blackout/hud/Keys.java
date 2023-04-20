@@ -31,13 +31,13 @@ public class Keys extends HudElement {
     );
     private final Setting<SettingColor> cTextColor = sgGeneral.add(new ColorSetting.Builder()
         .name("Clicked Text color")
-        .description(".")
+        .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(255, 255, 255, 255))
         .build()
     );
     private final Setting<SettingColor> textColor = sgGeneral.add(new ColorSetting.Builder()
         .name("Text color")
-        .description(".")
+        .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(0, 0, 0, 155))
         .build()
     );
@@ -49,14 +49,14 @@ public class Keys extends HudElement {
     );
     private final Setting<SettingColor> cbgColor = sgGeneral.add(new ColorSetting.Builder()
         .name("Clicked BG color")
-        .description(".")
+        .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(160, 160, 160, 155))
         .visible(textBG::get)
         .build()
     );
     private final Setting<SettingColor> bgColor = sgGeneral.add(new ColorSetting.Builder()
         .name("BG color")
-        .description(".")
+        .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(120, 120, 120, 155))
         .visible(textBG::get)
         .build()

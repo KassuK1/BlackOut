@@ -18,7 +18,7 @@ Made by KassuK
 
 public class WeakAlert extends BlackOutModule {
     public WeakAlert() {
-        super(BlackOut.BLACKOUT, "WeakAlert", "Alerts you if you get weakness");
+        super(BlackOut.BLACKOUT, "Weak Alert", "Alerts you if you get weakness");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Boolean> single = sgGeneral.add(new BoolSetting.Builder()

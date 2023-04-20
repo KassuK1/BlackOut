@@ -14,17 +14,20 @@ import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.*;
+import net.minecraft.block.entity.BedBlockEntity;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BedItem;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
+import net.minecraft.text.Text;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.*;
@@ -44,9 +47,21 @@ public class BedAuraPlus extends BlackOutModule {
     private final SettingGroup sgRender = settings.createGroup("Render");
 
     //   General Page
+    private final Setting<Boolean> fiveB = sgGeneral.add(new BoolSetting.Builder()
+        .name("5B5T")
+        .description("For example requires floor for both bed blocks and allows placing inside entities")
+        .defaultValue(false)
+        .build()
+    );
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
         .name("Pause Eat")
         .description("Pauses when you are eating")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> doubleInteract = sgGeneral.add(new BoolSetting.Builder()
+        .name("Double Interact")
+        .description("Clicks both bed blocks")
         .defaultValue(true)
         .build()
     );
@@ -70,12 +85,37 @@ public class BedAuraPlus extends BlackOutModule {
     );
 
     //   Placing Page
+    private final Setting<SpeedMode> speedMode = sgPlacing.add(new EnumSetting.Builder<SpeedMode>()
+        .name("Speed Mode")
+        .description("Normal mode should be used in everywhere else than 5B.")
+        .defaultValue(SpeedMode.Normal)
+        .build()
+    );
     private final Setting<Double> speed = sgPlacing.add(new DoubleSetting.Builder()
         .name("Speed")
         .description(".")
         .defaultValue(2)
         .min(0)
         .sliderRange(0, 20)
+        .visible(() -> speedMode.get() == SpeedMode.Normal)
+        .build()
+    );
+    private final Setting<Double> damageSpeed = sgPlacing.add(new DoubleSetting.Builder()
+        .name("Damage Speed Factor")
+        .description(".")
+        .defaultValue(1)
+        .min(0)
+        .sliderRange(0, 20)
+        .visible(() -> speedMode.get() == SpeedMode.Damage)
+        .build()
+    );
+    private final Setting<Double> maxSpeed = sgPlacing.add(new DoubleSetting.Builder()
+        .name("Damage Speed")
+        .description(".")
+        .defaultValue(12)
+        .min(0)
+        .sliderRange(0, 20)
+        .visible(() -> speedMode.get() == SpeedMode.Damage)
         .build()
     );
 
@@ -96,12 +136,58 @@ public class BedAuraPlus extends BlackOutModule {
         .sliderRange(0, 20)
         .build()
     );
+    private final Setting<Double> maxFriendDmg = sgDamage.add(new DoubleSetting.Builder()
+        .name("Max Friend Damage")
+        .description(".")
+        .defaultValue(6)
+        .min(0)
+        .sliderRange(0, 20)
+        .build()
+    );
     private final Setting<Double> minRatio = sgDamage.add(new DoubleSetting.Builder()
         .name("Min Damage Ratio")
         .description(".")
         .defaultValue(2)
         .min(0)
         .sliderRange(0, 10)
+        .build()
+    );
+    private final Setting<Double> minFriendRatio = sgDamage.add(new DoubleSetting.Builder()
+        .name("Min Friend Damage Ratio")
+        .description(".")
+        .defaultValue(2)
+        .min(0)
+        .sliderRange(0, 10)
+        .build()
+    );
+    private final Setting<Double> forcePop = sgDamage.add(new DoubleSetting.Builder()
+        .name("Force Pop")
+        .description(".")
+        .defaultValue(1)
+        .min(0)
+        .sliderRange(0, 10)
+        .build()
+    );
+    private final Setting<Double> antiPop = sgDamage.add(new DoubleSetting.Builder()
+        .name("Anti Pop")
+        .description(".")
+        .defaultValue(1)
+        .min(0)
+        .sliderRange(0, 10)
+        .build()
+    );
+    private final Setting<Double> antiFriendPop = sgDamage.add(new DoubleSetting.Builder()
+        .name("Anti Friend Pop")
+        .description(".")
+        .defaultValue(1)
+        .min(0)
+        .sliderRange(0, 10)
+        .build()
+    );
+    private final Setting<Boolean> friendSacrifice = sgDamage.add(new BoolSetting.Builder()
+        .name("Friend Sacrifice")
+        .description("Kills your friend if you can also kill any enemy with same bed")
+        .defaultValue(true)
         .build()
     );
 
@@ -151,12 +237,16 @@ public class BedAuraPlus extends BlackOutModule {
         SilentBypass,
         Disabled
     }
+    public enum SpeedMode {
+        Normal,
+        Damage
+    }
 
     BlockPos[] blocks = new BlockPos[]{};
     int lastIndex = 0;
     int length = 0;
     long tickTime = -1;
-    double bestDmg = -1;
+    double bestDmg = 0;
     long lastTime = 0;
 
     BlockPos placePos = null;
@@ -168,9 +258,17 @@ public class BedAuraPlus extends BlackOutModule {
     BlockPos renderPos = null;
     Direction renderDir = null;
     List<PlayerEntity> targets = new ArrayList<>();
+    List<PlayerEntity> friends = new ArrayList<>();
     List<Bed> beds = new ArrayList<>();
 
     double timer = 0;
+
+    double dmg;
+    double enemyHP;
+    double self;
+    double selfHP;
+    double friend;
+    double friendHP;
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onTickPre(TickEvent.Post event) {
@@ -187,7 +285,7 @@ public class BedAuraPlus extends BlackOutModule {
         tickTime = System.currentTimeMillis();
         length = blocks.length;
         lastIndex = 0;
-        bestDmg = -1;
+        bestDmg = 0;
         calcPos = null;
         calcDir = null;
         calcData = null;
@@ -200,11 +298,6 @@ public class BedAuraPlus extends BlackOutModule {
         double delta = (System.currentTimeMillis() - lastTime) / 1000f;
         timer += delta;
         lastTime = System.currentTimeMillis();
-        if (tickTime < 0 || mc.player == null || mc.world == null) {return;}
-
-        if (pauseCheck()) {
-            update();
-        }
 
         List<Bed> toRemove = new ArrayList<>();
         beds.forEach(bed -> {
@@ -213,6 +306,12 @@ public class BedAuraPlus extends BlackOutModule {
             }
         });
         toRemove.forEach(beds::remove);
+
+        if (tickTime < 0 || mc.player == null || mc.world == null) {return;}
+
+        if (pauseCheck()) {
+            update();
+        }
 
         int index = Math.min((int) Math.ceil((System.currentTimeMillis() - tickTime) / 50f * length), length - 1);
         calculate(index);
@@ -233,18 +332,15 @@ public class BedAuraPlus extends BlackOutModule {
     void calculate(int index) {
         BlockPos pos;
 
-        double dmg;
-        double self;
         for (int i = lastIndex; i < index; i++) {
             pos = blocks[i];
 
-            dmg = getDmg(pos);
-            self = BODamageUtils.bedDamage(mc.player, new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5));
+            damageCalc(pos);
 
-            if (!dmgCheck(dmg, self)) {continue;}
+            if (!dmgCheck()) {continue;}
 
             for (Direction dir : OLEPOSSUtils.horizontals) {
-                PlaceData data = SettingUtils.getPlaceDataAND(pos.offset(dir), direction -> direction != dir, pos1 -> !(mc.world.getBlockState(pos1).getBlock() instanceof BedBlock));
+                PlaceData data = getData(pos, dir);
 
                 if (!data.valid()) {continue;}
 
@@ -252,7 +348,7 @@ public class BedAuraPlus extends BlackOutModule {
 
                 if (!SettingUtils.inPlaceRange(data.pos())) {continue;}
 
-                if (EntityUtils.intersectsWithEntity(new Box(pos.offset(dir)), entity -> !(entity instanceof ItemEntity))) {continue;}
+                if (!fiveB.get() && EntityUtils.intersectsWithEntity(new Box(pos.offset(dir)), entity -> !(entity instanceof ItemEntity))) {continue;}
 
                 calcData = data;
                 calcPos = pos;
@@ -264,6 +360,8 @@ public class BedAuraPlus extends BlackOutModule {
     }
 
     void updateTargets() {
+        friends.clear();
+        targets.clear();
         List<PlayerEntity> players = new ArrayList<>();
         double closestDist = 1000;
         PlayerEntity closest;
@@ -285,9 +383,13 @@ public class BedAuraPlus extends BlackOutModule {
             }
             if (closest != null) {
                 players.add(closest);
+                if (Friends.get().isFriend(closest)) {
+                    friends.add(closest);
+                } else {
+                    targets.add(closest);
+                }
             }
         }
-        targets = players;
     }
 
     BlockPos[] getBlocks(Vec3d middle, double radius) {
@@ -301,6 +403,8 @@ public class BedAuraPlus extends BlackOutModule {
                     pos = new BlockPos(Math.floor(middle.x) + x, Math.floor(middle.y) + y, Math.floor(middle.z) + z);
 
                     if (!OLEPOSSUtils.replaceable(pos) && !(mc.world.getBlockState(pos).getBlock() instanceof BedBlock)) {continue;}
+
+                    if (fiveB.get() && (mc.world.getBlockState(pos.down()).getBlock() == Blocks.AIR || mc.world.getBlockState(pos.down()).hasBlockEntity())) {continue;}
 
                     if (!inRangeToTargets(pos)) {continue;}
                     result.add(pos);
@@ -320,18 +424,17 @@ public class BedAuraPlus extends BlackOutModule {
     }
 
     void update() {
-
         if (placePos == null || placeData == null || !placeData.valid() || bedDir == null) {return;}
 
         if (logicMode.get() == LogicMode.PlaceBreak) {
-            BlockPos in = interactUpdate();
-            if (in != null) {
-                removeBed(in);
+            List<BlockPos> in = interactUpdate();
+            if (in != null && !in.isEmpty()) {
+                in.forEach(this::removeBed);
             }
 
-            if (timer <= 1 / speed.get()) {return;}
+            if (timer <= 1 / getSpeed()) {return;}
 
-            if (!isBed(placePos) && !isBed(placePos.offset(bedDir)) && placeUpdate()) {
+            if (OLEPOSSUtils.replaceable(placePos) && OLEPOSSUtils.replaceable(placePos.offset(bedDir)) && placeUpdate()) {
                 removeBed2(placePos);
                 beds.add(new Bed(placePos, placePos.offset(bedDir), true, System.currentTimeMillis()));
                 timer = 0;
@@ -342,11 +445,11 @@ public class BedAuraPlus extends BlackOutModule {
                 beds.add(new Bed(placePos, placePos.offset(bedDir), true, System.currentTimeMillis()));
             }
 
-            if (timer <= 1 / speed.get()) {return;}
+            if (timer <= 1 / getSpeed()) {return;}
 
-            BlockPos in = interactUpdate();
-            if (in != null) {
-                removeBed(in);
+            List<BlockPos> in = interactUpdate();
+            if (in != null && !in.isEmpty()) {
+                in.forEach(this::removeBed);
                 timer = 0;
             }
         }
@@ -371,7 +474,9 @@ public class BedAuraPlus extends BlackOutModule {
                 toRemove.add(bed);
             }
         });
-        toRemove.forEach(beds::remove);
+        toRemove.forEach(bed -> {
+            beds.remove(bed);
+        });
     }
 
     void place(Hand hand) {
@@ -382,11 +487,35 @@ public class BedAuraPlus extends BlackOutModule {
         SettingUtils.swing(SwingState.Post, SwingType.Placing, hand);
     }
 
-    BlockPos interactUpdate() {
+    List<BlockPos> interactUpdate() {
+        if (doubleInteract.get()) {
+            if (SettingUtils.shouldRotate(RotationType.Interact) && !Managers.ROTATION.start(placePos, priority, RotationType.Interact)) {return null;}
+
+            List<BlockPos> list = new ArrayList<>();
+
+            if (isBed(placePos) || isBed(placePos.offset(bedDir))) {
+                if (SettingUtils.inPlaceRange(placePos) && interact(placePos)) {
+                    list.add(placePos);
+                }
+                if (SettingUtils.inPlaceRange(placePos.offset(bedDir)) && interact(placePos.offset(bedDir))) {
+                    list.add(placePos.offset(bedDir));
+                }
+            }
+
+            if (SettingUtils.shouldRotate(RotationType.Interact)) {
+                Managers.ROTATION.end(placePos);
+            }
+
+            return list;
+        }
+
         BlockPos interactPos = getInteractPos();
 
+        if (interactPos == null) {return null;}
+
         Direction interactDir = SettingUtils.getPlaceOnDirection(interactPos);
-        if (interactPos == null || interactDir == null) {return null;}
+
+        if (interactDir == null) {return null;}
 
         if (SettingUtils.shouldRotate(RotationType.Interact) && !Managers.ROTATION.start(interactPos, priority, RotationType.Interact)) {return null;}
 
@@ -394,20 +523,35 @@ public class BedAuraPlus extends BlackOutModule {
 
         sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, new BlockHitResult(OLEPOSSUtils.getMiddle(interactPos), interactDir, interactPos, false), 0));
 
-        SettingUtils.swing(SwingState.Post, SwingType.Interact, Hand.OFF_HAND);
+        SettingUtils.swing(SwingState.Post, SwingType.Interact, Hand.MAIN_HAND);
 
         if (SettingUtils.shouldRotate(RotationType.Interact)) {
             Managers.ROTATION.end(interactPos);
         }
-        return interactPos;
+        List<BlockPos> list = new ArrayList<>();
+        list.add(interactPos);
+        return list;
+    }
+
+    boolean interact(BlockPos pos) {
+        Direction dir = SettingUtils.getPlaceOnDirection(pos);
+
+        if (dir == null) {return false;}
+
+        SettingUtils.swing(SwingState.Pre, SwingType.Interact, Hand.MAIN_HAND);
+
+        sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, new BlockHitResult(OLEPOSSUtils.getMiddle(pos), dir, pos, false), 0));
+
+        SettingUtils.swing(SwingState.Post, SwingType.Interact, Hand.MAIN_HAND);
+        return true;
     }
 
     BlockPos getInteractPos() {
-        if (isBed(placePos) && SettingUtils.getPlaceOnDirection(placePos) != null) {
-            return placePos;
-        }
-        if (isBed(placePos.offset(bedDir)) && SettingUtils.getPlaceOnDirection(placePos.offset(bedDir)) != null) {
+        if (isBed(placePos.offset(bedDir)) && SettingUtils.inPlaceRange(placePos.offset(bedDir)) && SettingUtils.getPlaceOnDirection(placePos.offset(bedDir)) != null) {
             return placePos.offset(bedDir);
+        }
+        if (isBed(placePos) && SettingUtils.inPlaceRange(placePos) && SettingUtils.getPlaceOnDirection(placePos) != null) {
+            return placePos;
         }
         return null;
     }
@@ -446,6 +590,15 @@ public class BedAuraPlus extends BlackOutModule {
 
         boolean switched = hand != null;
 
+        if (rotMode.get() == RotationMode.Packet) {
+            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(bedDir.getOpposite().asRotation(), Managers.ROTATION.lastDir[1], Managers.ONGROUND.isOnGround()));
+        } else {
+            Managers.ROTATION.startYaw(bedDir.getOpposite().asRotation(), priority, RotationType.Other);
+            if (Math.abs(RotationUtils.yawAngle(Managers.ROTATION.lastDir[0], bedDir.getOpposite().asRotation())) > 45) {
+                return false;
+            }
+        }
+
         if (!switched) {
             switch (switchMode.get()) {
                 case Silent, Normal -> {
@@ -462,12 +615,6 @@ public class BedAuraPlus extends BlackOutModule {
 
         if (!switched) {return false;}
 
-        if (rotMode.get() == RotationMode.Packet) {
-            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(bedDir.getOpposite().asRotation(), Managers.ROTATION.lastDir[1], Managers.ONGROUND.isOnGround()));
-        } else {
-            Managers.ROTATION.startYaw(bedDir.getOpposite().asRotation(), priority, RotationType.Other);
-        }
-
         place(hand == null ? Hand.MAIN_HAND : hand);
 
         if (SettingUtils.shouldRotate(RotationType.Placing)) {
@@ -476,23 +623,29 @@ public class BedAuraPlus extends BlackOutModule {
 
         if (hand == null) {
             switch (switchMode.get()) {
-                case Silent -> {
-                    InvUtils.swapBack();
-                }
-                case SilentBypass -> {
-                    BOInvUtils.swapBack();
-                }
+                case Silent -> InvUtils.swapBack();
+                case SilentBypass -> BOInvUtils.swapBack();
             }
         }
         return true;
     }
 
-    boolean dmgCheck(double dmg, double self) {
+    boolean dmgCheck() {
         if (dmg < bestDmg) {return false;}
 
+        if (self * antiPop.get() >= selfHP) {return false;}
+
+        if (!friendSacrifice.get() && friendHP >= 0 && friend * antiFriendPop.get() >= friendHP) {return false;}
+        if (enemyHP >= 0 && dmg * forcePop.get() >= enemyHP) {return true;}
+        if (friendHP >= 0 && friend * antiFriendPop.get() >= friendHP) {return false;}
+
         if (dmg < minDmg.get()) {return false;}
+
         if (self > maxDmg.get()) {return false;}
+        if (friend > maxFriendDmg.get()) {return false;}
+
         if (dmg / self < minRatio.get()) {return false;}
+        if (friendHP >= 0 && dmg / friend < minFriendRatio.get()) {return false;}
 
         return true;
     }
@@ -505,8 +658,63 @@ public class BedAuraPlus extends BlackOutModule {
         return highest;
     }
 
+    void damageCalc(BlockPos pos) {
+        // Enemy
+        double highest = -1;
+        double highestHP = -1;
+        for (PlayerEntity target : targets) {
+            if (target.getHealth() <= 0) {continue;}
+
+            highest = Math.max(highest, BODamageUtils.bedDamage(target, new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5)));
+            highestHP = target.getHealth() + target.getAbsorptionAmount();
+        }
+        dmg = highest;
+        enemyHP = highestHP;
+
+        // Self
+        self = BODamageUtils.bedDamage(mc.player, new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5));
+        selfHP = mc.player.getHealth() + mc.player.getAbsorptionAmount();
+
+        // Friend
+        highest = -1;
+        highestHP = -1;
+        for (PlayerEntity friend : friends) {
+            if (friend.getHealth() <= 0) {continue;}
+
+            highest = Math.max(highest, BODamageUtils.bedDamage(friend, new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5)));
+            highestHP = friend.getHealth() + friend.getAbsorptionAmount();
+        }
+        friend = highest;
+        friendHP = highestHP;
+    }
+
     Box bedBox(BlockPos pos) {
         return new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 0.5, pos.getZ() + 1);
+    }
+
+    PlaceData getData(BlockPos pos, Direction dir) {
+        if (fiveB.get()) {
+            return SettingUtils.getPlaceDataAND(pos.offset(dir), direction -> direction == Direction.DOWN, pos1 -> !(mc.world.getBlockState(pos1).getBlock() instanceof BedBlock));
+        } else {
+            return SettingUtils.getPlaceDataAND(pos.offset(dir), direction -> direction != dir, pos1 -> !(mc.world.getBlockState(pos1).getBlock() instanceof BedBlock));
+        }
+    }
+
+    double getSpeed() {
+        switch (speedMode.get()) {
+            case Normal -> {
+                return speed.get();
+            }
+            case Damage -> {
+                if (placePos == null) {
+                    return maxSpeed.get();
+                }
+
+                double dmg = getDmg(placePos);
+                return Math.min(dmg * damageSpeed.get(), maxSpeed.get());
+            }
+        }
+        return 2;
     }
 
     record Bed(BlockPos feetBlock, BlockPos headBlock, boolean isBed, long time) {}

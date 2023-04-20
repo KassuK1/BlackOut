@@ -33,7 +33,7 @@ Made by OLEPOSSU / Raksamies
 
 public class AutoCraftingTable extends BlackOutModule {
     public AutoCraftingTable() {
-        super(BlackOut.BLACKOUT, "AutoCraftingTable", "Automatically places and opens an Crafting table");
+        super(BlackOut.BLACKOUT, "Auto Crafting Table", "Automatically places and opens an Crafting table");
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();

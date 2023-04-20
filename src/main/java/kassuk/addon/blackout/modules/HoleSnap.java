@@ -29,11 +29,11 @@ Made by OLEPOSSU / Raksamies
 
 public class HoleSnap extends BlackOutModule {
     public HoleSnap() {
-        super(BlackOut.BLACKOUT, "HoleSnap", "For the time when you cant even press W");
+        super(BlackOut.BLACKOUT, "Hole Snap", "For the time when you cant even press W");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private final Setting<Boolean> single = sgGeneral.add(new BoolSetting.Builder()
-        .name("Single")
+    private final Setting<Boolean> singleTarget = sgGeneral.add(new BoolSetting.Builder()
+        .name("Single Target")
         .description("Only chooses target hole once")
         .defaultValue(true)
         .build()
@@ -63,7 +63,7 @@ public class HoleSnap extends BlackOutModule {
     private final Setting<Double> timer = sgGeneral.add(new DoubleSetting.Builder()
         .name("Timer")
         .description("Sends packets faster")
-        .defaultValue(30)
+        .defaultValue(10)
         .min(0)
         .sliderMax(100)
         .build()
@@ -106,6 +106,24 @@ public class HoleSnap extends BlackOutModule {
         .sliderRange(0, 100)
         .build()
     );
+    private final Setting<Boolean> singleHoles = sgGeneral.add(new BoolSetting.Builder()
+        .name("Single Holes")
+        .description(".")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> doubleHoles = sgGeneral.add(new BoolSetting.Builder()
+        .name("Double Holes")
+        .description(".")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> quadHoles = sgGeneral.add(new BoolSetting.Builder()
+        .name("Quad Holes")
+        .description(".")
+        .defaultValue(true)
+        .build()
+    );
     Hole singleHole;
     int collisions;
     int rubberbands;
@@ -140,7 +158,7 @@ public class HoleSnap extends BlackOutModule {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onMove(PlayerMoveEvent event) {
         if (mc.player != null && mc.world != null) {
-            Hole hole = single.get() ? singleHole : findHole();
+            Hole hole = singleTarget.get() ? singleHole : findHole();
 
             if (hole != null && !singleBlocked()) {
                 Modules.get().get(Timer.class).setOverride(timer.get());
@@ -203,7 +221,7 @@ public class HoleSnap extends BlackOutModule {
                 for (int z = -range.get(); z < range.get(); z++) {
                     BlockPos pos = mc.player.getBlockPos().add(x, y, z);
 
-                    Hole hole = HoleUtils.getHole(pos, depth.get());
+                    Hole hole = HoleUtils.getHole(pos, singleHoles.get(), doubleHoles.get(), quadHoles.get(), depth.get());
 
                     if (hole.type == HoleType.NotHole) {continue;}
 

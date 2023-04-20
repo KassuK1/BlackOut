@@ -47,7 +47,6 @@ Made by KassuK
 public class SurroundPlus extends BlackOutModule {
     public SurroundPlus() {super(BlackOut.BLACKOUT, "Surround+", "KasumsSoft surround");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private final SettingGroup sgAttack = settings.createGroup("Attack");
     private final SettingGroup sgToggle = settings.createGroup("Toggle");
     private final SettingGroup sgRender = settings.createGroup("Render");
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()

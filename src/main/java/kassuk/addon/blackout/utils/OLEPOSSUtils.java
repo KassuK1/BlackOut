@@ -133,7 +133,4 @@ public class OLEPOSSUtils {
         Block b = mc.world.getBlockState(block).getBlock();
         return !(b instanceof AbstractFireBlock || b instanceof FluidBlock || b instanceof AirBlock);
     }
-    public static boolean solid(Block b) {
-        return !(b instanceof AbstractFireBlock || b instanceof FluidBlock || b instanceof AirBlock);
-    }
 }

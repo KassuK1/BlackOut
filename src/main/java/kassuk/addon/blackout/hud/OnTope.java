@@ -19,7 +19,7 @@ public class OnTope extends HudElement {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
         .name("Color")
-        .description("Color is the visual perception of different wavelengths of light as hue, saturation, and brightness.")
+        .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(255, 255, 255, 255))
         .build()
     );

@@ -24,7 +24,7 @@ Made by OLEPOSSU / Raksamies
 
 public class FeetESP extends BlackOutModule {
     public FeetESP() {
-        super(BlackOut.BLACKOUT, "FeetESP", "No, it doesn't show you pictures of feet");
+        super(BlackOut.BLACKOUT, "Feet ESP", "No, it doesn't show you pictures of feet");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Boolean> friend = sgGeneral.add(new BoolSetting.Builder()

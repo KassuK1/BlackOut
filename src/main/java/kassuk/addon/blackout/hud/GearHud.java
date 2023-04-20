@@ -35,8 +35,8 @@ public class GearHud extends HudElement {
     );
     private final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
         .name("Color")
-        .description("U blind?")
-        .defaultValue(new SettingColor(0, 0, 0, 255))
+        .description(BlackOut.COLOR)
+        .defaultValue(new SettingColor(255, 255, 255, 255))
         .build()
     );
     public static final HudElementInfo<GearHud> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "GearHud", "Gear.", GearHud::new);

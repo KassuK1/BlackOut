@@ -37,21 +37,21 @@ public class TargetHud extends HudElement {
 
     private final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
         .name("Backround color")
-        .description(".")
+        .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(0, 0, 0, 155))
         .build()
     );
 
     private final Setting<SettingColor> textcolor = sgGeneral.add(new ColorSetting.Builder()
         .name("Text color")
-        .description(".")
+        .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(255, 255, 255, 155))
         .build()
     );
 
     private final Setting<SettingColor> bar = sgGeneral.add(new ColorSetting.Builder()
         .name("HealthBar color")
-        .description(".")
+        .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(0, 255, 0, 200))
         .build()
     );
@@ -78,7 +78,7 @@ public class TargetHud extends HudElement {
 
     private final Setting<SettingColor> outlineColor = sgGeneral.add(new ColorSetting.Builder()
         .name("Outline color")
-        .description(".")
+        .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(255, 255, 255, 255))
         .visible(outline::get)
         .build()

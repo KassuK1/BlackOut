@@ -16,7 +16,7 @@ Made by KassuK
 
 public class FastXP extends BlackOutModule {
     public FastXP() {
-        super(BlackOut.BLACKOUT, "FastXP", "XP spamming moment");
+        super(BlackOut.BLACKOUT, "Fast XP", "XP spamming moment");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<rotationmode> rotmode = sgGeneral.add(new EnumSetting.Builder<rotationmode>()

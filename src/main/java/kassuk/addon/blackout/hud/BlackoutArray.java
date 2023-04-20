@@ -147,8 +147,9 @@ public class BlackoutArray extends HudElement {
 
         for (int i = 0; i < sorted.size(); i++) {
             Line line = sorted.get(i);
-            renderer.text(line.name, side.get() == Side.Left ? x : x + 120 - width(renderer, line.name + " " + line.info), y + i * height(renderer) * scale.get() * scale.get(), getColor(color.get(), waveColor.get(), (Math.sin(i * 6 + System.currentTimeMillis() / 1000D * speed.get()) + 1) / 2D), true, scale.get());
-            renderer.text(line.info, side.get() == Side.Left ? x + width(renderer, line.name + " ") : x + 120 - width(renderer, line.info), y + i * height(renderer) * scale.get() * scale.get(), getColor(infoColor.get(), infoWaveColor.get(), (Math.sin(i * 6 + System.currentTimeMillis() / 1000D * speed.get()) + 1) / 2D), true, scale.get());
+
+            renderer.text(line.name, side.get() == Side.Left ? x : x + 120 * scale.get() * scale.get() - width(renderer, line.name + " " + line.info), y + i * height(renderer), getColor(color.get(), waveColor.get(), (Math.sin(i * 6 + System.currentTimeMillis() / 1000D * speed.get()) + 1) / 2D), true, scale.get());
+            renderer.text(line.info, side.get() == Side.Left ? x + width(renderer, line.name + " ") : x + 120 * scale.get() * scale.get() - width(renderer, line.info), y + i * height(renderer), getColor(infoColor.get(), infoWaveColor.get(), (Math.sin(i * 6 + System.currentTimeMillis() / 1000D * speed.get()) + 1) / 2D), true, scale.get());
         }
     }
 

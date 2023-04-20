@@ -55,7 +55,7 @@ Made by OLEPOSSU / Raksamies
 */
 
 public class AutoMine extends BlackOutModule {
-    public AutoMine() {super(BlackOut.BLACKOUT, "AutoMine", "For the times your too lazy or bad to press your break bind");}
+    public AutoMine() {super(BlackOut.BLACKOUT, "Auto Mine", "For the times your too lazy or bad to press your break bind");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgValue = settings.createGroup("Value");
     private final SettingGroup sgSpeed = settings.createGroup("Speed");
