@@ -2,7 +2,7 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
-import kassuk.addon.blackout.utils.ItemUtils;
+import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Modules;
@@ -109,9 +109,9 @@ public class OffHandPlus extends BlackOutModule {
             boolean crystalAvailable = InvUtils.find(itemStack -> itemStack.getItem().equals(Items.END_CRYSTAL)).count() > 0;
             boolean totemAvailable = !(suicide.isActive() && suicide.offhand.get()) && InvUtils.find(itemStack -> itemStack.getItem().equals(Items.TOTEM_OF_UNDYING)).count() > 0;
             boolean gapAvailable = InvUtils.find(itemStack -> itemStack.getItem().equals(Items.ENCHANTED_GOLDEN_APPLE)).count() > 0;
-            boolean shouldGap = (swordGapple.get().equals(swordGapModes.Always) && ItemUtils.isSword(mc.player.getMainHandStack().getItem())) ||
-                (swordGapple.get().equals(swordGapModes.Pressing) && ItemUtils.isSword(mc.player.getMainHandStack().getItem()) && mc.options.useKey.isPressed()) ||
-                (swordGapple.get().equals(swordGapModes.Smart) && ItemUtils.isSword(mc.player.getMainHandStack().getItem()) && mc.options.useKey.isPressed());
+            boolean shouldGap = (swordGapple.get().equals(swordGapModes.Always) && OLEPOSSUtils.isSword(mc.player.getMainHandStack().getItem())) ||
+                (swordGapple.get().equals(swordGapModes.Pressing) && OLEPOSSUtils.isSword(mc.player.getMainHandStack().getItem()) && mc.options.useKey.isPressed()) ||
+                (swordGapple.get().equals(swordGapModes.Smart) && OLEPOSSUtils.isSword(mc.player.getMainHandStack().getItem()) && mc.options.useKey.isPressed());
             boolean firstAvailable = itemMode.get().equals(itemModes.Crystal) ? crystalAvailable : gapAvailable;
             boolean secondAvailable = itemMode.get().equals(itemModes.Crystal) ? gapAvailable : crystalAvailable;
 

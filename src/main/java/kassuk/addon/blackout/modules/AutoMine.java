@@ -857,7 +857,7 @@ public class AutoMine extends BlackOutModule {
                         hold = false;
                     }
                     // Auto City
-                    if (valueCheck(value, autoCity.get(), pos.offset(dir), closest) && getBlock(pos.offset(dir)) != Blocks.AIR && getBlock(pos.offset(dir)) != Blocks.BEDROCK && canPlaceCrystal(pos.offset(dir).offset(dir)) && kassuk.addon.blackout.utils.EntityUtils.isCrystalBlock(getBlock(pos.offset(dir).offset(dir).down())) && SettingUtils.inMineRange(pos.offset(dir)) && SettingUtils.inPlaceRange(pos.offset(dir).offset(dir).down()) && SettingUtils.getPlaceOnDirection(pos.offset(dir)) != null) {
+                    if (valueCheck(value, autoCity.get(), pos.offset(dir), closest) && getBlock(pos.offset(dir)) != Blocks.AIR && getBlock(pos.offset(dir)) != Blocks.BEDROCK && canPlaceCrystal(pos.offset(dir).offset(dir)) && OLEPOSSUtils.isCrystalBlock(getBlock(pos.offset(dir).offset(dir).down())) && SettingUtils.inMineRange(pos.offset(dir)) && SettingUtils.inPlaceRange(pos.offset(dir).offset(dir).down()) && SettingUtils.getPlaceOnDirection(pos.offset(dir)) != null) {
                         value = autoCity.get();
                         closest = pos.offset(dir);
                         crystal = pos.offset(dir).offset(dir);

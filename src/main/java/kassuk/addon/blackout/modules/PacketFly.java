@@ -2,7 +2,7 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
-import kassuk.addon.blackout.utils.EntityUtils;
+import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -292,7 +292,7 @@ public class PacketFly extends BlackOutModule {
     }
 
     private boolean isPhasing() {
-        return EntityUtils.inside(mc.player, mc.player.getBoundingBox());
+        return OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox());
     }
 
     private boolean jumping() {

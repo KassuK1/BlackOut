@@ -819,7 +819,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
                     debugRangeHeight(3) + "  " + dist(debugRangePos(3)) + "\n" +
                     debugRangeHeight(4) + "  " + dist(debugRangePos(4)) + "\n" +
                     debugRangeHeight(5) + "  " + dist(debugRangePos(5)) + "\n" +
-                    SettingUtils.attackRangeTo(kassuk.addon.blackout.utils.EntityUtils.getCrystalBox(new BlockPos(debugRangeX.get(), debugRangeY.get(), debugRangeZ.get())), new Vec3d(debugRangeX.get() + 0.5, debugRangeY.get(), debugRangeZ.get() + 0.5)));
+                    SettingUtils.attackRangeTo(OLEPOSSUtils.getCrystalBox(new BlockPos(debugRangeX.get(), debugRangeY.get(), debugRangeZ.get())), new Vec3d(debugRangeX.get() + 0.5, debugRangeY.get(), debugRangeZ.get() + 0.5)));
             }
         }
 
@@ -1332,7 +1332,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         if (handToUse != null && !pausedCheck()) {
             EndCrystalEntity en = new EndCrystalEntity(mc.world, pos.x, pos.y, pos.z);
             en.setId(id);
-            attackEntity(en, kassuk.addon.blackout.utils.EntityUtils.getCrystalBox(pos));
+            attackEntity(en, OLEPOSSUtils.getCrystalBox(pos));
         }
     }
 
