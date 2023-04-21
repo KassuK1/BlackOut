@@ -127,8 +127,8 @@ public class BlackoutArray extends HudElement {
             if (wave.get()) {
                 f = (Math.sin(i * 6 + System.currentTimeMillis() / 1000D * speed.get()) + 1) / 2D;
             }
-            renderer.text(line.name, side.get() == Side.Left ? x : x + getWidth() - width(renderer, line.name + (line.info.isEmpty() ? "" : " " + line.info)), y + i * height * scale.get() * scale.get(), getColor(color.get(), waveColor.get(), f), shadow.get(), scale.get());
-            renderer.text(line.info, side.get() == Side.Left ? x + width(renderer, line.name + " ") : x + getWidth() - width(renderer, line.info), y + i * height * scale.get() * scale.get(), getColor(infoColor.get(), infoWaveColor.get(), f), shadow.get(), scale.get());
+            renderer.text(line.name, side.get() == Side.Left ? x : x + getWidth() - width(renderer, line.name + (line.info.isEmpty() ? "" : " " + line.info)), y + i * height, getColor(color.get(), waveColor.get(), f), shadow.get(), scale.get());
+            renderer.text(line.info, side.get() == Side.Left ? x + width(renderer, line.name + " ") : x + getWidth() - width(renderer, line.info), y + i * height, getColor(infoColor.get(), infoWaveColor.get(), f), shadow.get(), scale.get());
         }
     }
 

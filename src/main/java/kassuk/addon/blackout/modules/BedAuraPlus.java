@@ -235,6 +235,7 @@ public class BedAuraPlus extends BlackOutModule {
         Silent,
         Normal,
         SilentBypass,
+        InvSwitch,
         Disabled
     }
     public enum SpeedMode {
@@ -577,7 +578,7 @@ public class BedAuraPlus extends BlackOutModule {
                     FindItemResult result = InvUtils.findInHotbar(item -> item.getItem() instanceof BedItem);
                     beds = result.count();
                 }
-                case SilentBypass -> {
+                case SilentBypass, InvSwitch -> {
                     FindItemResult result = InvUtils.find(item -> item.getItem() instanceof BedItem);
                     beds = result.slot() >= 0 ? result.count() : -1;
                 }
@@ -608,6 +609,10 @@ public class BedAuraPlus extends BlackOutModule {
                 }
                 case SilentBypass -> {
                     FindItemResult result = InvUtils.find(item -> item.getItem() instanceof BedItem);
+                    switched = BOInvUtils.pickSwitch(result.slot());
+                }
+                case InvSwitch -> {
+                    FindItemResult result = InvUtils.find(item -> item.getItem() instanceof BedItem);
                     switched = BOInvUtils.invSwitch(result.slot());
                 }
             }
@@ -624,7 +629,8 @@ public class BedAuraPlus extends BlackOutModule {
         if (hand == null) {
             switch (switchMode.get()) {
                 case Silent -> InvUtils.swapBack();
-                case SilentBypass -> BOInvUtils.swapBack();
+                case SilentBypass -> BOInvUtils.pickSwapBack();
+                case InvSwitch -> BOInvUtils.swapBack();
             }
         }
         return true;

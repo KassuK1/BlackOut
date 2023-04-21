@@ -6,6 +6,7 @@ import meteordevelopment.meteorclient.mixininterface.IClientPlayerInteractionMan
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.c2s.play.ClickSlotC2SPacket;
+import net.minecraft.network.packet.c2s.play.PickFromInventoryC2SPacket;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.SlotActionType;
 
@@ -14,6 +15,22 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 @SuppressWarnings("DataFlowIssue")
 public class BOInvUtils {
     private static int[] slots;
+    private static int pickSlot = -1;
+
+    public static boolean pickSwitch(int slot) {
+        if (slot >= 0) {
+            mc.getNetworkHandler().sendPacket(new PickFromInventoryC2SPacket(slot));
+            pickSlot = slot;
+            return true;
+        }
+        return false;
+    }
+    public static void pickSwapBack() {
+        if (pickSlot >= 0) {
+            mc.getNetworkHandler().sendPacket(new PickFromInventoryC2SPacket(pickSlot));
+            pickSlot = -1;
+        }
+    }
 
     // Credits to rickyracuun
     public static boolean invSwitch(int slot) {

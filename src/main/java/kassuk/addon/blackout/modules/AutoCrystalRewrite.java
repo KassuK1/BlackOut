@@ -32,9 +32,7 @@ import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
+import net.minecraft.network.packet.c2s.play.*;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -112,7 +110,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     private final Setting<Boolean> ccPlacements = sgPlace.add(new BoolSetting.Builder()
         .name("CC Placements")
         .description("Uses crystalpvp.cc hitboxes.")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
     private final Setting<Boolean> instantPlace = sgPlace.add(new BoolSetting.Builder()
@@ -719,6 +717,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         Smart,
         Gapple,
         Silent,
+        InvSilent,
         SilentBypass
     }
     public enum DelayMode {
@@ -1119,7 +1118,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
             if (!pausedCheck()) {
                 int silentSlot = InvUtils.find(Items.END_CRYSTAL).slot();
                 int hotbar = InvUtils.findInHotbar(Items.END_CRYSTAL).slot();
-                if (handToUse != null || (switchMode.get() == SwitchMode.Silent && hotbar >= 0) || (switchMode.get() == SwitchMode.SilentBypass && silentSlot >= 0)) {
+                if (handToUse != null || (switchMode.get() == SwitchMode.Silent && hotbar >= 0) || ((switchMode.get() == SwitchMode.SilentBypass || switchMode.get() == SwitchMode.InvSilent) && silentSlot >= 0)) {
                     placing = true;
                     if (speedCheck() && delayCheck()) {
                         if (!SettingUtils.shouldRotate(RotationType.Crystal) || (Managers.ROTATION.start(placePos.down(), smartRot.get() ? new Vec3d(placePos.getX() + 0.5, placePos.getY(), placePos.getZ() + 0.5) : null, priority - 0.1, RotationType.Crystal) && ghostCheck(placePos.down()))) {
@@ -1188,7 +1187,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
             case Silent -> {
                 return InvUtils.findInHotbar(Items.END_CRYSTAL).slot() >= 0;
             }
-            case SilentBypass -> {
+            case SilentBypass, InvSilent -> {
                 return InvUtils.find(Items.END_CRYSTAL).slot() >= 0;
             }
             default -> {
@@ -1229,8 +1228,9 @@ public class AutoCrystalRewrite extends BlackOutModule {
             boolean switched = handToUse == null;
             if (switched) {
                 switch (switchMode.get()) {
-                    case SilentBypass -> BOInvUtils.invSwitch(sl);
+                    case SilentBypass -> BOInvUtils.pickSwitch(sl);
                     case Silent -> InvUtils.swap(hsl, true);
+                    case InvSilent -> BOInvUtils.invSwitch(sl);
                 }
             }
 
@@ -1259,8 +1259,9 @@ public class AutoCrystalRewrite extends BlackOutModule {
 
             if (switched) {
                 switch (switchMode.get()) {
-                    case SilentBypass -> BOInvUtils.swapBack();
+                    case SilentBypass -> BOInvUtils.pickSwapBack();
                     case Silent -> InvUtils.swapBack();
+                    case InvSilent -> BOInvUtils.swapBack();
                 }
             }
             if (idPredict.get()) {
@@ -1364,7 +1365,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         if (existedMode.get() == ExistedMode.Seconds) {
             return !existedList.containsKey(pos) || System.currentTimeMillis() > existedList.get(pos) + existed.get() * 1000;
         } else {
-            return !existedTicksList.containsKey(pos) || ticksEnabled > existedTicksList.get(pos) + existedTicks.get();
+            return !existedTicksList.containsKey(pos) || ticksEnabled >= existedTicksList.get(pos) + existedTicks.get();
         }
     }
 

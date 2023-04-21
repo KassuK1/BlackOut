@@ -247,7 +247,7 @@ public class SurroundPlus extends BlackOutModule {
         FindItemResult inventory = InvUtils.find(item -> item.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) item.getItem()).getBlock()));
         Hand hand = isValid(Managers.HOLDING.getStack()) ? Hand.MAIN_HAND : isValid(mc.player.getOffHandStack()) ? Hand.OFF_HAND : null;
 
-        if ((hand != null || (switchMode.get() == SwitchMode.SilentBypass && inventory.slot() >= 0) || ((switchMode.get() == SwitchMode.Silent || switchMode.get() == SwitchMode.Normal) && hotbar.slot() >= 0)) && (!pauseEat.get() || !mc.player.isUsingItem()) && placesLeft > 0 && !placements.isEmpty()) {
+        if ((hand != null || ((switchMode.get() == SwitchMode.SilentBypass || switchMode.get() == SwitchMode.InvSwitch) && inventory.slot() >= 0) || ((switchMode.get() == SwitchMode.Silent || switchMode.get() == SwitchMode.Normal) && hotbar.slot() >= 0)) && (!pauseEat.get() || !mc.player.isUsingItem()) && placesLeft > 0 && !placements.isEmpty()) {
 
             Map<PlaceData, BlockPos> toPlace = new HashMap<>();
             for (BlockPos placement : placements) {
@@ -271,7 +271,7 @@ public class SurroundPlus extends BlackOutModule {
 
         switch (switchMode.get()) {
             case Silent, Normal -> obsidian = hotbar.count();
-            case SilentBypass -> obsidian = inventory.slot() >= 0 ? inventory.count() : -1;
+            case SilentBypass, InvSwitch -> obsidian = inventory.slot() >= 0 ? inventory.count() : -1;
         }
 
         if (obsidian >= 0) {
@@ -298,7 +298,8 @@ public class SurroundPlus extends BlackOutModule {
                                     InvUtils.swap(hotbar.slot(), true);
                                     switched = true;
                                 }
-                                case SilentBypass -> switched = BOInvUtils.invSwitch(inventory.slot());
+                                case SilentBypass -> switched = BOInvUtils.pickSwitch(inventory.slot());
+                                case InvSwitch -> switched = BOInvUtils.invSwitch(inventory.slot());
                             }
                         }
                     }
@@ -309,7 +310,8 @@ public class SurroundPlus extends BlackOutModule {
             if (switched) {
                 switch (switchMode.get()) {
                     case Silent -> InvUtils.swapBack();
-                    case SilentBypass -> BOInvUtils.swapBack();
+                    case SilentBypass -> BOInvUtils.pickSwapBack();
+                    case InvSwitch -> BOInvUtils.swapBack();
                 }
             }
         }
@@ -478,7 +480,8 @@ public class SurroundPlus extends BlackOutModule {
         Disabled,
         Normal,
         Silent,
-        SilentBypass
+        SilentBypass,
+        InvSwitch
     }
 
     public enum ToggleYMode {

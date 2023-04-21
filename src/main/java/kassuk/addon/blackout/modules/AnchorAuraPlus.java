@@ -70,7 +70,7 @@ public class AnchorAuraPlus extends BlackOutModule {
     private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
         .name("Switch Mode")
         .description(".")
-        .defaultValue(SwitchMode.Silent)
+        .defaultValue(SwitchMode.SilentBypass)
         .build()
     );
 
@@ -135,15 +135,11 @@ public class AnchorAuraPlus extends BlackOutModule {
         BreakPlace
     }
 
-    public enum RotationMode {
-        Packet,
-        Manager
-    }
-
     public enum SwitchMode {
         Silent,
         Normal,
         SilentBypass,
+        InvSwitch,
         Disabled
     }
 
@@ -419,7 +415,7 @@ public class AnchorAuraPlus extends BlackOutModule {
                     FindItemResult result = InvUtils.findInHotbar(Items.RESPAWN_ANCHOR);
                     switched = result.found();
                 }
-                case SilentBypass -> {
+                case SilentBypass, InvSwitch -> {
                     FindItemResult result = InvUtils.find(Items.RESPAWN_ANCHOR);
                     switched = result.found();
                 }
@@ -443,6 +439,10 @@ public class AnchorAuraPlus extends BlackOutModule {
                 }
                 case SilentBypass -> {
                     FindItemResult result = InvUtils.find(Items.RESPAWN_ANCHOR);
+                    switched = BOInvUtils.pickSwitch(result.slot());
+                }
+                case InvSwitch -> {
+                    FindItemResult result = InvUtils.find(Items.RESPAWN_ANCHOR);
                     switched = BOInvUtils.invSwitch(result.slot());
                 }
             }
@@ -461,7 +461,8 @@ public class AnchorAuraPlus extends BlackOutModule {
         if (hand == null) {
             switch (switchMode.get()) {
                 case Silent -> InvUtils.swapBack();
-                case SilentBypass -> BOInvUtils.swapBack();
+                case SilentBypass -> BOInvUtils.pickSwapBack();
+                case InvSwitch -> BOInvUtils.swapBack();
             }
         }
         return true;
@@ -483,7 +484,7 @@ public class AnchorAuraPlus extends BlackOutModule {
                     FindItemResult result = InvUtils.findInHotbar(Items.GLOWSTONE);
                     switched = result.found();
                 }
-                case SilentBypass -> {
+                case SilentBypass, InvSwitch -> {
                     FindItemResult result = InvUtils.find(Items.GLOWSTONE);
                     switched = result.found();
                 }
@@ -506,8 +507,13 @@ public class AnchorAuraPlus extends BlackOutModule {
                 }
                 case SilentBypass -> {
                     FindItemResult result = InvUtils.find(Items.GLOWSTONE);
+                    switched = BOInvUtils.pickSwitch(result.slot());
+                }
+                case InvSwitch -> {
+                    FindItemResult result = InvUtils.find(Items.GLOWSTONE);
                     switched = BOInvUtils.invSwitch(result.slot());
                 }
+
             }
         }
 
@@ -524,7 +530,8 @@ public class AnchorAuraPlus extends BlackOutModule {
         if (hand == null) {
             switch (switchMode.get()) {
                 case Silent -> InvUtils.swapBack();
-                case SilentBypass -> BOInvUtils.swapBack();
+                case SilentBypass -> BOInvUtils.pickSwapBack();
+                case InvSwitch -> BOInvUtils.swapBack();
             }
         }
         return true;
@@ -546,7 +553,7 @@ public class AnchorAuraPlus extends BlackOutModule {
                     FindItemResult result = InvUtils.findInHotbar(stack -> stack.getItem() != Items.GLOWSTONE);
                     switched = result.found();
                 }
-                case SilentBypass -> {
+                case SilentBypass, InvSwitch -> {
                     FindItemResult result = InvUtils.find(stack -> stack.getItem() != Items.GLOWSTONE);
                     switched = result.found();
                 }
@@ -569,6 +576,10 @@ public class AnchorAuraPlus extends BlackOutModule {
                 }
                 case SilentBypass -> {
                     FindItemResult result = InvUtils.find(item -> item.getItem() != Items.GLOWSTONE);
+                    switched = BOInvUtils.pickSwitch(result.slot());
+                }
+                case InvSwitch -> {
+                    FindItemResult result = InvUtils.find(item -> item.getItem() != Items.GLOWSTONE);
                     switched = BOInvUtils.invSwitch(result.slot());
                 }
             }
@@ -587,7 +598,8 @@ public class AnchorAuraPlus extends BlackOutModule {
         if (hand == null) {
             switch (switchMode.get()) {
                 case Silent -> InvUtils.swapBack();
-                case SilentBypass -> BOInvUtils.swapBack();
+                case SilentBypass -> BOInvUtils.pickSwapBack();
+                case InvSwitch -> BOInvUtils.swapBack();
             }
         }
         return true;

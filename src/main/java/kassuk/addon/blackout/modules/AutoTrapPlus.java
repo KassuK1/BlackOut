@@ -114,13 +114,13 @@ public class AutoTrapPlus extends BlackOutModule {
     private final Setting<Boolean> toggleMove = sgToggle.add(new BoolSetting.Builder()
         .name("Toggle Move")
         .description("Toggles when you move horizontally")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
     private final Setting<SurroundPlus.ToggleYMode> toggleY = sgToggle.add(new EnumSetting.Builder<SurroundPlus.ToggleYMode>()
         .name("Toggle Y")
         .description("Toggles when you move vertically")
-        .defaultValue(SurroundPlus.ToggleYMode.Full)
+        .defaultValue(SurroundPlus.ToggleYMode.Disabled)
         .build()
     );
     private final Setting<Boolean> toggleSneak = sgToggle.add(new BoolSetting.Builder()
@@ -165,7 +165,8 @@ public class AutoTrapPlus extends BlackOutModule {
         Disabled,
         Normal,
         Silent,
-        SilentBypass
+        SilentBypass,
+        InvSwitch
     }
     public enum TrapMode {
         Top,
@@ -275,7 +276,7 @@ public class AutoTrapPlus extends BlackOutModule {
 
             if ((!pauseEat.get() || !mc.player.isUsingItem()) &&
                 (hand != null || ((switchMode.get() == SwitchMode.Silent || switchMode.get() == SwitchMode.Normal) && hotbar.slot() >= 0) ||
-                    (switchMode.get() == SwitchMode.SilentBypass && inventory.slot() >= 0)) && placesLeft > 0 && !placements.isEmpty()) {
+                    ((switchMode.get() == SwitchMode.SilentBypass || switchMode.get() == SwitchMode.InvSwitch) && inventory.slot() >= 0)) && placesLeft > 0 && !placements.isEmpty()) {
 
                 List<BlockPos> toPlace = new ArrayList<>();
                 for (BlockPos placement : placements) {
@@ -294,7 +295,7 @@ public class AutoTrapPlus extends BlackOutModule {
                             case Silent, Normal -> {
                                 obsidian = hotbar.count();
                             }
-                            case SilentBypass -> {
+                            case SilentBypass, InvSwitch -> {
                                 obsidian = inventory.slot() >= 0 ? inventory.count() : -1;
                             }
                         }
@@ -307,7 +308,8 @@ public class AutoTrapPlus extends BlackOutModule {
                                     obsidian = hotbar.count();
                                     InvUtils.swap(hotbar.slot(), true);
                                 }
-                                case SilentBypass -> obsidian = BOInvUtils.invSwitch(inventory.slot()) ? inventory.count() : -1;
+                                case SilentBypass -> obsidian = BOInvUtils.pickSwitch(inventory.slot()) ? inventory.count() : -1;
+                                case InvSwitch -> obsidian = BOInvUtils.invSwitch(inventory.slot()) ? inventory.count() : -1;
                             }
                         }
 
@@ -333,6 +335,7 @@ public class AutoTrapPlus extends BlackOutModule {
                             switch (switchMode.get()) {
                                 case Silent -> InvUtils.swapBack();
                                 case SilentBypass -> BOInvUtils.swapBack();
+                                case InvSwitch -> BOInvUtils.pickSwapBack();
                             }
                         }
                     }

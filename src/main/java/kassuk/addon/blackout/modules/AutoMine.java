@@ -327,7 +327,8 @@ public class AutoMine extends BlackOutModule {
 
     public enum SwitchMode {
         Silent,
-        SilentBypass
+        SilentBypass,
+        InvSwitch
     }
 
     public Block lastBlock = null;
@@ -586,7 +587,7 @@ public class AutoMine extends BlackOutModule {
                             crystalPos = null;
                             shouldForce = false;
                         }
-                    } else if ((hand != null || (switchMode.get() == SwitchMode.Silent && hotbar > 0) || (switchMode.get() == SwitchMode.SilentBypass && inv > 0)) && timer >= placeDelay.get() && placeCrystal.get() && placeCrystal.get() && !EntityUtils.intersectsWithEntity(new Box(crystalPos), entity -> !entity.isSpectator()) && crystalDir != null) {
+                    } else if ((hand != null || (switchMode.get() == SwitchMode.Silent && hotbar > 0) || ((switchMode.get() == SwitchMode.SilentBypass || switchMode.get() == SwitchMode.InvSwitch) && inv > 0)) && timer >= placeDelay.get() && placeCrystal.get() && placeCrystal.get() && !EntityUtils.intersectsWithEntity(new Box(crystalPos), entity -> !entity.isSpectator()) && crystalDir != null) {
                         boolean rotated = !SettingUtils.shouldRotate(RotationType.Crystal) || Managers.ROTATION.start(crystalPos.down(), priority, RotationType.Crystal);
                         if (rotated) {
                             timer = 0;
@@ -599,6 +600,11 @@ public class AutoMine extends BlackOutModule {
                                         holding = 2;
                                     }
                                     case SilentBypass -> {
+                                        if (BOInvUtils.pickSwitch(inv)) {
+                                            holding = 2;
+                                        }
+                                    }
+                                    case InvSwitch -> {
                                         if (BOInvUtils.invSwitch(inv)) {
                                             holding = 2;
                                         }
@@ -624,7 +630,8 @@ public class AutoMine extends BlackOutModule {
                             if (holding == 2) {
                                 switch (switchMode.get()) {
                                     case Silent -> InvUtils.swapBack();
-                                    case SilentBypass -> BOInvUtils.swapBack();
+                                    case SilentBypass -> BOInvUtils.pickSwapBack();
+                                    case InvSwitch -> BOInvUtils.swapBack();
                                 }
                             }
 
@@ -650,6 +657,11 @@ public class AutoMine extends BlackOutModule {
                                     }
                                 }
                                 case SilentBypass -> {
+                                    if (BOInvUtils.pickSwitch(fastestSlot(targetPos))) {
+                                        holding = 2;
+                                    }
+                                }
+                                case InvSwitch -> {
                                     if (BOInvUtils.invSwitch(fastestSlot(targetPos))) {
                                         holding = 2;
                                     }
@@ -669,7 +681,8 @@ public class AutoMine extends BlackOutModule {
                         if (holding == 2) {
                             switch (switchMode.get()) {
                                 case Silent -> InvUtils.swapBack();
-                                case SilentBypass -> BOInvUtils.swapBack();
+                                case SilentBypass -> BOInvUtils.pickSwapBack();
+                                case InvSwitch -> BOInvUtils.swapBack();
                             }
                         }
                         if (mode.get() == AutoMineMode.SpeedMine) {
@@ -718,6 +731,11 @@ public class AutoMine extends BlackOutModule {
                     holding = 2;
                 }
                 case SilentBypass -> {
+                    if (BOInvUtils.pickSwitch(inv)) {
+                        holding = 2;
+                    }
+                }
+                case InvSwitch -> {
                     if (BOInvUtils.invSwitch(inv)) {
                         holding = 2;
                     }
@@ -742,7 +760,8 @@ public class AutoMine extends BlackOutModule {
         if (holding == 2) {
             switch (switchMode.get()) {
                 case Silent -> InvUtils.swapBack();
-                case SilentBypass -> BOInvUtils.swapBack();
+                case SilentBypass -> BOInvUtils.pickSwapBack();
+                case InvSwitch -> BOInvUtils.swapBack();
             }
         }
     }

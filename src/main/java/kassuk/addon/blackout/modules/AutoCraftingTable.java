@@ -12,11 +12,13 @@ import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
+import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
@@ -25,6 +27,7 @@ import net.minecraft.screen.ScreenHandler;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 
 /**
@@ -56,7 +59,7 @@ public class AutoCraftingTable extends BlackOutModule {
     private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
         .name("Switch Mode")
         .description(".")
-        .defaultValue(SwitchMode.SilentBypass)
+        .defaultValue(SwitchMode.Silent)
         .build()
     );
     public final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
@@ -67,18 +70,6 @@ public class AutoCraftingTable extends BlackOutModule {
     );
     public final Setting<SettingColor> lineColor = sgGeneral.add(new ColorSetting.Builder()
         .name("Line Color")
-        .description("Line color of rendered stuff")
-        .defaultValue(new SettingColor(255, 0, 0, 255))
-        .build()
-    );
-    public final Setting<SettingColor> tColor = sgGeneral.add(new ColorSetting.Builder()
-        .name("Table Side Color")
-        .description("Side color of rendered stuff")
-        .defaultValue(new SettingColor(255, 0, 0, 50))
-        .build()
-    );
-    public final Setting<SettingColor> tLineColor = sgGeneral.add(new ColorSetting.Builder()
-        .name("Table Line Color")
         .description("Line color of rendered stuff")
         .defaultValue(new SettingColor(255, 0, 0, 255))
         .build()
@@ -95,7 +86,8 @@ public class AutoCraftingTable extends BlackOutModule {
         Disabled,
         Normal,
         Silent,
-        SilentBypass
+        SilentBypass,
+        InvSwitch
     }
 
     @Override
@@ -170,7 +162,7 @@ public class AutoCraftingTable extends BlackOutModule {
         boolean canSwitch = switch (switchMode.get()) {
             case Disabled -> hand != null;
             case Silent, Normal -> InvUtils.findInHotbar(Items.CRAFTING_TABLE).found();
-            case SilentBypass -> InvUtils.find(Items.CRAFTING_TABLE).found();
+            case SilentBypass, InvSwitch -> InvUtils.find(Items.CRAFTING_TABLE).found();
         };
 
 
@@ -186,7 +178,8 @@ public class AutoCraftingTable extends BlackOutModule {
                     InvUtils.swap(InvUtils.findInHotbar(Items.CRAFTING_TABLE).slot(), true);
                     switched = true;
                 }
-                case SilentBypass -> switched = BOInvUtils.invSwitch(InvUtils.findInHotbar(Items.CRAFTING_TABLE).slot());
+                case SilentBypass -> switched = BOInvUtils.pickSwitch(InvUtils.findInHotbar(Items.CRAFTING_TABLE).slot());
+                case InvSwitch -> switched = BOInvUtils.invSwitch(InvUtils.findInHotbar(Items.CRAFTING_TABLE).slot());
             }
         } else {
             switched = true;
@@ -199,7 +192,8 @@ public class AutoCraftingTable extends BlackOutModule {
         if (hand == null) {
             switch (switchMode.get()) {
                 case Silent -> InvUtils.swapBack();
-                case SilentBypass -> BOInvUtils.swapBack();
+                case SilentBypass -> BOInvUtils.pickSwapBack();
+                case InvSwitch -> BOInvUtils.swapBack();
             }
         }
         return true;
@@ -235,6 +229,8 @@ public class AutoCraftingTable extends BlackOutModule {
 
                     double eDist = distToEnemySQ(pos);
                     if (val == closestVal && eDist < closestEnemyDist) {continue;}
+
+                    if (EntityUtils.intersectsWithEntity(new Box(pos), entity -> !(entity instanceof ItemEntity) && !entity.isSpectator())) {continue;}
 
                     closestData = data;
                     closestPos = pos;

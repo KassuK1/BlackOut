@@ -35,9 +35,9 @@ public class AnteroTaateli extends BlackOutModule {
     private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
         .name("Delay")
         .description("Tick delay between messages.")
-        .defaultValue(10)
-        .range(0, 60)
-        .sliderRange(0, 60)
+        .defaultValue(50)
+        .min(0)
+        .sliderRange(0, 100)
         .build()
     );
 

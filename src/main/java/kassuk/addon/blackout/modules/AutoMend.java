@@ -205,7 +205,7 @@ public class AutoMend extends BlackOutModule {
             int bottleSlot;
             int bottleAmount;
             if (hand == null) {
-                FindItemResult result = switchMode.get() == SwitchMode.SilentBypass ? InvUtils.find(item -> item.getItem() == Items.EXPERIENCE_BOTTLE) : InvUtils.findInHotbar(item -> item.getItem() == Items.EXPERIENCE_BOTTLE);
+                FindItemResult result = switchMode.get() == SwitchMode.SilentBypass || switchMode.get() == SwitchMode.InvSwitch ? InvUtils.find(item -> item.getItem() == Items.EXPERIENCE_BOTTLE) : InvUtils.findInHotbar(item -> item.getItem() == Items.EXPERIENCE_BOTTLE);
 
                 bottleSlot = result.slot();
                 bottleAmount = result.count();
@@ -228,7 +228,8 @@ public class AutoMend extends BlackOutModule {
                                 InvUtils.swap(bottleSlot, true);
                                 switched = true;
                             }
-                            case SilentBypass -> switched = BOInvUtils.invSwitch(bottleSlot);
+                            case SilentBypass -> switched = BOInvUtils.pickSwitch(bottleSlot);
+                            case InvSwitch -> switched = BOInvUtils.invSwitch(bottleSlot);
                         }
                     }
 
@@ -243,7 +244,8 @@ public class AutoMend extends BlackOutModule {
                         if (hand == null) {
                             switch (switchMode.get()) {
                                 case Silent -> InvUtils.swapBack();
-                                case SilentBypass -> BOInvUtils.swapBack();
+                                case SilentBypass -> BOInvUtils.pickSwapBack();
+                                case InvSwitch -> BOInvUtils.swapBack();
                             }
                         }
                     }
@@ -329,6 +331,7 @@ public class AutoMend extends BlackOutModule {
         Disabled,
         Normal,
         Silent,
-        SilentBypass
+        SilentBypass,
+        InvSwitch
     }
 }

@@ -143,7 +143,8 @@ public class ScaffoldPlus extends BlackOutModule {
         Disabled,
         Normal,
         Silent,
-        SilentBypass
+        SilentBypass,
+        InvSwitch
     }
     BlockTimerList timers = new BlockTimerList();
     BlockTimerList placed = new BlockTimerList();
@@ -190,7 +191,7 @@ public class ScaffoldPlus extends BlackOutModule {
             FindItemResult inventory = InvUtils.find(item -> item.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) item.getItem()).getBlock()));
             Hand hand = isValid(Managers.HOLDING.getStack()) ? Hand.MAIN_HAND : isValid(mc.player.getOffHandStack()) ? Hand.OFF_HAND : null;
 
-            if (hand != null || (switchMode.get() == SwitchMode.SilentBypass && inventory.slot() >= 0) ||
+            if (hand != null || ((switchMode.get() == SwitchMode.SilentBypass || switchMode.get() == SwitchMode.InvSwitch) && inventory.slot() >= 0) ||
                 ((switchMode.get() == SwitchMode.Silent || switchMode.get() == SwitchMode.Normal) && hotbar.slot() >= 0)) {
 
                 if (safeWalk.get() && !Modules.get().get(SafeWalk.class).isActive()) {
@@ -221,7 +222,7 @@ public class ScaffoldPlus extends BlackOutModule {
                         if (hand == null) {
                             switch (switchMode.get()) {
                                 case Silent, Normal -> obsidian = hotbar.count();
-                                case SilentBypass -> obsidian = inventory.slot() >= 0 ? inventory.count() : -1;
+                                case SilentBypass, InvSwitch -> obsidian = inventory.slot() >= 0 ? inventory.count() : -1;
                             }
                         }
 
@@ -232,7 +233,8 @@ public class ScaffoldPlus extends BlackOutModule {
                                         obsidian = hotbar.count();
                                         InvUtils.swap(hotbar.slot(), true);
                                     }
-                                    case SilentBypass -> obsidian = BOInvUtils.invSwitch(inventory.slot()) ? inventory.count() : -1;
+                                    case InvSwitch -> obsidian = BOInvUtils.invSwitch(inventory.slot()) ? inventory.count() : -1;
+                                    case SilentBypass -> obsidian = BOInvUtils.pickSwitch(inventory.slot()) ? inventory.count() : -1;
                                 }
                             }
 
@@ -251,7 +253,8 @@ public class ScaffoldPlus extends BlackOutModule {
                             if (hand == null) {
                                 switch (switchMode.get()) {
                                     case Silent -> InvUtils.swapBack();
-                                    case SilentBypass -> BOInvUtils.swapBack();
+                                    case SilentBypass -> BOInvUtils.pickSwapBack();
+                                    case InvSwitch -> BOInvUtils.swapBack();
                                 }
                             }
                         }

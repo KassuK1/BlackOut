@@ -33,6 +33,7 @@ public class WeakAlert extends BlackOutModule {
         .defaultValue(5)
         .range(0, 60)
         .sliderMax(60)
+        .visible(() -> !single.get())
         .build()
     );
 
@@ -46,7 +47,7 @@ public class WeakAlert extends BlackOutModule {
                 if (single.get()) {
                     if (!last) {
                         last = true;
-                        info("You have Weakness!!!");
+                        sendBOInfo("you have weakness!!!");
                     }
                 } else {
                     if (timer > 0) {
@@ -54,12 +55,12 @@ public class WeakAlert extends BlackOutModule {
                     } else {
                         timer = delay.get();
                         last = true;
-                        info("You have Weakness!!!");
+                        sendBOInfo("you have weakness!!!");
                     }
                 }
             } else if (last) {
                 last = false;
-                info("Weakness has ended");
+                sendBOInfo("weakness has ended");
             }
         }
     }

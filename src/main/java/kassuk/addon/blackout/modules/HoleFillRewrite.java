@@ -177,7 +177,8 @@ public class HoleFillRewrite extends BlackOutModule {
     public enum SwitchMode {
         Disabled,
         Silent,
-        SilentBypass
+        SilentBypass,
+        InvSwitch
     }
     List<BlockPos> holes = new ArrayList<>();
     BlockTimerList timers = new BlockTimerList();
@@ -222,7 +223,7 @@ public class HoleFillRewrite extends BlackOutModule {
         Hand hand = isValid(Managers.HOLDING.getStack()) ? Hand.MAIN_HAND : isValid(mc.player.getOffHandStack()) ? Hand.OFF_HAND : null;
 
         if (!placements.isEmpty() && (!pauseEat.get() || !mc.player.isUsingItem()) && placeTimer >= placeDelay.get()) {
-            if (hand != null || (switchMode.get() == SwitchMode.Silent && result.slot() >= 0) || (switchMode.get() == SwitchMode.SilentBypass && invResult.slot() >= 0)) {
+            if (hand != null || (switchMode.get() == SwitchMode.Silent && result.slot() >= 0) || ((switchMode.get() == SwitchMode.SilentBypass || switchMode.get() == SwitchMode.InvSwitch) && invResult.slot() >= 0)) {
 
                 List<BlockPos> toPlace = new ArrayList<>();
                 for (BlockPos pos : placements) {
@@ -238,7 +239,7 @@ public class HoleFillRewrite extends BlackOutModule {
                     if (hand == null) {
                         switch (switchMode.get()) {
                             case Silent -> obsidian = result.count();
-                            case SilentBypass -> obsidian = invResult.slot() >= 0 ? invResult.count() : -1;
+                            case SilentBypass, InvSwitch -> obsidian = invResult.slot() >= 0 ? invResult.count() : -1;
                         }
                     }
 
@@ -249,7 +250,8 @@ public class HoleFillRewrite extends BlackOutModule {
                                     obsidian = result.count();
                                     InvUtils.swap(result.slot(), true);
                                 }
-                                case SilentBypass -> obsidian = BOInvUtils.invSwitch(invResult.slot()) ? invResult.count() : -1;
+                                case SilentBypass -> obsidian = BOInvUtils.pickSwitch(invResult.slot()) ? invResult.count() : -1;
+                                case InvSwitch -> obsidian = BOInvUtils.invSwitch(invResult.slot()) ? invResult.count() : -1;
                             }
                         }
 
@@ -270,7 +272,8 @@ public class HoleFillRewrite extends BlackOutModule {
                         if (hand == null) {
                             switch (switchMode.get()) {
                                 case Silent -> InvUtils.swapBack();
-                                case SilentBypass -> BOInvUtils.swapBack();
+                                case SilentBypass -> BOInvUtils.pickSwapBack();
+                                case InvSwitch -> BOInvUtils.swapBack();
                             }
                         }
                     }
