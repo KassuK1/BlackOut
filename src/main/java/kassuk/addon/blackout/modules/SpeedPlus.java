@@ -16,6 +16,9 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
 import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.util.math.BlockPos;
 
+/**
+ * @author OLEPOSSU
+ */
 public class SpeedPlus extends BlackOutModule {
     public SpeedPlus() {super(BlackOut.BLACKOUT, "Speed+", "Speeeeeeeed");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();

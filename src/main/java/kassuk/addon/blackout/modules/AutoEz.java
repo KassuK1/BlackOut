@@ -14,16 +14,17 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.packet.s2c.play.EntityStatusS2CPacket;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
-/*
-Made by OLEPOSSU / Raksamies
-*/
-
+/**
+ * @author OLEPOSSU
+ */
 public class AutoEz extends BlackOutModule {
-    public AutoEz() {super(BlackOut.BLACKOUT, "Auto EZ", "Sends message after enemy dies(too EZ nn's)");}
+    public AutoEz() {
+        super(BlackOut.BLACKOUT, "Auto EZ", "Sends message after enemy dies(too EZ nn's)");
+    }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgKill = settings.getDefaultGroup();
     private final SettingGroup sgPop = settings.getDefaultGroup();
@@ -58,7 +59,7 @@ public class AutoEz extends BlackOutModule {
     private final Setting<List<String>> killMessages = sgKill.add(new StringListSetting.Builder()
         .name("Kill Messages")
         .description("Messages to send when killing an enemy with blackout message mode on")
-        .defaultValue(List.of("Fucked by BlackOut!", "BlackOut on top", "BlackOut strong", "BlackOut gayming","BlackOut on top"))
+        .defaultValue(List.of("Fucked by BlackOut!", "BlackOut on top", "BlackOut strong", "BlackOut gayming", "BlackOut on top"))
         .visible(() -> killMsgMode.get() == MessageMode.Blackout)
         .build()
     );
@@ -75,20 +76,16 @@ public class AutoEz extends BlackOutModule {
         .build()
     );
 
-    public enum MessageMode {
-        Blackout,
-        Exhibition,
-    }
-    Random r = new Random();
-    int lastNum;
-    int lastPop;
-    boolean lastState;
-    String name = null;
-    List<Message> messageQueue = new ArrayList<>();
-    int timer = 0;
+    private final Random r = new Random();
+    private int lastNum;
+    private int lastPop;
+    private boolean lastState;
+    private String name = null;
+    private final List<Message> messageQueue = new LinkedList<>();
+    private int timer = 0;
 
     // credits to exhibition for these messages
-    static final String[] exhibobo = new String[]{
+    private final String[] exhibobo = new String[]{
         "Wow, you just died in a block game %s",
         "%s died in a block game lmfao.",
         "%s died for using an android device. LOL",
@@ -293,6 +290,7 @@ public class AutoEz extends BlackOutModule {
             }
         }
     }
+
     @EventHandler
     private void onReceive(PacketEvent.Receive event) {
         if (event.packet instanceof EntityStatusS2CPacket packet) {
@@ -309,7 +307,8 @@ public class AutoEz extends BlackOutModule {
         }
     }
 
-    boolean anyDead(double range) {
+    @SuppressWarnings("DataFlowIssue")
+    private boolean anyDead(double range) {
         for (PlayerEntity pl : mc.world.getPlayers()) {
             if (pl != mc.player && !Friends.get().isFriend(pl) && OLEPOSSUtils.distance(pl.getPos(), mc.player.getPos()) <= range) {
                 if (pl.getHealth() <= 0) {
@@ -321,8 +320,8 @@ public class AutoEz extends BlackOutModule {
         return false;
     }
 
-    void sendKillMessage() {
-        switch (killMsgMode.get()){
+    private void sendKillMessage() {
+        switch (killMsgMode.get()) {
             case Exhibition -> {
                 int num = r.nextInt(0, exhibobo.length - 1);
                 if (num == lastNum) {
@@ -345,7 +344,7 @@ public class AutoEz extends BlackOutModule {
         }
     }
 
-    void sendPopMessage(String name) {
+    private void sendPopMessage(String name) {
         if (!popMessages.get().isEmpty()) {
             int num = r.nextInt(0, popMessages.get().size() - 1);
             if (num == lastPop) {
@@ -356,5 +355,10 @@ public class AutoEz extends BlackOutModule {
         }
     }
 
-    record Message(String message, boolean kill) {}
+    private record Message(String message, boolean kill) { }
+
+    public enum MessageMode {
+        Blackout,
+        Exhibition,
+    }
 }

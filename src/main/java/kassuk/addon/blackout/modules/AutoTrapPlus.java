@@ -39,10 +39,9 @@ import net.minecraft.util.math.Vec3d;
 import java.util.ArrayList;
 import java.util.List;
 
-/*
-Made by OLEPOSSU / Raksamies
-*/
-
+/**
+ * @author OLEPOSSU
+ */
 public class AutoTrapPlus extends BlackOutModule {
     public AutoTrapPlus() {
         super(BlackOut.BLACKOUT, "Auto Trap+", "Traps enemies (literally selftrap but places on enemies)");
@@ -308,9 +307,7 @@ public class AutoTrapPlus extends BlackOutModule {
                                     obsidian = hotbar.count();
                                     InvUtils.swap(hotbar.slot(), true);
                                 }
-                                case SilentBypass -> {
-                                    obsidian = BOInvUtils.invSwitch(inventory.slot()) ? inventory.count() : -1;
-                                }
+                                case SilentBypass -> obsidian = BOInvUtils.invSwitch(inventory.slot()) ? inventory.count() : -1;
                             }
                         }
 
@@ -334,12 +331,8 @@ public class AutoTrapPlus extends BlackOutModule {
 
                         if (hand == null) {
                             switch (switchMode.get()) {
-                                case Silent -> {
-                                    InvUtils.swapBack();
-                                }
-                                case SilentBypass -> {
-                                    BOInvUtils.swapBack();
-                                }
+                                case Silent -> InvUtils.swapBack();
+                                case SilentBypass -> BOInvUtils.swapBack();
                             }
                         }
                     }

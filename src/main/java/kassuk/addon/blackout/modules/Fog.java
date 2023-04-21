@@ -6,11 +6,9 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import net.minecraft.client.render.FogShape;
 
-/*
-Made by OLEPOSSU
-*/
-
-
+/**
+ * @author OLEPOSSU
+ */
 public class Fog extends BlackOutModule {
     public Fog() {
         super(BlackOut.BLACKOUT, "Fog", "Customizable fog");

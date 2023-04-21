@@ -11,10 +11,10 @@ import meteordevelopment.meteorclient.systems.hud.HudRenderer;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
-/*
-Made by KassuK
-*/
 
+/**
+ * @author KassuK
+ */
 public class OnTope extends HudElement {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
@@ -25,7 +25,7 @@ public class OnTope extends HudElement {
     );
     private final Setting<Double> scale = sgGeneral.add(new DoubleSetting.Builder()
         .name("Scale")
-        .description("Size of the text")
+        .description("Modify the size of the text.")
         .defaultValue(1)
         .build()
     );
@@ -37,10 +37,8 @@ public class OnTope extends HudElement {
 
     @Override
     public void render(HudRenderer renderer) {
-        if (mc.player != null) {
-            setSize(renderer.textWidth(mc.player.getName().getString() + " on top!", true) * scale.get() * scale.get(), renderer.textHeight(true) * scale.get() * scale.get());
-
-            renderer.text(mc.player.getName().getString() + " on top!", x, y, color.get(), true, scale.get());
-        }
+        assert mc.player != null;
+        setSize(renderer.textWidth(mc.player.getName().getString() + " on top!", true) * scale.get() * scale.get(), renderer.textHeight(true) * scale.get() * scale.get());
+        renderer.text(mc.player.getName().getString() + " on top!", x, y, color.get(), true, scale.get());
     }
 }

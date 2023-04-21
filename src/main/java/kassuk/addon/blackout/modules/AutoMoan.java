@@ -13,10 +13,10 @@ import net.minecraft.entity.player.PlayerEntity;
 
 import java.util.Random;
 
-/*
-Made by KassuK (I sacrificed my mental well-being for this )
-*/
 
+/**
+ * @author KassuK
+ */
 public class AutoMoan extends BlackOutModule {
 
     public AutoMoan() {super(BlackOut.BLACKOUT, "Auto Moan","Moans sexual things to the closest person");}
@@ -54,10 +54,9 @@ public class AutoMoan extends BlackOutModule {
         Submissive,
     }
 
-    int lastNum;
-
-    double timer = 0;
-    static final String[] Submissive = new String[]{
+    private int lastNum;
+    private double timer = 0;
+    private static final String[] Submissive = new String[]{
         //please fucking end me
         "fuck me harder daddy",
         "deeper! daddy deeper!",
@@ -85,7 +84,7 @@ public class AutoMoan extends BlackOutModule {
         "why wont u say the last message",
     };
 
-    static final String[] Dominant = new String[]{
+    private static final String[] Dominant = new String[]{
         //Oh god, why the fuck am I making this
         "Be a good boy for daddy",
         //If heaven is real im not getting there
@@ -116,7 +115,7 @@ public class AutoMoan extends BlackOutModule {
         //if anyone asks what I did during my vacation I can proudly tell them I wasted multiple hours writing things gay people can say during sex
         //The fact that I have said a few of these frightens me : SigmaClientWasTaken 2023 wtf sigma
     };
-    Random r = new Random();
+    private final Random r = new Random();
 
 
     @EventHandler
@@ -136,12 +135,11 @@ public class AutoMoan extends BlackOutModule {
         }
     }
 
-    void MOAN() {
+    private void MOAN() {
         PlayerEntity target = getClosest();
         if (target == null) {return;}
 
         String name = target.getName().getString();
-
         switch (moanmode.get()){
             //Skidding AutoEz for this is harder than just making this fully myself but what I start I finish
             case Submissive -> {
@@ -166,7 +164,7 @@ public class AutoMoan extends BlackOutModule {
         }
     }
 
-    PlayerEntity getClosest() {
+    private PlayerEntity getClosest() {
         PlayerEntity closest = null;
         float distance = -1;
         if (!mc.world.getPlayers().isEmpty()) {
@@ -174,6 +172,7 @@ public class AutoMoan extends BlackOutModule {
                 if (player != mc.player && (!iFriends.get() || !Friends.get().isFriend(player))) {
                     if (closest == null || OLEPOSSUtils.distance(mc.player.getPos(), player.getPos()) < distance) {
                         closest = player;
+                        assert mc.player != null;
                         distance = (float) OLEPOSSUtils.distance(mc.player.getPos(), player.getPos());
                     }
                 }

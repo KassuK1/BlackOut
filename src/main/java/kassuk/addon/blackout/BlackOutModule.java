@@ -13,14 +13,13 @@ import net.minecraft.util.Formatting;
 import java.util.Objects;
 
 public class BlackOutModule extends Module {
+    private final String prefix = Formatting.DARK_RED + "[BlackOut]";
+    public int priority;
 
     public BlackOutModule(Category category, String name, String description) {
         super(category, name, description);
         this.priority = PriorityUtils.get(this);
     }
-
-    public int priority;
-    String prefix = Formatting.DARK_RED + "[BlackOut]";
 
     public void sendToggledMsg() {
         if (Config.get().chatFeedback.get() && chatFeedback && mc.world != null) {

@@ -18,10 +18,9 @@ import meteordevelopment.starscript.Script;
 import java.util.ArrayList;
 import java.util.List;
 
-/*
-Made by OLEPOSSU / Raksamies
-*/
-
+/**
+ * @author OLEPOSSU
+ */
 public class RPC extends BlackOutModule {
     public RPC() {
         super(BlackOut.BLACKOUT, "RPC", "Epic rpc");

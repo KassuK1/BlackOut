@@ -8,8 +8,8 @@ import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.timers.IntTimerList;
 import kassuk.addon.blackout.utils.BOInvUtils;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
+import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.meteor.BODamageUtils;
 import kassuk.addon.blackout.utils.meteor.BOEntityUtils;
 import meteordevelopment.meteorclient.events.entity.EntityAddedEvent;
@@ -48,10 +48,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/*
-Made by OLEPOSSU / Raksamies
-*/
-
+/**
+ * @author OLEPOSSU
+ */
 public class AutoCrystalRewrite extends BlackOutModule {
     public AutoCrystalRewrite() {super(BlackOut.BLACKOUT, "Auto Crystal Rewrite", "Breaks and places crystals automatically (but better).");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -820,7 +819,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
                     debugRangeHeight(3) + "  " + dist(debugRangePos(3)) + "\n" +
                     debugRangeHeight(4) + "  " + dist(debugRangePos(4)) + "\n" +
                     debugRangeHeight(5) + "  " + dist(debugRangePos(5)) + "\n" +
-                    SettingUtils.attackRangeTo(OLEPOSSUtils.getCrystalBox(new BlockPos(debugRangeX.get(), debugRangeY.get(), debugRangeZ.get())), new Vec3d(debugRangeX.get() + 0.5, debugRangeY.get(), debugRangeZ.get() + 0.5)));
+                    SettingUtils.attackRangeTo(kassuk.addon.blackout.utils.EntityUtils.getCrystalBox(new BlockPos(debugRangeX.get(), debugRangeY.get(), debugRangeZ.get())), new Vec3d(debugRangeX.get() + 0.5, debugRangeY.get(), debugRangeZ.get() + 0.5)));
             }
         }
 
@@ -1230,12 +1229,8 @@ public class AutoCrystalRewrite extends BlackOutModule {
             boolean switched = handToUse == null;
             if (switched) {
                 switch (switchMode.get()) {
-                    case SilentBypass -> {
-                        BOInvUtils.invSwitch(sl);
-                    }
-                    case Silent -> {
-                        InvUtils.swap(hsl, true);
-                    }
+                    case SilentBypass -> BOInvUtils.invSwitch(sl);
+                    case Silent -> InvUtils.swap(hsl, true);
                 }
             }
 
@@ -1264,12 +1259,8 @@ public class AutoCrystalRewrite extends BlackOutModule {
 
             if (switched) {
                 switch (switchMode.get()) {
-                    case SilentBypass -> {
-                        BOInvUtils.swapBack();
-                    }
-                    case Silent -> {
-                        InvUtils.swapBack();
-                    }
+                    case SilentBypass -> BOInvUtils.swapBack();
+                    case Silent -> InvUtils.swapBack();
                 }
             }
             if (idPredict.get()) {
@@ -1341,7 +1332,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         if (handToUse != null && !pausedCheck()) {
             EndCrystalEntity en = new EndCrystalEntity(mc.world, pos.x, pos.y, pos.z);
             en.setId(id);
-            attackEntity(en, OLEPOSSUtils.getCrystalBox(pos));
+            attackEntity(en, kassuk.addon.blackout.utils.EntityUtils.getCrystalBox(pos));
         }
     }
 
@@ -1848,10 +1839,10 @@ public class AutoCrystalRewrite extends BlackOutModule {
     }
 
     boolean validForIntersect(Entity entity) {
-        if (entity instanceof EndCrystalEntity && canExplodePlacing(entity.getPos())) {return false;}
+        if (entity instanceof EndCrystalEntity && canExplodePlacing(entity.getPos())) {
+            return false;
+        }
 
-        if (entity instanceof PlayerEntity && entity.isSpectator()) {return false;}
-
-        return true;
+        return !(entity instanceof PlayerEntity) || !entity.isSpectator();
     }
 }

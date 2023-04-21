@@ -9,8 +9,10 @@ import meteordevelopment.meteorclient.settings.DoubleSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.util.math.Vec3d;
 
+/**
+ * @author KassuK
+ */
 public class JumpModify extends BlackOutModule {
     public JumpModify() {super(BlackOut.BLACKOUT, "Jump Modify", "Allows you to modify jumping");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -28,11 +30,12 @@ public class JumpModify extends BlackOutModule {
         .defaultValue(false)
         .build()
     );
+
     @EventHandler
-    private void onMove(PlayerMoveEvent event){
-        if (mc.player != null && mc.world != null){
+    private void onMove(PlayerMoveEvent event) {
+        if (mc.player != null && mc.world != null) {
             if (mc.options.jumpKey.isPressed() && mc.player.isOnGround() || autoJump.get() && mc.player.isOnGround())
-                ((IVec3d) event.movement).set(((Vec3d) event.movement).getX(), jumpForce.get(), ((Vec3d) event.movement).getZ());
+                ((IVec3d) event.movement).set(event.movement.getX(), jumpForce.get(), event.movement.getZ());
         }
     }
 }

@@ -1,9 +1,9 @@
 package kassuk.addon.blackout.managers;
 
-/*
-Made by OLEPOSSU / Raksamies
-*/
 
+/**
+ * @author OLEPOSSU
+ */
 public class Managers {
     public static final DelayManager DELAY = new DelayManager();
     public static final HoldingManager HOLDING = new HoldingManager();

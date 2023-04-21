@@ -38,10 +38,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/*
-Made by OLEPOSSU / Raksamies
-*/
-
+/**
+ * @author OLEPOSSU
+ */
 public class HoleFillRewrite extends BlackOutModule {
     public HoleFillRewrite() {
         super(BlackOut.BLACKOUT, "Hole Fill+", "Automatically is a cunt to your enemies");
@@ -238,12 +237,8 @@ public class HoleFillRewrite extends BlackOutModule {
 
                     if (hand == null) {
                         switch (switchMode.get()) {
-                            case Silent -> {
-                                obsidian = result.count();
-                            }
-                            case SilentBypass -> {
-                                obsidian = invResult.slot() >= 0 ? invResult.count() : -1;
-                            }
+                            case Silent -> obsidian = result.count();
+                            case SilentBypass -> obsidian = invResult.slot() >= 0 ? invResult.count() : -1;
                         }
                     }
 
@@ -254,9 +249,7 @@ public class HoleFillRewrite extends BlackOutModule {
                                     obsidian = result.count();
                                     InvUtils.swap(result.slot(), true);
                                 }
-                                case SilentBypass -> {
-                                    obsidian = BOInvUtils.invSwitch(invResult.slot()) ? invResult.count() : -1;
-                                }
+                                case SilentBypass -> obsidian = BOInvUtils.invSwitch(invResult.slot()) ? invResult.count() : -1;
                             }
                         }
 
@@ -276,12 +269,8 @@ public class HoleFillRewrite extends BlackOutModule {
 
                         if (hand == null) {
                             switch (switchMode.get()) {
-                                case Silent -> {
-                                    InvUtils.swapBack();
-                                }
-                                case SilentBypass -> {
-                                    BOInvUtils.swapBack();
-                                }
+                                case Silent -> InvUtils.swapBack();
+                                case SilentBypass -> BOInvUtils.swapBack();
                             }
                         }
                     }

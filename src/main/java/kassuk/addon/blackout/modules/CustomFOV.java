@@ -8,6 +8,9 @@ import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.orbit.EventHandler;
 
+/**
+ * @author KassuK
+ */
 public class CustomFOV extends BlackOutModule {
     public CustomFOV() {super(BlackOut.BLACKOUT, "Custom FOV", "Allows more customisation to the FOV");}
 

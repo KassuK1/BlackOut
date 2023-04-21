@@ -10,7 +10,9 @@ import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.world.Timer;
 import meteordevelopment.orbit.EventHandler;
 
-
+/**
+ * @author KassuK
+ */
 public class FlightPlus extends BlackOutModule {
 
     public FlightPlus() {super(BlackOut.BLACKOUT, "Flight+", "KasumsSoft Flight");}
@@ -90,8 +92,10 @@ public class FlightPlus extends BlackOutModule {
         Jump,
         Glide,
     }
-    double startY = 0.0;
-    int tick = 0;
+
+    private double startY = 0.0;
+    private int tick = 0;
+
     @Override
     public void onActivate() {
         if (mc.player != null && mc.world != null){
@@ -148,7 +152,6 @@ public class FlightPlus extends BlackOutModule {
     @EventHandler
     private void onTick(TickEvent.Pre event){
         tick++;
-
     }
 
     @Override
@@ -157,7 +160,8 @@ public class FlightPlus extends BlackOutModule {
             Modules.get().get(Timer.class).setOverride(1);
         }
     }
-    double[] getYaw(double f, double s) {
+
+    private double[] getYaw(double f, double s) {
         double yaw = mc.player.getYaw();
         double move;
         if (f > 0) {

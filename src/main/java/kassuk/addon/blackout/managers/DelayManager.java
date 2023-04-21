@@ -8,16 +8,17 @@ import meteordevelopment.orbit.EventPriority;
 import java.util.ArrayList;
 import java.util.List;
 
-/*
-Made by OLEPOSSU / Raksamies
-*/
 
+/**
+ * @author OLEPOSSU
+ */
 public class DelayManager {
 
-    private List<Delayed> tasks;
+    private final List<Delayed> tasks;
+
     public DelayManager() {
         MeteorClient.EVENT_BUS.subscribe(this);
-        this.tasks = new ArrayList<>();
+        tasks = new ArrayList<>();
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -41,7 +42,10 @@ public class DelayManager {
     public void add(Runnable run, double delay) {
         tasks.add(new Delayed(run, delay));
     }
-    public void clear() {tasks.clear();}
+
+    public void clear() {
+        tasks.clear();
+    }
 
     static class Delayed {
         private final Runnable runnable;
@@ -51,12 +55,15 @@ public class DelayManager {
             this.runnable = runnable;
             this.time = delay;
         }
+
         public void update(double delta) {
             time = Math.max(0, time - delta);
         }
+
         public boolean shouldRun() {
             return time <= 0;
         }
+
         public void run() {
             runnable.run();
         }

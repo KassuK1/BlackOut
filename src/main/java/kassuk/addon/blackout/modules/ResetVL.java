@@ -10,15 +10,14 @@ import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.world.Timer;
 import meteordevelopment.orbit.EventHandler;
 
-
-/*
-Made by KassuK
-*/
-
+/**
+ * @author KassuK
+ */
 public class ResetVL extends BlackOutModule {
     public ResetVL() {
         super(BlackOut.BLACKOUT, "ResetVL", "Tries to reset your violation level");
     }
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Double> timer = sgGeneral.add(new DoubleSetting.Builder()
         .name("Timer")
@@ -31,11 +30,12 @@ public class ResetVL extends BlackOutModule {
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
-        if (mc.player != null && mc.world != null){
+        if (mc.player != null && mc.world != null) {
             Modules.get().get(Timer.class).setOverride(timer.get());
             if (mc.player.isOnGround())
-                mc.player.jump();}
+                mc.player.jump();
         }
+    }
 
     @Override
     public void onDeactivate() {

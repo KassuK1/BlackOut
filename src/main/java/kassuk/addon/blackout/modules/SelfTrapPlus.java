@@ -7,10 +7,7 @@ import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.timers.BlockTimerList;
-import kassuk.addon.blackout.utils.BOInvUtils;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
-import kassuk.addon.blackout.utils.PlaceData;
-import kassuk.addon.blackout.utils.SettingUtils;
+import kassuk.addon.blackout.utils.*;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
@@ -38,10 +35,9 @@ import net.minecraft.util.math.Vec3d;
 import java.util.ArrayList;
 import java.util.List;
 
-/*
-Made by OLEPOSSU / Raksamies
-*/
-
+/**
+ * @author OLEPOSSU
+ */
 public class SelfTrapPlus extends BlackOutModule {
     public SelfTrapPlus() {
         super(BlackOut.BLACKOUT, "Self Trap+", "Traps yourself");
@@ -275,12 +271,8 @@ public class SelfTrapPlus extends BlackOutModule {
 
                     if (hand == null) {
                         switch (switchMode.get()) {
-                            case Silent, Normal -> {
-                                obsidian = hotbar.count();
-                            }
-                            case SilentBypass -> {
-                                obsidian = inventory.slot() >= 0 ? inventory.count() : -1;
-                            }
+                            case Silent, Normal -> obsidian = hotbar.count();
+                            case SilentBypass -> obsidian = inventory.slot() >= 0 ? inventory.count() : -1;
                         }
                     }
 
@@ -291,9 +283,7 @@ public class SelfTrapPlus extends BlackOutModule {
                                     obsidian = hotbar.count();
                                     InvUtils.swap(hotbar.slot(), true);
                                 }
-                                case SilentBypass -> {
-                                    obsidian = BOInvUtils.invSwitch(inventory.slot()) ? inventory.count() : -1;
-                                }
+                                case SilentBypass -> obsidian = BOInvUtils.invSwitch(inventory.slot()) ? inventory.count() : -1;
                             }
                         }
 
@@ -317,12 +307,8 @@ public class SelfTrapPlus extends BlackOutModule {
 
                         if (hand == null) {
                             switch (switchMode.get()) {
-                                case Silent -> {
-                                    InvUtils.swapBack();
-                                }
-                                case SilentBypass -> {
-                                    BOInvUtils.swapBack();
-                                }
+                                case Silent -> InvUtils.swapBack();
+                                case SilentBypass -> BOInvUtils.swapBack();
                             }
                         }
                     }

@@ -20,13 +20,9 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
-import java.util.ArrayList;
-import java.util.List;
-
-/*
-Made by OLEPOSSU / Raksamies
-*/
-
+/**
+ * @author OLEPOSSU
+ */
 public class HoleSnap extends BlackOutModule {
     public HoleSnap() {
         super(BlackOut.BLACKOUT, "Hole Snap", "For the time when you cant even press W");
@@ -124,11 +120,11 @@ public class HoleSnap extends BlackOutModule {
         .defaultValue(true)
         .build()
     );
-    Hole singleHole;
-    int collisions;
-    int rubberbands;
-    int ticks;
-    List<BlockPos> holes = new ArrayList<>();
+
+    private Hole singleHole;
+    private int collisions;
+    private int rubberbands;
+    private int ticks;
 
     @Override
     public void onActivate() {

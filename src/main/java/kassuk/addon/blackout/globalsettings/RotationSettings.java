@@ -5,26 +5,24 @@ import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.managers.RotationManager;
 import kassuk.addon.blackout.mixins.MixinRaycastContext;
-import kassuk.addon.blackout.utils.RotationUtils;
-import kassuk.addon.blackout.utils.meteor.BODamageUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
+import kassuk.addon.blackout.utils.RotationUtils;
+import kassuk.addon.blackout.utils.OLEPOSSUtils;
+import kassuk.addon.blackout.utils.meteor.BODamageUtils;
 import meteordevelopment.meteorclient.mixininterface.IVec3d;
 import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.utils.player.Rotations;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
-import org.lwjgl.opengl.GL11;
 
 import java.util.List;
 
-/*
-Made by OLEPOSSU
-*/
-
+/**
+ * @author OLEPOSSU
+ */
 public class RotationSettings extends BlackOutModule {
     public RotationSettings() {
         super(BlackOut.SETTINGS, "Rotate", "Global rotation settings for every blackout module");
@@ -478,7 +476,7 @@ public class RotationSettings extends BlackOutModule {
         };
     }
 
-    void updateContext() {
+    private void updateContext() {
         if (raycastContext == null) {
             raycastContext = new RaycastContext(mc.player.getEyePos(), null, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.ANY, mc.player);
         } else {

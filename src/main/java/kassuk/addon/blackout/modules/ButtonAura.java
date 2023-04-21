@@ -7,8 +7,7 @@ import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.timers.BlockTimerList;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
-import kassuk.addon.blackout.utils.SettingUtils;
+import kassuk.addon.blackout.utils.*;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -29,6 +28,9 @@ import net.minecraft.util.math.Vec3d;
 
 import java.util.Map;
 
+/**
+ * @author OLEPOSSU
+ */
 public class ButtonAura extends BlackOutModule {
 
     public ButtonAura() {super(BlackOut.BLACKOUT, "Button Aura", "Presses nearby buttons.");}

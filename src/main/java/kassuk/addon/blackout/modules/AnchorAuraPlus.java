@@ -41,12 +41,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/*
-Made by OLEPOSSU / Raksamies
-*/
-
+/**
+ * @author OLEPOSSU
+ */
 public class AnchorAuraPlus extends BlackOutModule {
-    public AnchorAuraPlus() {super(BlackOut.BLACKOUT, "Anchor Aura+", "Automatically places and breaks respawn anchors to cause damage to your opponents but better");}
+    public AnchorAuraPlus() {
+        super(BlackOut.BLACKOUT, "Anchor Aura+", "Automatically places and breaks respawn anchors to cause damage to your opponents but better");
+    }
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgPlacing = settings.createGroup("Placing");
     private final SettingGroup sgDamage = settings.createGroup("Damage");
@@ -132,16 +134,19 @@ public class AnchorAuraPlus extends BlackOutModule {
         PlaceBreak,
         BreakPlace
     }
+
     public enum RotationMode {
         Packet,
         Manager
     }
+
     public enum SwitchMode {
         Silent,
         Normal,
         SilentBypass,
         Disabled
     }
+
     public enum AnchorState {
         Air,
         Anchor,
@@ -190,7 +195,9 @@ public class AnchorAuraPlus extends BlackOutModule {
         double delta = (System.currentTimeMillis() - lastTime) / 1000f;
         timer += delta;
         lastTime = System.currentTimeMillis();
-        if (tickTime < 0 || mc.player == null || mc.world == null) {return;}
+        if (tickTime < 0 || mc.player == null || mc.world == null) {
+            return;
+        }
 
         if (pauseCheck()) {
             update();
@@ -228,13 +235,19 @@ public class AnchorAuraPlus extends BlackOutModule {
             dmg = getDmg(pos);
             self = BODamageUtils.anchorDamage(mc.player, new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5));
 
-            if (!dmgCheck(dmg, self)) {continue;}
+            if (!dmgCheck(dmg, self)) {
+                continue;
+            }
 
             PlaceData data = SettingUtils.getPlaceData(pos);
 
-            if (!data.valid()) {continue;}
+            if (!data.valid()) {
+                continue;
+            }
 
-            if (EntityUtils.intersectsWithEntity(new Box(pos), entity -> !(entity instanceof ItemEntity))) {continue;}
+            if (EntityUtils.intersectsWithEntity(new Box(pos), entity -> !(entity instanceof ItemEntity))) {
+                continue;
+            }
 
             calcData = data;
             calcPos = pos;
@@ -252,11 +265,15 @@ public class AnchorAuraPlus extends BlackOutModule {
 
             closest = null;
             for (PlayerEntity player : mc.world.getPlayers()) {
-                if (players.contains(player) || Friends.get().isFriend(player) || player == mc.player) {continue;}
+                if (players.contains(player) || Friends.get().isFriend(player) || player == mc.player) {
+                    continue;
+                }
 
                 dist = player.distanceTo(mc.player);
 
-                if (dist > 15) {continue;}
+                if (dist > 15) {
+                    continue;
+                }
 
                 if (closest == null || dist < closestDist) {
                     closestDist = dist;
@@ -280,11 +297,17 @@ public class AnchorAuraPlus extends BlackOutModule {
                 for (int z = -i; z <= i; z++) {
                     pos = new BlockPos(Math.floor(middle.x) + x, Math.floor(middle.y) + y, Math.floor(middle.z) + z);
 
-                    if (!OLEPOSSUtils.replaceable(pos) && !(mc.world.getBlockState(pos).getBlock() == Blocks.RESPAWN_ANCHOR)) {continue;}
+                    if (!OLEPOSSUtils.replaceable(pos) && !(mc.world.getBlockState(pos).getBlock() == Blocks.RESPAWN_ANCHOR)) {
+                        continue;
+                    }
 
-                    if (!inRangeToTargets(pos)) {continue;}
+                    if (!inRangeToTargets(pos)) {
+                        continue;
+                    }
 
-                    if (!SettingUtils.inPlaceRange(pos)) {continue;}
+                    if (!SettingUtils.inPlaceRange(pos)) {
+                        continue;
+                    }
 
                     result.add(pos);
                 }
@@ -304,7 +327,9 @@ public class AnchorAuraPlus extends BlackOutModule {
 
     void update() {
 
-        if (placePos == null || placeData == null || !placeData.valid()) {return;}
+        if (placePos == null || placeData == null || !placeData.valid()) {
+            return;
+        }
 
         Anchor anchor = getAnchor(placePos);
 
@@ -325,7 +350,9 @@ public class AnchorAuraPlus extends BlackOutModule {
                     }
                 }
                 case Air -> {
-                    if (timer <= 1 / speed.get()) {return;}
+                    if (timer <= 1 / speed.get()) {
+                        return;
+                    }
 
                     if (placeUpdate()) {
                         anchors.remove(placePos);
@@ -351,7 +378,9 @@ public class AnchorAuraPlus extends BlackOutModule {
                     }
                 }
                 case Loaded -> {
-                    if (timer <= 1 / speed.get()) {return;}
+                    if (timer <= 1 / speed.get()) {
+                        return;
+                    }
 
                     if (explodeUpdate(placePos)) {
                         anchors.remove(placePos);
@@ -397,9 +426,13 @@ public class AnchorAuraPlus extends BlackOutModule {
             }
         }
 
-        if (!switched) {return false;}
+        if (!switched) {
+            return false;
+        }
 
-        if (SettingUtils.shouldRotate(RotationType.Placing) && !Managers.ROTATION.start(placeData.pos(), priority, RotationType.Placing)) {return false;}
+        if (SettingUtils.shouldRotate(RotationType.Placing) && !Managers.ROTATION.start(placeData.pos(), priority, RotationType.Placing)) {
+            return false;
+        }
 
 
         if (hand == null) {
@@ -415,7 +448,9 @@ public class AnchorAuraPlus extends BlackOutModule {
             }
         }
 
-        if (!switched) {return false;}
+        if (!switched) {
+            return false;
+        }
 
         place(hand == null ? Hand.MAIN_HAND : hand);
 
@@ -436,7 +471,9 @@ public class AnchorAuraPlus extends BlackOutModule {
         Hand hand = Managers.HOLDING.isHolding(Items.GLOWSTONE) ? Hand.MAIN_HAND : mc.player.getOffHandStack().getItem() == Items.GLOWSTONE ? Hand.OFF_HAND : null;
         Direction dir = SettingUtils.getPlaceOnDirection(pos);
 
-        if (dir == null) {return false;}
+        if (dir == null) {
+            return false;
+        }
 
         boolean switched = hand != null;
 
@@ -453,9 +490,13 @@ public class AnchorAuraPlus extends BlackOutModule {
             }
         }
 
-        if (!switched) {return false;}
+        if (!switched) {
+            return false;
+        }
 
-        if (SettingUtils.shouldRotate(RotationType.Interact) && !Managers.ROTATION.start(pos, priority, RotationType.Interact)) {return false;}
+        if (SettingUtils.shouldRotate(RotationType.Interact) && !Managers.ROTATION.start(pos, priority, RotationType.Interact)) {
+            return false;
+        }
 
         if (hand == null) {
             switch (switchMode.get()) {
@@ -470,7 +511,9 @@ public class AnchorAuraPlus extends BlackOutModule {
             }
         }
 
-        if (!switched) {return false;}
+        if (!switched) {
+            return false;
+        }
 
         interact(pos, dir, hand == null ? Hand.MAIN_HAND : hand);
 
@@ -486,11 +529,14 @@ public class AnchorAuraPlus extends BlackOutModule {
         }
         return true;
     }
+
     boolean explodeUpdate(BlockPos pos) {
         Hand hand = !Managers.HOLDING.isHolding(Items.GLOWSTONE) ? Hand.MAIN_HAND : mc.player.getOffHandStack().getItem() != Items.GLOWSTONE ? Hand.OFF_HAND : null;
         Direction dir = SettingUtils.getPlaceOnDirection(pos);
 
-        if (dir == null) {return false;}
+        if (dir == null) {
+            return false;
+        }
 
         boolean switched = hand != null;
 
@@ -507,9 +553,13 @@ public class AnchorAuraPlus extends BlackOutModule {
             }
         }
 
-        if (!switched) {return false;}
+        if (!switched) {
+            return false;
+        }
 
-        if (SettingUtils.shouldRotate(RotationType.Interact) && !Managers.ROTATION.start(pos, priority, RotationType.Interact)) {return false;}
+        if (SettingUtils.shouldRotate(RotationType.Interact) && !Managers.ROTATION.start(pos, priority, RotationType.Interact)) {
+            return false;
+        }
 
         if (hand == null) {
             switch (switchMode.get()) {
@@ -524,7 +574,9 @@ public class AnchorAuraPlus extends BlackOutModule {
             }
         }
 
-        if (!switched) {return false;}
+        if (!switched) {
+            return false;
+        }
 
         interact(pos, dir, hand == null ? Hand.MAIN_HAND : hand);
 
@@ -550,11 +602,19 @@ public class AnchorAuraPlus extends BlackOutModule {
     }
 
     boolean dmgCheck(double dmg, double self) {
-        if (dmg < bestDmg) {return false;}
+        if (dmg < bestDmg) {
+            return false;
+        }
 
-        if (dmg < minDmg.get()) {return false;}
-        if (self > maxDmg.get()) {return false;}
-        if (dmg / self < minRatio.get()) {return false;}
+        if (dmg < minDmg.get()) {
+            return false;
+        }
+        if (self > maxDmg.get()) {
+            return false;
+        }
+        if (dmg / self < minRatio.get()) {
+            return false;
+        }
 
         return true;
     }
@@ -571,5 +631,6 @@ public class AnchorAuraPlus extends BlackOutModule {
         return new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 0.5, pos.getZ() + 1);
     }
 
-    record Anchor(AnchorState state, int charges, long time) {}
+    record Anchor(AnchorState state, int charges, long time) {
+    }
 }

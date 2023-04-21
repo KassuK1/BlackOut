@@ -18,10 +18,9 @@ import net.minecraft.util.math.Vec3d;
 import java.util.ArrayList;
 import java.util.List;
 
-/*
-Made by OLEPOSSU / Raksamies
-*/
-
+/**
+ * @author OLEPOSSU
+ */
 public class FeetESP extends BlackOutModule {
     public FeetESP() {
         super(BlackOut.BLACKOUT, "Feet ESP", "No, it doesn't show you pictures of feet");
@@ -59,7 +58,8 @@ public class FeetESP extends BlackOutModule {
         .sliderRange(0, 25)
         .build()
     );
-    List<Render> renders = new ArrayList<>();
+
+    private final List<Render> renders = new ArrayList<>();
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {

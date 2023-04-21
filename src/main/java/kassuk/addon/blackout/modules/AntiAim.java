@@ -16,10 +16,9 @@ import net.minecraft.item.Items;
 import java.util.List;
 import java.util.Random;
 
-/*
-Made by OLEPOSSU / Raksamies
-*/
-
+/**
+ * @author OLEPOSSU
+ */
 public class AntiAim extends BlackOutModule {
     public AntiAim() {
         super(BlackOut.BLACKOUT, "Anti Aim", "Funi conter stik module");

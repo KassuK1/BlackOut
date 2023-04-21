@@ -17,8 +17,13 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
+/**
+ * @author KassuK
+ */
 public class LightsOut extends BlackOutModule {
-    public LightsOut(){super(BlackOut.BLACKOUT,"Lights Out","a tribute to Reliant");}
+    public LightsOut() {
+        super(BlackOut.BLACKOUT, "Lights Out", "a tribute to Reliant");
+    }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
         .name("Delay")
@@ -29,7 +34,7 @@ public class LightsOut extends BlackOutModule {
         .build()
     );
 
-    double timer = 0;
+    private double timer = 0;
 
     @EventHandler
     private void onTick(TickEvent.Post event) {
@@ -47,9 +52,10 @@ public class LightsOut extends BlackOutModule {
 
     @EventHandler
     private void onRender(Render3DEvent event) {
-        timer = Math.min(delay.get(), timer + event.frameTime);}
+        timer = Math.min(delay.get(), timer + event.frameTime);
+    }
 
-    BlockPos getLightSource(Vec3d vec, double r) {
+    private BlockPos getLightSource(Vec3d vec, double r) {
         int c = (int) (Math.ceil(r) + 1);
         BlockPos closest = null;
         float closestDist = -1;

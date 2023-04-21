@@ -11,15 +11,14 @@ import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.entity.effect.StatusEffect;
 
-/*
-Made by KassuK
-*/
-
-
+/**
+ * @author KassuK
+ */
 public class WeakAlert extends BlackOutModule {
     public WeakAlert() {
         super(BlackOut.BLACKOUT, "Weak Alert", "Alerts you if you get weakness");
     }
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Boolean> single = sgGeneral.add(new BoolSetting.Builder()
         .name("Single")
@@ -36,8 +35,9 @@ public class WeakAlert extends BlackOutModule {
         .sliderMax(60)
         .build()
     );
-    int timer = 0;
-    boolean last = false;
+
+    private int timer = 0;
+    private boolean last = false;
 
     @EventHandler(priority = EventPriority.HIGH)
     private void onTick(TickEvent.Pre event) {

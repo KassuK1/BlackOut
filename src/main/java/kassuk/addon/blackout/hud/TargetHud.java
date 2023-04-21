@@ -17,10 +17,11 @@ import java.util.Map;
 import java.util.Random;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
-/*
-Made By KassuK & OLEPOSSU
- */
 
+/**
+ * @author KassuK
+ * @author OLEPOSSU
+ */
 public class TargetHud extends HudElement {
 
     public static final HudElementInfo<TargetHud> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "TargetHud", "A target hud the fuck you thinkin bruv", TargetHud::new);
@@ -87,13 +88,13 @@ public class TargetHud extends HudElement {
     public TargetHud() {
         super(INFO);
     }
-    double scaleAnim = 0;
-    int health = 0;
-    int lastHealth = 0;
-    int difference = 0;
-    String renderName = "HeavyMan";
-    Random r = new Random();
-    Map<Vec3d, Integer> damages = new HashMap<>();
+
+    private double scaleAnim = 0;
+    private int health = 0;
+    private int lastHealth = 0;
+    private String renderName = "HeavyMan";
+    private final Random r = new Random();
+    private Map<Vec3d, Integer> damages = new HashMap<>();
 
     @Override
     public void render(HudRenderer renderer) {
@@ -102,10 +103,10 @@ public class TargetHud extends HudElement {
         PlayerEntity playerEntity = getClosest();
         double[] renderSize = new double[]{size[0] * scaleAnim, size[1] * scaleAnim};
         double[] offsetPos = new double[]{x + size[0] * (1 - scaleAnim) / 2, y + size[1] * (1 - scaleAnim) / 2};
-        if (playerEntity != null){
+        if (playerEntity != null) {
             renderName = playerEntity.getName().getString();
             health = Math.round((playerEntity.getHealth() + playerEntity.getAbsorptionAmount()));
-            difference = health - lastHealth;
+            int difference = health - lastHealth;
             if (difference < 0) {
                 damages.put(new Vec3d(offsetPos[0] + renderSize[0] * 0.05 + r.nextFloat() * scale.get() * scale.get() * scaleAnim * 180 / 36f * health, offsetPos[1] + renderSize[1] * 0.7, 230 + r.nextFloat() * 25), difference);
             }
@@ -145,7 +146,8 @@ public class TargetHud extends HudElement {
             }
         }
     }
-    PlayerEntity getClosest() {
+
+    private PlayerEntity getClosest() {
         PlayerEntity closest = null;
         float distance = -1;
         if (!mc.world.getPlayers().isEmpty()) {
@@ -160,8 +162,9 @@ public class TargetHud extends HudElement {
         }
         return closest;
     }
-    Color getColor(int dmg, int a) {
-        int c = (int) Math.min(255, Math.max(0, Math.round(dmg * -15) + 122.5f));
+
+    private Color getColor(int dmg, int a) {
+        int c = (int) Math.min(255, Math.max(0, dmg * -15 + 122.5f));
         return new Color(c, 255 - c, 0, a);
     }
 }

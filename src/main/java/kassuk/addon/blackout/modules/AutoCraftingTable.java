@@ -27,13 +27,12 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 
-/*
-Made by OLEPOSSU / Raksamies
-*/
-
+/**
+ * @author OLEPOSSU
+ */
 public class AutoCraftingTable extends BlackOutModule {
     public AutoCraftingTable() {
-        super(BlackOut.BLACKOUT, "Auto Crafting Table", "Automatically places and opens an Crafting table");
+        super(BlackOut.BLACKOUT, "Auto Crafting Table", "Automatically places and opens an Crafting table.");
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();

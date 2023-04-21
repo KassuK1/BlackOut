@@ -28,15 +28,13 @@ public class Hole {
             }
             case Quad -> {
                 this.positions = new BlockPos[]{pos, pos.add(1, 0, 0), pos.add(0, 0, 1), pos.add(1, 0, 1)};
-                this.middle = new Vec3d(pos.getX() + 1, pos.getY() , pos.getZ() + 1);
+                this.middle = new Vec3d(pos.getX() + 1, pos.getY(), pos.getZ() + 1);
             }
             default -> {
                 this.positions = new BlockPos[]{};
                 this.middle = new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
             }
-        };
-
-
+        }
     }
 
     public BlockPos[] positions() {

@@ -24,10 +24,9 @@ import net.minecraft.util.math.BlockPos;
 import java.util.ArrayList;
 import java.util.List;
 
-/*
-Made by OLEPOSSU / Raksamies
-*/
-
+/**
+ * @author OLEPOSSU
+ */
 public class AutoMend extends BlackOutModule {
     public AutoMend() {super(BlackOut.BLACKOUT, "Auto Mend", "Automatically fixes your armor with experience bottles");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -148,26 +147,17 @@ public class AutoMend extends BlackOutModule {
         .build()
     );
 
-    public enum SwitchMode {
-        Disabled,
-        Normal,
-        Silent,
-        SilentBypass
-    }
-
-    double timer = 0;
-    int bottleSlot = 0;
-    int bottleAmount = 0;
-    BlockPos lastPos = null;
-    boolean started = false;
-    boolean shouldRot = false;
+    private double timer = 0;
+    private BlockPos lastPos = null;
+    private boolean started = false;
+    private boolean shouldRot = false;
 
     // Pause ticks
-    int acTimer = 0;
-    int surroundTimer = 0;
-    int selfTrapTimer = 0;
-    int moveTimer = 0;
-    int offGroundTimer = 0;
+    private int acTimer = 0;
+    private int surroundTimer = 0;
+    private int selfTrapTimer = 0;
+    private int moveTimer = 0;
+    private  int offGroundTimer = 0;
 
     @Override
     public void onActivate() {
@@ -176,7 +166,9 @@ public class AutoMend extends BlackOutModule {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
-        if (mc.player == null || mc.world == null) {return;}
+        if (mc.player == null || mc.world == null) {
+            return;
+        }
 
         if (AutoCrystalRewrite.placing) {
             acTimer = autoCrystalTicks.get();
@@ -197,10 +189,11 @@ public class AutoMend extends BlackOutModule {
     }
 
 
-
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onTick(TickEvent.Pre event) {
-        if (mc.player == null || mc.world == null) {return;}
+        if (mc.player == null || mc.world == null) {
+            return;
+        }
 
         timer += speed.get() / 20D;
 
@@ -209,6 +202,8 @@ public class AutoMend extends BlackOutModule {
         if (timer >= 1) {
             Hand hand = Managers.HOLDING.isHolding(Items.EXPERIENCE_BOTTLE) ? Hand.MAIN_HAND : mc.player.getOffHandStack().getItem() == Items.EXPERIENCE_BOTTLE ? Hand.OFF_HAND : null;
 
+            int bottleSlot;
+            int bottleAmount;
             if (hand == null) {
                 FindItemResult result = switchMode.get() == SwitchMode.SilentBypass ? InvUtils.find(item -> item.getItem() == Items.EXPERIENCE_BOTTLE) : InvUtils.findInHotbar(item -> item.getItem() == Items.EXPERIENCE_BOTTLE);
 
@@ -233,9 +228,7 @@ public class AutoMend extends BlackOutModule {
                                 InvUtils.swap(bottleSlot, true);
                                 switched = true;
                             }
-                            case SilentBypass -> {
-                                switched = BOInvUtils.invSwitch(bottleSlot);
-                            }
+                            case SilentBypass -> switched = BOInvUtils.invSwitch(bottleSlot);
                         }
                     }
 
@@ -249,12 +242,8 @@ public class AutoMend extends BlackOutModule {
 
                         if (hand == null) {
                             switch (switchMode.get()) {
-                                case Silent -> {
-                                    InvUtils.swapBack();
-                                }
-                                case SilentBypass -> {
-                                    BOInvUtils.swapBack();
-                                }
+                                case Silent -> InvUtils.swapBack();
+                                case SilentBypass -> BOInvUtils.swapBack();
                             }
                         }
                     }
@@ -272,15 +261,19 @@ public class AutoMend extends BlackOutModule {
     }
 
     boolean shouldThrow() {
-        if (autoCrystal.get() && acTimer > 0) {return false;}
-        if (surroundPause.get() && surroundTimer > 0) {return false;}
-        if (selfTrapPause.get() && selfTrapTimer > 0) {return false;}
-        if (movePause.get() && moveTimer > 0) {return false;}
-        if (offGroundPause.get() && offGroundTimer > 0) {return false;}
+        if (autoCrystal.get() && acTimer > 0) {
+            return false;
+        } else if (surroundPause.get() && surroundTimer > 0) {
+            return false;
+        } else if (selfTrapPause.get() && selfTrapTimer > 0) {
+            return false;
+        } else if (movePause.get() && moveTimer > 0) {
+            return false;
+        } else if (offGroundPause.get() && offGroundTimer > 0) {
+            return false;
+        }
 
-        if (!shouldMend()) {return false;}
-
-        return true;
+        return shouldMend();
     }
 
     void updateTimers() {
@@ -295,6 +288,7 @@ public class AutoMend extends BlackOutModule {
         List<ItemStack> armors = new ArrayList<>();
 
         for (int i = 0; i < 4; i++) {
+            //noinspection DataFlowIssue
             armors.add(mc.player.getInventory().getArmorStack(i));
         }
 
@@ -325,8 +319,16 @@ public class AutoMend extends BlackOutModule {
     void throwBottle(Hand hand) {
         SettingUtils.swing(SwingState.Pre, SwingType.Using, hand);
 
+        //noinspection DataFlowIssue
         mc.getNetworkHandler().sendPacket(new PlayerInteractItemC2SPacket(hand, 0));
 
         SettingUtils.swing(SwingState.Post, SwingType.Using, hand);
+    }
+
+    public enum SwitchMode {
+        Disabled,
+        Normal,
+        Silent,
+        SilentBypass
     }
 }

@@ -9,6 +9,9 @@ import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.world.Timer;
 import meteordevelopment.orbit.EventHandler;
 
+/**
+ * @author OLEPOSSU
+ */
 public class TickShift extends BlackOutModule {
 
     public TickShift() {
@@ -40,16 +43,10 @@ public class TickShift extends BlackOutModule {
     );
 
     public int unSent = 0;
-    int startedAt = 0;
-    boolean lastTimer = false;
-    boolean lastMoving = false;
-    Timer timerModule = Modules.get().get(Timer.class);
-
-    public enum SmoothMode {
-        Disabled,
-        Normal,
-        Exponent
-    }
+    private int startedAt = 0;
+    private boolean lastTimer = false;
+    private boolean lastMoving = false;
+    private final Timer timerModule = Modules.get().get(Timer.class);
 
 
     @Override
@@ -95,8 +92,10 @@ public class TickShift extends BlackOutModule {
         }
     }
 
-    double getTimer() {
-        if (smooth.get() == SmoothMode.Disabled) {return timer.get();}
+    private double getTimer() {
+        if (smooth.get() == SmoothMode.Disabled) {
+            return timer.get();
+        }
         double progress = 1 - (unSent / (float) packets.get());
 
         if (smooth.get() == SmoothMode.Exponent) {
@@ -104,5 +103,11 @@ public class TickShift extends BlackOutModule {
         }
 
         return 1 + (timer.get() - 1) * (1 - progress);
+    }
+
+    public enum SmoothMode {
+        Disabled,
+        Normal,
+        Exponent
     }
 }

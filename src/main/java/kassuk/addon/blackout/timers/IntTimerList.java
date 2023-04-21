@@ -14,10 +14,12 @@ Made by OLEPOSSU / Raksamies
 
 public class IntTimerList {
     public List<IntTimer> timers;
+
     public IntTimerList() {
         MeteorClient.EVENT_BUS.subscribe(this);
         timers = new ArrayList<>();
     }
+
     public IntTimerList(boolean autoUpdate) {
         if (autoUpdate) {
             MeteorClient.EVENT_BUS.subscribe(this);
@@ -25,7 +27,10 @@ public class IntTimerList {
         timers = new ArrayList<>();
     }
 
-    public void add(int val, double time) {timers.add(new IntTimer(val, time));}
+    public void add(int val, double time) {
+        timers.add(new IntTimer(val, time));
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
         update(event.frameTime);
@@ -37,7 +42,9 @@ public class IntTimerList {
 
     public boolean contains(int val) {
         for (IntTimer timer : timers) {
-            if (timer.value == val) {return true;}
+            if (timer.value == val) {
+                return true;
+            }
         }
         return false;
     }
@@ -50,6 +57,7 @@ public class IntTimerList {
             this.value = value;
             this.endTime = System.currentTimeMillis() + time * 1000;
         }
+
         public boolean isValid() {
             return System.currentTimeMillis() <= endTime;
         }
