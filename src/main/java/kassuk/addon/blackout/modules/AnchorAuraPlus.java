@@ -69,15 +69,15 @@ public class AnchorAuraPlus extends BlackOutModule {
     );
     private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
         .name("Switch Mode")
-        .description(".")
-        .defaultValue(SwitchMode.SilentBypass)
+        .description("Switching method. Silent is the most reliable but doesn't work everywhere.")
+        .defaultValue(SwitchMode.Silent)
         .build()
     );
 
     //   Placing Page
     private final Setting<Double> speed = sgPlacing.add(new DoubleSetting.Builder()
         .name("Speed")
-        .description(".")
+        .description("How many anchors should be blown every second.")
         .defaultValue(2)
         .min(0)
         .sliderRange(0, 20)
@@ -87,7 +87,7 @@ public class AnchorAuraPlus extends BlackOutModule {
     //   Damage Page
     private final Setting<Double> minDmg = sgDamage.add(new DoubleSetting.Builder()
         .name("Min Damage")
-        .description(".")
+        .description("Minimum damage required to place.")
         .defaultValue(8)
         .min(0)
         .sliderRange(0, 20)
@@ -95,7 +95,7 @@ public class AnchorAuraPlus extends BlackOutModule {
     );
     private final Setting<Double> maxDmg = sgDamage.add(new DoubleSetting.Builder()
         .name("Max Damage")
-        .description(".")
+        .description("Maximum damage to self.")
         .defaultValue(6)
         .min(0)
         .sliderRange(0, 20)
@@ -103,7 +103,7 @@ public class AnchorAuraPlus extends BlackOutModule {
     );
     private final Setting<Double> minRatio = sgDamage.add(new DoubleSetting.Builder()
         .name("Min Damage Ratio")
-        .description(".")
+        .description("Damage ratio between enemy damage and self damage (enemy / self).")
         .defaultValue(2)
         .min(0)
         .sliderRange(0, 10)
@@ -113,7 +113,7 @@ public class AnchorAuraPlus extends BlackOutModule {
     //   Render Page
     public final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
         .name("Shape Mode")
-        .description(".")
+        .description("Which parts should be renderer.")
         .defaultValue(ShapeMode.Both)
         .build()
     );
@@ -138,7 +138,7 @@ public class AnchorAuraPlus extends BlackOutModule {
     public enum SwitchMode {
         Silent,
         Normal,
-        SilentBypass,
+        PickSilent,
         InvSwitch,
         Disabled
     }
@@ -415,7 +415,7 @@ public class AnchorAuraPlus extends BlackOutModule {
                     FindItemResult result = InvUtils.findInHotbar(Items.RESPAWN_ANCHOR);
                     switched = result.found();
                 }
-                case SilentBypass, InvSwitch -> {
+                case PickSilent, InvSwitch -> {
                     FindItemResult result = InvUtils.find(Items.RESPAWN_ANCHOR);
                     switched = result.found();
                 }
@@ -437,7 +437,7 @@ public class AnchorAuraPlus extends BlackOutModule {
                     FindItemResult result = InvUtils.findInHotbar(Items.RESPAWN_ANCHOR);
                     InvUtils.swap(result.slot(), true);
                 }
-                case SilentBypass -> {
+                case PickSilent -> {
                     FindItemResult result = InvUtils.find(Items.RESPAWN_ANCHOR);
                     switched = BOInvUtils.pickSwitch(result.slot());
                 }
@@ -461,7 +461,7 @@ public class AnchorAuraPlus extends BlackOutModule {
         if (hand == null) {
             switch (switchMode.get()) {
                 case Silent -> InvUtils.swapBack();
-                case SilentBypass -> BOInvUtils.pickSwapBack();
+                case PickSilent -> BOInvUtils.pickSwapBack();
                 case InvSwitch -> BOInvUtils.swapBack();
             }
         }
@@ -484,7 +484,7 @@ public class AnchorAuraPlus extends BlackOutModule {
                     FindItemResult result = InvUtils.findInHotbar(Items.GLOWSTONE);
                     switched = result.found();
                 }
-                case SilentBypass, InvSwitch -> {
+                case PickSilent, InvSwitch -> {
                     FindItemResult result = InvUtils.find(Items.GLOWSTONE);
                     switched = result.found();
                 }
@@ -505,7 +505,7 @@ public class AnchorAuraPlus extends BlackOutModule {
                     FindItemResult result = InvUtils.findInHotbar(Items.GLOWSTONE);
                     InvUtils.swap(result.slot(), true);
                 }
-                case SilentBypass -> {
+                case PickSilent -> {
                     FindItemResult result = InvUtils.find(Items.GLOWSTONE);
                     switched = BOInvUtils.pickSwitch(result.slot());
                 }
@@ -530,7 +530,7 @@ public class AnchorAuraPlus extends BlackOutModule {
         if (hand == null) {
             switch (switchMode.get()) {
                 case Silent -> InvUtils.swapBack();
-                case SilentBypass -> BOInvUtils.pickSwapBack();
+                case PickSilent -> BOInvUtils.pickSwapBack();
                 case InvSwitch -> BOInvUtils.swapBack();
             }
         }
@@ -553,7 +553,7 @@ public class AnchorAuraPlus extends BlackOutModule {
                     FindItemResult result = InvUtils.findInHotbar(stack -> stack.getItem() != Items.GLOWSTONE);
                     switched = result.found();
                 }
-                case SilentBypass, InvSwitch -> {
+                case PickSilent, InvSwitch -> {
                     FindItemResult result = InvUtils.find(stack -> stack.getItem() != Items.GLOWSTONE);
                     switched = result.found();
                 }
@@ -574,7 +574,7 @@ public class AnchorAuraPlus extends BlackOutModule {
                     FindItemResult result = InvUtils.findInHotbar(item -> item.getItem() != Items.GLOWSTONE);
                     InvUtils.swap(result.slot(), true);
                 }
-                case SilentBypass -> {
+                case PickSilent -> {
                     FindItemResult result = InvUtils.find(item -> item.getItem() != Items.GLOWSTONE);
                     switched = BOInvUtils.pickSwitch(result.slot());
                 }
@@ -598,7 +598,7 @@ public class AnchorAuraPlus extends BlackOutModule {
         if (hand == null) {
             switch (switchMode.get()) {
                 case Silent -> InvUtils.swapBack();
-                case SilentBypass -> BOInvUtils.pickSwapBack();
+                case PickSilent -> BOInvUtils.pickSwapBack();
                 case InvSwitch -> BOInvUtils.swapBack();
             }
         }

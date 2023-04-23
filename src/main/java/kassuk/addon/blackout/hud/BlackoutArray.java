@@ -75,7 +75,7 @@ public class BlackoutArray extends HudElement {
         .build()
     );
     private final Setting<Boolean> infoCare = sgGeneral.add(new BoolSetting.Builder()
-        .name("InfoLength")
+        .name("Info Length")
         .description("Should the list care about the the info text length when sorting?")
         .defaultValue(false)
         .build()

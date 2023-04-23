@@ -43,7 +43,6 @@ public class TickShift extends BlackOutModule {
     );
 
     public int unSent = 0;
-    private int startedAt = 0;
     private boolean lastTimer = false;
     private boolean lastMoving = false;
     private final Timer timerModule = Modules.get().get(Timer.class);
@@ -85,9 +84,6 @@ public class TickShift extends BlackOutModule {
     private void onMove(PlayerMoveEvent e) {
         if (e.movement.length() > 0 && !(e.movement.length() > 0.0784 && e.movement.length() < 0.0785)) {
             unSent = Math.max(0, unSent - 1);
-            if (!lastMoving) {
-                startedAt = unSent;
-            }
             lastMoving = true;
         }
     }

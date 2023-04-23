@@ -37,7 +37,7 @@ public class AutoPearl extends BlackOutModule {
         .name("Pitch")
         .description("How deep down to look.")
         .defaultValue(85)
-        .range(0, 90)
+        .range(-90, 90)
         .sliderRange(0, 90)
         .build()
     );

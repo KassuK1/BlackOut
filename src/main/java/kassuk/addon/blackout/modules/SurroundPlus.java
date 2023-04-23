@@ -48,19 +48,19 @@ public class SurroundPlus extends BlackOutModule {
     private final SettingGroup sgRender = settings.createGroup("Render");
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
         .name("Pause Eat")
-        .description("Pauses when you are eating")
+        .description("Pauses when you are eating.")
         .defaultValue(true)
         .build()
     );
     private final Setting<Boolean> onlyConfirmed = sgGeneral.add(new BoolSetting.Builder()
         .name("Only Confirmed")
-        .description("Only places on blocks the server has confirmed to exist")
+        .description("Only places on blocks the server has confirmed to exist.")
         .defaultValue(false)
         .build()
     );
     private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
         .name("Switch Mode")
-        .description(".")
+        .description("Method of switching. Silent is the most reliable.")
         .defaultValue(SwitchMode.Silent)
         .build()
     );
@@ -85,7 +85,7 @@ public class SurroundPlus extends BlackOutModule {
     );
     private final Setting<Integer> places = sgGeneral.add(new IntSetting.Builder()
         .name("Places")
-        .description("Blocks placed per place")
+        .description("Blocks placed per place.")
         .defaultValue(1).range(1, 10)
         .sliderRange(1, 10)
         .build()
@@ -102,19 +102,19 @@ public class SurroundPlus extends BlackOutModule {
     //  Toggle Page
     private final Setting<Boolean> toggleMove = sgToggle.add(new BoolSetting.Builder()
         .name("Toggle Move")
-        .description("Toggles when you move horizontally")
-        .defaultValue(true)
+        .description("Toggles when you move horizontally.")
+        .defaultValue(false)
         .build()
     );
     private final Setting<ToggleYMode> toggleY = sgToggle.add(new EnumSetting.Builder<ToggleYMode>()
         .name("Toggle Y")
-        .description("Toggles when you move vertically")
+        .description("Toggles when you move vertically.")
         .defaultValue(ToggleYMode.Full)
         .build()
     );
     private final Setting<Boolean> toggleSneak = sgToggle.add(new BoolSetting.Builder()
         .name("Toggle Sneak")
-        .description("Toggles when you sneak")
+        .description("Toggles when you sneak.")
         .defaultValue(false)
         .build()
     );
@@ -122,37 +122,37 @@ public class SurroundPlus extends BlackOutModule {
     //  Render Page
     private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
         .name("Shape Mode")
-        .description(".")
+        .description("Which parts of render boxes should be rendered.")
         .defaultValue(ShapeMode.Both)
         .build()
     );
     private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder()
         .name("Line Color")
         .description("Color of the outlines")
-        .defaultValue(new SettingColor(255, 0, 0, 150))
+        .defaultValue(new SettingColor(255, 0, 0, 255))
         .build()
     );
     private final Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder()
         .name("Side Color")
-        .description(".")
+        .description("Color of the sides.")
         .defaultValue(new SettingColor(255, 0, 0, 50))
         .build()
     );
     private final Setting<ShapeMode> supportShapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
         .name("Support Shape Mode")
-        .description(".")
+        .description("Which parts of render boxes should be rendered for support blocks.")
         .defaultValue(ShapeMode.Both)
         .build()
     );
     private final Setting<SettingColor> supportLineColor = sgRender.add(new ColorSetting.Builder()
         .name("Support Line Color")
-        .description("Color of the outlines")
-        .defaultValue(new SettingColor(255, 0, 0, 150))
+        .description("Color of support block outlines")
+        .defaultValue(new SettingColor(255, 0, 0, 255))
         .build()
     );
     private final Setting<SettingColor> supportSideColor = sgRender.add(new ColorSetting.Builder()
         .name("Support Side Color")
-        .description(".")
+        .description("Color of support block sides.")
         .defaultValue(new SettingColor(255, 0, 0, 50))
         .build()
     );
@@ -247,7 +247,7 @@ public class SurroundPlus extends BlackOutModule {
         FindItemResult inventory = InvUtils.find(item -> item.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) item.getItem()).getBlock()));
         Hand hand = isValid(Managers.HOLDING.getStack()) ? Hand.MAIN_HAND : isValid(mc.player.getOffHandStack()) ? Hand.OFF_HAND : null;
 
-        if ((hand != null || ((switchMode.get() == SwitchMode.SilentBypass || switchMode.get() == SwitchMode.InvSwitch) && inventory.slot() >= 0) || ((switchMode.get() == SwitchMode.Silent || switchMode.get() == SwitchMode.Normal) && hotbar.slot() >= 0)) && (!pauseEat.get() || !mc.player.isUsingItem()) && placesLeft > 0 && !placements.isEmpty()) {
+        if ((hand != null || ((switchMode.get() == SwitchMode.PickSilent || switchMode.get() == SwitchMode.InvSwitch) && inventory.slot() >= 0) || ((switchMode.get() == SwitchMode.Silent || switchMode.get() == SwitchMode.Normal) && hotbar.slot() >= 0)) && (!pauseEat.get() || !mc.player.isUsingItem()) && placesLeft > 0 && !placements.isEmpty()) {
 
             Map<PlaceData, BlockPos> toPlace = new HashMap<>();
             for (BlockPos placement : placements) {
@@ -271,7 +271,7 @@ public class SurroundPlus extends BlackOutModule {
 
         switch (switchMode.get()) {
             case Silent, Normal -> obsidian = hotbar.count();
-            case SilentBypass, InvSwitch -> obsidian = inventory.slot() >= 0 ? inventory.count() : -1;
+            case PickSilent, InvSwitch -> obsidian = inventory.slot() >= 0 ? inventory.count() : -1;
         }
 
         if (obsidian >= 0) {
@@ -298,7 +298,7 @@ public class SurroundPlus extends BlackOutModule {
                                     InvUtils.swap(hotbar.slot(), true);
                                     switched = true;
                                 }
-                                case SilentBypass -> switched = BOInvUtils.pickSwitch(inventory.slot());
+                                case PickSilent -> switched = BOInvUtils.pickSwitch(inventory.slot());
                                 case InvSwitch -> switched = BOInvUtils.invSwitch(inventory.slot());
                             }
                         }
@@ -310,7 +310,7 @@ public class SurroundPlus extends BlackOutModule {
             if (switched) {
                 switch (switchMode.get()) {
                     case Silent -> InvUtils.swapBack();
-                    case SilentBypass -> BOInvUtils.pickSwapBack();
+                    case PickSilent -> BOInvUtils.pickSwapBack();
                     case InvSwitch -> BOInvUtils.swapBack();
                 }
             }
@@ -480,7 +480,7 @@ public class SurroundPlus extends BlackOutModule {
         Disabled,
         Normal,
         Silent,
-        SilentBypass,
+        PickSilent,
         InvSwitch
     }
 

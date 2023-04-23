@@ -4,6 +4,7 @@ import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
+import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
@@ -13,10 +14,13 @@ import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author OLEPOSSU
@@ -38,17 +42,22 @@ public class FeetESP extends BlackOutModule {
         .defaultValue(true)
         .build()
     );
-    private final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
-        .name("Color")
-        .description("Color of the feet.")
+    private final Setting<ShapeMode> shapeMode = sgGeneral.add(new EnumSetting.Builder<ShapeMode>()
+        .name("Shape Mode")
+        .description("Which parts of feet should be rendered")
+        .defaultValue(ShapeMode.Both)
+        .build()
+    );
+    private final Setting<SettingColor> lineColor = sgGeneral.add(new ColorSetting.Builder()
+        .name("Line Color")
+        .description("Color of the feet outlines.")
         .defaultValue(new SettingColor(255, 0, 0, 255))
         .build()
     );
-    private final Setting<Double> height = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Height")
-        .description("Height of the feet box.")
-        .defaultValue(0)
-        .sliderRange(-0.5, 0.5)
+    private final Setting<SettingColor> sideColor = sgGeneral.add(new ColorSetting.Builder()
+        .name("Side Color")
+        .description("Color of the feet sides.")
+        .defaultValue(new SettingColor(255, 0, 0, 50))
         .build()
     );
     private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
@@ -59,76 +68,30 @@ public class FeetESP extends BlackOutModule {
         .build()
     );
 
-    private final List<Render> renders = new ArrayList<>();
-
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
-        mc.world.getPlayers().forEach(player -> {
-            String name = player.getName().getString();
-            Render existing = getByEntity(player);
 
-            if (existing == null) {
-                renders.add(new Render(player, player.getPos()));
-            }
-        });
+        if (mc.player == null || mc.world == null) {return;}
+
         mc.world.getPlayers().forEach(player -> {
-            if (OLEPOSSUtils.distance(player.getPos(), mc.player.getEyePos()) <= range.get() &&
-                player != mc.player && (!Friends.get().isFriend(player) || friend.get()) &&
-                (Friends.get().isFriend(player) || player == mc.player || other.get())) {
-                Render render = getByEntity(player);
-                if (render != null) {render.update(event, color.get(), player.getPos());}
-            }
+            if (player.distanceTo(mc.player) > range.get()) {return;}
+
+            if (!friend.get() && Friends.get().isFriend(player)) {return;}
+            if (!other.get() && !Friends.get().isFriend(player)) {return;}
+
+            render(event, new Vec3d(
+                lerp(mc.getTickDelta(), player.prevX, player.getX()),
+                lerp(mc.getTickDelta(), player.prevY, player.getY()),
+                lerp(mc.getTickDelta(), player.prevZ, player.getZ())
+            ));
         });
     }
 
-    Render getByEntity(PlayerEntity player) {
-        for (Render render : renders) {
-            if (render.getPlayer().equals(player)) {
-                return render;
-            }
-        }
-        return null;
+    private double lerp(double delta, double min, double max) {
+        return min + (max - min) * delta;
     }
 
-    class Render {
-        private final PlayerEntity player;
-        private Vec3d vec;
-        public Render(PlayerEntity player, Vec3d vec) {
-            this.player = player;
-            this.vec = vec;
-        }
-
-        public PlayerEntity getPlayer() {
-            return player;
-        }
-
-        public void update(Render3DEvent event, Color color, Vec3d newVec) {
-            double absX = Math.abs(vec.x - newVec.x);
-            double absY = Math.abs(vec.y - newVec.y);
-            double absZ = Math.abs(vec.z - newVec.z);
-            float speed = (float) (event.frameTime * 2 + event.frameTime * Math.sqrt(absX * absX + absY * absY + absZ * absZ) * 50);
-
-            vec = new Vec3d(
-                vec.x > newVec.x ?
-                    (absX <= speed * absX ? newVec.x : vec.x - speed * absX) :
-                    vec.x != newVec.x ?
-                        (absX <= speed * absX ? newVec.x : vec.x + speed * absX) :
-                        newVec.x
-                ,
-                vec.y > newVec.y ?
-                    (absY <= speed * absY ? newVec.y : vec.y - speed * absY) :
-                    vec.y != newVec.y ?
-                        (absY <= speed * absY ? newVec.y : vec.y + speed * absY) :
-                        newVec.y
-                ,
-                vec.z > newVec.z ?
-                    (absZ <= speed * absZ ? newVec.z : vec.z - speed * absZ) :
-                    vec.z != newVec.z ?
-                        (absZ <= speed * absZ ? newVec.z : vec.z + speed * absZ) :
-                        newVec.z);
-            event.renderer.box(new Box(vec.getX() - 0.3, vec.getY(), vec.getZ() - 0.3, vec.getX() + 0.3, vec.getY() + height.get(), vec.getZ() + 0.3),
-                new Color(color.r, color.g, color.b, color.a / 5), color, ShapeMode.Both, 0);
-
-        }
+    private void render(Render3DEvent event, Vec3d vec) {
+        event.renderer.sideHorizontal(vec.x - 0.3, vec.y, vec.z - 0.3, vec.x + 0.3, vec.z + 0.3, sideColor.get(), lineColor.get(), shapeMode.get());
     }
 }

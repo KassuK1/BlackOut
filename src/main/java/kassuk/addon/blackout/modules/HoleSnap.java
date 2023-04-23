@@ -25,24 +25,24 @@ import net.minecraft.util.math.Vec3d;
  */
 public class HoleSnap extends BlackOutModule {
     public HoleSnap() {
-        super(BlackOut.BLACKOUT, "Hole Snap", "For the time when you cant even press W");
+        super(BlackOut.BLACKOUT, "Hole Snap", "For the time when you cant even press W.");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Boolean> singleTarget = sgGeneral.add(new BoolSetting.Builder()
         .name("Single Target")
-        .description("Only chooses target hole once")
+        .description("Only chooses target hole once.")
         .defaultValue(true)
         .build()
     );
     private final Setting<Boolean> jump = sgGeneral.add(new BoolSetting.Builder()
         .name("Jump")
-        .description("Jumps to the hole (very useful)")
+        .description("Jumps to the hole (very useful).")
         .defaultValue(false)
         .build()
     );
     private final Setting<Integer> jumpCoolDown = sgGeneral.add(new IntSetting.Builder()
         .name("Jump Cooldown")
-        .description("Ticks between jumps")
+        .description("Ticks between jumps.")
         .defaultValue(5)
         .range(0, 100)
         .sliderMax(100)
@@ -50,7 +50,7 @@ public class HoleSnap extends BlackOutModule {
     );
     private final Setting<Double> speed = sgGeneral.add(new DoubleSetting.Builder()
         .name("Speed")
-        .description("Movement Speed")
+        .description("Movement Speed.")
         .defaultValue(0.2873)
         .min(0)
         .sliderMax(1)
@@ -58,7 +58,7 @@ public class HoleSnap extends BlackOutModule {
     );
     private final Setting<Double> timer = sgGeneral.add(new DoubleSetting.Builder()
         .name("Timer")
-        .description("Sends packets faster")
+        .description("Sends packets faster.")
         .defaultValue(10)
         .min(0)
         .sliderMax(100)
@@ -66,7 +66,7 @@ public class HoleSnap extends BlackOutModule {
     );
     private final Setting<Integer> range = sgGeneral.add(new IntSetting.Builder()
         .name("Range")
-        .description("Horizontal range for finding holes")
+        .description("Horizontal range for finding holes.")
         .defaultValue(3)
         .range(0, 10)
         .sliderMax(10)
@@ -74,7 +74,7 @@ public class HoleSnap extends BlackOutModule {
     );
     private final Setting<Integer> downRange = sgGeneral.add(new IntSetting.Builder()
         .name("Down Range")
-        .description("Vertical range for finding holes")
+        .description("Vertical range for finding holes.")
         .defaultValue(3)
         .range(0, 10)
         .sliderMax(10)
@@ -82,7 +82,7 @@ public class HoleSnap extends BlackOutModule {
     );
     private final Setting<Integer> depth = sgGeneral.add(new IntSetting.Builder()
         .name("Hole Depth")
-        .description("How deep a hole has to be")
+        .description("How deep a hole has to be.")
         .defaultValue(3)
         .range(1, 10)
         .sliderRange(1, 10)
@@ -90,33 +90,33 @@ public class HoleSnap extends BlackOutModule {
     );
     private final Setting<Integer> coll = sgGeneral.add(new IntSetting.Builder()
         .name("Collisions to disable")
-        .description("0 = doesn't disable")
+        .description("0 = doesn't disable.")
         .defaultValue(15)
         .sliderRange(0, 100)
         .build()
     );
     private final Setting<Integer> rDisable = sgGeneral.add(new IntSetting.Builder()
         .name("Rubberbands to disable")
-        .description("0 = doesn't disable")
+        .description("0 = doesn't disable.")
         .defaultValue(1)
         .sliderRange(0, 100)
         .build()
     );
     private final Setting<Boolean> singleHoles = sgGeneral.add(new BoolSetting.Builder()
         .name("Single Holes")
-        .description(".")
+        .description("Targets single block holes.")
         .defaultValue(true)
         .build()
     );
     private final Setting<Boolean> doubleHoles = sgGeneral.add(new BoolSetting.Builder()
         .name("Double Holes")
-        .description(".")
+        .description("Targets double holes.")
         .defaultValue(true)
         .build()
     );
     private final Setting<Boolean> quadHoles = sgGeneral.add(new BoolSetting.Builder()
         .name("Quad Holes")
-        .description(".")
+        .description("Targets quad holes.")
         .defaultValue(true)
         .build()
     );

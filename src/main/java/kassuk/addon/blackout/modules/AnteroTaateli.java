@@ -28,7 +28,7 @@ public class AnteroTaateli extends BlackOutModule {
 
     private final Setting<Boolean> iFriends = sgGeneral.add(new BoolSetting.Builder()
         .name("Ignore Friends")
-        .description("Doesn't send messages when there is only friends nearby.")
+        .description("Doesn't send messages targeted to friends.")
         .defaultValue(true)
         .build()
     );

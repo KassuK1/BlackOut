@@ -36,12 +36,12 @@ public class FacingSettings extends BlackOutModule {
     public final Setting<Boolean> unblocked = sgGeneral.add(new BoolSetting.Builder()
         .name("Unblocked")
         .description("Doesn't place on faces that have block on them.")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
     public final Setting<Boolean> airPlace = sgGeneral.add(new BoolSetting.Builder()
         .name("Air Place")
-        .description("Can place blocks in air.")
+        .description("Allows placing blocks in air.")
         .defaultValue(false)
         .build()
     );
@@ -66,7 +66,7 @@ public class FacingSettings extends BlackOutModule {
                 for (Direction dir : Direction.values()) {
 
                     // Doesn't place on top of max height
-                    if (maxHeight.get() && pos.offset(dir).getY() > mc.world.getHeight()) {
+                    if (maxHeight.get() && mc.world.isOutOfHeightLimit(pos.offset(dir))) {
                         continue;
                     }
 
@@ -110,7 +110,7 @@ public class FacingSettings extends BlackOutModule {
                 for (Direction dir : Direction.values()) {
 
                     // Doesn't place on top of max height
-                    if (maxHeight.get() && pos.offset(dir).getY() > mc.world.getHeight()) {
+                    if (maxHeight.get() && mc.world.isOutOfHeightLimit(pos.offset(dir))) {
                         continue;
                     }
 
@@ -154,7 +154,7 @@ public class FacingSettings extends BlackOutModule {
                 for (Direction dir : Direction.values()) {
 
                     // Doesn't place on top of max height
-                    if (maxHeight.get() && pos.offset(dir).getY() > mc.world.getHeight()) {
+                    if (maxHeight.get() && mc.world.isOutOfHeightLimit(pos.offset(dir))) {
                         continue;
                     }
 
@@ -198,7 +198,7 @@ public class FacingSettings extends BlackOutModule {
             for (Direction dir : Direction.values()) {
 
                 // Doesn't place on top of max height
-                if (maxHeight.get() && pos.offset(dir).getY() > mc.world.getHeight()) {
+                if (maxHeight.get() && mc.world.isOutOfHeightLimit(pos.offset(dir))) {
                     continue;
                 }
 

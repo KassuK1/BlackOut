@@ -9,6 +9,6 @@ import kassuk.addon.blackout.BlackOutModule;
 public class ForceSneak extends BlackOutModule {
 
     public ForceSneak() {
-        super(BlackOut.BLACKOUT, "Force Sneak", "Makes everyone sneak");
+        super(BlackOut.BLACKOUT, "Force Sneak", "Makes everyone sneak.");
     }
 }

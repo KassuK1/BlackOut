@@ -21,7 +21,7 @@ public class SprintPlus extends BlackOutModule {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     public final Setting<SprintMode> sprintmode = sgGeneral.add(new EnumSetting.Builder<SprintMode>()
-        .name("mode")
+        .name("Mode")
         .description("The method of sprinting.")
         .defaultValue(SprintMode.Vanilla)
         .build()

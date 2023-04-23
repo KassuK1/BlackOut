@@ -19,13 +19,13 @@ public class SoundModifier extends BlackOutModule {
 
     public final Setting<Boolean> crystalHits = sgCrystal.add(new BoolSetting.Builder()
         .name("Crystal Hit Sound")
-        .description("Allows hit sounds when attacking end crystal")
+        .description("Allows hit sounds when attacking end crystal.")
         .defaultValue(true)
         .build()
     );
     public final Setting<Double> crystalHitVolume = sgCrystal.add(new DoubleSetting.Builder()
         .name("Crystal Hit Volume")
-        .description(".")
+        .description("Multiplies crystal hit volumes.")
         .defaultValue(1)
         .sliderRange(0, 10)
         .visible(crystalHits::get)
@@ -33,7 +33,7 @@ public class SoundModifier extends BlackOutModule {
     );
     public final Setting<Double> crystalHitPitch = sgCrystal.add(new DoubleSetting.Builder()
         .name("Crystal Hit Pitch")
-        .description(".")
+        .description("Multiplies pitch of crystal hit sounds.")
         .defaultValue(1)
         .sliderRange(0, 10)
         .visible(crystalHits::get)
@@ -47,7 +47,7 @@ public class SoundModifier extends BlackOutModule {
     );
     public final Setting<Double> explosionVolume = sgCrystal.add(new DoubleSetting.Builder()
         .name("Explosion Volume")
-        .description(".")
+        .description("Multiplies explosion volumes.")
         .defaultValue(1)
         .sliderRange(0, 10)
         .visible(expSound::get)
@@ -55,7 +55,7 @@ public class SoundModifier extends BlackOutModule {
     );
     public final Setting<Double> explosionPitch = sgCrystal.add(new DoubleSetting.Builder()
         .name("Explosion Pitch")
-        .description(".")
+        .description("Multiplies pitch of explosions sounds.")
         .defaultValue(1)
         .sliderRange(0, 10)
         .visible(expSound::get)

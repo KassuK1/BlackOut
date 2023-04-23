@@ -25,13 +25,13 @@ public class SpeedPlus extends BlackOutModule {
     private final SettingGroup sgPause = settings.createGroup("Pause");
     private final Setting<SpeedMode> mode = sgGeneral.add(new EnumSetting.Builder<SpeedMode>()
         .name("Mode")
-        .description("How many blocks to move every movement tick")
+        .description("Mode for speed.")
         .defaultValue(SpeedMode.Strafe)
         .build()
     );
     private final Setting<Double> accelerationAmount = sgGeneral.add(new DoubleSetting.Builder()
         .name("Acceleration")
-        .description("How many blocks to move every movement tick")
+        .description("How much should the speed increase every movement tick.")
         .defaultValue(0.3)
         .min(0)
         .sliderMax(10)
@@ -54,7 +54,7 @@ public class SpeedPlus extends BlackOutModule {
     );
     private final Setting<Double> jumpForce = sgGeneral.add(new DoubleSetting.Builder()
         .name("Jump Force")
-        .description(".")
+        .description("Where should the y motion be set for jumping. 0.42 is vanilla.")
         .defaultValue(0.42)
         .min(0)
         .sliderMax(10)
@@ -110,13 +110,13 @@ public class SpeedPlus extends BlackOutModule {
     );
     private final Setting<LiquidMode> pauseWater = sgPause.add(new EnumSetting.Builder<LiquidMode>()
         .name("Pause Water")
-        .description(".")
+        .description("Doesn't modify movement when in water.")
         .defaultValue(LiquidMode.Submerged)
         .build()
     );
     private final Setting<LiquidMode> pauseLava = sgPause.add(new EnumSetting.Builder<LiquidMode>()
         .name("Pause Lava")
-        .description(".")
+        .description("Doesn't modify movement when in lava.")
         .defaultValue(LiquidMode.Both)
         .build()
     );

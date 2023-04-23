@@ -28,13 +28,13 @@ public class OffHandPlus extends BlackOutModule {
 
     private final Setting<Boolean> onlyInInv = sgGeneral.add(new BoolSetting.Builder()
         .name("Only in inventory")
-        .description("Will only switch if you are in your inventory")
+        .description("Will only switch if you are in your inventory.")
         .defaultValue(false)
         .build()
     );
     private final Setting<switchModes> switchMode = sgGeneral.add(new EnumSetting.Builder<switchModes>()
         .name("Prefer")
-        .description("Where do we pick items from")
+        .description("Where do we pick items from.")
         .defaultValue(switchModes.Inventory)
         .build()
     );

@@ -49,19 +49,19 @@ public class BedAuraPlus extends BlackOutModule {
     //   General Page
     private final Setting<Boolean> fiveB = sgGeneral.add(new BoolSetting.Builder()
         .name("5B5T")
-        .description("For example requires floor for both bed blocks and allows placing inside entities")
+        .description("For example requires floor for both bed blocks and allows placing inside entities.")
         .defaultValue(false)
         .build()
     );
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
         .name("Pause Eat")
-        .description("Pauses when you are eating")
+        .description("Pauses when you are eating.")
         .defaultValue(true)
         .build()
     );
     private final Setting<Boolean> doubleInteract = sgGeneral.add(new BoolSetting.Builder()
         .name("Double Interact")
-        .description("Clicks both bed blocks")
+        .description("Clicks both bed blocks every time.")
         .defaultValue(true)
         .build()
     );
@@ -73,13 +73,13 @@ public class BedAuraPlus extends BlackOutModule {
     );
     private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
         .name("Switch Mode")
-        .description(".")
+        .description("Method of switching. Silent is the most reliable.")
         .defaultValue(SwitchMode.Silent)
         .build()
     );
     private final Setting<RotationMode> rotMode = sgGeneral.add(new EnumSetting.Builder<RotationMode>()
         .name("Rotation Mode")
-        .description(".")
+        .description("Packet- Sends 1 rotation packet for each bed. Manager- Modifies movement packets to set rotation.")
         .defaultValue(RotationMode.Packet)
         .build()
     );
@@ -93,7 +93,7 @@ public class BedAuraPlus extends BlackOutModule {
     );
     private final Setting<Double> speed = sgPlacing.add(new DoubleSetting.Builder()
         .name("Speed")
-        .description(".")
+        .description("How many beds to blow up every second.")
         .defaultValue(2)
         .min(0)
         .sliderRange(0, 20)
@@ -102,7 +102,7 @@ public class BedAuraPlus extends BlackOutModule {
     );
     private final Setting<Double> damageSpeed = sgPlacing.add(new DoubleSetting.Builder()
         .name("Damage Speed Factor")
-        .description(".")
+        .description("Sets speed to damage multiplied by factor.")
         .defaultValue(1)
         .min(0)
         .sliderRange(0, 20)
@@ -111,7 +111,7 @@ public class BedAuraPlus extends BlackOutModule {
     );
     private final Setting<Double> maxSpeed = sgPlacing.add(new DoubleSetting.Builder()
         .name("Damage Speed")
-        .description(".")
+        .description("Maximum speed for damage mode.")
         .defaultValue(12)
         .min(0)
         .sliderRange(0, 20)
@@ -122,7 +122,7 @@ public class BedAuraPlus extends BlackOutModule {
     //   Damage Page
     private final Setting<Double> minDmg = sgDamage.add(new DoubleSetting.Builder()
         .name("Min Damage")
-        .description(".")
+        .description("Minimum damage to place.")
         .defaultValue(8)
         .min(0)
         .sliderRange(0, 20)
@@ -130,7 +130,7 @@ public class BedAuraPlus extends BlackOutModule {
     );
     private final Setting<Double> maxDmg = sgDamage.add(new DoubleSetting.Builder()
         .name("Max Damage")
-        .description(".")
+        .description("Maximum self damage to place.")
         .defaultValue(6)
         .min(0)
         .sliderRange(0, 20)
@@ -138,7 +138,7 @@ public class BedAuraPlus extends BlackOutModule {
     );
     private final Setting<Double> maxFriendDmg = sgDamage.add(new DoubleSetting.Builder()
         .name("Max Friend Damage")
-        .description(".")
+        .description("Maximum friend damage to place.")
         .defaultValue(6)
         .min(0)
         .sliderRange(0, 20)
@@ -146,7 +146,7 @@ public class BedAuraPlus extends BlackOutModule {
     );
     private final Setting<Double> minRatio = sgDamage.add(new DoubleSetting.Builder()
         .name("Min Damage Ratio")
-        .description(".")
+        .description("Minimum damage ratio between self damage and enemy damage.")
         .defaultValue(2)
         .min(0)
         .sliderRange(0, 10)
@@ -154,7 +154,7 @@ public class BedAuraPlus extends BlackOutModule {
     );
     private final Setting<Double> minFriendRatio = sgDamage.add(new DoubleSetting.Builder()
         .name("Min Friend Damage Ratio")
-        .description(".")
+        .description("Minimum damage ratio between friend damage and enemy damage.")
         .defaultValue(2)
         .min(0)
         .sliderRange(0, 10)
@@ -162,7 +162,7 @@ public class BedAuraPlus extends BlackOutModule {
     );
     private final Setting<Double> forcePop = sgDamage.add(new DoubleSetting.Builder()
         .name("Force Pop")
-        .description(".")
+        .description("Ignores damage checks if enemy would pop after x explodes.")
         .defaultValue(1)
         .min(0)
         .sliderRange(0, 10)
@@ -170,7 +170,7 @@ public class BedAuraPlus extends BlackOutModule {
     );
     private final Setting<Double> antiPop = sgDamage.add(new DoubleSetting.Builder()
         .name("Anti Pop")
-        .description(".")
+        .description("Cancels actions if you would pop after x explodes.")
         .defaultValue(1)
         .min(0)
         .sliderRange(0, 10)
@@ -178,7 +178,7 @@ public class BedAuraPlus extends BlackOutModule {
     );
     private final Setting<Double> antiFriendPop = sgDamage.add(new DoubleSetting.Builder()
         .name("Anti Friend Pop")
-        .description(".")
+        .description("Cancels actions if any friend would pop after x explodes.")
         .defaultValue(1)
         .min(0)
         .sliderRange(0, 10)
@@ -186,7 +186,7 @@ public class BedAuraPlus extends BlackOutModule {
     );
     private final Setting<Boolean> friendSacrifice = sgDamage.add(new BoolSetting.Builder()
         .name("Friend Sacrifice")
-        .description("Kills your friend if you can also kill any enemy with same bed")
+        .description("Kills your friend if you can also kill any enemy with same bed.")
         .defaultValue(true)
         .build()
     );
@@ -194,31 +194,31 @@ public class BedAuraPlus extends BlackOutModule {
     //   Render Page
     public final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
         .name("Shape Mode")
-        .description(".")
+        .description("Which parts of the render should be rendered.")
         .defaultValue(ShapeMode.Both)
         .build()
     );
     private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder()
         .name("Head Line Color")
-        .description("Line color of rendered stuff")
+        .description("Line color of head block.")
         .defaultValue(new SettingColor(255, 0, 0, 255))
         .build()
     );
     public final Setting<SettingColor> color = sgRender.add(new ColorSetting.Builder()
         .name("Head Side Color")
-        .description("Side color of rendered stuff")
+        .description("Side color of head block.")
         .defaultValue(new SettingColor(255, 0, 0, 50))
         .build()
     );
     private final Setting<SettingColor> fLineColor = sgRender.add(new ColorSetting.Builder()
         .name("Feet Line Color")
-        .description("Line color of rendered stuff")
+        .description("Line color of feet block")
         .defaultValue(new SettingColor(255, 0, 0, 255))
         .build()
     );
     public final Setting<SettingColor> fColor = sgRender.add(new ColorSetting.Builder()
         .name("Feet Side Color")
-        .description("Side color of rendered stuff")
+        .description("Side color of feet block")
         .defaultValue(new SettingColor(255, 0, 0, 50))
         .build()
     );
@@ -234,7 +234,7 @@ public class BedAuraPlus extends BlackOutModule {
     public enum SwitchMode {
         Silent,
         Normal,
-        SilentBypass,
+        PickSilent,
         InvSwitch,
         Disabled
     }
@@ -578,7 +578,7 @@ public class BedAuraPlus extends BlackOutModule {
                     FindItemResult result = InvUtils.findInHotbar(item -> item.getItem() instanceof BedItem);
                     beds = result.count();
                 }
-                case SilentBypass, InvSwitch -> {
+                case PickSilent, InvSwitch -> {
                     FindItemResult result = InvUtils.find(item -> item.getItem() instanceof BedItem);
                     beds = result.slot() >= 0 ? result.count() : -1;
                 }
@@ -607,7 +607,7 @@ public class BedAuraPlus extends BlackOutModule {
                     InvUtils.swap(result.slot(), true);
                     switched = true;
                 }
-                case SilentBypass -> {
+                case PickSilent -> {
                     FindItemResult result = InvUtils.find(item -> item.getItem() instanceof BedItem);
                     switched = BOInvUtils.pickSwitch(result.slot());
                 }
@@ -629,7 +629,7 @@ public class BedAuraPlus extends BlackOutModule {
         if (hand == null) {
             switch (switchMode.get()) {
                 case Silent -> InvUtils.swapBack();
-                case SilentBypass -> BOInvUtils.pickSwapBack();
+                case PickSilent -> BOInvUtils.pickSwapBack();
                 case InvSwitch -> BOInvUtils.swapBack();
             }
         }

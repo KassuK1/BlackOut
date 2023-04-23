@@ -15,7 +15,7 @@ import net.minecraft.item.Items;
  */
 public class FastXP extends BlackOutModule {
     public FastXP() {
-        super(BlackOut.BLACKOUT, "Fast XP", "XP spamming moment");
+        super(BlackOut.BLACKOUT, "Fast XP", "XP spamming moment.");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<rotationmode> rotmode = sgGeneral.add(new EnumSetting.Builder<rotationmode>()
@@ -25,8 +25,8 @@ public class FastXP extends BlackOutModule {
         .build()
     );
     private final Setting<Integer> YeetDelay = sgGeneral.add(new IntSetting.Builder()
-        .name("YeetDelay")
-        .description("Delay of yeeting")
+        .name("Throw Delay")
+        .description("Delay between throws.")
         .defaultValue(0)
         .range(0, 3)
         .sliderMax(3)
@@ -35,7 +35,7 @@ public class FastXP extends BlackOutModule {
 
     private final Setting<Integer> Pitch = sgGeneral.add(new IntSetting.Builder()
         .name("Pitch")
-        .description("Where to set Pitch")
+        .description("Where to set pitch.")
         .defaultValue(45)
         .range(0, 90)
         .sliderMax(90)
@@ -44,7 +44,7 @@ public class FastXP extends BlackOutModule {
 
     private final Setting<Boolean> Rotate = sgGeneral.add(new BoolSetting.Builder()
         .name("Rotate")
-        .description("Should we do a bit of rotating")
+        .description("Should we do a bit of rotating.")
         .defaultValue(true)
         .build()
     );

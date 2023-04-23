@@ -20,7 +20,11 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class OLEPOSSUtils {
     public static double distance(Vec3d v1, Vec3d v2) {
-        return Math.sqrt(PlayerUtils.squaredDistance(v1.x, v1.y, v1.z, v2.x, v2.y, v2.z));
+        double x = v1.x - v2.x;
+        double y = v1.y - v2.y;
+        double z = v1.z - v2.z;
+
+        return Math.sqrt(x * x + y * y + z * z);
     }
 
     public static Direction[] horizontals = new Direction[]{

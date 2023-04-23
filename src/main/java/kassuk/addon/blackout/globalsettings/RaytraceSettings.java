@@ -26,7 +26,7 @@ public class RaytraceSettings extends BlackOutModule {
     //-----Place Settings-----
     public final Setting<Boolean> placeTrace = sgPlace.add(new BoolSetting.Builder()
         .name("Place Traces")
-        .description("Raytraces when placing")
+        .description("Raytraces when placing.")
         .defaultValue(false)
         .build()
     );
@@ -75,7 +75,7 @@ public class RaytraceSettings extends BlackOutModule {
     //-----Attack Settings-----
     public final Setting<Boolean> attackTrace = sgAttack.add(new BoolSetting.Builder()
         .name("Attack Traces")
-        .description("Raytraces when attacking")
+        .description("Raytraces when attacking.")
         .defaultValue(false)
         .build()
     );
@@ -242,7 +242,7 @@ public class RaytraceSettings extends BlackOutModule {
                 return BODamageUtils.raycast(BODamageUtils.raycastContext).getType() != HitResult.Type.BLOCK;
             }
             case Exposure -> {
-                ((IVec3d) vec).set(box.minX, box.minY, box.maxZ);
+                ((IVec3d) vec).set(box.minX, box.minY, box.minZ);
                 double xw = box.maxX - box.minX;
                 double yh = box.maxY - box.minY;
                 double zw = box.maxZ - box.minZ;
@@ -265,7 +265,7 @@ public class RaytraceSettings extends BlackOutModule {
                 }
             }
             case Any -> {
-                ((IVec3d) vec).set(box.minX, box.minY, box.maxZ);
+                ((IVec3d) vec).set(box.minX, box.minY, box.minZ);
                 double xw = box.maxX - box.minX;
                 double yh = box.maxY - box.minY;
                 double zw = box.maxZ - box.minZ;

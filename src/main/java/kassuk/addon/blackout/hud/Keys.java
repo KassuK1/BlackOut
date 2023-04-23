@@ -24,7 +24,7 @@ public class Keys extends HudElement {
 
     private final Setting<Double> scale = sgGeneral.add(new DoubleSetting.Builder()
         .name("Renderer scale")
-        .description("Scale to render at")
+        .description("Scale to render at.")
         .defaultValue(1)
         .range(0, 5)
         .sliderRange(0, 5)
@@ -37,14 +37,14 @@ public class Keys extends HudElement {
         .build()
     );
     private final Setting<SettingColor> textColor = sgGeneral.add(new ColorSetting.Builder()
-        .name("Text color")
+        .name("Key color")
         .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(0, 0, 0, 155))
         .build()
     );
     private final Setting<Boolean> textBG = sgGeneral.add(new BoolSetting.Builder()
-        .name("Text Background")
-        .description(".")
+        .name("Key Background")
+        .description("Should there be a background for keys.")
         .defaultValue(false)
         .build()
     );
@@ -64,13 +64,13 @@ public class Keys extends HudElement {
     );
     private final Setting<Mode> mode = sgGeneral.add(new EnumSetting.Builder<Mode>()
         .name("Mode")
-        .description(".")
+        .description("Mode for key locations.")
         .defaultValue(Mode.Basic)
         .build()
     );
     private final Setting<Double> renderTime = sgGeneral.add(new DoubleSetting.Builder()
         .name("Render Time")
-        .description("Seconds to keep full color before fading")
+        .description("Seconds to keep full color before fading.")
         .defaultValue(0)
         .min(0)
         .sliderRange(0, 1)
@@ -78,7 +78,7 @@ public class Keys extends HudElement {
     );
     private final Setting<Double> fadeTime = sgGeneral.add(new DoubleSetting.Builder()
         .name("Fade Time")
-        .description("How many seconds the fading should take")
+        .description("How many seconds should fading take.")
         .defaultValue(1)
         .min(0)
         .sliderRange(0, 5)

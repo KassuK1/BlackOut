@@ -29,7 +29,7 @@ public class WeakAlert extends BlackOutModule {
 
     private final Setting<Integer> delay = sgGeneral.add(new IntSetting.Builder()
         .name("Delay")
-        .description("Delay.")
+        .description("Tick delay between sending the message.")
         .defaultValue(5)
         .range(0, 60)
         .sliderMax(60)

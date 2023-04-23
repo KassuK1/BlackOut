@@ -42,7 +42,7 @@ public class AutoCraftingTable extends BlackOutModule {
 
     private final Setting<Double> placeSpeed = sgGeneral.add(new DoubleSetting.Builder()
         .name("Place Speed")
-        .description("Places x times every second")
+        .description("Tries to place this many times every second.")
         .defaultValue(1)
         .min(0)
         .sliderMin(0)
@@ -50,7 +50,7 @@ public class AutoCraftingTable extends BlackOutModule {
     );
     private final Setting<Double> interactSpeed = sgGeneral.add(new DoubleSetting.Builder()
         .name("Interact Speed")
-        .description("Sends open packet x times every second")
+        .description("Tries to open the crafting table this many times every second.")
         .defaultValue(1)
         .min(0)
         .sliderMin(0)
@@ -58,7 +58,7 @@ public class AutoCraftingTable extends BlackOutModule {
     );
     private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
         .name("Switch Mode")
-        .description(".")
+        .description("Switching method. Silent is the most reliable but doesn't work everywhere..")
         .defaultValue(SwitchMode.Silent)
         .build()
     );
@@ -86,7 +86,7 @@ public class AutoCraftingTable extends BlackOutModule {
         Disabled,
         Normal,
         Silent,
-        SilentBypass,
+        PickSilent,
         InvSwitch
     }
 
@@ -162,7 +162,7 @@ public class AutoCraftingTable extends BlackOutModule {
         boolean canSwitch = switch (switchMode.get()) {
             case Disabled -> hand != null;
             case Silent, Normal -> InvUtils.findInHotbar(Items.CRAFTING_TABLE).found();
-            case SilentBypass, InvSwitch -> InvUtils.find(Items.CRAFTING_TABLE).found();
+            case PickSilent, InvSwitch -> InvUtils.find(Items.CRAFTING_TABLE).found();
         };
 
 
@@ -178,7 +178,7 @@ public class AutoCraftingTable extends BlackOutModule {
                     InvUtils.swap(InvUtils.findInHotbar(Items.CRAFTING_TABLE).slot(), true);
                     switched = true;
                 }
-                case SilentBypass -> switched = BOInvUtils.pickSwitch(InvUtils.findInHotbar(Items.CRAFTING_TABLE).slot());
+                case PickSilent -> switched = BOInvUtils.pickSwitch(InvUtils.findInHotbar(Items.CRAFTING_TABLE).slot());
                 case InvSwitch -> switched = BOInvUtils.invSwitch(InvUtils.findInHotbar(Items.CRAFTING_TABLE).slot());
             }
         } else {
@@ -192,7 +192,7 @@ public class AutoCraftingTable extends BlackOutModule {
         if (hand == null) {
             switch (switchMode.get()) {
                 case Silent -> InvUtils.swapBack();
-                case SilentBypass -> BOInvUtils.pickSwapBack();
+                case PickSilent -> BOInvUtils.pickSwapBack();
                 case InvSwitch -> BOInvUtils.swapBack();
             }
         }

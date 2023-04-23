@@ -15,12 +15,17 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 @SuppressWarnings("DataFlowIssue")
 public class BOInvUtils {
     private static int[] slots;
-    private static int pickSlot = -1;
+    public static int pickSlot = -1;
+    public static boolean modify = false;
 
     public static boolean pickSwitch(int slot) {
         if (slot >= 0) {
-            mc.getNetworkHandler().sendPacket(new PickFromInventoryC2SPacket(slot));
+            Managers.HOLDING.modifyStartTime = System.currentTimeMillis();
             pickSlot = slot;
+            modify = true;
+            mc.getNetworkHandler().sendPacket(new PickFromInventoryC2SPacket(slot));
+            modify = false;
+
             return true;
         }
         return false;

@@ -23,7 +23,7 @@ import java.util.List;
  */
 public class RPC extends BlackOutModule {
     public RPC() {
-        super(BlackOut.BLACKOUT, "RPC", "Epic rpc");
+        super(BlackOut.BLACKOUT, "RPC", "Epic rpc.");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<List<String>> l1 = sgGeneral.add(new StringListSetting.Builder()
@@ -42,7 +42,7 @@ public class RPC extends BlackOutModule {
     );
     private final Setting<Integer> refreshDelay = sgGeneral.add(new IntSetting.Builder()
         .name("Refresh Delay")
-        .description("Delay of refreshing the rpc (Ticks)")
+        .description("Ticks between refreshing.")
         .defaultValue(100)
         .range(0, 1000)
         .sliderRange(0, 1000)

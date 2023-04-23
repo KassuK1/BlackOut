@@ -58,19 +58,19 @@ public class AutoMine extends BlackOutModule {
         super(BlackOut.BLACKOUT, "Auto Mine", "For the times your too lazy or bad to press your break bind");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private final SettingGroup sgValue = settings.createGroup("Value");
+    private final SettingGroup sgValue = settings.createGroup("Priority");
     private final SettingGroup sgSpeed = settings.createGroup("Speed");
     private final SettingGroup sgCrystal = settings.createGroup("Crystal");
     private final SettingGroup sgRender = settings.createGroup("Render");
     private final Setting<AutoMineMode> mode = sgGeneral.add(new EnumSetting.Builder<AutoMineMode>()
         .name("Mode")
-        .description("Pauses when you are eating")
+        .description("Mode of auto mine. All of them are different.")
         .defaultValue(AutoMineMode.AutoMine)
         .build()
     );
     private final Setting<Double> civDelay = sgGeneral.add(new DoubleSetting.Builder()
         .name("CIV Delay")
-        .description("Seconds between sending civ packets")
+        .description("Seconds between sending civ packets.")
         .defaultValue(0.2)
         .range(0.1, 10)
         .sliderMax(10)
@@ -79,7 +79,7 @@ public class AutoMine extends BlackOutModule {
     );
     private final Setting<Integer> civLimit = sgGeneral.add(new IntSetting.Builder()
         .name("CIV Limit")
-        .description("Resets civ after this many breaks (0 = doesn't reset)")
+        .description("Resets civ after this many breaks (0 = doesn't reset).")
         .defaultValue(0)
         .min(0)
         .sliderRange(0, 20)
@@ -88,14 +88,14 @@ public class AutoMine extends BlackOutModule {
     );
     private final Setting<Boolean> resetOnEnd = sgGeneral.add(new BoolSetting.Builder()
         .name("Reset On End")
-        .description("Resets Speedmine position when ending mining.")
+        .description("Resets speedmine position when finished mining.")
         .defaultValue(true)
         .visible(() -> mode.get() == AutoMineMode.SpeedMine)
         .build()
     );
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
         .name("Pause Eat")
-        .description("Pauses when you are eating")
+        .description("Pauses when you are eating.")
         .defaultValue(true)
         .build()
     );
@@ -107,19 +107,19 @@ public class AutoMine extends BlackOutModule {
     );
     private final Setting<Boolean> resetOnPlace = sgGeneral.add(new BoolSetting.Builder()
         .name("Reset On Place")
-        .description("Resets Speedmine position when placing a block.")
+        .description("Resets speedmine position when placing a block.")
         .defaultValue(false)
         .build()
     );
     private final Setting<Boolean> resetOnCrystal = sgGeneral.add(new BoolSetting.Builder()
         .name("Reset On Crystal")
-        .description("Resets Speedmine position when placing a crystal.")
+        .description("Resets speedmine position when placing a crystal.")
         .defaultValue(false)
         .build()
     );
     private final Setting<Boolean> resetOnAttack = sgGeneral.add(new BoolSetting.Builder()
         .name("Reset On Attack")
-        .description("Resets Speedmine position when attacking an entity.")
+        .description("Resets speedmine position when attacking an entity.")
         .defaultValue(false)
         .build()
     );
@@ -131,58 +131,46 @@ public class AutoMine extends BlackOutModule {
     );
     private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
         .name("Switch Mode")
-        .description(".")
-        .defaultValue(SwitchMode.SilentBypass)
+        .description("Method of switching. InvSwitch should be used since it doesn't reset mining on most servers.")
+        .defaultValue(SwitchMode.InvSwitch)
         .build()
     );
 
     //  Value Page
-    private final Setting<Integer> antiSurround = sgValue.add(new IntSetting.Builder()
-        .name("Anti Surround Value")
-        .description("0 = disabled")
-        .defaultValue(0)
-        .range(0, 100)
-        .sliderRange(0, 100)
+    private final Setting<Priority> surroundMine = sgValue.add(new EnumSetting.Builder<Priority>()
+        .name("Surround Mine")
+        .description("Highest priority task will be performed first.")
+        .defaultValue(Priority.Normal)
         .build()
     );
-    private final Setting<Integer> surroundCev = sgValue.add(new IntSetting.Builder()
-        .name("Surround Cev Value")
-        .description("0 = disabled")
-        .defaultValue(0)
-        .range(0, 100)
-        .sliderRange(0, 100)
+    private final Setting<Priority> surroundCev = sgValue.add(new EnumSetting.Builder<Priority>()
+        .name("Surround Cev")
+        .description("Highest priority task will be performed first.")
+        .defaultValue(Priority.Normal)
         .build()
     );
-    private final Setting<Integer> trapCev = sgValue.add(new IntSetting.Builder()
-        .name("Trap Cev Value")
-        .description("0 = disabled")
-        .defaultValue(0)
-        .range(0, 100)
-        .sliderRange(0, 100)
+    private final Setting<Priority> trapCev = sgValue.add(new EnumSetting.Builder<Priority>()
+        .name("Trap Cev")
+        .description("Highest priority task will be performed first.")
+        .defaultValue(Priority.Normal)
         .build()
     );
-    private final Setting<Integer> autoCity = sgValue.add(new IntSetting.Builder()
-        .name("Auto City Value")
-        .description("0 = disabled")
-        .defaultValue(0)
-        .range(0, 100)
-        .sliderRange(0, 100)
+    private final Setting<Priority> autoCity = sgValue.add(new EnumSetting.Builder<Priority>()
+        .name("Auto City")
+        .description("Highest priority task will be performed first.")
+        .defaultValue(Priority.Normal)
         .build()
     );
-    private final Setting<Integer> cev = sgValue.add(new IntSetting.Builder()
-        .name("Cev Value")
-        .description("0 = disabled")
-        .defaultValue(0)
-        .range(0, 100)
-        .sliderRange(0, 100)
+    private final Setting<Priority> cev = sgValue.add(new EnumSetting.Builder<Priority>()
+        .name("Cev")
+        .description("Highest priority task will be performed first.")
+        .defaultValue(Priority.Normal)
         .build()
     );
-    private final Setting<Integer> antiBurrow = sgValue.add(new IntSetting.Builder()
-        .name("Anti Burrow Value")
-        .description("0 = disabled")
-        .defaultValue(0)
-        .range(0, 100)
-        .sliderRange(0, 100)
+    private final Setting<Priority> antiBurrow = sgValue.add(new EnumSetting.Builder<Priority>()
+        .name("Anti Burrow")
+        .description("Highest priority task will be performed first.")
+        .defaultValue(Priority.Normal)
         .build()
     );
 
@@ -235,19 +223,19 @@ public class AutoMine extends BlackOutModule {
     );
     private final Setting<Boolean> placeCrystal = sgCrystal.add(new BoolSetting.Builder()
         .name("Place Crystal")
-        .description("Places crystal before ending the mining.")
+        .description("Places crystal before ending stopping mining.")
         .defaultValue(true)
         .build()
     );
     private final Setting<Boolean> expCrystal = sgCrystal.add(new BoolSetting.Builder()
         .name("Explode Crystal")
-        .description("Explodes a crystal before ending the mining.")
+        .description("Explodes a crystal after ending stopping mining.")
         .defaultValue(true)
         .build()
     );
     private final Setting<Double> placeDelay = sgCrystal.add(new DoubleSetting.Builder()
         .name("Place Delay")
-        .description("Delay between crystal places")
+        .description("Delay between crystal places. Doesn't matter very much.")
         .defaultValue(0.3)
         .range(0, 1)
         .sliderRange(0, 1)
@@ -255,7 +243,7 @@ public class AutoMine extends BlackOutModule {
     );
     private final Setting<Boolean> forceHold = sgCrystal.add(new BoolSetting.Builder()
         .name("Force Hold")
-        .description("Instantly places a new crystal at the block after attacking the crystal.")
+        .description("Instantly places a new crystal at the block after attacking a crystal.")
         .defaultValue(true)
         .build()
     );
@@ -263,7 +251,7 @@ public class AutoMine extends BlackOutModule {
     //  Render Page
     private final Setting<Double> exp = sgRender.add(new DoubleSetting.Builder()
         .name("Animation Exponent")
-        .description("3 - 4 look cool")
+        .description("3 - 4 look cool.")
         .defaultValue(3)
         .range(0, 10)
         .sliderRange(1, 5)
@@ -271,49 +259,49 @@ public class AutoMine extends BlackOutModule {
     );
     private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
         .name("Shape Mode")
-        .description(".")
+        .description("Which parts of the box should be rendered.")
         .defaultValue(ShapeMode.Both)
         .build()
     );
     private final Setting<SettingColor> lineStartColor = sgRender.add(new ColorSetting.Builder()
         .name("Line Start Color")
-        .description(".")
+        .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(255, 0, 0, 0))
         .build()
     );
     private final Setting<SettingColor> lineEndColor = sgRender.add(new ColorSetting.Builder()
         .name("Line End Color")
-        .description(".")
+        .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(255, 0, 0, 255))
         .build()
     );
     private final Setting<SettingColor> startColor = sgRender.add(new ColorSetting.Builder()
-        .name("Start Color")
-        .description(".")
+        .name("Side Start Color")
+        .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(255, 0, 0, 0))
         .build()
     );
     private final Setting<SettingColor> endColor = sgRender.add(new ColorSetting.Builder()
-        .name("End Color")
-        .description(".")
+        .name("Side End Color")
+        .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(255, 0, 0, 50))
         .build()
     );
     private final Setting<ShapeMode> waitingShapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
         .name("Waiting Shape Mode")
-        .description(".")
+        .description("Which parts of the box should be rendered when waiting for starting.")
         .defaultValue(ShapeMode.Both)
         .build()
     );
     private final Setting<SettingColor> waitingLineColor = sgRender.add(new ColorSetting.Builder()
         .name("Waiting Line Color")
-        .description(".")
+        .description("Line color of the waiting box.")
         .defaultValue(new SettingColor(255, 0, 0, 255))
         .build()
     );
     private final Setting<SettingColor> waitingColor = sgRender.add(new ColorSetting.Builder()
-        .name("Waiting Color")
-        .description(".")
+        .name("Waiting Side Color")
+        .description("Side color of the waiting box.")
         .defaultValue(new SettingColor(255, 0, 0, 50))
         .build()
     );
@@ -327,8 +315,24 @@ public class AutoMine extends BlackOutModule {
 
     public enum SwitchMode {
         Silent,
-        SilentBypass,
+        PickSilent,
         InvSwitch
+    }
+
+    public enum Priority {
+        Highest(6),
+        Higher(5),
+        High(4),
+        Normal(3),
+        Low(2),
+        Lower(1),
+        Lowest(0),
+        Disabled(-1);
+
+        public final int priority;
+        Priority(int priority) {
+            this.priority = priority;
+        }
     }
 
     public Block lastBlock = null;
@@ -587,7 +591,7 @@ public class AutoMine extends BlackOutModule {
                             crystalPos = null;
                             shouldForce = false;
                         }
-                    } else if ((hand != null || (switchMode.get() == SwitchMode.Silent && hotbar > 0) || ((switchMode.get() == SwitchMode.SilentBypass || switchMode.get() == SwitchMode.InvSwitch) && inv > 0)) && timer >= placeDelay.get() && placeCrystal.get() && placeCrystal.get() && !EntityUtils.intersectsWithEntity(new Box(crystalPos), entity -> !entity.isSpectator()) && crystalDir != null) {
+                    } else if ((hand != null || (switchMode.get() == SwitchMode.Silent && hotbar > 0) || ((switchMode.get() == SwitchMode.PickSilent || switchMode.get() == SwitchMode.InvSwitch) && inv > 0)) && timer >= placeDelay.get() && placeCrystal.get() && placeCrystal.get() && !EntityUtils.intersectsWithEntity(new Box(crystalPos), entity -> !entity.isSpectator()) && crystalDir != null) {
                         boolean rotated = !SettingUtils.shouldRotate(RotationType.Crystal) || Managers.ROTATION.start(crystalPos.down(), priority, RotationType.Crystal);
                         if (rotated) {
                             timer = 0;
@@ -599,7 +603,7 @@ public class AutoMine extends BlackOutModule {
                                         InvUtils.swap(hotbar, true);
                                         holding = 2;
                                     }
-                                    case SilentBypass -> {
+                                    case PickSilent -> {
                                         if (BOInvUtils.pickSwitch(inv)) {
                                             holding = 2;
                                         }
@@ -630,7 +634,7 @@ public class AutoMine extends BlackOutModule {
                             if (holding == 2) {
                                 switch (switchMode.get()) {
                                     case Silent -> InvUtils.swapBack();
-                                    case SilentBypass -> BOInvUtils.pickSwapBack();
+                                    case PickSilent -> BOInvUtils.pickSwapBack();
                                     case InvSwitch -> BOInvUtils.swapBack();
                                 }
                             }
@@ -656,7 +660,7 @@ public class AutoMine extends BlackOutModule {
                                         holding = 2;
                                     }
                                 }
-                                case SilentBypass -> {
+                                case PickSilent -> {
                                     if (BOInvUtils.pickSwitch(fastestSlot(targetPos))) {
                                         holding = 2;
                                     }
@@ -681,7 +685,7 @@ public class AutoMine extends BlackOutModule {
                         if (holding == 2) {
                             switch (switchMode.get()) {
                                 case Silent -> InvUtils.swapBack();
-                                case SilentBypass -> BOInvUtils.pickSwapBack();
+                                case PickSilent -> BOInvUtils.pickSwapBack();
                                 case InvSwitch -> BOInvUtils.swapBack();
                             }
                         }
@@ -730,7 +734,7 @@ public class AutoMine extends BlackOutModule {
                     InvUtils.swap(hotbar, true);
                     holding = 2;
                 }
-                case SilentBypass -> {
+                case PickSilent -> {
                     if (BOInvUtils.pickSwitch(inv)) {
                         holding = 2;
                     }
@@ -760,7 +764,7 @@ public class AutoMine extends BlackOutModule {
         if (holding == 2) {
             switch (switchMode.get()) {
                 case Silent -> InvUtils.swapBack();
-                case SilentBypass -> BOInvUtils.pickSwapBack();
+                case PickSilent -> BOInvUtils.pickSwapBack();
                 case InvSwitch -> BOInvUtils.swapBack();
             }
         }
@@ -854,44 +858,44 @@ public class AutoMine extends BlackOutModule {
                 BlockPos pos = pl.getBlockPos();
                 for (Direction dir : OLEPOSSUtils.horizontals) {
                     // Anti Surround
-                    if (valueCheck(value, antiSurround.get(), pos.offset(dir), closest) && getBlock(pos.offset(dir)) != Blocks.AIR && getBlock(pos.offset(dir)) != Blocks.BEDROCK && SettingUtils.inMineRange(pos.offset(dir)) && SettingUtils.getPlaceOnDirection(pos.offset(dir)) != null) {
-                        value = antiSurround.get();
+                    if (valueCheck(value, surroundMine.get().priority, pos.offset(dir), closest) && getBlock(pos.offset(dir)) != Blocks.AIR && getBlock(pos.offset(dir)) != Blocks.BEDROCK && SettingUtils.inMineRange(pos.offset(dir)) && SettingUtils.getPlaceOnDirection(pos.offset(dir)) != null) {
+                        value = surroundMine.get().priority;
                         closest = pos.offset(dir);
                         crystal = null;
                         hold = false;
                     }
 
                     // Surround Cev
-                    if (valueCheck(value, surroundCev.get(), pos.offset(dir), closest) && getBlock(pos.offset(dir)) == Blocks.OBSIDIAN && canPlaceCrystal(pos.offset(dir).up()) && SettingUtils.inMineRange(pos.offset(dir)) && SettingUtils.inPlaceRange(pos.offset(dir)) && SettingUtils.getPlaceOnDirection(pos.offset(dir)) != null) {
-                        value = surroundCev.get();
+                    if (valueCheck(value, surroundCev.get().priority, pos.offset(dir), closest) && getBlock(pos.offset(dir)) == Blocks.OBSIDIAN && canPlaceCrystal(pos.offset(dir).up()) && SettingUtils.inMineRange(pos.offset(dir)) && SettingUtils.inPlaceRange(pos.offset(dir)) && SettingUtils.getPlaceOnDirection(pos.offset(dir)) != null) {
+                        value = surroundCev.get().priority;
                         closest = pos.offset(dir);
                         crystal = pos.offset(dir).up();
                         hold = true;
                     }
                     // Trap Cev
-                    if (valueCheck(value, trapCev.get(), pos.offset(dir).up(), closest) && getBlock(pos.offset(dir).up()) == Blocks.OBSIDIAN && canPlaceCrystal(pos.offset(dir).up(2)) && SettingUtils.inMineRange(pos.offset(dir).up()) && SettingUtils.inPlaceRange(pos.offset(dir).up()) && SettingUtils.getPlaceOnDirection(pos.offset(dir).up()) != null) {
-                        value = trapCev.get();
+                    if (valueCheck(value, trapCev.get().priority, pos.offset(dir).up(), closest) && getBlock(pos.offset(dir).up()) == Blocks.OBSIDIAN && canPlaceCrystal(pos.offset(dir).up(2)) && SettingUtils.inMineRange(pos.offset(dir).up()) && SettingUtils.inPlaceRange(pos.offset(dir).up()) && SettingUtils.getPlaceOnDirection(pos.offset(dir).up()) != null) {
+                        value = trapCev.get().priority;
                         closest = pos.offset(dir).up();
                         crystal = pos.offset(dir).up(2);
                         hold = false;
                     }
                     // Auto City
-                    if (valueCheck(value, autoCity.get(), pos.offset(dir), closest) && getBlock(pos.offset(dir)) != Blocks.AIR && getBlock(pos.offset(dir)) != Blocks.BEDROCK && canPlaceCrystal(pos.offset(dir).offset(dir)) && OLEPOSSUtils.isCrystalBlock(getBlock(pos.offset(dir).offset(dir).down())) && SettingUtils.inMineRange(pos.offset(dir)) && SettingUtils.inPlaceRange(pos.offset(dir).offset(dir).down()) && SettingUtils.getPlaceOnDirection(pos.offset(dir)) != null) {
-                        value = autoCity.get();
+                    if (valueCheck(value, autoCity.get().priority, pos.offset(dir), closest) && getBlock(pos.offset(dir)) != Blocks.AIR && getBlock(pos.offset(dir)) != Blocks.BEDROCK && canPlaceCrystal(pos.offset(dir).offset(dir)) && OLEPOSSUtils.isCrystalBlock(getBlock(pos.offset(dir).offset(dir).down())) && SettingUtils.inMineRange(pos.offset(dir)) && SettingUtils.inPlaceRange(pos.offset(dir).offset(dir).down()) && SettingUtils.getPlaceOnDirection(pos.offset(dir)) != null) {
+                        value = autoCity.get().priority;
                         closest = pos.offset(dir);
                         crystal = pos.offset(dir).offset(dir);
                         hold = true;
                     }
                     // Cev
-                    if (valueCheck(value, cev.get(), pos.up(2), closest) && getBlock(pos.up(2)) == Blocks.OBSIDIAN && canPlaceCrystal(pos.up(3)) && SettingUtils.inMineRange(pos.up(2)) && SettingUtils.inPlaceRange(pos.up(2)) && SettingUtils.getPlaceOnDirection(pos.up(2)) != null) {
-                        value = cev.get();
+                    if (valueCheck(value, cev.get().priority, pos.up(2), closest) && getBlock(pos.up(2)) == Blocks.OBSIDIAN && canPlaceCrystal(pos.up(3)) && SettingUtils.inMineRange(pos.up(2)) && SettingUtils.inPlaceRange(pos.up(2)) && SettingUtils.getPlaceOnDirection(pos.up(2)) != null) {
+                        value = cev.get().priority;
                         closest = pos.up(2);
                         crystal = pos.up(3);
                         hold = false;
                     }
                     // Anti Burrow
-                    if (valueCheck(value, antiBurrow.get(), pos, closest) && getBlock(pos) != Blocks.AIR && getBlock(pos) != Blocks.BEDROCK && SettingUtils.inMineRange(pos) && SettingUtils.getPlaceOnDirection(pos) != null) {
-                        value = antiBurrow.get();
+                    if (valueCheck(value, antiBurrow.get().priority, pos, closest) && getBlock(pos) != Blocks.AIR && getBlock(pos) != Blocks.BEDROCK && SettingUtils.inMineRange(pos) && SettingUtils.getPlaceOnDirection(pos) != null) {
+                        value = antiBurrow.get().priority;
                         closest = pl.getBlockPos();
                         crystal = null;
                         hold = false;
@@ -904,16 +908,12 @@ public class AutoMine extends BlackOutModule {
     }
 
     boolean valueCheck(int currentValue, int value, BlockPos pos, BlockPos closest) {
-        if (value == 0) {
-            return false;
-        }
-        boolean rur;
-        if (closest == null) {
-            rur = true;
-        } else {
-            rur = OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(pos), mc.player.getEyePos()) < OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(closest), mc.player.getEyePos());
-        }
-        return ((currentValue <= value && rur) || currentValue < value) && SettingUtils.inPlaceRange(pos);
+        if (value == -1) {return false;}
+
+        boolean rur = closest == null || OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(pos), mc.player.getEyePos()) < OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(closest), mc.player.getEyePos());
+        if (rur && currentValue <= value) {return true;}
+
+        return currentValue < value;
     }
 
     Block getBlock(BlockPos pos) {

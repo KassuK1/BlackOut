@@ -27,19 +27,19 @@ public class StrictNoSlow extends BlackOutModule {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     public final Setting<Boolean> onlyGap = sgGeneral.add(new BoolSetting.Builder()
         .name("Only Gapples")
-        .description("Only sends packets when eating gapples")
+        .description("Only sends packets when eating gapples.")
         .defaultValue(true)
         .build()
     );
     public final Setting<Boolean> single = sgGeneral.add(new BoolSetting.Builder()
         .name("Single Packet")
-        .description("Only sends 1 switch packet after starting to eat (works on most servers)")
+        .description("Only sends 1 switch packet after starting to eat. Works on most servers that require this module.")
         .defaultValue(true)
         .build()
     );
     public final Setting<Integer> delay = sgGeneral.add(new IntSetting.Builder()
         .name("Delay")
-        .description("Tick delay between switch packets")
+        .description("Tick delay between switch packets.")
         .defaultValue(0)
         .min(0)
         .sliderRange(0, 20)

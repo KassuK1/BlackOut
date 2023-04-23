@@ -7,9 +7,12 @@ import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.hud.HudElement;
 import meteordevelopment.meteorclient.systems.hud.HudElementInfo;
 import meteordevelopment.meteorclient.systems.hud.HudRenderer;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.HashMap;
@@ -49,17 +52,28 @@ public class TargetHud extends HudElement {
         .defaultValue(new SettingColor(255, 255, 255, 155))
         .build()
     );
-
-    private final Setting<SettingColor> bar = sgGeneral.add(new ColorSetting.Builder()
-        .name("HealthBar color")
+    private final Setting<SettingColor> maxHP = sgGeneral.add(new ColorSetting.Builder()
+        .name("Max Health Color")
+        .description(BlackOut.COLOR)
+        .defaultValue(new SettingColor(255, 255, 0, 200))
+        .build()
+    );
+    private final Setting<SettingColor> highHP = sgGeneral.add(new ColorSetting.Builder()
+        .name("High Health Color")
         .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(0, 255, 0, 200))
+        .build()
+    );
+    private final Setting<SettingColor> lowHP = sgGeneral.add(new ColorSetting.Builder()
+        .name("Low Health Color")
+        .description(BlackOut.COLOR)
+        .defaultValue(new SettingColor(255, 0, 0, 200))
         .build()
     );
 
     private final Setting<Boolean> shadow = sgGeneral.add(new BoolSetting.Builder()
         .name("Text shadow")
-        .description("Should the text have a shadow")
+        .description("Should the text have a shadow.")
         .defaultValue(true)
         .build()
     );
@@ -69,7 +83,6 @@ public class TargetHud extends HudElement {
         .defaultValue(false)
         .build()
     );
-
     private final Setting<Boolean> outline = sgGeneral.add(new BoolSetting.Builder()
         .name("Outline")
         .description("Should we render an outline")
@@ -98,11 +111,12 @@ public class TargetHud extends HudElement {
 
     @Override
     public void render(HudRenderer renderer) {
-        double[] size = new double[]{200 * scale.get() * scale.get(), 65 * scale.get() * scale.get()};
+        float[] size = new float[]{(float) (200 * scale.get() * scale.get()), (float) (65 * scale.get() * scale.get())};
+
         setSize(size[0], size[1]);
         PlayerEntity playerEntity = getClosest();
-        double[] renderSize = new double[]{size[0] * scaleAnim, size[1] * scaleAnim};
-        double[] offsetPos = new double[]{x + size[0] * (1 - scaleAnim) / 2, y + size[1] * (1 - scaleAnim) / 2};
+        float[] renderSize = new float[]{(float) (size[0] * scaleAnim), (float) (size[1] * scaleAnim)};
+        float[] offsetPos = new float[]{(float) (x + size[0] * (1 - scaleAnim) / 2), (float) (y + size[1] * (1 - scaleAnim) / 2)};
         if (playerEntity != null) {
             renderName = playerEntity.getName().getString();
             health = Math.round((playerEntity.getHealth() + playerEntity.getAbsorptionAmount()));
@@ -127,7 +141,7 @@ public class TargetHud extends HudElement {
 
         // Render
         if (scaleAnim > 0.01) {
-            renderer.quad(offsetPos[0], offsetPos[1], renderSize[0], renderSize[1], color.get(), color.get(), color.get(), color.get());
+            renderer.quad(offsetPos[0], offsetPos[1], renderSize[0], renderSize[1], color.get());
 
             if (damage.get()) {
                 damages.forEach((vec, i) -> {
@@ -137,7 +151,9 @@ public class TargetHud extends HudElement {
 
             renderer.text(renderName, offsetPos[0] + renderSize[0] * 0.05, offsetPos[1] + renderSize[1] / 13, textcolor.get(), shadow.get(), scale.get() * Math.sqrt(scaleAnim));
             renderer.text(String.valueOf(health), offsetPos[0] + renderSize[0] * 0.05, offsetPos[1] + renderSize[1] * 0.5, textcolor.get(), shadow.get(), scale.get() * Math.sqrt(scaleAnim));
-            renderer.quad(offsetPos[0] + renderSize[0] * 0.05, offsetPos[1] + renderSize[1] * 0.8, 180 / 36f * scale.get() * scale.get() * scaleAnim * health, renderSize[1] * 0.1, bar.get());
+
+            renderer.quad(offsetPos[0] + renderSize[0] * 0.05, offsetPos[1] + renderSize[1] * 0.8, 180 / 36f * scale.get() * scale.get() * scaleAnim * health, renderSize[1] * 0.1, barColor());
+
             if (outline.get()) {
                 renderer.line(offsetPos[0], offsetPos[1], offsetPos[0] + renderSize[0], offsetPos[1], outlineColor.get());
                 renderer.line(offsetPos[0] + renderSize[0], offsetPos[1], offsetPos[0] + renderSize[0], offsetPos[1] + renderSize[1], outlineColor.get());
@@ -166,5 +182,22 @@ public class TargetHud extends HudElement {
     private Color getColor(int dmg, int a) {
         int c = (int) Math.min(255, Math.max(0, dmg * -15 + 122.5f));
         return new Color(c, 255 - c, 0, a);
+    }
+
+    private Color barColor() {
+        if (health <= 20) {
+            return new Color(lerp(health / 20d, lowHP.get().r, highHP.get().r),
+                lerp(health / 20d, lowHP.get().g, highHP.get().g),
+                lerp(health / 20d, lowHP.get().b, highHP.get().b),
+                lerp(health / 20d, lowHP.get().a, highHP.get().a));
+        } else {
+            return new Color(lerp((health - 20) / 16d, highHP.get().r, maxHP.get().r),
+                lerp((health - 20) / 16d, highHP.get().g, maxHP.get().g),
+                lerp((health - 20) / 16d, highHP.get().b, maxHP.get().b),
+                lerp((health - 20) / 16d, highHP.get().a, maxHP.get().a));
+        }
+    }
+    private int lerp(double delta, double min, double max) {
+        return (int) Math.round(min + (max - min) * delta);
     }
 }

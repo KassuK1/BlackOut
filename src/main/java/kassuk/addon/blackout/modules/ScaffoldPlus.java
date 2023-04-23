@@ -37,40 +37,40 @@ import java.util.List;
  */
 public class ScaffoldPlus extends BlackOutModule {
     public ScaffoldPlus() {
-        super(BlackOut.BLACKOUT, "Scaffold+", "KasumsSoft blockwalk");
+        super(BlackOut.BLACKOUT, "Scaffold+", "KasumsSoft blockwalk.");
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<ScaffoldMode> scaffoldMode = sgGeneral.add(new EnumSetting.Builder<ScaffoldMode>()
         .name("Scaffold Mode")
-        .description(".")
+        .description("Mode for scaffold.")
         .defaultValue(ScaffoldMode.Normal)
         .build()
     );
     private final Setting<Boolean> onlyConfirmed = sgGeneral.add(new BoolSetting.Builder()
         .name("Only Confirmed")
-        .description("Only places on blocks the server has confirmed to exist")
+        .description("Only places on blocks the server has confirmed to exist.")
         .defaultValue(true)
         .build()
     );
     // Normal
     private final Setting<Boolean> sSprint = sgGeneral.add(new BoolSetting.Builder()
         .name("Stop Sprint")
-        .description("Stops you from sprinting")
+        .description("Stops you from sprinting.")
         .defaultValue(true)
         .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
         .build()
     );
     private final Setting<Boolean> safeWalk = sgGeneral.add(new BoolSetting.Builder()
         .name("SafeWalk")
-        .description("Should SafeWalk be used")
+        .description("Should SafeWalk be used.")
         .defaultValue(true)
         .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
         .build()
     );
     private final Setting<Boolean> useTimer = sgGeneral.add(new BoolSetting.Builder()
         .name("Use timer")
-        .description("Should we use timer")
+        .description("Should we use timer.")
         .defaultValue(true)
         .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
         .build()
@@ -78,7 +78,7 @@ public class ScaffoldPlus extends BlackOutModule {
     private final Setting<Double> timer = sgGeneral.add(new DoubleSetting.Builder()
         .visible(useTimer::get)
         .name("Timer")
-        .description("Sends more packets")
+        .description("Sends more packets.")
         .defaultValue(1.088)
         .min(0)
         .sliderMax(10)
@@ -94,8 +94,8 @@ public class ScaffoldPlus extends BlackOutModule {
     );
     private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
         .name("Switch Mode")
-        .description(".")
-        .defaultValue(SwitchMode.SilentBypass)
+        .description("Method of switching. Silent is the most reliable.")
+        .defaultValue(SwitchMode.Silent)
         .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
         .build()
     );
@@ -110,7 +110,7 @@ public class ScaffoldPlus extends BlackOutModule {
     );
     private final Setting<Integer> places = sgGeneral.add(new IntSetting.Builder()
         .name("Places")
-        .description("Blocks placed per place")
+        .description("Blocks placed per place.")
         .defaultValue(1)
         .range(1, 10)
         .sliderRange(1, 10)
@@ -143,7 +143,7 @@ public class ScaffoldPlus extends BlackOutModule {
         Disabled,
         Normal,
         Silent,
-        SilentBypass,
+        PickSilent,
         InvSwitch
     }
     BlockTimerList timers = new BlockTimerList();
@@ -191,7 +191,7 @@ public class ScaffoldPlus extends BlackOutModule {
             FindItemResult inventory = InvUtils.find(item -> item.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) item.getItem()).getBlock()));
             Hand hand = isValid(Managers.HOLDING.getStack()) ? Hand.MAIN_HAND : isValid(mc.player.getOffHandStack()) ? Hand.OFF_HAND : null;
 
-            if (hand != null || ((switchMode.get() == SwitchMode.SilentBypass || switchMode.get() == SwitchMode.InvSwitch) && inventory.slot() >= 0) ||
+            if (hand != null || ((switchMode.get() == SwitchMode.PickSilent || switchMode.get() == SwitchMode.InvSwitch) && inventory.slot() >= 0) ||
                 ((switchMode.get() == SwitchMode.Silent || switchMode.get() == SwitchMode.Normal) && hotbar.slot() >= 0)) {
 
                 if (safeWalk.get() && !Modules.get().get(SafeWalk.class).isActive()) {
@@ -222,7 +222,7 @@ public class ScaffoldPlus extends BlackOutModule {
                         if (hand == null) {
                             switch (switchMode.get()) {
                                 case Silent, Normal -> obsidian = hotbar.count();
-                                case SilentBypass, InvSwitch -> obsidian = inventory.slot() >= 0 ? inventory.count() : -1;
+                                case PickSilent, InvSwitch -> obsidian = inventory.slot() >= 0 ? inventory.count() : -1;
                             }
                         }
 
@@ -234,7 +234,7 @@ public class ScaffoldPlus extends BlackOutModule {
                                         InvUtils.swap(hotbar.slot(), true);
                                     }
                                     case InvSwitch -> obsidian = BOInvUtils.invSwitch(inventory.slot()) ? inventory.count() : -1;
-                                    case SilentBypass -> obsidian = BOInvUtils.pickSwitch(inventory.slot()) ? inventory.count() : -1;
+                                    case PickSilent -> obsidian = BOInvUtils.pickSwitch(inventory.slot()) ? inventory.count() : -1;
                                 }
                             }
 
@@ -253,7 +253,7 @@ public class ScaffoldPlus extends BlackOutModule {
                             if (hand == null) {
                                 switch (switchMode.get()) {
                                     case Silent -> InvUtils.swapBack();
-                                    case SilentBypass -> BOInvUtils.pickSwapBack();
+                                    case PickSilent -> BOInvUtils.pickSwapBack();
                                     case InvSwitch -> BOInvUtils.swapBack();
                                 }
                             }

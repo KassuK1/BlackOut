@@ -21,7 +21,7 @@ public class Suicide extends BlackOutModule {
 
     public final Setting<Boolean> offhand = sgGeneral.add(new BoolSetting.Builder()
         .name("Offhand")
-        .description("Doesn't hold totem.")
+        .description("Doesn't hold totem in offhand.")
         .defaultValue(true)
         .build()
     );

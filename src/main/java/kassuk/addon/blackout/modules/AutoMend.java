@@ -28,17 +28,17 @@ import java.util.List;
  * @author OLEPOSSU
  */
 public class AutoMend extends BlackOutModule {
-    public AutoMend() {super(BlackOut.BLACKOUT, "Auto Mend", "Automatically fixes your armor with experience bottles");}
+    public AutoMend() {super(BlackOut.BLACKOUT, "Auto Mend", "Automatically mends your armor with experience bottles");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Boolean> autoCrystal = sgGeneral.add(new BoolSetting.Builder()
         .name("Auto Crystal Pause")
-        .description("Only throws bottles if autocrystal isn't placing.")
+        .description("Only throws bottles if auto crystal isn't placing.")
         .defaultValue(false)
         .build()
     );
     private final Setting<Integer> autoCrystalTicks = sgGeneral.add(new IntSetting.Builder()
         .name("Auto Crystal Ticks")
-        .description("How many ticks to wait after autocrytal places.")
+        .description("How many ticks to wait after auto crystal places.")
         .defaultValue(20)
         .min(0)
         .sliderRange(0, 100)
@@ -75,7 +75,7 @@ public class AutoMend extends BlackOutModule {
     private final Setting<Boolean> movePause = sgGeneral.add(new BoolSetting.Builder()
         .name("Move Pause")
         .description("Only throws bottles if you aren't moving")
-        .defaultValue(false)
+        .defaultValue(true)
         .build()
     );
     private final Setting<Integer> moveTicks = sgGeneral.add(new IntSetting.Builder()
@@ -102,9 +102,9 @@ public class AutoMend extends BlackOutModule {
     );
     private final Setting<Double> speed = sgGeneral.add(new DoubleSetting.Builder()
         .name("Throw Speed")
-        .description("Only send message if enemy died inside this range.")
+        .description("How many bottles to throw every second. 20 is recommended.")
         .defaultValue(20)
-        .range(0, 20)
+        .min(0)
         .sliderRange(0, 20)
         .build()
     );
@@ -118,7 +118,7 @@ public class AutoMend extends BlackOutModule {
     );
     private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
         .name("Switch Mode")
-        .description(".")
+        .description("Method of switching. Silent is the most reliable.")
         .defaultValue(SwitchMode.Silent)
         .build()
     );
@@ -205,7 +205,7 @@ public class AutoMend extends BlackOutModule {
             int bottleSlot;
             int bottleAmount;
             if (hand == null) {
-                FindItemResult result = switchMode.get() == SwitchMode.SilentBypass || switchMode.get() == SwitchMode.InvSwitch ? InvUtils.find(item -> item.getItem() == Items.EXPERIENCE_BOTTLE) : InvUtils.findInHotbar(item -> item.getItem() == Items.EXPERIENCE_BOTTLE);
+                FindItemResult result = switchMode.get() == SwitchMode.PickSilent || switchMode.get() == SwitchMode.InvSwitch ? InvUtils.find(item -> item.getItem() == Items.EXPERIENCE_BOTTLE) : InvUtils.findInHotbar(item -> item.getItem() == Items.EXPERIENCE_BOTTLE);
 
                 bottleSlot = result.slot();
                 bottleAmount = result.count();
@@ -228,7 +228,7 @@ public class AutoMend extends BlackOutModule {
                                 InvUtils.swap(bottleSlot, true);
                                 switched = true;
                             }
-                            case SilentBypass -> switched = BOInvUtils.pickSwitch(bottleSlot);
+                            case PickSilent -> switched = BOInvUtils.pickSwitch(bottleSlot);
                             case InvSwitch -> switched = BOInvUtils.invSwitch(bottleSlot);
                         }
                     }
@@ -244,7 +244,7 @@ public class AutoMend extends BlackOutModule {
                         if (hand == null) {
                             switch (switchMode.get()) {
                                 case Silent -> InvUtils.swapBack();
-                                case SilentBypass -> BOInvUtils.pickSwapBack();
+                                case PickSilent -> BOInvUtils.pickSwapBack();
                                 case InvSwitch -> BOInvUtils.swapBack();
                             }
                         }
@@ -331,7 +331,7 @@ public class AutoMend extends BlackOutModule {
         Disabled,
         Normal,
         Silent,
-        SilentBypass,
+        PickSilent,
         InvSwitch
     }
 }

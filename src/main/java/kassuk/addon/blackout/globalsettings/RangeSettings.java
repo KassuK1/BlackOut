@@ -32,7 +32,7 @@ public class RangeSettings extends BlackOutModule {
     );
     public final Setting<Double> placeRangeWalls = sgPlace.add(new DoubleSetting.Builder()
         .name("Place Range Walls")
-        .description("place for attacking entities behind blocks.")
+        .description("Range for placing behind blocks.")
         .defaultValue(5.2)
         .range(0, 6)
         .sliderRange(0, 6)
@@ -40,13 +40,13 @@ public class RangeSettings extends BlackOutModule {
     );
     private final Setting<FromMode> placeRangeFrom = sgPlace.add(new EnumSetting.Builder<FromMode>()
         .name("Place Range From")
-        .description("Where to calculate ranges from.")
+        .description("Where to calculate place ranges from.")
         .defaultValue(FromMode.Eyes)
         .build()
     );
     private final Setting<PlaceRangeMode> placeRangeMode = sgPlace.add(new EnumSetting.Builder<PlaceRangeMode>()
         .name("Place Range Mode")
-        .description("Where to calculate ranges from.")
+        .description("Where to calculate place ranges from.")
         .defaultValue(PlaceRangeMode.NCP)
         .build()
     );
@@ -160,7 +160,7 @@ public class RangeSettings extends BlackOutModule {
     //  Mining Ranges
     public final Setting<Double> miningRange = sgMining.add(new DoubleSetting.Builder()
         .name("Mining Range")
-        .description("Range for attacking entities.")
+        .description("Range for mining blocks.")
         .defaultValue(4.8)
         .range(0, 6)
         .sliderRange(0, 6)
@@ -168,7 +168,7 @@ public class RangeSettings extends BlackOutModule {
     );
     public final Setting<Double> miningRangeWalls = sgMining.add(new DoubleSetting.Builder()
         .name("Mining Range Walls")
-        .description("Range for attacking entities behind blocks.")
+        .description("Range for mining blocks behind other blocks.")
         .defaultValue(4.8)
         .range(0, 6)
         .sliderRange(0, 6)
@@ -176,13 +176,13 @@ public class RangeSettings extends BlackOutModule {
     );
     private final Setting<FromMode> miningRangeFrom = sgMining.add(new EnumSetting.Builder<FromMode>()
         .name("Mining Range From")
-        .description("Where to calculate ranges from.")
+        .description("Where to calculate mining ranges from.")
         .defaultValue(FromMode.Eyes)
         .build()
     );
     private final Setting<MiningRangeMode> miningRangeMode = sgMining.add(new EnumSetting.Builder<MiningRangeMode>()
         .name("Mining Range Mode")
-        .description("Where to calculate ranges from.")
+        .description("Where to calculate mining ranges from.")
         .defaultValue(MiningRangeMode.NCP)
         .build()
     );

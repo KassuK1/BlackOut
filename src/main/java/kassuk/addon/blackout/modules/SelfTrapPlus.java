@@ -47,20 +47,20 @@ public class SelfTrapPlus extends BlackOutModule {
     private final SettingGroup sgRender = settings.createGroup("Render");
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
         .name("Pause Eat")
-        .description("Pauses when you are eating")
+        .description("Pauses when you are eating.")
         .defaultValue(true)
         .build()
     );
     private final Setting<Boolean> onlyConfirmed = sgGeneral.add(new BoolSetting.Builder()
         .name("Only Confirmed")
-        .description("Only places on blocks the server has confirmed to exist")
+        .description("Only places on blocks the server has confirmed to exist.")
         .defaultValue(true)
         .build()
     );
     private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
         .name("Switch Mode")
-        .description(".")
-        .defaultValue(SwitchMode.SilentBypass)
+        .description("Method of switching. Silent is the most reliable.")
+        .defaultValue(SwitchMode.Silent)
         .build()
     );
     private final Setting<List<Block>> blocks = sgGeneral.add(new BlockListSetting.Builder()
@@ -71,7 +71,7 @@ public class SelfTrapPlus extends BlackOutModule {
     );
     private final Setting<TrapMode> trapMode = sgGeneral.add(new EnumSetting.Builder<TrapMode>()
         .name("Trap Mode")
-        .description(".")
+        .description("Where to place blocks.")
         .defaultValue(TrapMode.Both)
         .build()
     );
@@ -85,7 +85,7 @@ public class SelfTrapPlus extends BlackOutModule {
     );
     private final Setting<Integer> places = sgGeneral.add(new IntSetting.Builder()
         .name("Places")
-        .description("Blocks placed per place")
+        .description("Blocks placed per place.")
         .defaultValue(1)
         .range(1, 10)
         .sliderRange(1, 10)
@@ -103,19 +103,19 @@ public class SelfTrapPlus extends BlackOutModule {
     //  Toggle Page
     private final Setting<Boolean> toggleMove = sgToggle.add(new BoolSetting.Builder()
         .name("Toggle Move")
-        .description("Toggles when you move horizontally")
+        .description("Toggles when you move horizontally.")
         .defaultValue(true)
         .build()
     );
     private final Setting<SurroundPlus.ToggleYMode> toggleY = sgToggle.add(new EnumSetting.Builder<SurroundPlus.ToggleYMode>()
         .name("Toggle Y")
-        .description("Toggles when you move vertically")
+        .description("Toggles when you move vertically.")
         .defaultValue(SurroundPlus.ToggleYMode.Full)
         .build()
     );
     private final Setting<Boolean> toggleSneak = sgToggle.add(new BoolSetting.Builder()
         .name("Toggle Sneak")
-        .description("Toggles when you sneak")
+        .description("Toggles when you sneak.")
         .defaultValue(false)
         .build()
     );
@@ -123,31 +123,31 @@ public class SelfTrapPlus extends BlackOutModule {
     //  Render Page
     private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
         .name("Shape Mode")
-        .description(".")
+        .description("Which parts of the boxes should be rendered.")
         .defaultValue(ShapeMode.Both)
         .build()
     );
     private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder()
         .name("Line Color")
         .description("Color of the outlines")
-        .defaultValue(new SettingColor(255, 0, 0, 150))
+        .defaultValue(new SettingColor(255, 0, 0, 255))
         .build()
     );
     private final Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder()
         .name("Side Color")
-        .description(".")
+        .description("Color of the sides.")
         .defaultValue(new SettingColor(255, 0, 0, 50))
         .build()
     );
     private final Setting<SettingColor> supportLineColor = sgRender.add(new ColorSetting.Builder()
-        .name("Line Color")
-        .description("Color of the outlines")
-        .defaultValue(new SettingColor(255, 0, 0, 150))
+        .name("Support Line Color")
+        .description("Color of the outlines for support blocks")
+        .defaultValue(new SettingColor(255, 0, 0, 255))
         .build()
     );
     private final Setting<SettingColor> supportSideColor = sgRender.add(new ColorSetting.Builder()
-        .name("Side Color")
-        .description(".")
+        .name("Support Side Color")
+        .description("Color of the sides for support blocks.")
         .defaultValue(new SettingColor(255, 0, 0, 50))
         .build()
     );
@@ -155,7 +155,7 @@ public class SelfTrapPlus extends BlackOutModule {
         Disabled,
         Normal,
         Silent,
-        SilentBypass,
+        PickSilent,
         InvSwitch
     }
     public enum TrapMode {
@@ -256,7 +256,7 @@ public class SelfTrapPlus extends BlackOutModule {
 
             if ((!pauseEat.get() || !mc.player.isUsingItem()) &&
                 (hand != null || ((switchMode.get() == SwitchMode.Silent || switchMode.get() == SwitchMode.Normal) && hotbar.slot() >= 0) ||
-                    ((switchMode.get() == SwitchMode.SilentBypass || switchMode.get() == SwitchMode.InvSwitch) && inventory.slot() >= 0)) && placesLeft > 0 && !placements.isEmpty()) {
+                    ((switchMode.get() == SwitchMode.PickSilent || switchMode.get() == SwitchMode.InvSwitch) && inventory.slot() >= 0)) && placesLeft > 0 && !placements.isEmpty()) {
 
                 List<BlockPos> toPlace = new ArrayList<>();
                 for (BlockPos placement : placements) {
@@ -273,7 +273,7 @@ public class SelfTrapPlus extends BlackOutModule {
                     if (hand == null) {
                         switch (switchMode.get()) {
                             case Silent, Normal -> obsidian = hotbar.count();
-                            case SilentBypass, InvSwitch -> obsidian = inventory.slot() >= 0 ? inventory.count() : -1;
+                            case PickSilent, InvSwitch -> obsidian = inventory.slot() >= 0 ? inventory.count() : -1;
                         }
                     }
 
@@ -284,7 +284,7 @@ public class SelfTrapPlus extends BlackOutModule {
                                     obsidian = hotbar.count();
                                     InvUtils.swap(hotbar.slot(), true);
                                 }
-                                case SilentBypass -> obsidian = BOInvUtils.pickSwitch(inventory.slot()) ? inventory.count() : -1;
+                                case PickSilent -> obsidian = BOInvUtils.pickSwitch(inventory.slot()) ? inventory.count() : -1;
                                 case InvSwitch -> obsidian = BOInvUtils.invSwitch(inventory.slot()) ? inventory.count() : -1;
                             }
                         }
@@ -310,7 +310,7 @@ public class SelfTrapPlus extends BlackOutModule {
                         if (hand == null) {
                             switch (switchMode.get()) {
                                 case Silent -> InvUtils.swapBack();
-                                case SilentBypass -> BOInvUtils.pickSwapBack();
+                                case PickSilent -> BOInvUtils.pickSwapBack();
                                 case InvSwitch -> BOInvUtils.swapBack();
                             }
                         }

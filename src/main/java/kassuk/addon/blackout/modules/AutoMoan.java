@@ -34,16 +34,16 @@ public class AutoMoan extends BlackOutModule {
 
     private final Setting<Boolean> iFriends = sgGeneral.add(new BoolSetting.Builder()
         .name("Ignore Friends")
-        .description("Doesn't send messages when there is only friends nearby.")
+        .description("Doesn't send messages targeted to friends.")
         .defaultValue(true)
         .build()
     );
     private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
         .name("Delay")
         .description("Tick delay between moans.")
-        .defaultValue(30)
-        .range(0, 60)
-        .sliderRange(0, 60)
+        .defaultValue(50)
+        .min(0)
+        .sliderRange(0, 100)
         .build()
     );
 

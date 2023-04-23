@@ -28,7 +28,7 @@ public class PacketCrash extends BlackOutModule {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<SendMode> mode = sgGeneral.add(new EnumSetting.Builder<SendMode>()
         .name("Mode")
-        .description("Mode.")
+        .description("Mode for sending packets.")
         .defaultValue(SendMode.Spam)
         .build()
     );
@@ -54,7 +54,7 @@ public class PacketCrash extends BlackOutModule {
     );
     private final Setting<Integer> boundsAmount = sgGeneral.add(new IntSetting.Builder()
         .name("Bounds Amount")
-        .description("Per tick.")
+        .description("How many bounds packets should be sent every tick.")
         .defaultValue(10)
         .range(0, 100)
         .sliderMax(100)
@@ -78,7 +78,7 @@ public class PacketCrash extends BlackOutModule {
     );
     private final Setting<Integer> swingAmount = sgGeneral.add(new IntSetting.Builder()
         .name("Swing Amount")
-        .description("Per tick.")
+        .description("How many swing packets should be sent every tick.")
         .defaultValue(5)
         .sliderRange(0, 100)
         .visible(() -> mode.get().equals(SendMode.Spam) && swing.get())
@@ -93,7 +93,7 @@ public class PacketCrash extends BlackOutModule {
     );
     private final Setting<Integer> confirmAmount = sgGeneral.add(new IntSetting.Builder()
         .name("Confirm Amount")
-        .description("Per tick.")
+        .description("How many confirm packets should be sent every tick.")
         .defaultValue(5)
         .sliderRange(0, 100)
         .visible(() -> mode.get().equals(SendMode.Spam) && confirm.get())

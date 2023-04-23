@@ -44,7 +44,7 @@ public class AntiAim extends BlackOutModule {
 
     private final Setting<Double> spinSpeed = sgGeneral.add(new DoubleSetting.Builder()
         .name("Spin Speed")
-        .description("Spiid.")
+        .description("How many degrees should be turned every tick.")
         .defaultValue(5)
         .range(0, 100)
         .sliderMin(0)
@@ -54,14 +54,14 @@ public class AntiAim extends BlackOutModule {
     );
     private final Setting<Boolean> rYaw = sgGeneral.add(new BoolSetting.Builder()
         .name("Random Yaw")
-        .description("Randomly sets yaw.")
+        .description("Sets yaw to random value.")
         .defaultValue(true)
         .visible(() -> mode.get().equals(Modes.CSGO))
         .build()
     );
     private final Setting<Boolean> rPitch = sgGeneral.add(new BoolSetting.Builder()
         .name("Random Pitch")
-        .description("Randomly sets pitch.")
+        .description("Sets pitch to random value.")
         .defaultValue(false)
         .visible(() -> mode.get().equals(Modes.CSGO))
         .build()
@@ -115,7 +115,7 @@ public class AntiAim extends BlackOutModule {
     );
     private final Setting<Boolean> encMode = sgGeneral.add(new BoolSetting.Builder()
         .name("Look Down With Exp")
-        .description("Looks down while holding enchanting bottles.")
+        .description("Looks down while holding experience bottles.")
         .defaultValue(true)
         .build()
     );
@@ -127,7 +127,7 @@ public class AntiAim extends BlackOutModule {
     );
     private final Setting<List<Item>> yItems = sgIgnore.add(new ItemListSetting.Builder()
         .name("Ignore Yaw Items")
-        .description("Ignores yaw rotations when holding.")
+        .description("Ignores yaw rotations when holding these items.")
         .defaultValue(Items.ENDER_PEARL, Items.BOW, Items.EXPERIENCE_BOTTLE)
         .build()
     );
@@ -139,7 +139,7 @@ public class AntiAim extends BlackOutModule {
     );
     private final Setting<List<Item>> pItems = sgIgnore.add(new ItemListSetting.Builder()
         .name("Ignore Pitch items")
-        .description("Ignores pitch rotations when holding.")
+        .description("Ignores pitch rotations when holding these items.")
         .defaultValue(Items.ENDER_PEARL, Items.BOW, Items.EXPERIENCE_BOTTLE)
         .build()
     );

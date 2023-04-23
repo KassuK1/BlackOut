@@ -18,10 +18,10 @@ public class CustomFOV extends BlackOutModule {
 
     private final Setting<Integer> FOV = sgGeneral.add(new IntSetting.Builder()
         .name("FOV")
-        .description("What the FOV should be")
+        .description("What the FOV should be.")
         .defaultValue(120)
-        .min(0)
-        .sliderMax(360)
+        .range(0, 360)
+        .sliderRange(0, 360)
         .build()
     );
 

@@ -34,7 +34,7 @@ public class Welcomer extends HudElement {
     );
     private final Setting<Boolean> shadow = sgGeneral.add(new BoolSetting.Builder()
         .name("Text shadow")
-        .description("Should the text have a shadow")
+        .description("Should the text have a shadow.")
         .defaultValue(true)
         .build()
     );

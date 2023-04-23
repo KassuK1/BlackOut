@@ -53,7 +53,7 @@ public class HoleFillRewrite extends BlackOutModule {
     private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
         .name("Switch Mode")
         .description(".")
-        .defaultValue(SwitchMode.SilentBypass)
+        .defaultValue(SwitchMode.InvSwitch)
         .build()
     );
     private final Setting<List<Block>> blocks = sgGeneral.add(new BlockListSetting.Builder()
@@ -177,7 +177,7 @@ public class HoleFillRewrite extends BlackOutModule {
     public enum SwitchMode {
         Disabled,
         Silent,
-        SilentBypass,
+        PickSilent,
         InvSwitch
     }
     List<BlockPos> holes = new ArrayList<>();
@@ -223,7 +223,7 @@ public class HoleFillRewrite extends BlackOutModule {
         Hand hand = isValid(Managers.HOLDING.getStack()) ? Hand.MAIN_HAND : isValid(mc.player.getOffHandStack()) ? Hand.OFF_HAND : null;
 
         if (!placements.isEmpty() && (!pauseEat.get() || !mc.player.isUsingItem()) && placeTimer >= placeDelay.get()) {
-            if (hand != null || (switchMode.get() == SwitchMode.Silent && result.slot() >= 0) || ((switchMode.get() == SwitchMode.SilentBypass || switchMode.get() == SwitchMode.InvSwitch) && invResult.slot() >= 0)) {
+            if (hand != null || (switchMode.get() == SwitchMode.Silent && result.slot() >= 0) || ((switchMode.get() == SwitchMode.PickSilent || switchMode.get() == SwitchMode.InvSwitch) && invResult.slot() >= 0)) {
 
                 List<BlockPos> toPlace = new ArrayList<>();
                 for (BlockPos pos : placements) {
@@ -239,7 +239,7 @@ public class HoleFillRewrite extends BlackOutModule {
                     if (hand == null) {
                         switch (switchMode.get()) {
                             case Silent -> obsidian = result.count();
-                            case SilentBypass, InvSwitch -> obsidian = invResult.slot() >= 0 ? invResult.count() : -1;
+                            case PickSilent, InvSwitch -> obsidian = invResult.slot() >= 0 ? invResult.count() : -1;
                         }
                     }
 
@@ -250,7 +250,7 @@ public class HoleFillRewrite extends BlackOutModule {
                                     obsidian = result.count();
                                     InvUtils.swap(result.slot(), true);
                                 }
-                                case SilentBypass -> obsidian = BOInvUtils.pickSwitch(invResult.slot()) ? invResult.count() : -1;
+                                case PickSilent -> obsidian = BOInvUtils.pickSwitch(invResult.slot()) ? invResult.count() : -1;
                                 case InvSwitch -> obsidian = BOInvUtils.invSwitch(invResult.slot()) ? invResult.count() : -1;
                             }
                         }
@@ -272,7 +272,7 @@ public class HoleFillRewrite extends BlackOutModule {
                         if (hand == null) {
                             switch (switchMode.get()) {
                                 case Silent -> InvUtils.swapBack();
-                                case SilentBypass -> BOInvUtils.pickSwapBack();
+                                case PickSilent -> BOInvUtils.pickSwapBack();
                                 case InvSwitch -> BOInvUtils.swapBack();
                             }
                         }

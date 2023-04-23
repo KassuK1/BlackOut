@@ -23,7 +23,7 @@ import java.util.Random;
  */
 public class AutoEz extends BlackOutModule {
     public AutoEz() {
-        super(BlackOut.BLACKOUT, "Auto EZ", "Sends message after enemy dies(too EZ nn's)");
+        super(BlackOut.BLACKOUT, "Auto EZ", "Sends message after enemy dies (too EZ nn's)");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgKill = settings.getDefaultGroup();
@@ -31,14 +31,14 @@ public class AutoEz extends BlackOutModule {
     private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
         .name("Enemy Range")
         .description("Only send message if enemy died inside this range.")
-        .defaultValue(50)
+        .defaultValue(25)
         .min(0)
         .sliderRange(0, 50)
         .build()
     );
     private final Setting<Integer> tickDelay = sgGeneral.add(new IntSetting.Builder()
         .name("Delay")
-        .description("Waits this long between sending messages.")
+        .description("How many ticks to wait between sending messages.")
         .defaultValue(50)
         .min(0)
         .sliderRange(0, 100)
@@ -59,13 +59,13 @@ public class AutoEz extends BlackOutModule {
     private final Setting<List<String>> killMessages = sgKill.add(new StringListSetting.Builder()
         .name("Kill Messages")
         .description("Messages to send when killing an enemy with blackout message mode on")
-        .defaultValue(List.of("Fucked by BlackOut!", "BlackOut on top", "BlackOut strong", "BlackOut gayming", "BlackOut on top"))
+        .defaultValue(List.of("Fucked by BlackOut!", "BlackOut on top", "BlackOut strong", "BlackOut gayming"))
         .visible(() -> killMsgMode.get() == MessageMode.Blackout)
         .build()
     );
     private final Setting<Boolean> pop = sgPop.add(new BoolSetting.Builder()
         .name("Pop")
-        .description("Should we send a message when enemy pops")
+        .description("Should we send a message when enemy pops a totem")
         .defaultValue(false)
         .build()
     );

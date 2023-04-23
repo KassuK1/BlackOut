@@ -81,7 +81,7 @@ public class PacketFly extends BlackOutModule {
     private final Setting<Double> phaseSpeed = sgPhase.add(new DoubleSetting.Builder()
         .name("Phase Speed")
         .description("Distance to travel each packet.")
-        .defaultValue(0.2873)
+        .defaultValue(0.062)
         .min(0)
         .sliderRange(0, 10)
         .build()
@@ -94,7 +94,7 @@ public class PacketFly extends BlackOutModule {
     );
     private final Setting<Double> phaseDownSpeed = sgPhase.add(new DoubleSetting.Builder()
         .name("Phase Down Speed")
-        .description("How fast to fly down.")
+        .description("How fast to phase down.")
         .defaultValue(0.062)
         .min(0)
         .sliderRange(0, 10)
@@ -102,22 +102,23 @@ public class PacketFly extends BlackOutModule {
     );
     private final Setting<Double> phaseUpSpeed = sgPhase.add(new DoubleSetting.Builder()
         .name("Phase Up Speed")
-        .description("How fast to fly up.")
+        .description("How fast to phase up.")
         .defaultValue(0.062)
         .min(0)
         .sliderRange(0, 10)
         .build()
     );
+
     //  General Page
     private final Setting<Boolean> onGroundSpoof = sgGeneral.add(new BoolSetting.Builder()
         .name("On Ground Spoof")
-        .description("Spoofs on ground in packets.")
+        .description("Spoofs on ground.")
         .defaultValue(false)
         .build()
     );
     private final Setting<Boolean> onGround = sgGeneral.add(new BoolSetting.Builder()
         .name("On Ground")
-        .description("Should we tell the server that u are onground.")
+        .description("Should we tell the server that you are on ground.")
         .defaultValue(false)
         .visible(onGroundSpoof::get)
         .build()
@@ -137,15 +138,15 @@ public class PacketFly extends BlackOutModule {
         .build()
     );
     private final Setting<Double> antiKick = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Anti Kick")
+        .name("Anti-Kick")
         .description("Slowly glides down.")
         .defaultValue(1)
         .sliderRange(0, 10)
         .build()
     );
     private final Setting<Integer> antiKickDelay = sgGeneral.add(new IntSetting.Builder()
-        .name("Anti Kick Delay")
-        .description("Tick delay between moving down.")
+        .name("Anti-Kick Delay")
+        .description("Tick delay between moving anti kick packets.")
         .defaultValue(10)
         .min(1)
         .sliderRange(0, 100)

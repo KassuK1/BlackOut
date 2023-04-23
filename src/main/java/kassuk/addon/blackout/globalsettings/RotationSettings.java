@@ -45,7 +45,7 @@ public class RotationSettings extends BlackOutModule {
     );
     public final Setting<Double> yawAngle = sgGeneral.add(new DoubleSetting.Builder()
         .name("Yaw Angle")
-        .description(".")
+        .description("Accepts rotation of yaw angle to target is under this.")
         .defaultValue(90)
         .range(0, 180)
         .sliderRange(0, 180)
@@ -54,7 +54,7 @@ public class RotationSettings extends BlackOutModule {
     );
     public final Setting<Double> pitchAngle = sgGeneral.add(new DoubleSetting.Builder()
         .name("Pitch Angle")
-        .description(".")
+        .description("Accepts rotation of pitch angle to target is under this.")
         .defaultValue(45)
         .range(0, 180)
         .sliderRange(0, 180)
@@ -75,7 +75,7 @@ public class RotationSettings extends BlackOutModule {
     );
     public final Setting<Double> yawStep = sgGeneral.add(new DoubleSetting.Builder()
         .name("Yaw Step")
-        .description(".")
+        .description("How many yaw degrees should be rotated each packet.")
         .defaultValue(180)
         .range(0, 180)
         .sliderRange(0, 180)
@@ -83,7 +83,7 @@ public class RotationSettings extends BlackOutModule {
     );
     public final Setting<Double> pitchStep = sgGeneral.add(new DoubleSetting.Builder()
         .name("Pitch Step")
-        .description(".")
+        .description("How many pitch degrees should be rotated each packet.")
         .defaultValue(180)
         .range(0, 180)
         .sliderRange(0, 180)
@@ -91,13 +91,13 @@ public class RotationSettings extends BlackOutModule {
     );
     public final Setting<Boolean> NCPRotation = sgGeneral.add(new BoolSetting.Builder()
         .name("NCP Rotations")
-        .description(".")
+        .description("Accepts rotation if you were looking at the target 'NCP packets' ago.")
         .defaultValue(true)
         .build()
     );
     public final Setting<Integer> NCPPackets = sgGeneral.add(new IntSetting.Builder()
-        .name("NCP Rotation packets")
-        .description(".")
+        .name("NCP Rotation Packets")
+        .description("Check description from 'NCP Rotations'.")
         .defaultValue(5)
         .range(0, 10)
         .sliderRange(0, 10)
@@ -107,13 +107,13 @@ public class RotationSettings extends BlackOutModule {
     //  Crystal Page
     private final Setting<Boolean> crystalRotate = sgCrystal.add(new BoolSetting.Builder()
         .name("Crystal Rotate")
-        .description(".")
+        .description("Rotates when placing crystals.")
         .defaultValue(false)
         .build()
     );
     private final Setting<Integer> crystalExisted = sgCrystal.add(new IntSetting.Builder()
         .name("Crystal Rotation Existed")
-        .description(".")
+        .description("Crystal rotation has to be existed for x ticks before accepting.")
         .defaultValue(0)
         .range(0, 10)
         .sliderRange(0, 10)
@@ -131,13 +131,13 @@ public class RotationSettings extends BlackOutModule {
     // Attack Page
     private final Setting<Boolean> attackRotate = sgAttack.add(new BoolSetting.Builder()
         .name("Attack Rotate")
-        .description(".")
+        .description("Rotates when attacking entities.")
         .defaultValue(false)
         .build()
     );
     private final Setting<Integer> attackExisted = sgAttack.add(new IntSetting.Builder()
         .name("Attack Rotation Existed")
-        .description(".")
+        .description("Attack rotation has to be existed for x ticks before accepting.")
         .defaultValue(0)
         .range(0, 10)
         .sliderRange(0, 10)
@@ -155,13 +155,13 @@ public class RotationSettings extends BlackOutModule {
     // Place Page
     private final Setting<Boolean> placeRotate = sgPlace.add(new BoolSetting.Builder()
         .name("Placing Rotate")
-        .description(".")
+        .description("Rotates when placing blocks.")
         .defaultValue(false)
         .build()
     );
     private final Setting<Integer> placeExisted = sgPlace.add(new IntSetting.Builder()
         .name("Place Rotation Existed")
-        .description(".")
+        .description("Placing rotation has to be existed for x ticks before accepting.")
         .defaultValue(0)
         .range(0, 10)
         .sliderRange(0, 10)
@@ -179,13 +179,13 @@ public class RotationSettings extends BlackOutModule {
     // Mine Page
     public final Setting<MiningRotMode> mineRotate = sgMine.add(new EnumSetting.Builder<MiningRotMode>()
         .name("Mine Rotate")
-        .description(".")
+        .description("Rotates when mining.")
         .defaultValue(MiningRotMode.Disabled)
         .build()
     );
     private final Setting<Integer> mineExisted = sgMine.add(new IntSetting.Builder()
         .name("Mine Rotation Existed")
-        .description(".")
+        .description("Mining rotation has to be existed for x ticks before accepting.")
         .defaultValue(0)
         .range(0, 10)
         .sliderRange(0, 10)
@@ -203,13 +203,13 @@ public class RotationSettings extends BlackOutModule {
     // Interact Page
     private final Setting<Boolean> interactRotate = sgInteract.add(new BoolSetting.Builder()
         .name("Interact Rotate")
-        .description(".")
+        .description("Rotates when interacting with blocks. Crafting tables, chests...")
         .defaultValue(false)
         .build()
     );
     private final Setting<Integer> interactExisted = sgInteract.add(new IntSetting.Builder()
         .name("Interact Rotation Existed")
-        .description(".")
+        .description("Interact rotation has to be existed for x ticks before accepting.")
         .defaultValue(0)
         .range(0, 10)
         .sliderRange(0, 10)

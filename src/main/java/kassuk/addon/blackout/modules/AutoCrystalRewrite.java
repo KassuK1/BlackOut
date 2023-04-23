@@ -8,8 +8,8 @@ import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.timers.IntTimerList;
 import kassuk.addon.blackout.utils.BOInvUtils;
-import kassuk.addon.blackout.utils.SettingUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
+import kassuk.addon.blackout.utils.SettingUtils;
 import kassuk.addon.blackout.utils.meteor.BODamageUtils;
 import kassuk.addon.blackout.utils.meteor.BOEntityUtils;
 import meteordevelopment.meteorclient.events.entity.EntityAddedEvent;
@@ -32,7 +32,9 @@ import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
-import net.minecraft.network.packet.c2s.play.*;
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
+import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -115,7 +117,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     );
     private final Setting<Boolean> instantPlace = sgPlace.add(new BoolSetting.Builder()
         .name("Instant Place")
-        .description("Ignores delay after crystal hitbox has disappeared.")
+        .description("Ignores delay after crystal has disappeared.")
         .defaultValue(true)
         .build()
     );
@@ -138,7 +140,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     );
     private final Setting<DelayMode> placeDelayMode = sgPlace.add(new EnumSetting.Builder<DelayMode>()
         .name("Place Delay Mode")
-        .description(".")
+        .description("Should we count the delay in seconds or ticks.")
         .defaultValue(DelayMode.Seconds)
         .build()
     );
@@ -184,7 +186,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     );
     private final Setting<ExistedMode> existedMode = sgPlace.add(new EnumSetting.Builder<ExistedMode>()
         .name("Existed Mode")
-        .description(".")
+        .description("Should crystal existed times be counted in seconds or ticks.")
         .defaultValue(ExistedMode.Seconds)
         .build()
     );
@@ -216,7 +218,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     );
     private final Setting<Double> expSpeedLimit = sgExplode.add(new DoubleSetting.Builder()
         .name("Explode Speed Limit")
-        .description("How many times to hit any crystal each second. 0 = no limiy")
+        .description("How many times to hit any crystal each second. 0 = no limit")
         .defaultValue(0)
         .min(0)
         .sliderRange(0, 20)
@@ -224,7 +226,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     );
     private final Setting<Boolean> setDead = sgExplode.add(new BoolSetting.Builder()
         .name("Set Dead")
-        .description("Hides the crystal after hitting it.")
+        .description("Hides the crystal after hitting it. Not needed since the module already is smart enough.")
         .defaultValue(false)
         .build()
     );
@@ -241,7 +243,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     //  Switch Page
     private final Setting<SwitchMode> switchMode = sgSwitch.add(new EnumSetting.Builder<SwitchMode>()
         .name("Switch Mode")
-        .description("Mode for switching to crystal in mainhand. \nSimple - Switches to crystal when placing\nSmart - Switches to gapple (complicated)\nGapple - Switches to crystal when holding gapple and gapple when holding use key and crystals")
+        .description("Mode for switching to crystal in main hand.")
         .defaultValue(SwitchMode.Disabled)
         .build()
     );
@@ -284,23 +286,23 @@ public class AutoCrystalRewrite extends BlackOutModule {
     );
     private final Setting<Double> minPlace = sgDamage.add(new DoubleSetting.Builder()
         .name("Min Place")
-        .description("Minimum enemy damage for placing.")
+        .description("Minimum damage to place.")
         .defaultValue(4)
         .range(0, 20)
         .sliderRange(0, 20)
         .build()
     );
-    private final Setting<Double> maxSelfPlace = sgDamage.add(new DoubleSetting.Builder()
-        .name("Max Self Place")
+    private final Setting<Double> maxPlace = sgDamage.add(new DoubleSetting.Builder()
+        .name("Max Place")
         .description("Max self damage for placing.")
         .defaultValue(8)
         .range(0, 20)
         .sliderRange(0, 20)
         .build()
     );
-    private final Setting<Double> maxSelfPlaceRatio = sgDamage.add(new DoubleSetting.Builder()
-        .name("Max Self Place Ratio")
-        .description("Max self damage ratio for placing (self damage / enemy damage).")
+    private final Setting<Double> minPlaceRatio = sgDamage.add(new DoubleSetting.Builder()
+        .name("Min Place Ratio")
+        .description("Max self damage ratio for placing (enemy / self).")
         .defaultValue(0.3)
         .range(0, 5)
         .sliderRange(0, 5)
@@ -314,9 +316,9 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .sliderRange(0, 20)
         .build()
     );
-    private final Setting<Double> maxFriendPlaceRatio = sgDamage.add(new DoubleSetting.Builder()
-        .name("Max Friend Place Ratio")
-        .description("Max friend damage ratio for placing (friend damage / enemy damage).")
+    private final Setting<Double> minFriendPlaceRatio = sgDamage.add(new DoubleSetting.Builder()
+        .name("Min Friend Place Ratio")
+        .description("Max friend damage ratio for placing (enemy / friend).")
         .defaultValue(0.5)
         .range(0, 5)
         .sliderRange(0, 5)
@@ -336,17 +338,17 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .sliderRange(0, 20)
         .build()
     );
-    private final Setting<Double> maxSelfExp = sgDamage.add(new DoubleSetting.Builder()
-        .name("Max Self Explode")
+    private final Setting<Double> maxExp = sgDamage.add(new DoubleSetting.Builder()
+        .name("Max Explode")
         .description("Max self damage for exploding a crystal.")
         .defaultValue(9)
         .range(0, 20)
         .sliderRange(0, 20)
         .build()
     );
-    private final Setting<Double> maxSelfExpRatio = sgDamage.add(new DoubleSetting.Builder()
-        .name("Max Self Explode Ratio")
-        .description("Max self damage ratio for exploding a crystal (self damage / enemy damage).")
+    private final Setting<Double> minExpRatio = sgDamage.add(new DoubleSetting.Builder()
+        .name("Min Explode Ratio")
+        .description("Max self damage ratio for exploding a crystal (enemy / self).")
         .defaultValue(0.4)
         .range(0, 5)
         .sliderRange(0, 5)
@@ -360,9 +362,9 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .sliderRange(0, 20)
         .build()
     );
-    private final Setting<Double> maxFriendExpRatio = sgDamage.add(new DoubleSetting.Builder()
-        .name("Max Friend Explode Ratio")
-        .description("Max friend damage ratio for exploding a crystal (friend damage / enemy damage).")
+    private final Setting<Double> minFriendExpRatio = sgDamage.add(new DoubleSetting.Builder()
+        .name("Min Friend Explode Ratio")
+        .description("Min friend damage ratio for exploding a crystal (enemy / friend).")
         .defaultValue(0.5)
         .range(0, 5)
         .sliderRange(0, 5)
@@ -419,16 +421,16 @@ public class AutoCrystalRewrite extends BlackOutModule {
 
     //  Extrapolation Page
     private final Setting<Integer> selfExt = sgExtrapolation.add(new IntSetting.Builder()
-        .name("Self DMG Extrapolation")
-        .description("How many ticks of movement should be predicted, should be lower than normal.")
+        .name("Self Extrapolation")
+        .description("How many ticks of movement should be predicted for self damage checks.")
         .defaultValue(0)
         .range(0, 100)
         .sliderMax(100)
         .build()
     );
     private final Setting<Integer> extrapolation = sgExtrapolation.add(new IntSetting.Builder()
-        .name("DMG Extrapolation")
-        .description("How many ticks of movement should be predicted.")
+        .name("Extrapolation")
+        .description("How many ticks of movement should be predicted for enemy damage checks.")
         .defaultValue(0)
         .range(0, 100)
         .sliderMax(100)
@@ -462,7 +464,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     //  Render Page
     private final Setting<Boolean> render = sgRender.add(new BoolSetting.Builder()
         .name("Render")
-        .description("Renders stuff when placing on placements.")
+        .description("Renders box on placement.")
         .defaultValue(true)
         .build()
     );
@@ -474,13 +476,13 @@ public class AutoCrystalRewrite extends BlackOutModule {
     );
     private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
         .name("Shape Mode")
-        .description(".")
+        .description("Which parts of render should be rendered.")
         .defaultValue(ShapeMode.Both)
         .build()
     );
     private final Setting<Double> renderTime = sgRender.add(new DoubleSetting.Builder()
         .name("Render Time")
-        .description("How long the box should remain in full alpha.")
+        .description("How long the box should remain in full alpha value.")
         .defaultValue(0.3)
         .min(0)
         .sliderRange(0, 10)
@@ -489,7 +491,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     );
     private final Setting<FadeMode> fadeMode = sgRender.add(new EnumSetting.Builder<FadeMode>()
         .name("Fade Mode")
-        .description(".")
+        .description("How long the fading should take.")
         .defaultValue(FadeMode.Normal)
         .visible(() -> renderMode.get() == RenderMode.BlackOut)
         .build()
@@ -522,7 +524,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     private final Setting<Double> animationMoveExponent = sgRender.add(new DoubleSetting.Builder()
         .name("Animation Move Exponent")
         .description("Moves faster when longer away from the target.")
-        .defaultValue(1.3)
+        .defaultValue(2)
         .min(0)
         .sliderRange(0, 10)
         .visible(() -> renderMode.get().equals(RenderMode.BlackOut))
@@ -539,13 +541,13 @@ public class AutoCrystalRewrite extends BlackOutModule {
     );
     private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder()
         .name("Line Color")
-        .description("Line color of rendered stuff")
+        .description("Line color of rendered boxes")
         .defaultValue(new SettingColor(255, 0, 0, 255))
         .build()
     );
     public final Setting<SettingColor> color = sgRender.add(new ColorSetting.Builder()
         .name("Side Color")
-        .description("Side color of rendered stuff")
+        .description("Side color of rendered boxes")
         .defaultValue(new SettingColor(255, 0, 0, 50))
         .build()
     );
@@ -553,14 +555,14 @@ public class AutoCrystalRewrite extends BlackOutModule {
     //  Compatibility Page
     private final Setting<Boolean> surroundAttack = sgCompatibility.add(new BoolSetting.Builder()
         .name("Surround Attack")
-        .description("Attacks any crystal if surround placement is blocked.")
+        .description("Attacks any crystal blocking surround placement.")
         .defaultValue(true)
         .build()
     );
     private final Setting<Double> autoMineDamage = sgCompatibility.add(new DoubleSetting.Builder()
         .name("Auto Mine Damage")
-        .description("Places at automine pos if it deals over 'highest dmg / x' damage.")
-        .defaultValue(2)
+        .description("Prioritizes placing on automine target block.")
+        .defaultValue(1.1)
         .sliderRange(1, 5)
         .min(1)
         .build()
@@ -569,7 +571,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     //  Debug Page
     private final Setting<Boolean> renderExt = sgDebug.add(new BoolSetting.Builder()
         .name("Render Extrapolation")
-        .description("Renders box at players' predicted positions.")
+        .description("Renders boxes at players' predicted positions.")
         .defaultValue(false)
         .build()
     );
@@ -577,76 +579,6 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .name("Render Self Extrapolation")
         .description("Renders box at your predicted position.")
         .defaultValue(false)
-        .build()
-    );
-    private final Setting<Boolean> debugRange = sgDebug.add(new BoolSetting.Builder()
-        .name("Debug Range")
-        .description(".")
-        .defaultValue(false)
-        .build()
-    );
-    private final Setting<Double> debugRangeX = sgDebug.add(new DoubleSetting.Builder()
-        .name("Range Pos X")
-        .description(".")
-        .defaultValue(0)
-        .sliderRange(-1000, 1000)
-        .visible(debugRange::get)
-        .build()
-    );
-    private final Setting<Double> debugRangeY = sgDebug.add(new DoubleSetting.Builder()
-        .name("Range Pos Y")
-        .description(".")
-        .defaultValue(0)
-        .sliderRange(-1000, 1000)
-        .visible(debugRange::get)
-        .build()
-    );
-    private final Setting<Double> debugRangeZ = sgDebug.add(new DoubleSetting.Builder()
-        .name("Range Pos Z")
-        .description(".")
-        .defaultValue(0)
-        .sliderRange(-1000, 1000)
-        .visible(debugRange::get)
-        .build()
-    );
-    private final Setting<Double> debugRangeHeight1 = sgDebug.add(new DoubleSetting.Builder()
-        .name("Debug Range Height 1")
-        .description(".")
-        .defaultValue(0)
-        .sliderRange(-2, 2)
-        .visible(debugRange::get)
-        .build()
-    );
-    private final Setting<Double> debugRangeHeight2 = sgDebug.add(new DoubleSetting.Builder()
-        .name("Debug Range Height 2")
-        .description(".")
-        .defaultValue(0)
-        .sliderRange(-2, 2)
-        .visible(debugRange::get)
-        .build()
-    );
-    private final Setting<Double> debugRangeHeight3 = sgDebug.add(new DoubleSetting.Builder()
-        .name("Debug Range Height 3")
-        .description(".")
-        .defaultValue(0)
-        .sliderRange(-2, 2)
-        .visible(debugRange::get)
-        .build()
-    );
-    private final Setting<Double> debugRangeHeight4 = sgDebug.add(new DoubleSetting.Builder()
-        .name("Debug Range Height 4")
-        .description(".")
-        .defaultValue(0)
-        .sliderRange(-2, 2)
-        .visible(debugRange::get)
-        .build()
-    );
-    private final Setting<Double> debugRangeHeight5 = sgDebug.add(new DoubleSetting.Builder()
-        .name("Debug Range Height 5")
-        .description(".")
-        .defaultValue(0)
-        .sliderRange(-2, 2)
-        .visible(debugRange::get)
         .build()
     );
 
@@ -718,7 +650,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         Gapple,
         Silent,
         InvSilent,
-        SilentBypass
+        PickSilent
     }
     public enum DelayMode {
         Seconds,
@@ -812,14 +744,6 @@ public class AutoCrystalRewrite extends BlackOutModule {
             extPos = getExtPos();
             rangePos = getRangeExt();
             extHitbox = getHitboxExt();
-            if (debugRange.get()) {
-                debug(debugRangeHeight(1) + "  " + dist(debugRangePos(1)) + "\n" +
-                    debugRangeHeight(2) + "  " + dist(debugRangePos(2)) + "\n" +
-                    debugRangeHeight(3) + "  " + dist(debugRangePos(3)) + "\n" +
-                    debugRangeHeight(4) + "  " + dist(debugRangePos(4)) + "\n" +
-                    debugRangeHeight(5) + "  " + dist(debugRangePos(5)) + "\n" +
-                    SettingUtils.attackRangeTo(OLEPOSSUtils.getCrystalBox(new BlockPos(debugRangeX.get(), debugRangeY.get(), debugRangeZ.get())), new Vec3d(debugRangeX.get() + 0.5, debugRangeY.get(), debugRangeZ.get() + 0.5)));
-            }
         }
 
         List<BlockPos> toRemove = new ArrayList<>();
@@ -1041,7 +965,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         double[] value = null;
         boolean shouldProtectSurround = surroundProt();
         Hand hand = getHand(Items.END_CRYSTAL);
-        if (!pausedCheck() && (hand != null || switchMode.get() == SwitchMode.Silent || switchMode.get() == SwitchMode.SilentBypass) && explode.get()) {
+        if (!pausedCheck() && (hand != null || switchMode.get() == SwitchMode.Silent || switchMode.get() == SwitchMode.PickSilent || switchMode.get() == SwitchMode.InvSilent) && explode.get()) {
             for (Entity en : mc.world.getEntities()) {
                 if (en instanceof EndCrystalEntity) {
                     double[] dmg = getDmg(en.getPos())[0];
@@ -1116,9 +1040,9 @@ public class AutoCrystalRewrite extends BlackOutModule {
 
         if (placePos != null && placeDir != null) {
             if (!pausedCheck()) {
-                int silentSlot = InvUtils.find(Items.END_CRYSTAL).slot();
+                int silentSlot = InvUtils.find(itemStack -> itemStack.getItem() == Items.END_CRYSTAL).slot();
                 int hotbar = InvUtils.findInHotbar(Items.END_CRYSTAL).slot();
-                if (handToUse != null || (switchMode.get() == SwitchMode.Silent && hotbar >= 0) || ((switchMode.get() == SwitchMode.SilentBypass || switchMode.get() == SwitchMode.InvSilent) && silentSlot >= 0)) {
+                if (handToUse != null || (switchMode.get() == SwitchMode.Silent && hotbar >= 0) || ((switchMode.get() == SwitchMode.PickSilent || switchMode.get() == SwitchMode.InvSilent) && silentSlot >= 0)) {
                     placing = true;
                     if (speedCheck() && delayCheck()) {
                         if (!SettingUtils.shouldRotate(RotationType.Crystal) || (Managers.ROTATION.start(placePos.down(), smartRot.get() ? new Vec3d(placePos.getX() + 0.5, placePos.getY(), placePos.getZ() + 0.5) : null, priority - 0.1, RotationType.Crystal) && ghostCheck(placePos.down()))) {
@@ -1187,7 +1111,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
             case Silent -> {
                 return InvUtils.findInHotbar(Items.END_CRYSTAL).slot() >= 0;
             }
-            case SilentBypass, InvSilent -> {
+            case PickSilent, InvSilent -> {
                 return InvUtils.find(Items.END_CRYSTAL).slot() >= 0;
             }
             default -> {
@@ -1228,7 +1152,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
             boolean switched = handToUse == null;
             if (switched) {
                 switch (switchMode.get()) {
-                    case SilentBypass -> BOInvUtils.pickSwitch(sl);
+                    case PickSilent -> BOInvUtils.pickSwitch(sl);
                     case Silent -> InvUtils.swap(hsl, true);
                     case InvSilent -> BOInvUtils.invSwitch(sl);
                 }
@@ -1259,7 +1183,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
 
             if (switched) {
                 switch (switchMode.get()) {
-                    case SilentBypass -> BOInvUtils.pickSwapBack();
+                    case PickSilent -> BOInvUtils.pickSwapBack();
                     case Silent -> InvUtils.swapBack();
                     case InvSilent -> BOInvUtils.swapBack();
                 }
@@ -1490,9 +1414,9 @@ public class AutoCrystalRewrite extends BlackOutModule {
 
         //  Max Damage
         if (dmg[1] > maxFriendPlace.get()) {return false;}
-        if (dmg[1] / dmg[0] > maxFriendPlaceRatio.get()) {return false;}
-        if (dmg[2] > maxSelfPlace.get()) {return false;}
-        if (dmg[2] / dmg[0] > maxSelfPlaceRatio.get()) {return false;}
+        if (dmg[0] / dmg[1] < minFriendPlaceRatio.get()) {return false;}
+        if (dmg[2] > maxPlace.get()) {return false;}
+        if (dmg[0] / dmg[2] < minPlaceRatio.get()) {return false;}
 
         return true;
     }
@@ -1528,10 +1452,10 @@ public class AutoCrystalRewrite extends BlackOutModule {
                 return false;
             }
 
-            if (dmg[1] / dmg[0] > maxFriendExpRatio.get()) {
+            if (dmg[1] / dmg[0] < minFriendExpRatio.get()) {
                 return false;
             }
-            if (dmg[2] / dmg[0] > maxSelfExpRatio.get()) {
+            if (dmg[0] / dmg[2] < minExpRatio.get()) {
                 return false;
             }
         }
@@ -1541,7 +1465,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
             if (dmg[1] > maxFriendExp.get()) {
                 return false;
             }
-            if (dmg[2] > maxSelfExp.get()) {
+            if (dmg[2] > maxExp.get()) {
                 return false;
             }
         }
@@ -1622,14 +1546,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     boolean inExplodeRange(Vec3d vec) {
         return SettingUtils.inAttackRange(new Box(vec.getX() - 1, vec.getY(), vec.getZ() - 1, vec.getX() + 1, vec.getY() + 2, vec.getZ() + 1));
     }
-    double dist(Vec3d distances) {
-        return Math.sqrt(distances.x * distances.x + distances.y * distances.y + distances.z * distances.z);
-    }
-    Vec3d debugRangePos(int id) {
-        return mc.player.getEyePos().add(-debugRangeX.get() - 0.5, -debugRangeY.get() - debugRangeHeight(id), -debugRangeZ.get() - 0.5);
-    }
-    double debugRangeHeight(int id) {return id == 1 ? debugRangeHeight1.get() : id == 2 ? debugRangeHeight2.get() : id == 3 ? debugRangeHeight3.get() : id == 4 ? debugRangeHeight4.get() : debugRangeHeight5.get();}
-    double getSpeed() {
+ double getSpeed() {
         return shouldSlow() ? slowSpeed.get() : placeSpeed.get();
     }
     boolean shouldSlow() {return placePos != null && getDmg(new Vec3d(placePos.getX() + 0.5, placePos.getY(), placePos.getZ() + 0.5))[0][0] <= slowDamage.get();}

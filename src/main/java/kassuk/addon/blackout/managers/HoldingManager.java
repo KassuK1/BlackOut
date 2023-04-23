@@ -16,6 +16,7 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 public class HoldingManager {
 
     public int slot;
+    public long modifyStartTime = 0;
 
     public HoldingManager() {
         MeteorClient.EVENT_BUS.subscribe(this);
