@@ -15,7 +15,7 @@ import meteordevelopment.orbit.EventHandler;
  */
 public class ResetVL extends BlackOutModule {
     public ResetVL() {
-        super(BlackOut.BLACKOUT, "ResetVL", "Tries to reset your violation level");
+        super(BlackOut.BLACKOUT, "ResetVL", "Tries to reset your violation level.");
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();

@@ -46,7 +46,7 @@ import java.util.Map;
  */
 public class AnchorAuraPlus extends BlackOutModule {
     public AnchorAuraPlus() {
-        super(BlackOut.BLACKOUT, "Anchor Aura+", "Automatically places and breaks respawn anchors to cause damage to your opponents but better");
+        super(BlackOut.BLACKOUT, "Anchor Aura+", "Automatically places and breaks respawn anchors to cause damage to your opponents but better.");
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();

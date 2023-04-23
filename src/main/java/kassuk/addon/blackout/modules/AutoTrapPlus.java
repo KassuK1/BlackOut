@@ -44,7 +44,7 @@ import java.util.List;
  */
 public class AutoTrapPlus extends BlackOutModule {
     public AutoTrapPlus() {
-        super(BlackOut.BLACKOUT, "Auto Trap+", "Traps enemies (literally selftrap but places on enemies)");
+        super(BlackOut.BLACKOUT, "Auto Trap+", "Traps enemies (literally selftrap but places on enemies).");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgToggle = settings.createGroup("Toggle");

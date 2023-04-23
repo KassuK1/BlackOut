@@ -29,7 +29,7 @@ public class OnTope extends HudElement {
         .defaultValue(1)
         .build()
     );
-    public static final HudElementInfo<OnTope> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "OnTope", "I don't even know what this is", OnTope::new);
+    public static final HudElementInfo<OnTope> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "OnTope", "I don't even know what this is.", OnTope::new);
 
     public OnTope() {
         super(INFO);

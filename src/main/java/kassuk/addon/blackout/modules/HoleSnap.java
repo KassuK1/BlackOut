@@ -25,7 +25,7 @@ import net.minecraft.util.math.Vec3d;
  */
 public class HoleSnap extends BlackOutModule {
     public HoleSnap() {
-        super(BlackOut.BLACKOUT, "Hole Snap", "For the time when you cant even press W.");
+        super(BlackOut.BLACKOUT, "Hole Snap", "For the times when you cant even press W.");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Boolean> singleTarget = sgGeneral.add(new BoolSetting.Builder()

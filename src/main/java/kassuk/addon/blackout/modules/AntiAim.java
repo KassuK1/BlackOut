@@ -21,7 +21,7 @@ import java.util.Random;
  */
 public class AntiAim extends BlackOutModule {
     public AntiAim() {
-        super(BlackOut.BLACKOUT, "Anti Aim", "Funi conter stik module");
+        super(BlackOut.BLACKOUT, "Anti Aim", "Funi conter stik module.");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgIgnore = settings.createGroup("Ignore");

@@ -15,7 +15,7 @@ import net.minecraft.util.Hand;
  */
 public class SwingSettings extends BlackOutModule {
     public SwingSettings() {
-        super(BlackOut.SETTINGS, "Swing", "Global swing settings for every blackout module");
+        super(BlackOut.SETTINGS, "Swing", "Global swing settings for every blackout module.");
     }
 
     private final SettingGroup sgCrystal = settings.createGroup("Crystal");

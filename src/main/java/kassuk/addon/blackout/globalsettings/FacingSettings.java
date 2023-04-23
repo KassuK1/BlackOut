@@ -21,7 +21,7 @@ import java.util.function.Predicate;
  */
 public class FacingSettings extends BlackOutModule {
     public FacingSettings() {
-        super(BlackOut.SETTINGS, "Facing", "Global facing settings for every blackout module");
+        super(BlackOut.SETTINGS, "Facing", "Global facing settings for every blackout module.");
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();

@@ -25,7 +25,7 @@ import java.util.List;
  */
 public class RotationSettings extends BlackOutModule {
     public RotationSettings() {
-        super(BlackOut.SETTINGS, "Rotate", "Global rotation settings for every blackout module");
+        super(BlackOut.SETTINGS, "Rotate", "Global rotation settings for every blackout module.");
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();

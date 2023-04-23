@@ -21,7 +21,7 @@ import net.minecraft.util.Hand;
  */
 public class StrictNoSlow extends BlackOutModule {
     public StrictNoSlow() {
-        super(BlackOut.BLACKOUT, "Strict No Slow", "Should be used with meteor noslow");
+        super(BlackOut.BLACKOUT, "Strict No Slow", "Should only be used on very strict servers. Requires any other noslow to work.");
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();

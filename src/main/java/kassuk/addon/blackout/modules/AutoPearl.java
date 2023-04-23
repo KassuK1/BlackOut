@@ -24,7 +24,7 @@ import net.minecraft.util.math.Vec3d;
  */
 public class AutoPearl extends BlackOutModule {
     public AutoPearl() {
-        super(BlackOut.BLACKOUT, "Auto Pearl", "Easily clip inside walls");
+        super(BlackOut.BLACKOUT, "Auto Pearl", "Easily clip inside walls with pearls.");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Boolean> invSwitch = sgGeneral.add(new BoolSetting.Builder()

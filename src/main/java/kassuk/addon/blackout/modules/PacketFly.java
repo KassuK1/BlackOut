@@ -22,7 +22,7 @@ import java.util.*;
 public class PacketFly extends BlackOutModule {
 
     public PacketFly() {
-        super(BlackOut.BLACKOUT, "Packet Fly", "Flies with packets");
+        super(BlackOut.BLACKOUT, "Packet Fly", "Flies with packets.");
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();

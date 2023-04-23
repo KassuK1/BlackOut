@@ -21,7 +21,7 @@ import net.minecraft.item.Items;
  */
 public class OffHandPlus extends BlackOutModule {
     public OffHandPlus() {
-        super(BlackOut.BLACKOUT, "Offhand+", "Better offhand");
+        super(BlackOut.BLACKOUT, "Offhand+", "Better offhand.");
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();

@@ -15,7 +15,7 @@ import meteordevelopment.orbit.EventHandler;
  */
 public class FlightPlus extends BlackOutModule {
 
-    public FlightPlus() {super(BlackOut.BLACKOUT, "Flight+", "KasumsSoft Flight");}
+    public FlightPlus() {super(BlackOut.BLACKOUT, "Flight+", "KasumsSoft Flight.");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<FlightMode> flyMode = sgGeneral.add(new EnumSetting.Builder<FlightMode>()

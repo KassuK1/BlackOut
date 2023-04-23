@@ -43,7 +43,7 @@ import java.util.Map;
  */
 public class HoleFillRewrite extends BlackOutModule {
     public HoleFillRewrite() {
-        super(BlackOut.BLACKOUT, "Hole Fill+", "Automatically is a cunt to your enemies");
+        super(BlackOut.BLACKOUT, "Hole Fill+", "Automatically is a cunt to your enemies.");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgRender = settings.createGroup("Render");

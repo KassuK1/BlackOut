@@ -14,7 +14,7 @@ import net.minecraft.util.math.*;
  */
 public class RangeSettings extends BlackOutModule {
     public RangeSettings() {
-        super(BlackOut.SETTINGS, "Range", "Global range settings for every blackout module");
+        super(BlackOut.SETTINGS, "Range", "Global range settings for every blackout module.");
     }
 
     private final SettingGroup sgPlace = settings.createGroup("Placing");

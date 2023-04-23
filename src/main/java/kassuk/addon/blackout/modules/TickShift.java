@@ -15,7 +15,7 @@ import meteordevelopment.orbit.EventHandler;
 public class TickShift extends BlackOutModule {
 
     public TickShift() {
-        super(BlackOut.BLACKOUT, "Tick Shift", ".");
+        super(BlackOut.BLACKOUT, "Tick Shift", "Stores packets when standing still and uses them when you start moving.");
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();

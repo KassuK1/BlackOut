@@ -15,7 +15,7 @@ import net.minecraft.util.Hand;
  */
 public class SwingModifier extends BlackOutModule {
     public SwingModifier() {
-        super(BlackOut.BLACKOUT, "Swing Modifier", "Modifies swing rendering");
+        super(BlackOut.BLACKOUT, "Swing Modifier", "Modifies swing rendering.");
     }
     private final SettingGroup sgMainHand = settings.createGroup("Main Hand");
     private final SettingGroup sgOffHand = settings.createGroup("Off Hand");

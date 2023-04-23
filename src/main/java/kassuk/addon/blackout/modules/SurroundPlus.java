@@ -40,7 +40,7 @@ import java.util.*;
  */
 public class SurroundPlus extends BlackOutModule {
     public SurroundPlus() {
-        super(BlackOut.BLACKOUT, "Surround+", "KasumsSoft surround");
+        super(BlackOut.BLACKOUT, "Surround+", "Places blocks around your legs to protect from explosions.");
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();

@@ -19,7 +19,7 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
  * @author KassuK
  */
 public class Keys extends HudElement {
-    public static final HudElementInfo<Keys> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "Keys", "Draws current movement keys", Keys::new);
+    public static final HudElementInfo<Keys> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "Keys", "Draws pressed movement keys.", Keys::new);
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<Double> scale = sgGeneral.add(new DoubleSetting.Builder()

@@ -55,7 +55,7 @@ import net.minecraft.util.math.Vec3d;
  */
 public class AutoMine extends BlackOutModule {
     public AutoMine() {
-        super(BlackOut.BLACKOUT, "Auto Mine", "For the times your too lazy or bad to press your break bind");
+        super(BlackOut.BLACKOUT, "Auto Mine", "Automatically mines blocks to destroy your enemies.");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgValue = settings.createGroup("Priority");

@@ -40,7 +40,7 @@ import java.util.List;
  */
 public class SelfTrapPlus extends BlackOutModule {
     public SelfTrapPlus() {
-        super(BlackOut.BLACKOUT, "Self Trap+", "Traps yourself");
+        super(BlackOut.BLACKOUT, "Self Trap+", "Traps yourself with blocks.");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgToggle = settings.createGroup("Toggle");

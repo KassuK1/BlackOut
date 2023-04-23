@@ -28,7 +28,7 @@ import java.util.List;
  * @author OLEPOSSU
  */
 public class AutoMend extends BlackOutModule {
-    public AutoMend() {super(BlackOut.BLACKOUT, "Auto Mend", "Automatically mends your armor with experience bottles");}
+    public AutoMend() {super(BlackOut.BLACKOUT, "Auto Mend", "Automatically mends your armor with experience bottles.");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<Boolean> autoCrystal = sgGeneral.add(new BoolSetting.Builder()
         .name("Auto Crystal Pause")

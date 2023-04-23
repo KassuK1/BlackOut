@@ -12,7 +12,7 @@ import meteordevelopment.meteorclient.settings.SettingGroup;
  */
 public class SoundModifier extends BlackOutModule {
     public SoundModifier() {
-        super(BlackOut.BLACKOUT, "Sound Modifier", "Modifies sounds to make crystal pvp less horrible for ears");
+        super(BlackOut.BLACKOUT, "Sound Modifier", "Modifies sounds to make crystal pvp less horrible for ears.");
     }
 
     private final SettingGroup sgCrystal = settings.createGroup("Crystal");

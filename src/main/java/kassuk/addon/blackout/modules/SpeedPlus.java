@@ -20,7 +20,7 @@ import net.minecraft.util.math.BlockPos;
  * @author OLEPOSSU
  */
 public class SpeedPlus extends BlackOutModule {
-    public SpeedPlus() {super(BlackOut.BLACKOUT, "Speed+", "Speeeeeeeed");}
+    public SpeedPlus() {super(BlackOut.BLACKOUT, "Speed+", "Speeeeeeeed.");}
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgPause = settings.createGroup("Pause");
     private final Setting<SpeedMode> mode = sgGeneral.add(new EnumSetting.Builder<SpeedMode>()

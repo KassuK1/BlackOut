@@ -22,7 +22,7 @@ import java.util.Random;
  */
 public class PacketCrash extends BlackOutModule {
     public PacketCrash() {
-        super(BlackOut.BLACKOUT, "Packet Crash", "Sends packets");
+        super(BlackOut.BLACKOUT, "Packet Crash", "Sends packets.");
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();

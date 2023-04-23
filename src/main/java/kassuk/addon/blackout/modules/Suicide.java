@@ -14,7 +14,7 @@ import net.minecraft.client.gui.screen.DeathScreen;
  */
 public class Suicide extends BlackOutModule {
     public Suicide() {
-        super(BlackOut.BLACKOUT, "Suicide", "Speeeeeeeed");
+        super(BlackOut.BLACKOUT, "Suicide", "Kills yourself. Recommended.");
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
