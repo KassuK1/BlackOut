@@ -45,7 +45,6 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new AutoPearl());
         Modules.get().add(new AutoTrapPlus());
         Modules.get().add(new BedAuraPlus());
-        Modules.get().add(new ButtonAura());
         Modules.get().add(new CustomFOV());
         Modules.get().add(new FastXP());
         Modules.get().add(new FeetESP());
@@ -55,7 +54,6 @@ public class BlackOut extends MeteorAddon {
         Modules.get().add(new HoleSnap());
         Modules.get().add(new KassuKAura());
         Modules.get().add(new LightsOut());
-        Modules.get().add(new JumpModify());
         Modules.get().add(new OffHandPlus());
         Modules.get().add(new PacketCrash());
         Modules.get().add(new PacketFly());
