@@ -1405,6 +1405,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
 
         //  Force/anti-pop check
         double playerHP = mc.player.getHealth() + mc.player.getAbsorptionAmount();
+
         if (playerHP >= 0 && dmg[2] * antiSelfPop.get() >= playerHP) {return false;}
         if (health[1] >= 0 && dmg[1] * antiFriendPop.get() >= health[1]) {return false;}
         if (health[0] >= 0 && dmg[0] * forcePop.get() >= health[0]) {return true;}
@@ -1414,9 +1415,9 @@ public class AutoCrystalRewrite extends BlackOutModule {
 
         //  Max Damage
         if (dmg[1] > maxFriendPlace.get()) {return false;}
-        if (dmg[0] / dmg[1] < minFriendPlaceRatio.get()) {return false;}
+        if (dmg[1] >= 0 && dmg[0] / dmg[1] < minFriendPlaceRatio.get()) {return false;}
         if (dmg[2] > maxPlace.get()) {return false;}
-        if (dmg[0] / dmg[2] < minPlaceRatio.get()) {return false;}
+        if (dmg[2] >= 0 && dmg[0] / dmg[2] < minPlaceRatio.get()) {return false;}
 
         return true;
     }
@@ -1452,10 +1453,10 @@ public class AutoCrystalRewrite extends BlackOutModule {
                 return false;
             }
 
-            if (dmg[1] / dmg[0] < minFriendExpRatio.get()) {
+            if (dmg[1] >= 0 && dmg[1] / dmg[0] < minFriendExpRatio.get()) {
                 return false;
             }
-            if (dmg[0] / dmg[2] < minExpRatio.get()) {
+            if (dmg[2] >= 0 && dmg[0] / dmg[2] < minExpRatio.get()) {
                 return false;
             }
         }

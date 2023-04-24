@@ -55,19 +55,19 @@ public class TargetHud extends HudElement {
     private final Setting<SettingColor> maxHP = sgGeneral.add(new ColorSetting.Builder()
         .name("Max Health Color")
         .description(BlackOut.COLOR)
-        .defaultValue(new SettingColor(255, 255, 0, 200))
+        .defaultValue(new SettingColor(255, 255, 0, 255))
         .build()
     );
     private final Setting<SettingColor> highHP = sgGeneral.add(new ColorSetting.Builder()
         .name("High Health Color")
         .description(BlackOut.COLOR)
-        .defaultValue(new SettingColor(0, 255, 0, 200))
+        .defaultValue(new SettingColor(0, 255, 0, 255))
         .build()
     );
     private final Setting<SettingColor> lowHP = sgGeneral.add(new ColorSetting.Builder()
         .name("Low Health Color")
         .description(BlackOut.COLOR)
-        .defaultValue(new SettingColor(255, 0, 0, 200))
+        .defaultValue(new SettingColor(255, 0, 0, 255))
         .build()
     );
 

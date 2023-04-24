@@ -42,6 +42,12 @@ public class FeetESP extends BlackOutModule {
         .defaultValue(true)
         .build()
     );
+    private final Setting<Boolean> self = sgGeneral.add(new BoolSetting.Builder()
+        .name("Self")
+        .description("Renders own feet.")
+        .defaultValue(true)
+        .build()
+    );
     private final Setting<ShapeMode> shapeMode = sgGeneral.add(new EnumSetting.Builder<ShapeMode>()
         .name("Shape Mode")
         .description("Which parts of feet should be rendered")
@@ -77,7 +83,8 @@ public class FeetESP extends BlackOutModule {
             if (player.distanceTo(mc.player) > range.get()) {return;}
 
             if (!friend.get() && Friends.get().isFriend(player)) {return;}
-            if (!other.get() && !Friends.get().isFriend(player)) {return;}
+            if (!other.get() && player != mc.player && !Friends.get().isFriend(player)) {return;}
+            if (!self.get() && mc.player == player) {return;}
 
             render(event, new Vec3d(
                 lerp(mc.getTickDelta(), player.prevX, player.getX()),
