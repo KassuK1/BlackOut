@@ -47,8 +47,11 @@ public class AutoTrapPlus extends BlackOutModule {
         super(BlackOut.BLACKOUT, "Auto Trap+", "Traps enemies (literally selftrap but places on enemies).");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final SettingGroup sgPlacing = settings.createGroup("Placing");
     private final SettingGroup sgToggle = settings.createGroup("Toggle");
     private final SettingGroup sgRender = settings.createGroup("Render");
+
+    //   General Page
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
         .name("Pause Eat")
         .description("Pauses when you are eating.")
@@ -67,12 +70,6 @@ public class AutoTrapPlus extends BlackOutModule {
         .defaultValue(SwitchMode.Silent)
         .build()
     );
-    private final Setting<List<Block>> blocks = sgGeneral.add(new BlockListSetting.Builder()
-        .name("Blocks")
-        .description("Blocks to use.")
-        .defaultValue(Blocks.OBSIDIAN, Blocks.CRYING_OBSIDIAN, Blocks.NETHERITE_BLOCK)
-        .build()
-    );
     private final Setting<TrapMode> trapMode = sgGeneral.add(new EnumSetting.Builder<TrapMode>()
         .name("Trap Mode")
         .description("Where should the blocks be placed at.")
@@ -85,7 +82,15 @@ public class AutoTrapPlus extends BlackOutModule {
         .defaultValue(false)
         .build()
     );
-    private final Setting<Double> placeDelay = sgGeneral.add(new DoubleSetting.Builder()
+
+    //   Placing Page
+    private final Setting<List<Block>> blocks = sgPlacing.add(new BlockListSetting.Builder()
+        .name("Blocks")
+        .description("Blocks to use.")
+        .defaultValue(Blocks.OBSIDIAN, Blocks.CRYING_OBSIDIAN, Blocks.NETHERITE_BLOCK)
+        .build()
+    );
+    private final Setting<Double> placeDelay = sgPlacing.add(new DoubleSetting.Builder()
         .name("Place Delay")
         .description("Delay between places.")
         .defaultValue(0.1)
@@ -93,7 +98,7 @@ public class AutoTrapPlus extends BlackOutModule {
         .sliderRange(0, 10)
         .build()
     );
-    private final Setting<Integer> places = sgGeneral.add(new IntSetting.Builder()
+    private final Setting<Integer> places = sgPlacing.add(new IntSetting.Builder()
         .name("Places")
         .description("Blocks placed per place.")
         .defaultValue(1)
@@ -101,7 +106,7 @@ public class AutoTrapPlus extends BlackOutModule {
         .sliderRange(1, 10)
         .build()
     );
-    private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
+    private final Setting<Double> delay = sgPlacing.add(new DoubleSetting.Builder()
         .name("Delay")
         .description("Delay between places at each spot. Should be at about 1.5x ping.")
         .defaultValue(0.3)

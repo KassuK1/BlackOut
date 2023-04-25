@@ -1,4 +1,4 @@
-![banner](https://raw.githubusercontent.com/KassuK1/BlackOut/main/src/main/resources/assets/logo.png)
+![banner](https://raw.githubusercontent.com/KassuK1/BlackOut/main/src/main/resources/assets/blackout/logo.png)
 
 ![Lines of code](https://img.shields.io/tokei/lines/github/KassuK1/BlackOut?color=blue&label=lines%20of%20code&style=for-the-badge)
 [![Discord](https://img.shields.io/discord/1020709439742947380?color=blue&label=Discord&logo=Discord&style=for-the-badge)](https://discord.gg/mmWz9Dz4Y9)

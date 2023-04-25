@@ -46,22 +46,11 @@ public class HoleFillRewrite extends BlackOutModule {
         super(BlackOut.BLACKOUT, "Hole Fill+", "Automatically is a cunt to your enemies.");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final SettingGroup sgPlacing = settings.createGroup("Placing");
     private final SettingGroup sgRender = settings.createGroup("Render");
     private final SettingGroup sgHole = settings.createGroup("Hole");
 
     //   General Page
-    private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
-        .name("Switch Mode")
-        .description(".")
-        .defaultValue(SwitchMode.InvSwitch)
-        .build()
-    );
-    private final Setting<List<Block>> blocks = sgGeneral.add(new BlockListSetting.Builder()
-        .name("Blocks")
-        .description("Which blocks to use.")
-        .defaultValue(Blocks.OBSIDIAN, Blocks.CRYING_OBSIDIAN, Blocks.NETHERITE_BLOCK)
-        .build()
-    );
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
         .name("Pause Eat")
         .description("Pauses when you are eating")
@@ -94,7 +83,21 @@ public class HoleFillRewrite extends BlackOutModule {
         .sliderMax(10)
         .build()
     );
-    private final Setting<Double> placeDelay = sgGeneral.add(new DoubleSetting.Builder()
+
+    //  Placing Page
+    private final Setting<SwitchMode> switchMode = sgPlacing.add(new EnumSetting.Builder<SwitchMode>()
+        .name("Switch Mode")
+        .description("Method of switching. Silent is the most reliable but delays crystals on some servers.")
+        .defaultValue(SwitchMode.Silent)
+        .build()
+    );
+    private final Setting<List<Block>> blocks = sgPlacing.add(new BlockListSetting.Builder()
+        .name("Blocks")
+        .description("Which blocks to use.")
+        .defaultValue(Blocks.OBSIDIAN, Blocks.CRYING_OBSIDIAN, Blocks.NETHERITE_BLOCK)
+        .build()
+    );
+    private final Setting<Double> placeDelay = sgPlacing.add(new DoubleSetting.Builder()
         .name("Place Delay")
         .description("Delay between places.")
         .defaultValue(0.125)
@@ -102,7 +105,7 @@ public class HoleFillRewrite extends BlackOutModule {
         .sliderRange(0, 10)
         .build()
     );
-    private final Setting<Integer> places = sgGeneral.add(new IntSetting.Builder()
+    private final Setting<Integer> places = sgPlacing.add(new IntSetting.Builder()
         .name("Places")
         .description("Blocks placed per place")
         .defaultValue(1)
@@ -110,7 +113,7 @@ public class HoleFillRewrite extends BlackOutModule {
         .sliderRange(1, 10)
         .build()
     );
-    private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
+    private final Setting<Double> delay = sgPlacing.add(new DoubleSetting.Builder()
         .name("Delay")
         .description("Delay between places at single spot.")
         .defaultValue(1)

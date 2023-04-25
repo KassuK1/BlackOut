@@ -28,12 +28,9 @@ public class HoleSnap extends BlackOutModule {
         super(BlackOut.BLACKOUT, "Hole Snap", "For the times when you cant even press W.");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private final Setting<Boolean> singleTarget = sgGeneral.add(new BoolSetting.Builder()
-        .name("Single Target")
-        .description("Only chooses target hole once.")
-        .defaultValue(true)
-        .build()
-    );
+    private final SettingGroup sgSpeed = settings.createGroup("Speed");
+    private final SettingGroup sgHole = settings.createGroup("Hole");
+    //   General Page
     private final Setting<Boolean> jump = sgGeneral.add(new BoolSetting.Builder()
         .name("Jump")
         .description("Jumps to the hole (very useful).")
@@ -45,46 +42,6 @@ public class HoleSnap extends BlackOutModule {
         .description("Ticks between jumps.")
         .defaultValue(5)
         .range(0, 100)
-        .sliderMax(100)
-        .build()
-    );
-    private final Setting<Double> speed = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Speed")
-        .description("Movement Speed.")
-        .defaultValue(0.2873)
-        .min(0)
-        .sliderMax(1)
-        .build()
-    );
-    private final Setting<Boolean> boost = sgGeneral.add(new BoolSetting.Builder()
-        .name("Speed Boost")
-        .description("Jumps to the hole (very useful).")
-        .defaultValue(false)
-        .build()
-    );
-    private final Setting<Double> boostedSpeed = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Boosted Speed")
-        .description("Movement Speed.")
-        .defaultValue(0.5)
-        .min(0)
-        .sliderMax(1)
-        .visible(boost::get)
-        .build()
-    );
-    private final Setting<Integer> boostTicks = sgGeneral.add(new IntSetting.Builder()
-        .name("Boost Ticks")
-        .description("How many boosted speed packets should be sent before returning to normal speed.")
-        .defaultValue(3)
-        .min(1)
-        .sliderMax(10)
-        .visible(boost::get)
-        .build()
-    );
-    private final Setting<Double> timer = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Timer")
-        .description("Sends packets faster.")
-        .defaultValue(10)
-        .min(0)
         .sliderMax(100)
         .build()
     );
@@ -104,14 +61,6 @@ public class HoleSnap extends BlackOutModule {
         .sliderMax(10)
         .build()
     );
-    private final Setting<Integer> depth = sgGeneral.add(new IntSetting.Builder()
-        .name("Hole Depth")
-        .description("How deep a hole has to be.")
-        .defaultValue(3)
-        .range(1, 10)
-        .sliderRange(1, 10)
-        .build()
-    );
     private final Setting<Integer> coll = sgGeneral.add(new IntSetting.Builder()
         .name("Collisions to disable")
         .description("0 = doesn't disable.")
@@ -126,19 +75,77 @@ public class HoleSnap extends BlackOutModule {
         .sliderRange(0, 100)
         .build()
     );
-    private final Setting<Boolean> singleHoles = sgGeneral.add(new BoolSetting.Builder()
+
+    //   Speed Page
+    private final Setting<Double> speed = sgSpeed.add(new DoubleSetting.Builder()
+        .name("Speed")
+        .description("Movement Speed.")
+        .defaultValue(0.2873)
+        .min(0)
+        .sliderMax(1)
+        .build()
+    );
+    private final Setting<Boolean> boost = sgSpeed.add(new BoolSetting.Builder()
+        .name("Speed Boost")
+        .description("Jumps to the hole (very useful).")
+        .defaultValue(false)
+        .build()
+    );
+    private final Setting<Double> boostedSpeed = sgSpeed.add(new DoubleSetting.Builder()
+        .name("Boosted Speed")
+        .description("Movement Speed.")
+        .defaultValue(0.5)
+        .min(0)
+        .sliderMax(1)
+        .visible(boost::get)
+        .build()
+    );
+    private final Setting<Integer> boostTicks = sgSpeed.add(new IntSetting.Builder()
+        .name("Boost Ticks")
+        .description("How many boosted speed packets should be sent before returning to normal speed.")
+        .defaultValue(3)
+        .min(1)
+        .sliderMax(10)
+        .visible(boost::get)
+        .build()
+    );
+    private final Setting<Double> timer = sgSpeed.add(new DoubleSetting.Builder()
+        .name("Timer")
+        .description("Sends packets faster.")
+        .defaultValue(10)
+        .min(0)
+        .sliderMax(100)
+        .build()
+    );
+
+    //   Hole Page
+    private final Setting<Boolean> singleTarget = sgHole.add(new BoolSetting.Builder()
+        .name("Single Target")
+        .description("Only chooses target hole once.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Integer> depth = sgHole.add(new IntSetting.Builder()
+        .name("Hole Depth")
+        .description("How deep a hole has to be.")
+        .defaultValue(3)
+        .range(1, 10)
+        .sliderRange(1, 10)
+        .build()
+    );
+    private final Setting<Boolean> singleHoles = sgHole.add(new BoolSetting.Builder()
         .name("Single Holes")
         .description("Targets single block holes.")
         .defaultValue(true)
         .build()
     );
-    private final Setting<Boolean> doubleHoles = sgGeneral.add(new BoolSetting.Builder()
+    private final Setting<Boolean> doubleHoles = sgHole.add(new BoolSetting.Builder()
         .name("Double Holes")
         .description("Targets double holes.")
         .defaultValue(true)
         .build()
     );
-    private final Setting<Boolean> quadHoles = sgGeneral.add(new BoolSetting.Builder()
+    private final Setting<Boolean> quadHoles = sgHole.add(new BoolSetting.Builder()
         .name("Quad Holes")
         .description("Targets quad holes.")
         .defaultValue(true)
