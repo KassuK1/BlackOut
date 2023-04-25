@@ -56,6 +56,30 @@ public class HoleSnap extends BlackOutModule {
         .sliderMax(1)
         .build()
     );
+    private final Setting<Boolean> boost = sgGeneral.add(new BoolSetting.Builder()
+        .name("Speed Boost")
+        .description("Jumps to the hole (very useful).")
+        .defaultValue(false)
+        .build()
+    );
+    private final Setting<Double> boostedSpeed = sgGeneral.add(new DoubleSetting.Builder()
+        .name("Boosted Speed")
+        .description("Movement Speed.")
+        .defaultValue(0.5)
+        .min(0)
+        .sliderMax(1)
+        .visible(boost::get)
+        .build()
+    );
+    private final Setting<Integer> boostTicks = sgGeneral.add(new IntSetting.Builder()
+        .name("Boost Ticks")
+        .description("How many boosted speed packets should be sent before returning to normal speed.")
+        .defaultValue(3)
+        .min(1)
+        .sliderMax(10)
+        .visible(boost::get)
+        .build()
+    );
     private final Setting<Double> timer = sgGeneral.add(new DoubleSetting.Builder()
         .name("Timer")
         .description("Sends packets faster.")
@@ -125,6 +149,7 @@ public class HoleSnap extends BlackOutModule {
     private int collisions;
     private int rubberbands;
     private int ticks;
+    private int boostLeft = 0;
 
     @Override
     public void onActivate() {
@@ -132,6 +157,7 @@ public class HoleSnap extends BlackOutModule {
         singleHole = findHole();
         rubberbands = 0;
         ticks = 0;
+        boostLeft = boost.get() ? boostTicks.get() : 0;
     }
 
     @Override
@@ -172,9 +198,9 @@ public class HoleSnap extends BlackOutModule {
                         ((IVec3d) event.movement).setXZ(0, 0);
                     }
                 } else {
-                    double x = speed.get() * yaw;
+                    double x = getSpeed() * yaw;
                     double dX = hole.middle.x - mc.player.getX();
-                    double z = speed.get() * pit;
+                    double z = getSpeed() * pit;
                     double dZ = hole.middle.z - mc.player.getZ();
                     if (OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox().offset(x, 0, z))) {
                         collisions++;
@@ -191,6 +217,7 @@ public class HoleSnap extends BlackOutModule {
                         ticks = jumpCoolDown.get();
                         ((IVec3d) event.movement).setY(0.42);
                     }
+                    boostLeft--;
                     ((IVec3d) event.movement).setXZ(Math.abs(x) < Math.abs(dX) ? x : dX, Math.abs(z) < Math.abs(dZ) ? z : dZ);
                 }
             } else {
@@ -200,7 +227,7 @@ public class HoleSnap extends BlackOutModule {
         }
     }
 
-    boolean singleBlocked() {
+    private boolean singleBlocked() {
         for (BlockPos pos : singleHole.positions) {
             if (mc.world.getBlockState(pos).getBlock() != Blocks.AIR) {
                 return true;
@@ -209,7 +236,7 @@ public class HoleSnap extends BlackOutModule {
         return false;
     }
 
-    Hole findHole() {
+    private Hole findHole() {
         Hole closest = null;
 
         for (int x = -range.get(); x <= range.get(); x++) {
@@ -236,7 +263,7 @@ public class HoleSnap extends BlackOutModule {
         return closest;
     }
 
-    boolean inHole(Hole hole) {
+    private boolean inHole(Hole hole) {
         for (BlockPos pos : hole.positions) {
             if (mc.player.getBlockPos().equals(pos)) {
                 return true;
@@ -245,8 +272,11 @@ public class HoleSnap extends BlackOutModule {
         return false;
     }
 
-    float getAngle(Vec3d pos)
+    private float getAngle(Vec3d pos)
     {
         return (float) Rotations.getYaw(pos);
+    }
+    private double getSpeed() {
+        return boostLeft > 0 ? boostedSpeed.get() : speed.get();
     }
 }

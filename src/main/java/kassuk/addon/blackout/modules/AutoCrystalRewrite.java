@@ -303,7 +303,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     private final Setting<Double> minPlaceRatio = sgDamage.add(new DoubleSetting.Builder()
         .name("Min Place Ratio")
         .description("Max self damage ratio for placing (enemy / self).")
-        .defaultValue(0.3)
+        .defaultValue(3)
         .range(0, 5)
         .sliderRange(0, 5)
         .build()
@@ -319,7 +319,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     private final Setting<Double> minFriendPlaceRatio = sgDamage.add(new DoubleSetting.Builder()
         .name("Min Friend Place Ratio")
         .description("Max friend damage ratio for placing (enemy / friend).")
-        .defaultValue(0.5)
+        .defaultValue(2)
         .range(0, 5)
         .sliderRange(0, 5)
         .build()
@@ -349,7 +349,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     private final Setting<Double> minExpRatio = sgDamage.add(new DoubleSetting.Builder()
         .name("Min Explode Ratio")
         .description("Max self damage ratio for exploding a crystal (enemy / self).")
-        .defaultValue(0.4)
+        .defaultValue(2.5)
         .range(0, 5)
         .sliderRange(0, 5)
         .build()
@@ -365,7 +365,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     private final Setting<Double> minFriendExpRatio = sgDamage.add(new DoubleSetting.Builder()
         .name("Min Friend Explode Ratio")
         .description("Min friend damage ratio for exploding a crystal (enemy / friend).")
-        .defaultValue(0.5)
+        .defaultValue(2)
         .range(0, 5)
         .sliderRange(0, 5)
         .build()
@@ -1489,7 +1489,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         self = BODamageUtils.crystalDamage(mc.player, extPos.containsKey(mc.player) ? extPos.get(mc.player) : mc.player.getBoundingBox(), vec, null, ignoreTerrain.get());
 
         if (suicide) {
-            return new double[][]{new double[] {self, 0, 0}, new double[]{20, 20}};
+            return new double[][]{new double[] {self, -1, -1}, new double[]{20, 20}};
         }
         if (dmgCache.containsKey(vec)) {
             return dmgCache.get(vec);

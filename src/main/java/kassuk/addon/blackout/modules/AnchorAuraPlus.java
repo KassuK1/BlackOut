@@ -57,7 +57,7 @@ public class AnchorAuraPlus extends BlackOutModule {
     //   General Page
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
         .name("Pause Eat")
-        .description("Pauses when you are eating")
+        .description("Pauses when you are eating.")
         .defaultValue(true)
         .build()
     );
