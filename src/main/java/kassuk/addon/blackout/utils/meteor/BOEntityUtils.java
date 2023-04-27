@@ -1,3 +1,7 @@
+/*
+Modified from Meteor Client
+https://github.com/MeteorDevelopment/meteor-client/blob/master/src/main/java/meteordevelopment/meteorclient/utils/entity/EntityUtils.java
+ */
 package kassuk.addon.blackout.utils.meteor;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
@@ -23,10 +27,6 @@ import java.util.function.Predicate;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class BOEntityUtils {
-
-    //Code is from meteor client https://github.com/MeteorDevelopment/meteor-client/blob/master/src/main/java/meteordevelopment/meteorclient/utils/entity/EntityUtils.java
-
-
     // Meteor guys are some wizards for making this
     public static boolean intersectsWithEntity(Box box, Predicate<Entity> predicate, Map<PlayerEntity, Box> customBoxes) {
         EntityLookup<Entity> entityLookup = ((WorldAccessor) mc.world).getEntityLookup();

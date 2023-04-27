@@ -1276,6 +1276,10 @@ public class AutoCrystalRewrite extends BlackOutModule {
             SettingUtils.registerAttack(bb);
             mc.player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(en, mc.player.isSneaking()));
 
+            if (surroundAttack.get()) {
+                SurroundPlus.attacked = 2;
+            }
+
             SettingUtils.swing(SwingState.Post, SwingType.Attacking, Hand.MAIN_HAND);
 
             blocked.clear();
@@ -1731,7 +1735,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
                 }
             }
         }
-        return new Vec3d((box.minX + box.maxX) / 2, box.minY + mc.player.getEyeHeight(mc.player.getPose()), (box.minZ + box.maxZ) / 2);
+        return new Vec3d((box.minX + box.maxX) / 2, box.minY, (box.minZ + box.maxZ) / 2);
     }
 
     Vec3d average(List<Vec3d> vec) {

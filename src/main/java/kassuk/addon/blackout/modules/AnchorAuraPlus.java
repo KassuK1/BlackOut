@@ -50,7 +50,6 @@ public class AnchorAuraPlus extends BlackOutModule {
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private final SettingGroup sgPlacing = settings.createGroup("Placing");
     private final SettingGroup sgDamage = settings.createGroup("Damage");
     private final SettingGroup sgRender = settings.createGroup("Render");
 
@@ -73,9 +72,7 @@ public class AnchorAuraPlus extends BlackOutModule {
         .defaultValue(SwitchMode.Silent)
         .build()
     );
-
-    //   Placing Page
-    private final Setting<Double> speed = sgPlacing.add(new DoubleSetting.Builder()
+    private final Setting<Double> speed = sgGeneral.add(new DoubleSetting.Builder()
         .name("Speed")
         .description("How many anchors should be blown every second.")
         .defaultValue(2)

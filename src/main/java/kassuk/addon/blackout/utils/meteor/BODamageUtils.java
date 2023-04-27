@@ -1,3 +1,7 @@
+/*
+Modified from Meteor Client
+https://github.com/MeteorDevelopment/meteor-client/blob/master/src/main/java/meteordevelopment/meteorclient/utils/player/DamageUtils.java
+*/
 package kassuk.addon.blackout.utils.meteor;
 
 import meteordevelopment.meteorclient.MeteorClient;
@@ -34,11 +38,6 @@ import net.minecraft.world.explosion.Explosion;
 import java.util.Objects;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
-
-/*
-Code is from meteor client https://github.com/MeteorDevelopment/meteor-client/blob/master/src/main/java/meteordevelopment/meteorclient/utils/player/DamageUtils.java
-got permission to use it from seasnail
- */
 
 public class BODamageUtils {
     private static final Vec3d vec3d = new Vec3d(0, 0, 0);

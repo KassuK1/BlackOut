@@ -43,6 +43,7 @@ public class SelfTrapPlus extends BlackOutModule {
         super(BlackOut.BLACKOUT, "Self Trap+", "Traps yourself with blocks.");
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final SettingGroup sgPlacing = settings.createGroup("Placing");
     private final SettingGroup sgToggle = settings.createGroup("Toggle");
     private final SettingGroup sgRender = settings.createGroup("Render");
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
@@ -63,19 +64,22 @@ public class SelfTrapPlus extends BlackOutModule {
         .defaultValue(SwitchMode.Silent)
         .build()
     );
-    private final Setting<List<Block>> blocks = sgGeneral.add(new BlockListSetting.Builder()
-        .name("Blocks")
-        .description("Blocks to use.")
-        .defaultValue(Blocks.OBSIDIAN, Blocks.CRYING_OBSIDIAN, Blocks.NETHERITE_BLOCK)
-        .build()
-    );
+
     private final Setting<TrapMode> trapMode = sgGeneral.add(new EnumSetting.Builder<TrapMode>()
         .name("Trap Mode")
         .description("Where to place blocks.")
         .defaultValue(TrapMode.Both)
         .build()
     );
-    private final Setting<Double> placeDelay = sgGeneral.add(new DoubleSetting.Builder()
+
+    //   Placing Page
+    private final Setting<List<Block>> blocks = sgPlacing.add(new BlockListSetting.Builder()
+        .name("Blocks")
+        .description("Blocks to use.")
+        .defaultValue(Blocks.OBSIDIAN, Blocks.CRYING_OBSIDIAN, Blocks.NETHERITE_BLOCK)
+        .build()
+    );
+    private final Setting<Double> placeDelay = sgPlacing.add(new DoubleSetting.Builder()
         .name("Place Delay")
         .description("Delay between places.")
         .defaultValue(0.125)
@@ -83,7 +87,7 @@ public class SelfTrapPlus extends BlackOutModule {
         .sliderRange(0, 10)
         .build()
     );
-    private final Setting<Integer> places = sgGeneral.add(new IntSetting.Builder()
+    private final Setting<Integer> places = sgPlacing.add(new IntSetting.Builder()
         .name("Places")
         .description("Blocks placed per place.")
         .defaultValue(1)
@@ -91,7 +95,7 @@ public class SelfTrapPlus extends BlackOutModule {
         .sliderRange(1, 10)
         .build()
     );
-    private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
+    private final Setting<Double> delay = sgPlacing.add(new DoubleSetting.Builder()
         .name("Delay")
         .description("Delay between places at each spot.")
         .defaultValue(0.3)
@@ -100,7 +104,7 @@ public class SelfTrapPlus extends BlackOutModule {
         .build()
     );
 
-    //  Toggle Page
+    //   Toggle Page
     private final Setting<Boolean> toggleMove = sgToggle.add(new BoolSetting.Builder()
         .name("Toggle Move")
         .description("Toggles when you move horizontally.")
@@ -120,7 +124,7 @@ public class SelfTrapPlus extends BlackOutModule {
         .build()
     );
 
-    //  Render Page
+    //   Render Page
     private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
         .name("Shape Mode")
         .description("Which parts of the boxes should be rendered.")

@@ -8,7 +8,9 @@ import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.timers.BlockTimerList;
 import kassuk.addon.blackout.utils.*;
+import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
+import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
@@ -19,11 +21,13 @@ import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -44,6 +48,7 @@ public class SurroundPlus extends BlackOutModule {
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final SettingGroup sgPlacing = settings.createGroup("Placing");
     private final SettingGroup sgToggle = settings.createGroup("Toggle");
     private final SettingGroup sgRender = settings.createGroup("Render");
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
@@ -58,12 +63,6 @@ public class SurroundPlus extends BlackOutModule {
         .defaultValue(false)
         .build()
     );
-    private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
-        .name("Switch Mode")
-        .description("Method of switching. Silent is the most reliable.")
-        .defaultValue(SwitchMode.Silent)
-        .build()
-    );
     private final Setting<List<Block>> blocks = sgGeneral.add(new BlockListSetting.Builder()
         .name("Blocks")
         .description("Blocks to use.")
@@ -76,21 +75,30 @@ public class SurroundPlus extends BlackOutModule {
         .defaultValue(true)
         .build()
     );
-    private final Setting<Double> placeDelay = sgGeneral.add(new DoubleSetting.Builder()
+
+    //   Placing Page
+    private final Setting<SwitchMode> switchMode = sgPlacing.add(new EnumSetting.Builder<SwitchMode>()
+        .name("Switch Mode")
+        .description("Method of switching. Silent is the most reliable.")
+        .defaultValue(SwitchMode.Silent)
+        .build()
+    );
+
+    private final Setting<Double> placeDelay = sgPlacing.add(new DoubleSetting.Builder()
         .name("Place Delay")
         .description("Delay between places.")
         .defaultValue(0).range(0, 10)
         .sliderRange(0, 10)
         .build()
     );
-    private final Setting<Integer> places = sgGeneral.add(new IntSetting.Builder()
+    private final Setting<Integer> places = sgPlacing.add(new IntSetting.Builder()
         .name("Places")
         .description("Blocks placed per place.")
         .defaultValue(1).range(1, 10)
         .sliderRange(1, 10)
         .build()
     );
-    private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
+    private final Setting<Double> delay = sgPlacing.add(new DoubleSetting.Builder()
         .name("Delay")
         .description("Delay between placing at each spot.")
         .defaultValue(0.3)
@@ -166,6 +174,7 @@ public class SurroundPlus extends BlackOutModule {
     private final BlockTimerList placed = new BlockTimerList();
     private boolean lastSneak = false;
     public static boolean placing = false;
+    public static long attacked = 0;
 
     @Override
     public void onActivate() {
@@ -177,6 +186,11 @@ public class SurroundPlus extends BlackOutModule {
         placesLeft = places.get();
         placeTimer = 0;
         render = new ArrayList<>();
+    }
+
+    @EventHandler
+    private void onTick(TickEvent.Pre event) {
+        attacked--;
     }
 
     @EventHandler
@@ -358,7 +372,7 @@ public class SurroundPlus extends BlackOutModule {
                 if (!timers.contains(position)) {
                     PlaceData data = onlyConfirmed.get() ? SettingUtils.getPlaceData(position) : SettingUtils.getPlaceDataOR(position, placed::contains);
                     if (data.valid()) {
-                        if ((EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) && (EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> entity instanceof EndCrystalEntity))) {
+                        if ((EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> isAlive(entity) && !entity.isSpectator() && entity.getType() != EntityType.ITEM)) && (EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> entity instanceof EndCrystalEntity))) {
                             toAttack.add(position);
                         } else {
                             list.add(position);
@@ -378,14 +392,14 @@ public class SurroundPlus extends BlackOutModule {
                                 continue;
                             }
 
-                            if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
+                            if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> isAlive(entity) && !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
                                 double distance = OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(position.offset(dir)), mc.player.getPos());
                                 if (distance < dist || value <= 1) {
                                     dist = distance;
                                     best = dir;
                                     value = 2;
                                 }
-                            } else if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM && entity.getType() != EntityType.END_CRYSTAL)) {
+                            } else if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> isAlive(entity) && !entity.isSpectator() && entity.getType() != EntityType.ITEM && entity.getType() != EntityType.END_CRYSTAL)) {
                                 if (value > 1) {
                                     continue;
                                 }
@@ -472,6 +486,10 @@ public class SurroundPlus extends BlackOutModule {
         }
 
         return map;
+    }
+
+    private boolean isAlive(Entity entity) {
+        return !(entity instanceof EndCrystalEntity) || attacked <= 0;
     }
 
     private record Render(BlockPos pos, boolean support) {}

@@ -41,6 +41,7 @@ public class ScaffoldPlus extends BlackOutModule {
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final SettingGroup sgPlacing = settings.createGroup("Placing");
     private final Setting<ScaffoldMode> scaffoldMode = sgGeneral.add(new EnumSetting.Builder<ScaffoldMode>()
         .name("Scaffold Mode")
         .description("Mode for scaffold.")
@@ -54,6 +55,8 @@ public class ScaffoldPlus extends BlackOutModule {
         .build()
     );
     // Normal
+
+    //   General Page
     private final Setting<Boolean> sSprint = sgGeneral.add(new BoolSetting.Builder()
         .name("Stop Sprint")
         .description("Stops you from sprinting.")
@@ -85,21 +88,23 @@ public class ScaffoldPlus extends BlackOutModule {
         .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
         .build()
     );
-    private final Setting<List<Block>> blocks = sgGeneral.add(new BlockListSetting.Builder()
-        .name("Blocks")
-        .description("Blocks to use.")
-        .defaultValue(Blocks.OBSIDIAN, Blocks.CRYING_OBSIDIAN, Blocks.NETHERITE_BLOCK)
-        .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
-        .build()
-    );
-    private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
+
+    //   Placing Page
+    private final Setting<SwitchMode> switchMode = sgPlacing.add(new EnumSetting.Builder<SwitchMode>()
         .name("Switch Mode")
         .description("Method of switching. Silent is the most reliable.")
         .defaultValue(SwitchMode.Silent)
         .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
         .build()
     );
-    private final Setting<Double> placeDelay = sgGeneral.add(new DoubleSetting.Builder()
+    private final Setting<List<Block>> blocks = sgPlacing.add(new BlockListSetting.Builder()
+        .name("Blocks")
+        .description("Blocks to use.")
+        .defaultValue(Blocks.OBSIDIAN, Blocks.CRYING_OBSIDIAN, Blocks.NETHERITE_BLOCK)
+        .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
+        .build()
+    );
+    private final Setting<Double> placeDelay = sgPlacing.add(new DoubleSetting.Builder()
         .name("Place Delay")
         .description("Delay between places.")
         .defaultValue(0.125)
@@ -108,7 +113,7 @@ public class ScaffoldPlus extends BlackOutModule {
         .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
         .build()
     );
-    private final Setting<Integer> places = sgGeneral.add(new IntSetting.Builder()
+    private final Setting<Integer> places = sgPlacing.add(new IntSetting.Builder()
         .name("Places")
         .description("Blocks placed per place.")
         .defaultValue(1)
@@ -117,7 +122,7 @@ public class ScaffoldPlus extends BlackOutModule {
         .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
         .build()
     );
-    private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
+    private final Setting<Double> delay = sgPlacing.add(new DoubleSetting.Builder()
         .name("Delay")
         .description("Delay between places at each spot.")
         .defaultValue(0.3)
@@ -126,7 +131,7 @@ public class ScaffoldPlus extends BlackOutModule {
         .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
         .build()
     );
-    private final Setting<Integer> extrapolation = sgGeneral.add(new IntSetting.Builder()
+    private final Setting<Integer> extrapolation = sgPlacing.add(new IntSetting.Builder()
         .name("Extrapolation")
         .description("Predicts movement.")
         .defaultValue(3)

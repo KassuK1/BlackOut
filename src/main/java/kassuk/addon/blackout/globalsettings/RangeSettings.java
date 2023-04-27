@@ -321,7 +321,14 @@ public class RangeSettings extends BlackOutModule {
             switch (attackRangeFrom.get()) {
                 case Middle ->
                     ((IVec3d) from).set((pBB.minX + pBB.maxX) / 2, (pBB.minY + pBB.maxY) / 2, (pBB.minZ + pBB.maxZ) / 2);
-                case Feet -> ((IVec3d) from).set((pBB.minX + pBB.maxX) / 2, pBB.minY, (pBB.minZ + pBB.maxZ) / 2);
+                case Feet -> from = mc.player.getPos();
+            }
+        } else {
+            switch (attackRangeFrom.get()) {
+                case Middle ->
+                    from = from.add(0, mc.player.getEyeHeight(mc.player.getPose()) / 2, 0);
+                case Eyes ->
+                    from = from.add(0, mc.player.getEyeHeight(mc.player.getPose()), 0);
             }
         }
 

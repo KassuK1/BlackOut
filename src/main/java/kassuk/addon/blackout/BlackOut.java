@@ -3,6 +3,7 @@ package kassuk.addon.blackout;
 import com.mojang.logging.LogUtils;
 import kassuk.addon.blackout.commands.*;
 import kassuk.addon.blackout.globalsettings.*;
+import kassuk.addon.blackout.gui.BlackOutTheme;
 import kassuk.addon.blackout.hud.*;
 import kassuk.addon.blackout.modules.*;
 import kassuk.addon.blackout.modules.CustomFOV;
@@ -10,18 +11,21 @@ import kassuk.addon.blackout.modules.FeetESP;
 import kassuk.addon.blackout.modules.Fog;
 import kassuk.addon.blackout.modules.SwingModifier;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
+import meteordevelopment.meteorclient.gui.GuiThemes;
 import meteordevelopment.meteorclient.systems.commands.Commands;
 import meteordevelopment.meteorclient.systems.hud.Hud;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import org.slf4j.Logger;
 
 public class BlackOut extends MeteorAddon {
     public static final Logger LOG = LogUtils.getLogger();
 
-    public static final Category BLACKOUT = new Category("BlackOut");
-    public static final Category SETTINGS = new Category("Settings");
+    public static final Category BLACKOUT = new Category("BlackOut", Items.END_CRYSTAL.getDefaultStack());
+    public static final Category SETTINGS = new Category("Settings", Items.OBSIDIAN.getDefaultStack());
     public static final HudGroup HUD_BLACKOUT = new HudGroup("BlackOut");
     public static final String BLACKOUT_NAME = "BlackOut";
     public static final String BLACKOUT_VERSION = "0.3.2";
@@ -31,69 +35,81 @@ public class BlackOut extends MeteorAddon {
     public void onInitialize() {
         LOG.info("Initializing Blackout");
 
-        // Modules
-        Modules.get().add(new AnchorAuraPlus());
-        Modules.get().add(new AnteroTaateli());
-        Modules.get().add(new AntiAim());
-        Modules.get().add(new AntiCrawl());
-        Modules.get().add(new AutoCraftingTable());
-        Modules.get().add(new AutoCrystalRewrite());
-        Modules.get().add(new AutoEz());
-        Modules.get().add(new AutoMend());
-        Modules.get().add(new AutoMine());
-        Modules.get().add(new AutoMoan());
-        Modules.get().add(new AutoPearl());
-        Modules.get().add(new AutoTrapPlus());
-        Modules.get().add(new BedAuraPlus());
-        Modules.get().add(new CustomFOV());
-        Modules.get().add(new FastXP());
-        Modules.get().add(new FeetESP());
-        Modules.get().add(new FlightPlus());
-        Modules.get().add(new Fog());
-        Modules.get().add(new HoleFillRewrite());
-        Modules.get().add(new HoleSnap());
-        Modules.get().add(new KassuKAura());
-        Modules.get().add(new LightsOut());
-        Modules.get().add(new OffHandPlus());
-        Modules.get().add(new PacketCrash());
-        Modules.get().add(new PacketFly());
-        Modules.get().add(new ForceSneak());
-        Modules.get().add(new PurpleSpinnyThingBlowerUpererAndPlacer());
-        Modules.get().add(new ResetVL());
-        Modules.get().add(new RPC());
-        Modules.get().add(new ScaffoldPlus());
-        Modules.get().add(new SelfTrapPlus());
-        Modules.get().add(new SoundModifier());
-        Modules.get().add(new SpeedPlus());
-        Modules.get().add(new SprintPlus());
-        Modules.get().add(new StrictNoSlow());
-        Modules.get().add(new Suicide());
-        Modules.get().add(new SurroundPlus());
-        Modules.get().add(new SwingModifier());
-        Modules.get().add(new TickShift());
-        Modules.get().add(new WeakAlert());
+        initializeModules(Modules.get());
 
-        // Global Settings
-        Modules.get().add(new FacingSettings());
-        Modules.get().add(new RangeSettings());
-        Modules.get().add(new RaytraceSettings());
-        Modules.get().add(new RotationSettings());
-        Modules.get().add(new SwingSettings());
+        initializeSettings(Modules.get());
 
-        // Commands
-        Commands.get().add(new BlackoutGit());
-        Commands.get().add(new Coords());
+        initializeCommands(Commands.get());
 
-        // HUD
-        Hud.get().register(BlackoutArray.INFO);
-        Hud.get().register(GearHud.INFO);
-        Hud.get().register(HudWaterMark.INFO);
-        Hud.get().register(Keys.INFO);
-        Hud.get().register(TargetHud.INFO);
-        Hud.get().register(Welcomer.INFO);
-        Hud.get().register(OnTope.INFO);
+        initializeHud(Hud.get());
 
-        // Theme
+        GuiThemes.add(new BlackOutTheme("OLEPOSSU"));
+    }
+
+    private void initializeModules(Modules modules) {
+        modules.add(new AnchorAuraPlus());
+        modules.add(new AnteroTaateli());
+        modules.add(new AntiAim());
+        modules.add(new AntiCrawl());
+        modules.add(new AutoCraftingTable());
+        modules.add(new AutoCrystalRewrite());
+        modules.add(new AutoEz());
+        modules.add(new AutoMend());
+        modules.add(new AutoMine());
+        modules.add(new AutoMoan());
+        modules.add(new AutoPearl());
+        modules.add(new AutoTrapPlus());
+        modules.add(new BedAuraPlus());
+        modules.add(new CustomFOV());
+        modules.add(new FastXP());
+        modules.add(new FeetESP());
+        modules.add(new FlightPlus());
+        modules.add(new Fog());
+        modules.add(new HoleFillRewrite());
+        modules.add(new HoleSnap());
+        modules.add(new KassuKAura());
+        modules.add(new LightsOut());
+        modules.add(new OffHandPlus());
+        modules.add(new PacketCrash());
+        modules.add(new PacketFly());
+        modules.add(new ForceSneak());
+        modules.add(new PurpleSpinnyThingBlowerUpererAndPlacer());
+        modules.add(new ResetVL());
+        modules.add(new RPC());
+        modules.add(new ScaffoldPlus());
+        modules.add(new SelfTrapPlus());
+        modules.add(new SoundModifier());
+        modules.add(new SpeedPlus());
+        modules.add(new SprintPlus());
+        modules.add(new StrictNoSlow());
+        modules.add(new Suicide());
+        modules.add(new SurroundPlus());
+        modules.add(new SwingModifier());
+        modules.add(new TickShift());
+        modules.add(new WeakAlert());
+    }
+
+    private void initializeSettings(Modules modules) {
+        modules.add(new FacingSettings());
+        modules.add(new RangeSettings());
+        modules.add(new RaytraceSettings());
+        modules.add(new RotationSettings());
+        modules.add(new SwingSettings());
+    }
+
+    private void initializeCommands(Commands commands) {
+        commands.add(new BlackoutGit());
+        commands.add(new Coords());
+    }
+
+    private void initializeHud(Hud hud) {
+        hud.register(BlackoutArray.INFO);
+        hud.register(GearHud.INFO);
+        hud.register(HudWaterMark.INFO);
+        hud.register(Keys.INFO);
+        hud.register(TargetHud.INFO);
+        hud.register(Welcomer.INFO);
+        hud.register(OnTope.INFO);
     }
 
     @Override
