@@ -441,13 +441,13 @@ public class RangeSettings extends BlackOutModule {
                 return getRange(from, feet.add(0, 0.5, 0));
             }
             case Height -> {
-                return getRange(from, feet.add(0, placeHeight.get(), 0));
+                return getRange(from, feet.add(0, miningHeight.get(), 0));
             }
             case Vanilla -> {
                 return getRange(from, OLEPOSSUtils.getClosest(mc.player.getEyePos(), feet, 1, 1));
             }
             case CustomBox -> {
-                return getRange(from, OLEPOSSUtils.getClosest(mc.player.getEyePos(), feet, blockWidth.get(), blockHeight.get()));
+                return getRange(from, OLEPOSSUtils.getClosest(mc.player.getEyePos(), feet, closestMiningWidth.get(), closestMiningHeight.get()));
             }
         }
         return -1;

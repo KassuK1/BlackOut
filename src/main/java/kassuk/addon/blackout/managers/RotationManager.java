@@ -301,22 +301,10 @@ public class RotationManager {
         history.add(0, new Rotation(yaw, pitch, mc.player.getEyePos()));
     }
 
-    public void endAny() {
-        target = null;
-        timer = 0;
-    }
-
     public record Rotation(double yaw, double pitch, Vec3d vec) {
     }
 
     public Vec3d getTargetPos() {
-        if (SettingUtils.shouldGhostRotate()) {
-            if (((BoxTarget) target).pos == null) {
-                return SettingUtils.getGhostRot(((BoxTarget) target).box, ((BoxTarget) target).vec);
-            } else {
-                return SettingUtils.getGhostRot(((BoxTarget) target).pos, ((BoxTarget) target).vec);
-            }
-        }
         return ((BoxTarget) target).vec;
     }
 

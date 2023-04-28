@@ -1045,7 +1045,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
                 if (handToUse != null || (switchMode.get() == SwitchMode.Silent && hotbar >= 0) || ((switchMode.get() == SwitchMode.PickSilent || switchMode.get() == SwitchMode.InvSilent) && silentSlot >= 0)) {
                     placing = true;
                     if (speedCheck() && delayCheck()) {
-                        if (!SettingUtils.shouldRotate(RotationType.Crystal) || (Managers.ROTATION.start(placePos.down(), smartRot.get() ? new Vec3d(placePos.getX() + 0.5, placePos.getY(), placePos.getZ() + 0.5) : null, priority - 0.1, RotationType.Crystal) && ghostCheck(placePos.down()))) {
+                        if (!SettingUtils.shouldRotate(RotationType.Crystal) || Managers.ROTATION.start(placePos.down(), smartRot.get() ? new Vec3d(placePos.getX() + 0.5, placePos.getY(), placePos.getZ() + 0.5) : null, priority - 0.1, RotationType.Crystal)) {
                             placeCrystal(placePos.down(), placeDir, handToUse, silentSlot, hotbar);
                         }
                     }
@@ -1057,7 +1057,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     }
     boolean startAttackRot() {
         expEntityBB = expEntity.getBoundingBox();
-        return (Managers.ROTATION.start(expEntity.getBoundingBox(), smartRot.get() ? expEntity.getPos() : null, priority, RotationType.Attacking) && ghostCheck(expEntity.getBoundingBox(), expEntity.getPos()));
+        return (Managers.ROTATION.start(expEntity.getBoundingBox(), smartRot.get() ? expEntity.getPos() : null, priority, RotationType.Attacking));
     }
     boolean isAlive(Box box) {
         if (box == null) {return true;}
@@ -1096,14 +1096,6 @@ public class AutoCrystalRewrite extends BlackOutModule {
             }
         }
         return false;
-    }
-    boolean ghostCheck(BlockPos pos) {
-        if (!SettingUtils.shouldGhostCheck()) {return true;}
-        return SettingUtils.placeRangeTo(pos) <= (SettingUtils.raytraceCheck(mc.player.getEyePos(), Managers.ROTATION.lastDir[0], Managers.ROTATION.lastDir[1], pos) ? SettingUtils.getPlaceRange() : SettingUtils.getPlaceWallsRange());
-    }
-    boolean ghostCheck(Box box, Vec3d feet) {
-        if (!SettingUtils.shouldGhostCheck()) {return true;}
-        return SettingUtils.attackRangeTo(box, feet) <= (SettingUtils.raytraceCheck(mc.player.getEyePos(), Managers.ROTATION.lastDir[0], Managers.ROTATION.lastDir[1], pos) ? SettingUtils.getPlaceRange() : SettingUtils.getPlaceWallsRange());
     }
 
     boolean holdingCheck() {

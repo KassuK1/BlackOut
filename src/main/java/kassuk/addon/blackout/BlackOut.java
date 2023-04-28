@@ -3,7 +3,6 @@ package kassuk.addon.blackout;
 import com.mojang.logging.LogUtils;
 import kassuk.addon.blackout.commands.*;
 import kassuk.addon.blackout.globalsettings.*;
-import kassuk.addon.blackout.gui.BlackOutTheme;
 import kassuk.addon.blackout.hud.*;
 import kassuk.addon.blackout.modules.*;
 import kassuk.addon.blackout.modules.CustomFOV;
@@ -11,13 +10,11 @@ import kassuk.addon.blackout.modules.FeetESP;
 import kassuk.addon.blackout.modules.Fog;
 import kassuk.addon.blackout.modules.SwingModifier;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
-import meteordevelopment.meteorclient.gui.GuiThemes;
 import meteordevelopment.meteorclient.systems.commands.Commands;
 import meteordevelopment.meteorclient.systems.hud.Hud;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
-import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import org.slf4j.Logger;
 
@@ -42,8 +39,6 @@ public class BlackOut extends MeteorAddon {
         initializeCommands(Commands.get());
 
         initializeHud(Hud.get());
-
-        GuiThemes.add(new BlackOutTheme("OLEPOSSU"));
     }
 
     private void initializeModules(Modules modules) {

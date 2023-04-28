@@ -61,13 +61,7 @@ public class RotationSettings extends BlackOutModule {
         .visible(() -> rotationCheckMode.get() == RotationCheckMode.Angle)
         .build()
     );
-    public final Setting<Boolean> ghostRotation = sgCrystal.add(new BoolSetting.Builder()
-        .name("Ghost Rotation")
-        .description("Rotates at the closest seen point.")
-        .defaultValue(false)
-        .build()
-    );
-    public final Setting<Boolean> vanillaRotation = sgCrystal.add(new BoolSetting.Builder()
+    public final Setting<Boolean> vanillaRotation = sgGeneral.add(new BoolSetting.Builder()
         .name("Vanilla Rotation")
         .description("Turns your head.")
         .defaultValue(false)
@@ -244,22 +238,12 @@ public class RotationSettings extends BlackOutModule {
 
     public enum RotationCheckMode {
         Raytrace,
-        Angle,
-        Ghost
+        Angle
     }
 
     public RaycastContext raycastContext;
     public BlockHitResult result;
     public Vec3d vec = new Vec3d(0, 0, 0);
-
-    // Closest
-    double closestDistance = 0;
-    Vec3d closest = new Vec3d(0, 0, 0);
-
-    Vec3d eyePos = new Vec3d(0, 0, 0);
-    Vec3d offset = new Vec3d(0, 0, 0);
-
-    double distance = 0;
 
     public boolean shouldRotate(RotationType type) {
         switch (type) {
@@ -388,80 +372,6 @@ public class RotationSettings extends BlackOutModule {
     }
     public boolean startMineRot() {
         return mineRotate.get() == MiningRotMode.Start || mineRotate.get() == MiningRotMode.Double;
-    }
-
-    public Vec3d getGhostRot(BlockPos pos, Vec3d targetVec) {
-        updateContext();
-
-        ((MixinRaycastContext) raycastContext).setEnd(targetVec);
-        result = BODamageUtils.raycast(raycastContext);
-
-        if (result.getBlockPos().equals(pos)) {return targetVec;}
-
-
-        ((IVec3d) vec).set(pos.getX(), pos.getY(), pos.getZ());
-
-        closestDistance = Double.MAX_VALUE;
-        ((IVec3d) closest).set(-1, -1, -1);
-        eyePos = mc.player.getEyePos();
-
-        for (int x = 0; x <= 4; x += 1) {
-            for (int y = 0; y <= 4; y += 1) {
-                for (int z = 0; z <= 4; z += 1) {
-                    ((MixinRaycastContext) raycastContext).setEnd(vec.add(0.1 + x * 0.16, 0.1 + y * 0.16, 0.1 + z * 0.16));
-
-                    result = BODamageUtils.raycast(raycastContext);
-
-                    if (result.getBlockPos().equals(pos)) {
-                        offset = eyePos.subtract(vec.add(0.1 + x * 0.16, 0.1 + y * 0.16, 0.1 + z * 0.16));
-                        distance = offset.lengthSquared();
-
-                        if (closestDistance > distance) {
-                            closestDistance = distance;
-                            ((IVec3d) closest).set(x, y, z);
-                        }
-                    }
-                }
-            }
-        }
-        return closest.getX() == 0 && closest.getY() == 0 && closest.getZ() == 0 ? targetVec : vec.add(0.1 + closest.getX() * 0.16, 0.1 + closest.getY() * 0.16, 0.1 + closest.getZ() * 0.16);
-    }
-
-    public Vec3d getGhostRot(Box box, Vec3d targetVec) {
-        updateContext();
-
-        ((MixinRaycastContext) raycastContext).setEnd(targetVec);
-        result = BODamageUtils.raycast(raycastContext);
-
-        if (result.getType() != HitResult.Type.BLOCK) {return targetVec;}
-
-
-        ((IVec3d) vec).set(box.minX, box.minY, box.minZ);
-
-        closestDistance = Double.MAX_VALUE;
-        ((IVec3d) closest).set(-1, -1, -1);
-        eyePos = mc.player.getEyePos();
-
-        for (int x = 0; x <= 4; x += 1) {
-            for (int y = 0; y <= 4; y += 1) {
-                for (int z = 0; z <= 4; z += 1) {
-                    ((MixinRaycastContext) raycastContext).setEnd(vec.add(0.1 + x * 0.16, 0.1 + y * 0.16, 0.1 + z * 0.16));
-
-                    result = BODamageUtils.raycast(raycastContext);
-
-                    if (result.getType() != HitResult.Type.BLOCK) {
-                        offset = eyePos.subtract(vec.add(0.1 + x * 0.16, 0.1 + y * 0.16, 0.1 + z * 0.16));
-                        distance = offset.lengthSquared();
-
-                        if (closestDistance > distance) {
-                            closestDistance = distance;
-                            ((IVec3d) closest).set(x, y, z);
-                        }
-                    }
-                }
-            }
-        }
-        return closest.getX() == 0 && closest.getY() == 0 && closest.getZ() == 0 ? targetVec : vec.add(0.1 + closest.getX() * 0.16, 0.1 + closest.getY() * 0.16, 0.1 + closest.getZ() * 0.16);
     }
 
     public double getTime(RotationType type) {

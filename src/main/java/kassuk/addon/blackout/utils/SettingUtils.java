@@ -78,11 +78,7 @@ public class SettingUtils extends Utils {
     public static boolean endMineRot() {
         return rotation.endMineRot();
     }
-    public static boolean shouldGhostRotate() {return rotation.ghostRotation.get();}
-    public static boolean shouldGhostCheck() {return rotation.rotationCheckMode.get() == RotationSettings.RotationCheckMode.Ghost;}
     public static boolean shouldVanillaRotate() {return rotation.vanillaRotation.get();}
-    public static Vec3d getGhostRot(BlockPos pos, Vec3d vec) {return rotation.getGhostRot(pos, vec);}
-    public static Vec3d getGhostRot(Box box, Vec3d vec) {return rotation.getGhostRot(box, vec);}
     public static boolean shouldRotate(RotationType type) {
         return rotation.shouldRotate(type);
     }
