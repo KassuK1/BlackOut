@@ -26,7 +26,7 @@ public class HudWaterMark extends HudElement {
     private final Setting<Double> scale = sgGeneral.add(new DoubleSetting.Builder()
         .name("Scale")
         .description("Modify the size of the text.")
-        .defaultValue(1)
+        .defaultValue(1.5)
         .min(0)
         .sliderRange(0, 5)
         .build()

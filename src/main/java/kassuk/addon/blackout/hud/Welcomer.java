@@ -19,21 +19,21 @@ public class Welcomer extends HudElement {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<Double> scale = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Renderer scale")
-        .description("Scale to render at")
+        .name("Scale")
+        .description("Scale to render at.")
         .defaultValue(1)
         .range(0, 5)
         .sliderRange(0, 5)
         .build()
     );
-    private final Setting<SettingColor> textcolor = sgGeneral.add(new ColorSetting.Builder()
-        .name("Text color")
+    private final Setting<SettingColor> textColor = sgGeneral.add(new ColorSetting.Builder()
+        .name("Text Color")
         .description(BlackOut.COLOR)
-        .defaultValue(new SettingColor(255, 255, 255, 155))
+        .defaultValue(new SettingColor(255, 255, 255, 255))
         .build()
     );
     private final Setting<Boolean> shadow = sgGeneral.add(new BoolSetting.Builder()
-        .name("Text shadow")
+        .name("Text Shadow")
         .description("Should the text have a shadow.")
         .defaultValue(true)
         .build()
@@ -46,12 +46,11 @@ public class Welcomer extends HudElement {
 
     @Override
     public void render(HudRenderer renderer) {
-        if (mc.player != null && mc.world != null) {
-            setSize(50 * scale.get() * scale.get(), 20 * scale.get() * scale.get());
-            renderer.text("Welcome " + mc.player.getName(), x, y, textcolor.get(), shadow.get(), scale.get());
-        }
-        if (isInEditor()) {
-            renderer.text("BlackOut Welcomer", x, y, textcolor.get(), shadow.get(), scale.get());
-        }
+        if (mc.player == null || mc.world == null) {return;}
+
+        String text = "Welcome " + mc.player.getName().getString();
+        setSize(renderer.textWidth(text, shadow.get(), scale.get()), renderer.textHeight(shadow.get(), scale.get()));
+
+        renderer.text(text, x, y, textColor.get(), shadow.get(), scale.get());
     }
 }

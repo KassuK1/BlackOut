@@ -26,7 +26,7 @@ public class SpeedPlus extends BlackOutModule {
     private final Setting<SpeedMode> mode = sgGeneral.add(new EnumSetting.Builder<SpeedMode>()
         .name("Mode")
         .description("Mode for speed.")
-        .defaultValue(SpeedMode.Strafe)
+        .defaultValue(SpeedMode.Instant)
         .build()
     );
     private final Setting<Double> accelerationAmount = sgGeneral.add(new DoubleSetting.Builder()
@@ -262,7 +262,7 @@ public class SpeedPlus extends BlackOutModule {
         if (moving) {
             return 1;
         }
-        return mc.player.isOnGround() ? mc.world.getBlockState(new BlockPos(mc.player.getX(), Math.ceil(mc.player.getY() - 1), mc.player.getZ())).getBlock().getSlipperiness() : 0.98;
+        return mc.player.isOnGround() ? mc.world.getBlockState(new BlockPos((int) mc.player.getX(), (int) Math.ceil(mc.player.getY() - 1), (int) mc.player.getZ())).getBlock().getSlipperiness() : 0.98;
     }
 
     double getYaw(double f, double s) {

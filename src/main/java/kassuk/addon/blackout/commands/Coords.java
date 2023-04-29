@@ -10,7 +10,7 @@ import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
 public class Coords extends Command {
 
     public Coords() {
-        super("Coords", "Pastes your coordinates to your clipboard.");
+        super("coords", "Copies your coordinates to your clipboard.");
     }
 
     @Override
@@ -18,6 +18,7 @@ public class Coords extends Command {
         builder.executes(context -> {
             if (mc.player != null) {
                 String text = "x: " + Math.floor(mc.player.getX()) + "; y:" + Math.floor(mc.player.getY()) + "; z:" + Math.floor(mc.player.getZ()) + ";";
+                info("Succesfully copied your coordinates: \n" + text);
                 mc.keyboard.setClipboard(text);
             }
             return SINGLE_SUCCESS;

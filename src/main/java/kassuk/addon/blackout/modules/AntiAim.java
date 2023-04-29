@@ -2,6 +2,8 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
+import kassuk.addon.blackout.enums.RotationType;
+import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
@@ -166,50 +168,40 @@ public class AntiAim extends BlackOutModule {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onTick(TickEvent.Pre event) {
         if (mc.player != null && mc.world != null) {
-            double y = mc.player.getYaw();
-            double p = mc.player.getPitch();
-            switch (mode.get()) {
-                case Enemy -> {
-                    PlayerEntity enemy = getClosest();
-                    if (enemy != null) {
-                        y = Rotations.getYaw(enemy.getEyePos());
-                        p = Rotations.getPitch(enemy.getEyePos());
-                    }
-                }
-                case Spin -> {
-                    spinYaw = nextYaw(spinYaw, spinSpeed.get());
-                    y = spinYaw;
-                    p = mc.player.getPitch();
-                }
-                case CSGO -> {
-                    if (!rYaw.get()) {
-                        csYaw = mc.player.getYaw();
-                    }
-                    if (!rPitch.get()) {
-                        csPitch = mc.player.getPitch();
-                    }
-                    if (csTick <= 0) {
-                        csTick += csDelay.get();
-                        csYaw = r.nextInt(-180, 180);
-                        csPitch = r.nextInt(-90, 90);
-                    } else {
-                        csTick--;
-                    }
-                    y = csYaw;
-                    p = !rPitch.get() ? csgoPitch.get() : csPitch;
-                }
-                case Custom -> {
-                    y = yaw.get();
-                    p = pitch.get();
+            if (mode.get() == Modes.CSGO) {
+                if (csTick <= 0) {
+                    csTick += csDelay.get();
+                    csYaw = r.nextInt(-180, 180);
+                    csPitch = r.nextInt(-90, 90);
+                } else {
+                    csTick--;
                 }
             }
 
-            Rotations.rotate(
-                contains(yItems.get(), mc.player.getMainHandStack().getItem()) && iYaw.get() ? mc.player.getYaw() : y,
+            Item item = mc.player.getMainHandStack().getItem();
+            boolean ignoreYaw = yItems.get().contains(item) && iYaw.get();
+            boolean ignorePitch = pItems.get().contains(item) && iPitch.get();
 
-                mc.player.getMainHandStack().getItem().equals(Items.EXPERIENCE_BOTTLE) && encMode.get() ? 90 :
-                    mc.player.getMainHandStack().getItem().equals(Items.BOW) && bowMode.get() ? -90 :
-                    (contains(pItems.get(), mc.player.getMainHandStack().getItem()) && iPitch.get() ? mc.player.getPitch() : p));
+            double y = ignoreYaw ? mc.player.getYaw() :
+                switch (mode.get()) {
+                    case Enemy -> closestYaw();
+                    case Spin -> getSpinYaw();
+                    case CSGO -> csYaw;
+                    case Custom -> yaw.get();
+                };
+
+            double p = item == Items.EXPERIENCE_BOTTLE && encMode.get() ? 90 :
+                item == Items.BOW && bowMode.get() ? -90 :
+                ignorePitch ? mc.player.getPitch() :
+                switch (mode.get()) {
+                    case Enemy -> closestPitch();
+                    case Spin -> 0.0;
+                    case CSGO -> csPitch;
+                    case Custom -> pitch.get();
+                };
+
+            Managers.ROTATION.start(y, p,
+                priority, RotationType.Other);
         }
     }
 
@@ -218,37 +210,44 @@ public class AntiAim extends BlackOutModule {
         return mode.get().name();
     }
 
+    double closestYaw() {
+        PlayerEntity closest = getClosest();
+
+        if (closest != null) {
+            return Rotations.getYaw(closest);
+        }
+        return mc.player.getYaw();
+    }
+    double closestPitch() {
+        PlayerEntity closest = getClosest();
+
+        if (closest != null) {
+            return Rotations.getPitch(closest);
+        }
+        return mc.player.getPitch();
+    }
+    double getSpinYaw() {
+        spinYaw += spinSpeed.get();
+
+        return spinYaw;
+    }
+
     PlayerEntity getClosest() {
         PlayerEntity closest = null;
         for (PlayerEntity pl : mc.world.getPlayers()) {
-            if (pl != mc.player && !Friends.get().isFriend(pl) && OLEPOSSUtils.distance(mc.player.getPos(), pl.getPos()) <= enemyRange.get()) {
-                if (closest == null) {
-                    closest = pl;
-                } else {
-                    if (OLEPOSSUtils.distance(pl.getPos(), mc.player.getPos()) <
-                        OLEPOSSUtils.distance(closest.getPos(), mc.player.getPos())) {
-                        closest = pl;
-                    }
-                }
+            if (pl == mc.player) {continue;}
+            if (Friends.get().isFriend(pl)) {continue;}
+
+            if (closest == null) {closest = pl;}
+
+            double distance = OLEPOSSUtils.distance(mc.player.getPos(), pl.getPos());
+
+            if (distance > enemyRange.get()) {continue;}
+
+            if (distance < OLEPOSSUtils.distance(closest.getPos(), mc.player.getPos())) {
+                closest = pl;
             }
         }
         return closest;
-    }
-
-    double nextYaw(double current, double speed) {
-        if (current + speed > 180) {
-            return -360 + current + speed;
-        } else {
-            return current + speed;
-        }
-    }
-
-    boolean contains(List<Item> l, Item item) {
-        for (Item i : l) {
-            if (i.equals(item)) {
-                return true;
-            }
-        }
-        return false;
     }
 }

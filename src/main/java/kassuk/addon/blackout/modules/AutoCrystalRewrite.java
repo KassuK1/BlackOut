@@ -1351,7 +1351,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         bestDir = null;
         highest = null;
 
-        BlockPos pPos = new BlockPos(mc.player.getEyePos());
+        BlockPos pPos = OLEPOSSUtils.toPos(mc.player.getEyePos());
 
         for (int x = -r; x <= r; x++) {
             for (int y = -r; y <= r; y++) {
@@ -1470,7 +1470,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     }
 
     boolean isOwn(Vec3d vec) {
-        return isOwn(new BlockPos(vec));
+        return isOwn(OLEPOSSUtils.toPos(vec));
     }
     boolean isOwn(BlockPos pos) {
         for (Map.Entry<BlockPos, Long> entry : own.entrySet()) {
@@ -1503,7 +1503,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
             }
 
             double dmg = BODamageUtils.crystalDamage(player, box, vec, null, ignoreTerrain.get());
-            if (new BlockPos(vec).down().equals(AutoMine.targetPos)) {
+            if (OLEPOSSUtils.toPos(vec).down().equals(AutoMine.targetPos)) {
                 dmg *= autoMineDamage.get();
             }
             double hp = player.getHealth() + player.getAbsorptionAmount();
@@ -1543,7 +1543,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     boolean inExplodeRange(Vec3d vec) {
         return SettingUtils.inAttackRange(new Box(vec.getX() - 1, vec.getY(), vec.getZ() - 1, vec.getX() + 1, vec.getY() + 2, vec.getZ() + 1));
     }
- double getSpeed() {
+    double getSpeed() {
         return shouldSlow() ? slowSpeed.get() : placeSpeed.get();
     }
     boolean shouldSlow() {return placePos != null && getDmg(new Vec3d(placePos.getX() + 0.5, placePos.getY(), placePos.getZ() + 0.5))[0][0] <= slowDamage.get();}

@@ -82,10 +82,7 @@ public class SettingUtils extends Utils {
     public static boolean shouldRotate(RotationType type) {
         return rotation.shouldRotate(type);
     }
-    public static boolean rotationCheckHistory(Box box, RotationType type) {return rotation.rotationCheckHistory(box, rotation.NCPRotation.get() ? rotation.NCPPackets.get() : rotation.getExisted(type) + 1);}
-    public static boolean rotationCheck(Vec3d pPos, double yaw, double pitch, Box box, RotationType type, boolean ncp) {return rotation.rotationCheck(pPos, yaw, pitch, box, rotation.NCPRotation.get() ? rotation.NCPPackets.get() : rotation.getExisted(type), ncp);}
-    public static boolean raytraceCheck(Vec3d vec, double yaw, double pitch, Box box) {return rotation.raytraceCheck(vec, yaw, pitch, box);}
-    public static boolean raytraceCheck(Vec3d vec, double yaw, double pitch, BlockPos pos) {return rotation.raytraceCheck(vec, yaw, pitch, pos);}
+    public static boolean rotationCheck(Box box) {return rotation.rotationCheck(box);}
 
     //  Swing
     public static void swing(SwingState state, SwingType type, Hand hand) {

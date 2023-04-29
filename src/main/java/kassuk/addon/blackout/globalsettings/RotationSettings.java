@@ -83,18 +83,12 @@ public class RotationSettings extends BlackOutModule {
         .sliderRange(0, 180)
         .build()
     );
-    public final Setting<Boolean> NCPRotation = sgGeneral.add(new BoolSetting.Builder()
-        .name("NCP Rotations")
-        .description("Accepts rotation if you were looking at the target 'NCP packets' ago.")
-        .defaultValue(true)
-        .build()
-    );
     public final Setting<Integer> NCPPackets = sgGeneral.add(new IntSetting.Builder()
-        .name("NCP Rotation Packets")
-        .description("Check description from 'NCP Rotations'.")
+        .name("Rotation Memory")
+        .description("Accepts rotation if looked at it x packets before.")
         .defaultValue(5)
-        .range(0, 10)
-        .sliderRange(0, 10)
+        .range(0, 20)
+        .sliderRange(0, 20)
         .build()
     );
 
@@ -103,14 +97,6 @@ public class RotationSettings extends BlackOutModule {
         .name("Crystal Rotate")
         .description("Rotates when placing crystals.")
         .defaultValue(false)
-        .build()
-    );
-    private final Setting<Integer> crystalExisted = sgCrystal.add(new IntSetting.Builder()
-        .name("Crystal Rotation Existed")
-        .description("Crystal rotation has to be existed for x ticks before accepting.")
-        .defaultValue(0)
-        .range(0, 10)
-        .sliderRange(0, 10)
         .build()
     );
     public final Setting<Double> crystalTime = sgCrystal.add(new DoubleSetting.Builder()
@@ -129,14 +115,6 @@ public class RotationSettings extends BlackOutModule {
         .defaultValue(false)
         .build()
     );
-    private final Setting<Integer> attackExisted = sgAttack.add(new IntSetting.Builder()
-        .name("Attack Rotation Existed")
-        .description("Attack rotation has to be existed for x ticks before accepting.")
-        .defaultValue(0)
-        .range(0, 10)
-        .sliderRange(0, 10)
-        .build()
-    );
     public final Setting<Double> attackTime = sgAttack.add(new DoubleSetting.Builder()
         .name("Attack Rotation Time")
         .description("Keeps the rotation for x seconds after ending.")
@@ -151,14 +129,6 @@ public class RotationSettings extends BlackOutModule {
         .name("Placing Rotate")
         .description("Rotates when placing blocks.")
         .defaultValue(false)
-        .build()
-    );
-    private final Setting<Integer> placeExisted = sgPlace.add(new IntSetting.Builder()
-        .name("Place Rotation Existed")
-        .description("Placing rotation has to be existed for x ticks before accepting.")
-        .defaultValue(0)
-        .range(0, 10)
-        .sliderRange(0, 10)
         .build()
     );
     public final Setting<Double> placeTime = sgPlace.add(new DoubleSetting.Builder()
@@ -177,14 +147,6 @@ public class RotationSettings extends BlackOutModule {
         .defaultValue(MiningRotMode.Disabled)
         .build()
     );
-    private final Setting<Integer> mineExisted = sgMine.add(new IntSetting.Builder()
-        .name("Mine Rotation Existed")
-        .description("Mining rotation has to be existed for x ticks before accepting.")
-        .defaultValue(0)
-        .range(0, 10)
-        .sliderRange(0, 10)
-        .build()
-    );
     public final Setting<Double> mineTime = sgMine.add(new DoubleSetting.Builder()
         .name("Mine Rotation Time")
         .description("Keeps the rotation for x seconds after ending.")
@@ -199,14 +161,6 @@ public class RotationSettings extends BlackOutModule {
         .name("Interact Rotate")
         .description("Rotates when interacting with blocks. Crafting tables, chests...")
         .defaultValue(false)
-        .build()
-    );
-    private final Setting<Integer> interactExisted = sgInteract.add(new IntSetting.Builder()
-        .name("Interact Rotation Existed")
-        .description("Interact rotation has to be existed for x ticks before accepting.")
-        .defaultValue(0)
-        .range(0, 10)
-        .sliderRange(0, 10)
         .build()
     );
     public final Setting<Double> interactTime = sgInteract.add(new DoubleSetting.Builder()
@@ -255,76 +209,29 @@ public class RotationSettings extends BlackOutModule {
         }
         return false;
     }
-    public int getExisted(RotationType type) {
-        switch (type) {
-            case Crystal -> {return crystalExisted.get();}
-            case Attacking -> {return attackExisted.get();}
-            case Placing -> {return placeExisted.get();}
-            case Breaking -> {return mineExisted.get();}
-            case Interact -> {return interactExisted.get();}
-            default -> {return 1;}
-        }
-    }
 
-    public boolean rotationCheckHistory(Box box, int existed) {
-        if (box == null){return false;}
-        if (mc.player == null) {return false;}
-        return rotationCheck(null, 0.0, 0.0, box, existed, NCPRotation.get());
-    }
-
-    public boolean rotationCheck(Vec3d pPos, double yaw, double pitch, Box box, int existed, boolean ncp) {
+    public boolean rotationCheck(Box box) {
         List<RotationManager.Rotation> history = RotationManager.history;
         if (box == null){return false;}
 
         switch (rotationCheckMode.get()) {
             case Raytrace -> {
-                if (pPos != null) {
-                    if (ncp) {
-                        if (raytraceCheck(pPos, yaw, pitch, box)) {
-                            return true;
-                        }
-                    } else {
-                        if (!raytraceCheck(pPos, yaw, pitch, box)) {
-                            return false;
-                        }
-                    }
-                }
-                for (int r = 0; r < existed; r++) {
+                for (int r = 0; r < NCPPackets.get(); r++) {
                     if (history.size() <= r) {break;}
                     RotationManager.Rotation rot = history.get(r);
-                    if (ncp) {
-                        if (raytraceCheck(rot.vec(), rot.yaw(), rot.pitch(), box)) {
-                            return true;
-                        }
-                    } else {
-                        if (!raytraceCheck(rot.vec(), rot.yaw(), rot.pitch(), box)) {
-                            return false;
-                        }
+
+                    if (raytraceCheck(rot.vec(), rot.yaw(), rot.pitch(), box)) {
+                        return true;
                     }
                 }
             }
             case Angle -> {
-                if (pPos != null) {if (ncp) {
-                        if (angleCheck(pPos, yaw, pitch, box)) {
-                            return true;
-                        }
-                    } else {
-                        if (!angleCheck(pPos, yaw, pitch, box)) {
-                            return false;
-                        }
-                    }
-                }
-                for (int r = 0; r < existed; r++) {
+                for (int r = 0; r < NCPPackets.get(); r++) {
                     if (history.size() <= r) {break;}
                     RotationManager.Rotation rot = history.get(r);
-                    if (ncp) {
-                        if (angleCheck(rot.vec(), rot.yaw(), rot.pitch(), box)) {
-                            return true;
-                        }
-                    } else {
-                        if (!angleCheck(rot.vec(), rot.yaw(), rot.pitch(), box)) {
-                            return false;
-                        }
+
+                    if (angleCheck(rot.vec(), rot.yaw(), rot.pitch(), box)) {
+                        return true;
                     }
                 }
             }

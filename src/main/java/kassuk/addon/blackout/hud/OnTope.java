@@ -1,10 +1,7 @@
 package kassuk.addon.blackout.hud;
 
 import kassuk.addon.blackout.BlackOut;
-import meteordevelopment.meteorclient.settings.ColorSetting;
-import meteordevelopment.meteorclient.settings.DoubleSetting;
-import meteordevelopment.meteorclient.settings.Setting;
-import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.hud.HudElement;
 import meteordevelopment.meteorclient.systems.hud.HudElementInfo;
 import meteordevelopment.meteorclient.systems.hud.HudRenderer;
@@ -29,6 +26,12 @@ public class OnTope extends HudElement {
         .defaultValue(1)
         .build()
     );
+    private final Setting<Boolean> shadow = sgGeneral.add(new BoolSetting.Builder()
+        .name("Text Shadow")
+        .description("Should the text have a shadow.")
+        .defaultValue(true)
+        .build()
+    );
     public static final HudElementInfo<OnTope> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "OnTope", "I don't even know what this is.", OnTope::new);
 
     public OnTope() {
@@ -37,8 +40,10 @@ public class OnTope extends HudElement {
 
     @Override
     public void render(HudRenderer renderer) {
-        assert mc.player != null;
-        setSize(renderer.textWidth(mc.player.getName().getString() + " on top!", true) * scale.get() * scale.get(), renderer.textHeight(true) * scale.get() * scale.get());
-        renderer.text(mc.player.getName().getString() + " on top!", x, y, color.get(), true, scale.get());
+        if (mc.player == null) {return;}
+        String text = mc.player.getName().getString() + " on top!";
+
+        setSize(renderer.textWidth(text, shadow.get(), scale.get()), renderer.textHeight(true, scale.get()));
+        renderer.text(text, x, y, color.get(), shadow.get(), scale.get());
     }
 }

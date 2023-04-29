@@ -288,7 +288,7 @@ public class AnchorAuraPlus extends BlackOutModule {
         for (int x = -i; x <= i; x++) {
             for (int y = -i; y <= i; y++) {
                 for (int z = -i; z <= i; z++) {
-                    pos = new BlockPos(Math.floor(middle.x) + x, Math.floor(middle.y) + y, Math.floor(middle.z) + z);
+                    pos = new BlockPos((int) (Math.floor(middle.x) + x), (int) (Math.floor(middle.y) + y), (int) (Math.floor(middle.z) + z));
 
                     if (!OLEPOSSUtils.replaceable(pos) && !(mc.world.getBlockState(pos).getBlock() == Blocks.RESPAWN_ANCHOR)) {
                         continue;
@@ -319,7 +319,6 @@ public class AnchorAuraPlus extends BlackOutModule {
     }
 
     void update() {
-
         if (placePos == null || placeData == null || !placeData.valid()) {
             return;
         }
@@ -634,10 +633,6 @@ public class AnchorAuraPlus extends BlackOutModule {
             highest = Math.max(highest, BODamageUtils.anchorDamage(target, new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5)));
         }
         return highest;
-    }
-
-    Box bedBox(BlockPos pos) {
-        return new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 0.5, pos.getZ() + 1);
     }
 
     record Anchor(AnchorState state, int charges, long time) {

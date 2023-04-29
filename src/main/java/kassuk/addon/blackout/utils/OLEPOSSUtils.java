@@ -163,4 +163,7 @@ public class OLEPOSSUtils {
         Block b = mc.world.getBlockState(block).getBlock();
         return !(b instanceof AbstractFireBlock || b instanceof FluidBlock || b instanceof AirBlock);
     }
+    public static BlockPos toPos(Vec3d vec) {
+        return new BlockPos((int) vec.x, (int) vec.y, (int) vec.z);
+    }
 }

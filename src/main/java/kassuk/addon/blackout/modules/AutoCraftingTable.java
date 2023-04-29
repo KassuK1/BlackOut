@@ -209,7 +209,7 @@ public class AutoCraftingTable extends BlackOutModule {
         for (int x = -i; x <= i; x++) {
             for (int y = -i; y <= i; y++) {
                 for (int z = -i; z <= i; z++) {
-                    BlockPos pos = new BlockPos(mc.player.getEyePos()).add(x, y, z);
+                    BlockPos pos = OLEPOSSUtils.toPos(mc.player.getEyePos()).add(x, y, z);
 
                     if (!OLEPOSSUtils.replaceable(pos)) {continue;}
                     if (getBlock(pos) == Blocks.CRAFTING_TABLE) {

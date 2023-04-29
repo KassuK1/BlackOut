@@ -78,8 +78,8 @@ public class TargetHud extends HudElement {
         .build()
     );
     private final Setting<Boolean> damage = sgGeneral.add(new BoolSetting.Builder()
-        .name("Shows Damage")
-        .description(".")
+        .name("Damage")
+        .description("Renders damage dealt to target.")
         .defaultValue(false)
         .build()
     );
@@ -114,7 +114,7 @@ public class TargetHud extends HudElement {
         float[] size = new float[]{(float) (200 * scale.get() * scale.get()), (float) (65 * scale.get() * scale.get())};
 
         setSize(size[0], size[1]);
-        PlayerEntity playerEntity = getClosest();
+        PlayerEntity playerEntity = isInEditor() ? mc.player : getClosest();
         float[] renderSize = new float[]{(float) (size[0] * scaleAnim), (float) (size[1] * scaleAnim)};
         float[] offsetPos = new float[]{(float) (x + size[0] * (1 - scaleAnim) / 2), (float) (y + size[1] * (1 - scaleAnim) / 2)};
         if (playerEntity != null) {

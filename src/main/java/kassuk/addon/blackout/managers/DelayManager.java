@@ -23,18 +23,14 @@ public class DelayManager {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
-        List<Delayed> toRemove = new ArrayList<>();
         if (!tasks.isEmpty()) {
-            for (Delayed task : tasks) {
-                if (task != null) {
-                    if (task.shouldRun()) {
-                        task.run();
-                        toRemove.add(task);
-                    } else {
-                        task.update(event.frameTime);
-                    }
+            List<Delayed> toRemove = new ArrayList<>();
+            tasks.forEach(task -> {
+                if (System.currentTimeMillis() > task.time) {
+                    task.runnable.run();
+                    toRemove.add(task);
                 }
-            }
+            });
             toRemove.forEach(tasks::remove);
         }
     }
@@ -43,29 +39,13 @@ public class DelayManager {
         tasks.add(new Delayed(run, delay));
     }
 
-    public void clear() {
-        tasks.clear();
-    }
-
     static class Delayed {
         private final Runnable runnable;
-        private double time;
+        private final long time;
 
         public Delayed(Runnable runnable, double delay) {
             this.runnable = runnable;
-            this.time = delay;
-        }
-
-        public void update(double delta) {
-            time = Math.max(0, time - delta);
-        }
-
-        public boolean shouldRun() {
-            return time <= 0;
-        }
-
-        public void run() {
-            runnable.run();
+            this.time = Math.round(System.currentTimeMillis() + delay * 1000);
         }
     }
 }

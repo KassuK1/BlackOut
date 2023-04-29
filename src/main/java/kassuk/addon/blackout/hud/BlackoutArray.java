@@ -24,7 +24,9 @@ import java.util.stream.Collectors;
 public class BlackoutArray extends HudElement {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final SettingGroup sgWave = settings.createGroup("Wave");
 
+    //   General Page
     private final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
         .name("Module Color")
         .description("The color the ArrayList will use for module names.")
@@ -35,31 +37,6 @@ public class BlackoutArray extends HudElement {
         .name("Info Color")
         .description("The color the ArrayList will use for info strings.")
         .defaultValue(new SettingColor(255, 255, 255, 255))
-        .build()
-    );
-    private final Setting<Boolean> wave = sgGeneral.add(new BoolSetting.Builder()
-        .name("Wave")
-        .description("The wave color.")
-        .defaultValue(false)
-        .build()
-    );
-    private final Setting<SettingColor> waveColor = sgGeneral.add(new ColorSetting.Builder()
-        .name("Module Wave Color")
-        .description("The color the ArrayList will use for module names.")
-        .defaultValue(new SettingColor(255, 255, 255, 255))
-        .build()
-    );
-    private final Setting<SettingColor> infoWaveColor = sgGeneral.add(new ColorSetting.Builder()
-        .name("Info Wave Color")
-        .description("The color the ArrayList will use for info strings.")
-        .defaultValue(new SettingColor(255, 255, 255, 255))
-        .build()
-    );
-    private final Setting<Double> speed = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Wave Speed")
-        .description("The speed of the color waves.")
-        .defaultValue(1)
-        .sliderRange(1, 10)
         .build()
     );
     private final Setting<Side> side = sgGeneral.add(new EnumSetting.Builder<Side>()
@@ -77,7 +54,7 @@ public class BlackoutArray extends HudElement {
     private final Setting<Boolean> infoCare = sgGeneral.add(new BoolSetting.Builder()
         .name("Info Length")
         .description("Should the list care about the the info text length when sorting?")
-        .defaultValue(false)
+        .defaultValue(true)
         .build()
     );
     private final Setting<Boolean> onlyBlackout = sgGeneral.add(new BoolSetting.Builder()
@@ -96,6 +73,33 @@ public class BlackoutArray extends HudElement {
         .name("Scale")
         .description("The scale the ArrayList will be rendered at.")
         .defaultValue(1)
+        .build()
+    );
+
+    //   Wave Page
+    private final Setting<Boolean> wave = sgWave.add(new BoolSetting.Builder()
+        .name("Wave")
+        .description("The wave color.")
+        .defaultValue(false)
+        .build()
+    );
+    private final Setting<SettingColor> waveColor = sgWave.add(new ColorSetting.Builder()
+        .name("Module Wave Color")
+        .description("The color the ArrayList will use for module names.")
+        .defaultValue(new SettingColor(255, 255, 255, 255))
+        .build()
+    );
+    private final Setting<SettingColor> infoWaveColor = sgWave.add(new ColorSetting.Builder()
+        .name("Info Wave Color")
+        .description("The color the ArrayList will use for info strings.")
+        .defaultValue(new SettingColor(255, 255, 255, 255))
+        .build()
+    );
+    private final Setting<Double> speed = sgWave.add(new DoubleSetting.Builder()
+        .name("Wave Speed")
+        .description("The speed of the color waves.")
+        .defaultValue(1)
+        .sliderRange(1, 10)
         .build()
     );
 

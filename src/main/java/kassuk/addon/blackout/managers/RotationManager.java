@@ -37,7 +37,6 @@ public class RotationManager {
     public RotationSettings settings = null;
     public boolean unsent = false;
     public static List<Rotation> history = new ArrayList<>();
-    public double rotationsLeft = 0;
     public Target lastTarget = null;
     public boolean stopping = false;
     boolean shouldRotate = false;
@@ -260,9 +259,9 @@ public class RotationManager {
         if (settings == null) {
             return false;
         }
-        boolean alreadyRotated = SettingUtils.rotationCheckHistory(box, type);
+        boolean alreadyRotated = SettingUtils.rotationCheck(box);
 
-        if (p < priority || (p == priority && (!(target instanceof BoxTarget) || SettingUtils.rotationCheckHistory(((BoxTarget) target).box, type)))) {
+        if (p < priority || (p == priority && (!(target instanceof BoxTarget) || SettingUtils.rotationCheck(((BoxTarget) target).box)))) {
             priority = p;
             lastTarget = target;
 

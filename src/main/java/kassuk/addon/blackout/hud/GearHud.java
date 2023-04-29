@@ -30,7 +30,7 @@ public class GearHud extends HudElement {
     private final Setting<Double> scale = sgGeneral.add(new DoubleSetting.Builder()
         .name("Scale")
         .description("The scale.")
-        .defaultValue(2)
+        .defaultValue(1.5)
         .min(1)
         .sliderRange(1, 5)
         .build()
@@ -39,6 +39,18 @@ public class GearHud extends HudElement {
         .name("Color")
         .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(255, 255, 255, 255))
+        .build()
+    );
+    private final Setting<Boolean> shadow = sgGeneral.add(new BoolSetting.Builder()
+        .name("Shadow")
+        .description("Renders a shadow behind the chars.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> experienceInfo = sgGeneral.add(new BoolSetting.Builder()
+        .name("Experience Info")
+        .description("Displays mend percentage for armor next to experience bottles.")
+        .defaultValue(true)
         .build()
     );
     public static final HudElementInfo<GearHud> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "GearHud", "Gear.", GearHud::new);
@@ -51,8 +63,9 @@ public class GearHud extends HudElement {
     public void render(HudRenderer renderer) {
         setSize(55 * scale.get() * scale.get(), 20 * scale.get() * scale.get() * items.get().size());
         for (int i = 0; i < items.get().size(); i++) {
-            RenderUtils.drawItem(new ItemStack(items.get().get(i).asItem()), x, (int) Math.round(y + i * 20 * scale.get() * scale.get()), scale.get() * scale.get(), true);
-            renderer.text(getText(items.get().get(i).asItem()), x + 25 * scale.get() * scale.get(), (int) Math.round(y + i * 20 * scale.get() * scale.get()), color.get(), true, scale.get());
+            int posY = (int) Math.round(y + i * 20 * scale.get() * scale.get());
+            RenderUtils.drawItem(items.get().get(i).getDefaultStack(), x, posY, (float) (scale.get() * scale.get()), true);
+            renderer.text(getText(items.get().get(i).asItem()), x + 25 * scale.get() * scale.get(), posY, color.get(), shadow.get(), scale.get());
         }
     }
 
@@ -61,11 +74,11 @@ public class GearHud extends HudElement {
     }
 
     private String getText(Item item) {
-        if (!(item == Items.EXPERIENCE_BOTTLE && armorDur() != 0)) {
-            return String.valueOf(amountOf(item));
-        } else {
-            return amountOf(item) + "  (" + Math.round(amountOf(item) * 14 / armorDur() * 100) + "%)";
+        if (item == Items.EXPERIENCE_BOTTLE && armorDur() > 0 && experienceInfo.get()) {
+            return amountOf(item) + "  " + Math.round(amountOf(item) * 14 / armorDur() * 100) + "%";
         }
+
+        return String.valueOf(amountOf(item));
     }
 
     private double armorDur() {

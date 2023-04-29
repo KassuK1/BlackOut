@@ -8,7 +8,7 @@ import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
 
 public class BlackoutGit extends Command {
     public BlackoutGit() {
-        super("BlackoutInfo", "Gives the Blackout GitHub");
+        super("blackoutinfo", "Gives the Blackout GitHub");
     }
 
     @Override

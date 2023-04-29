@@ -51,7 +51,7 @@ public class AutoEz extends BlackOutModule {
     private final Setting<Boolean> kill = sgKill.add(new BoolSetting.Builder()
         .name("Kill")
         .description("Should we send a message when enemy dies")
-        .defaultValue(false)
+        .defaultValue(true)
         .build()
     );
     private final Setting<MessageMode> killMsgMode = sgKill.add(new EnumSetting.Builder<MessageMode>()
@@ -72,7 +72,7 @@ public class AutoEz extends BlackOutModule {
     private final Setting<Boolean> pop = sgPop.add(new BoolSetting.Builder()
         .name("Pop")
         .description("Should we send a message when enemy pops a totem")
-        .defaultValue(false)
+        .defaultValue(true)
         .build()
     );
     private final Setting<List<String>> popMessages = sgPop.add(new StringListSetting.Builder()
