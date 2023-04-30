@@ -45,7 +45,7 @@ public class AutoMend extends BlackOutModule {
         .description("Amount of bottles to throw every time.")
         .defaultValue(1)
         .min(0)
-        .sliderRange(0, 100)
+        .sliderRange(0, 10)
         .build()
     );
     private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()

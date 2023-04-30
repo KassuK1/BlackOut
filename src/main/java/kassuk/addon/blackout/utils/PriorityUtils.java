@@ -22,6 +22,7 @@ public class PriorityUtils {
         if (module instanceof ScaffoldPlus) {return 2;}
         if (module instanceof SelfTrapPlus) {return 1;}
         if (module instanceof SurroundPlus) {return 0;}
+        if (module instanceof KillAuraPlus) {return 11;}
 
         return 100;
     }

@@ -41,7 +41,7 @@ public class RaytraceSettings extends BlackOutModule {
         .name("Place Height")
         .description("Raytraces to x blocks above the bottom.")
         .defaultValue(0.5)
-        .sliderRange(-0.5, 1.5)
+        .sliderRange(-2, 2)
         .visible(() -> placeMode.get() == PlaceTraceMode.SinglePoint)
         .build()
     );
@@ -49,16 +49,16 @@ public class RaytraceSettings extends BlackOutModule {
     private final Setting<Double> placeHeight1 = sgPlace.add(new DoubleSetting.Builder()
         .name("Place Height 1")
         .description("Raytraces to x blocks above the bottom.")
-        .defaultValue(0.5)
-        .sliderRange(-0.5, 1.5)
+        .defaultValue(0.25)
+        .sliderRange(-2, 1.5)
         .visible(() -> placeMode.get() == PlaceTraceMode.DoublePoint)
         .build()
     );
     private final Setting<Double> placeHeight2 = sgPlace.add(new DoubleSetting.Builder()
         .name("Place Height 2")
         .description("Raytraces to x blocks above the bottom.")
-        .defaultValue(0.5)
-        .sliderRange(-0.5, 1.5)
+        .defaultValue(0.75)
+        .sliderRange(-2, 2)
         .visible(() -> placeMode.get() == PlaceTraceMode.DoublePoint)
         .build()
     );
@@ -66,6 +66,7 @@ public class RaytraceSettings extends BlackOutModule {
     private final Setting<Double> exposure = sgPlace.add(new DoubleSetting.Builder()
         .name("Place Exposure")
         .description("How many % of the block should be seen.")
+        .defaultValue(50)
         .range(0, 100)
         .sliderRange(0, 100)
         .visible(() -> placeMode.get() == PlaceTraceMode.Exposure)
@@ -88,24 +89,24 @@ public class RaytraceSettings extends BlackOutModule {
     private final Setting<Double> attackHeight = sgAttack.add(new DoubleSetting.Builder()
         .name("Attack Height")
         .description("Raytraces to x blocks above the bottom.")
-        .defaultValue(0.5)
-        .sliderRange(-0.5, 1.5)
+        .defaultValue(1.5)
+        .sliderRange(-2, 2)
         .visible(() -> attackMode.get().equals(AttackTraceMode.SinglePoint))
         .build()
     );
     private final Setting<Double> attackHeight1 = sgAttack.add(new DoubleSetting.Builder()
         .name("Attack Height 1")
         .description("Raytraces to x * hitbox height above the bottom.")
-        .defaultValue(0.25)
-        .sliderRange(-1, 2)
+        .defaultValue(0.5)
+        .sliderRange(-2, 2)
         .visible(() -> attackMode.get().equals(AttackTraceMode.DoublePoint))
         .build()
     );
     private final Setting<Double> attackHeight2 = sgAttack.add(new DoubleSetting.Builder()
         .name("Attack Height 2")
         .description("Raytraces to x * hitbox height above the bottom.")
-        .defaultValue(0.75)
-        .sliderRange(-1, 2)
+        .defaultValue(0.5)
+        .sliderRange(-2, 2)
         .visible(() -> attackMode.get().equals(AttackTraceMode.DoublePoint))
         .build()
     );
@@ -113,6 +114,7 @@ public class RaytraceSettings extends BlackOutModule {
     private final Setting<Double> attackExposure = sgPlace.add(new DoubleSetting.Builder()
         .name("Attack Exposure")
         .description("How many % of the entity should be seen.")
+        .defaultValue(50)
         .range(0, 100)
         .sliderRange(0, 100)
         .visible(() -> placeMode.get() == PlaceTraceMode.Exposure)
@@ -256,7 +258,7 @@ public class RaytraceSettings extends BlackOutModule {
                             result = BODamageUtils.raycast(raycastContext);
                             if (result.getType() != HitResult.Type.BLOCK) {
                                 hit++;
-                                if (hit >= exposure.get() / 100 * 27) {
+                                if (hit >= attackExposure.get() / 100 * 27) {
                                     return true;
                                 }
                             }

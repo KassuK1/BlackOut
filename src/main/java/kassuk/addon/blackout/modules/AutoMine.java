@@ -73,7 +73,7 @@ public class AutoMine extends BlackOutModule {
         .description("Seconds between sending civ packets.")
         .defaultValue(0.2)
         .range(0.1, 10)
-        .sliderMax(10)
+        .sliderRange(0.1, 10)
         .visible(() -> mode.get() == AutoMineMode.CIV)
         .build()
     );

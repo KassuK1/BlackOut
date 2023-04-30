@@ -28,7 +28,7 @@ public class HudWaterMark extends HudElement {
         .description("Modify the size of the text.")
         .defaultValue(1.5)
         .min(0)
-        .sliderRange(0, 5)
+        .sliderRange(0, 10)
         .build()
     );
     private final Setting<Boolean> logo = sgGeneral.add(new BoolSetting.Builder()
@@ -42,7 +42,7 @@ public class HudWaterMark extends HudElement {
         .description("Modify the size of the logo.")
         .defaultValue(1)
         .min(0)
-        .sliderRange(0, 5)
+        .sliderRange(0, 10)
         .build()
     );
     public static final HudElementInfo<HudWaterMark> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "BlackoutWatermark", "The Blackout watermark.", HudWaterMark::new);

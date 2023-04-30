@@ -79,7 +79,7 @@ public class HoleFillRewrite extends BlackOutModule {
         .name("Hole Range")
         .description("Places when enemy is close enough to target hole")
         .defaultValue(3)
-        .range(0, 10)
+        .min(0)
         .sliderMax(10)
         .build()
     );
@@ -101,7 +101,7 @@ public class HoleFillRewrite extends BlackOutModule {
         .name("Place Delay")
         .description("Delay between places.")
         .defaultValue(0.125)
-        .range(0, 10)
+        .min(0)
         .sliderRange(0, 10)
         .build()
     );
@@ -109,7 +109,7 @@ public class HoleFillRewrite extends BlackOutModule {
         .name("Places")
         .description("Blocks placed per place")
         .defaultValue(1)
-        .range(1, 10)
+        .min(1)
         .sliderRange(1, 10)
         .build()
     );
@@ -117,7 +117,7 @@ public class HoleFillRewrite extends BlackOutModule {
         .name("Delay")
         .description("Delay between places at single spot.")
         .defaultValue(1)
-        .range(0, 10)
+        .min(0)
         .sliderRange(0, 10)
         .build()
     );

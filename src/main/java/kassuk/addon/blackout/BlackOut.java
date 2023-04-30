@@ -63,6 +63,7 @@ public class BlackOut extends MeteorAddon {
         modules.add(new HoleFillRewrite());
         modules.add(new HoleSnap());
         modules.add(new KassuKAura());
+        modules.add(new KillAuraPlus());
         modules.add(new LightsOut());
         modules.add(new OffHandPlus());
         modules.add(new PacketCrash());

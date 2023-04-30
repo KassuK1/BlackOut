@@ -164,6 +164,6 @@ public class OLEPOSSUtils {
         return !(b instanceof AbstractFireBlock || b instanceof FluidBlock || b instanceof AirBlock);
     }
     public static BlockPos toPos(Vec3d vec) {
-        return new BlockPos((int) vec.x, (int) vec.y, (int) vec.z);
+        return new BlockPos((int) Math.floor(vec.x), (int) Math.floor(vec.y), (int) Math.floor(vec.z));
     }
 }

@@ -94,7 +94,7 @@ public class AutoTrapPlus extends BlackOutModule {
         .name("Place Delay")
         .description("Delay between places.")
         .defaultValue(0.1)
-        .range(0, 10)
+        .min(0)
         .sliderRange(0, 10)
         .build()
     );

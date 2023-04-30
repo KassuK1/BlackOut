@@ -28,8 +28,8 @@ public class FastXP extends BlackOutModule {
         .name("Throw Delay")
         .description("Delay between throws.")
         .defaultValue(0)
-        .range(0, 3)
-        .sliderMax(3)
+        .min(0)
+        .sliderMax(10)
         .build()
     );
 
@@ -37,7 +37,7 @@ public class FastXP extends BlackOutModule {
         .name("Pitch")
         .description("Where to set pitch.")
         .defaultValue(45)
-        .range(0, 90)
+        .range(-90, 90)
         .sliderMax(90)
         .build()
     );

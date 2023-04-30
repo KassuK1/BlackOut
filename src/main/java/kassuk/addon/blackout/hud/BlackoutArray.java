@@ -73,6 +73,8 @@ public class BlackoutArray extends HudElement {
         .name("Scale")
         .description("The scale the ArrayList will be rendered at.")
         .defaultValue(1)
+        .min(0)
+        .sliderRange(10, 10)
         .build()
     );
 
@@ -99,6 +101,7 @@ public class BlackoutArray extends HudElement {
         .name("Wave Speed")
         .description("The speed of the color waves.")
         .defaultValue(1)
+        .min(0)
         .sliderRange(1, 10)
         .build()
     );

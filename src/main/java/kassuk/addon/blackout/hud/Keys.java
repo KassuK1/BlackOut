@@ -23,11 +23,11 @@ public class Keys extends HudElement {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<Double> scale = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Renderer scale")
+        .name("Scale")
         .description("Scale to render at.")
         .defaultValue(1)
-        .range(0, 5)
-        .sliderRange(0, 5)
+        .min(0)
+        .sliderRange(0, 10)
         .build()
     );
     private final Setting<SettingColor> textColor = sgGeneral.add(new ColorSetting.Builder()

@@ -24,6 +24,8 @@ public class OnTope extends HudElement {
         .name("Scale")
         .description("Modify the size of the text.")
         .defaultValue(1)
+        .min(0)
+        .sliderRange(0, 10)
         .build()
     );
     private final Setting<Boolean> shadow = sgGeneral.add(new BoolSetting.Builder()

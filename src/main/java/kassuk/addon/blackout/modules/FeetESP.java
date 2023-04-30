@@ -70,6 +70,7 @@ public class FeetESP extends BlackOutModule {
         .name("Range")
         .description("Renders feet inside this range.")
         .defaultValue(25)
+        .min(0)
         .sliderRange(0, 25)
         .build()
     );

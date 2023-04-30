@@ -171,8 +171,8 @@ public class AntiAim extends BlackOutModule {
             if (mode.get() == Modes.CSGO) {
                 if (csTick <= 0) {
                     csTick += csDelay.get();
-                    csYaw = r.nextInt(-180, 180);
-                    csPitch = r.nextInt(-90, 90);
+                    csYaw = rYaw.get() ? r.nextInt(-180, 180) : mc.player.getYaw();
+                    csPitch = rPitch.get() ? r.nextInt(-90, 90) : csgoPitch.get();
                 } else {
                     csTick--;
                 }

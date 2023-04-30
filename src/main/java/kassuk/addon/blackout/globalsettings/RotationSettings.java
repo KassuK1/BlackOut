@@ -85,7 +85,7 @@ public class RotationSettings extends BlackOutModule {
     );
     public final Setting<Integer> NCPPackets = sgGeneral.add(new IntSetting.Builder()
         .name("Rotation Memory")
-        .description("Accepts rotation if looked at it x packets before.")
+        .description("Accepts rotation if looked at it x packets earlier.")
         .defaultValue(5)
         .range(0, 20)
         .sliderRange(0, 20)
@@ -104,7 +104,7 @@ public class RotationSettings extends BlackOutModule {
         .description("Keeps the rotation for x seconds after ending.")
         .defaultValue(1)
         .min(0)
-        .sliderRange(0, 2)
+        .sliderRange(0, 1)
         .build()
     );
 
@@ -120,7 +120,7 @@ public class RotationSettings extends BlackOutModule {
         .description("Keeps the rotation for x seconds after ending.")
         .defaultValue(1)
         .min(0)
-        .sliderRange(0, 2)
+        .sliderRange(0, 1)
         .build()
     );
 
@@ -136,7 +136,7 @@ public class RotationSettings extends BlackOutModule {
         .description("Keeps the rotation for x seconds after ending.")
         .defaultValue(1)
         .min(0)
-        .sliderRange(0, 2)
+        .sliderRange(0, 1)
         .build()
     );
 
@@ -152,7 +152,7 @@ public class RotationSettings extends BlackOutModule {
         .description("Keeps the rotation for x seconds after ending.")
         .defaultValue(1)
         .min(0)
-        .sliderRange(0, 2)
+        .sliderRange(0, 1)
         .build()
     );
 
@@ -168,7 +168,7 @@ public class RotationSettings extends BlackOutModule {
         .description("Keeps the rotation for x seconds after ending.")
         .defaultValue(1)
         .min(0)
-        .sliderRange(0, 2)
+        .sliderRange(0, 1)
         .build()
     );
 
@@ -178,7 +178,7 @@ public class RotationSettings extends BlackOutModule {
         .description("Keeps the rotation for x seconds after ending.")
         .defaultValue(1)
         .min(0)
-        .sliderRange(0, 2)
+        .sliderRange(0, 1)
         .build()
     );
 

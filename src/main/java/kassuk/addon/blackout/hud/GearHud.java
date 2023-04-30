@@ -31,8 +31,8 @@ public class GearHud extends HudElement {
         .name("Scale")
         .description("The scale.")
         .defaultValue(1.5)
-        .min(1)
-        .sliderRange(1, 5)
+        .min(0)
+        .sliderRange(0, 10)
         .build()
     );
     private final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()

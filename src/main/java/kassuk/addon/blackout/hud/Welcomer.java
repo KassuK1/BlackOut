@@ -22,8 +22,8 @@ public class Welcomer extends HudElement {
         .name("Scale")
         .description("Scale to render at.")
         .defaultValue(1)
-        .range(0, 5)
-        .sliderRange(0, 5)
+        .min(0)
+        .sliderRange(0, 10)
         .build()
     );
     private final Setting<SettingColor> textColor = sgGeneral.add(new ColorSetting.Builder()

@@ -26,6 +26,7 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageSources;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
@@ -93,46 +94,46 @@ public class BODamageUtils {
 
     // Sword damage
 
-    public static double getSwordDamage(PlayerEntity entity, boolean charged) {
+    public static double getSwordDamage(ItemStack stack, PlayerEntity player, PlayerEntity target, boolean charged) {
         // Get sword damage
         double damage = 0;
         if (charged) {
-            if (entity.getActiveItem().getItem() == Items.NETHERITE_SWORD) {
+            if (stack.getItem() == Items.NETHERITE_SWORD) {
                 damage += 8;
-            } else if (entity.getActiveItem().getItem() == Items.DIAMOND_SWORD) {
+            } else if (stack.getItem() == Items.DIAMOND_SWORD) {
                 damage += 7;
-            } else if (entity.getActiveItem().getItem() == Items.GOLDEN_SWORD) {
+            } else if (stack.getItem() == Items.GOLDEN_SWORD) {
                 damage += 4;
-            } else if (entity.getActiveItem().getItem() == Items.IRON_SWORD) {
+            } else if (stack.getItem() == Items.IRON_SWORD) {
                 damage += 6;
-            } else if (entity.getActiveItem().getItem() == Items.STONE_SWORD) {
+            } else if (stack.getItem() == Items.STONE_SWORD) {
                 damage += 5;
-            } else if (entity.getActiveItem().getItem() == Items.WOODEN_SWORD) {
+            } else if (stack.getItem() == Items.WOODEN_SWORD) {
                 damage += 4;
             }
             damage *= 1.5;
         }
 
-        if (entity.getActiveItem().getEnchantments() != null) {
-            if (EnchantmentHelper.get(entity.getActiveItem()).containsKey(Enchantments.SHARPNESS)) {
-                int level = EnchantmentHelper.getLevel(Enchantments.SHARPNESS, entity.getActiveItem());
+        if (stack.getEnchantments() != null) {
+            if (EnchantmentHelper.get(stack).containsKey(Enchantments.SHARPNESS)) {
+                int level = EnchantmentHelper.getLevel(Enchantments.SHARPNESS, stack);
                 damage += (0.5 * level) + 0.5;
             }
         }
 
-        if (entity.getActiveStatusEffects().containsKey(StatusEffects.STRENGTH)) {
-            int strength = Objects.requireNonNull(entity.getStatusEffect(StatusEffects.STRENGTH)).getAmplifier() + 1;
+        if (player.getActiveStatusEffects().containsKey(StatusEffects.STRENGTH)) {
+            int strength = Objects.requireNonNull(player.getStatusEffect(StatusEffects.STRENGTH)).getAmplifier() + 1;
             damage += 3 * strength;
         }
 
         // Reduce by resistance
-        damage = resistanceReduction(entity, damage);
+        damage = resistanceReduction(target, damage);
 
         // Reduce by armour
-        damage = DamageUtil.getDamageLeft((float) damage, (float) entity.getArmor(), (float) entity.getAttributeInstance(EntityAttributes.GENERIC_ARMOR_TOUGHNESS).getValue());
+        damage = DamageUtil.getDamageLeft((float) damage, (float) target.getArmor(), (float) target.getAttributeInstance(EntityAttributes.GENERIC_ARMOR_TOUGHNESS).getValue());
 
         // Reduce by enchants
-        damage = normalProtReduction(entity, damage);
+        damage = normalProtReduction(target, damage);
 
         return damage < 0 ? 0 : damage;
     }

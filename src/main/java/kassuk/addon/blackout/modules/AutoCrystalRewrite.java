@@ -28,6 +28,8 @@ import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.ItemEntity;
+import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
@@ -35,6 +37,7 @@ import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
+import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -164,7 +167,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .name("Slow Damage")
         .description("Switches to slow speed when the target would take under this amount of damage.")
         .defaultValue(3)
-        .range(0, 20)
+        .min(0)
         .sliderRange(0, 20)
         .build()
     );
@@ -172,7 +175,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .name("Slow Speed")
         .description("How many times should the module place per second when damage is under slow damage.")
         .defaultValue(2)
-        .range(0, 20)
+        .min(0)
         .sliderRange(0, 20)
         .build()
     );
@@ -288,7 +291,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .name("Min Place")
         .description("Minimum damage to place.")
         .defaultValue(4)
-        .range(0, 20)
+        .min(0)
         .sliderRange(0, 20)
         .build()
     );
@@ -296,7 +299,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .name("Max Place")
         .description("Max self damage for placing.")
         .defaultValue(8)
-        .range(0, 20)
+        .min(0)
         .sliderRange(0, 20)
         .build()
     );
@@ -304,7 +307,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .name("Min Place Ratio")
         .description("Max self damage ratio for placing (enemy / self).")
         .defaultValue(3)
-        .range(0, 5)
+        .min(0)
         .sliderRange(0, 5)
         .build()
     );
@@ -312,7 +315,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .name("Max Friend Place")
         .description("Max friend damage for placing.")
         .defaultValue(8)
-        .range(0, 20)
+        .min(0)
         .sliderRange(0, 20)
         .build()
     );
@@ -320,7 +323,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .name("Min Friend Place Ratio")
         .description("Max friend damage ratio for placing (enemy / friend).")
         .defaultValue(2)
-        .range(0, 5)
+        .min(0)
         .sliderRange(0, 5)
         .build()
     );
@@ -334,7 +337,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .name("Min Explode")
         .description("Minimum enemy damage for exploding a crystal.")
         .defaultValue(2.5)
-        .range(0, 20)
+        .min(0)
         .sliderRange(0, 20)
         .build()
     );
@@ -342,7 +345,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .name("Max Explode")
         .description("Max self damage for exploding a crystal.")
         .defaultValue(9)
-        .range(0, 20)
+        .min(0)
         .sliderRange(0, 20)
         .build()
     );
@@ -350,7 +353,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .name("Min Explode Ratio")
         .description("Max self damage ratio for exploding a crystal (enemy / self).")
         .defaultValue(2.5)
-        .range(0, 5)
+        .min(0)
         .sliderRange(0, 5)
         .build()
     );
@@ -358,7 +361,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .name("Max Friend Explode")
         .description("Max friend damage for exploding a crystal.")
         .defaultValue(12)
-        .range(0, 20)
+        .min(0)
         .sliderRange(0, 20)
         .build()
     );
@@ -366,7 +369,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .name("Min Friend Explode Ratio")
         .description("Min friend damage ratio for exploding a crystal (enemy / friend).")
         .defaultValue(2)
-        .range(0, 5)
+        .min(0)
         .sliderRange(0, 5)
         .build()
     );
@@ -374,7 +377,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .name("Force Pop")
         .description("Ignores damage checks if any enemy will be popped in x hits.")
         .defaultValue(1)
-        .range(0, 10)
+        .min(0)
         .sliderRange(0, 10)
         .build()
     );
@@ -382,7 +385,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .name("Anti Friend Pop")
         .description("Cancels any action if any friend will be popped in x hits.")
         .defaultValue(1)
-        .range(0, 10)
+        .min(0)
         .sliderRange(0, 10)
         .build()
     );
@@ -390,7 +393,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .name("Anti Self Pop")
         .description("Cancels any action if you will be popped in x hits.")
         .defaultValue(1)
-        .range(0, 10)
+        .min(0)
         .sliderRange(0, 10)
         .build()
     );
@@ -402,11 +405,19 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .defaultValue(false)
         .build()
     );
-    private final Setting<Integer> idOffset = sgID.add(new IntSetting.Builder()
-        .name("Id Offset")
+    private final Setting<Integer> idStartOffset = sgID.add(new IntSetting.Builder()
+        .name("Id Start Offset")
         .description("How many id's ahead should we attack.")
         .defaultValue(1)
         .min(0)
+        .sliderMax(10)
+        .build()
+    );
+    private final Setting<Integer> idOffset = sgID.add(new IntSetting.Builder()
+        .name("Id Packet Offset")
+        .description("How many id's ahead should we attack between id packets.")
+        .defaultValue(1)
+        .min(1)
         .sliderMax(10)
         .build()
     );
@@ -418,6 +429,22 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .sliderMax(10)
         .build()
     );
+    private final Setting<Double> idDelay = sgID.add(new DoubleSetting.Builder()
+        .name("ID Start Delay")
+        .description("Starts sending id predict packets after this many seconds.")
+        .defaultValue(0.05)
+        .min(0)
+        .sliderRange(0, 1)
+        .build()
+    );
+    private final Setting<Double> idPacketDelay = sgID.add(new DoubleSetting.Builder()
+        .name("ID Packet Delay")
+        .description("Waits this many seconds between sending ID packets.")
+        .defaultValue(0.05)
+        .min(0)
+        .sliderRange(0, 1)
+        .build()
+    );
 
     //  Extrapolation Page
     private final Setting<Integer> selfExt = sgExtrapolation.add(new IntSetting.Builder()
@@ -425,7 +452,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .description("How many ticks of movement should be predicted for self damage checks.")
         .defaultValue(0)
         .range(0, 100)
-        .sliderMax(100)
+        .sliderMax(20)
         .build()
     );
     private final Setting<Integer> extrapolation = sgExtrapolation.add(new IntSetting.Builder()
@@ -433,7 +460,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .description("How many ticks of movement should be predicted for enemy damage checks.")
         .defaultValue(0)
         .range(0, 100)
-        .sliderMax(100)
+        .sliderMax(20)
         .build()
     );
     private final Setting<Integer> rangeExtrapolation = sgExtrapolation.add(new IntSetting.Builder()
@@ -441,7 +468,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .description("How many ticks of movement should be predicted for attack ranges before placing.")
         .defaultValue(0)
         .range(0, 100)
-        .sliderMax(100)
+        .sliderMax(20)
         .build()
     );
     private final Setting<Integer> hitboxExtrapolation = sgExtrapolation.add(new IntSetting.Builder()
@@ -449,7 +476,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .description("How many ticks of movement should be predicted for hitboxes in placing checks.")
         .defaultValue(0)
         .range(0, 100)
-        .sliderMax(100)
+        .sliderMax(20)
         .build()
     );
     private final Setting<Integer> extSmoothness = sgExtrapolation.add(new IntSetting.Builder()
@@ -563,8 +590,8 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .name("Auto Mine Damage")
         .description("Prioritizes placing on automine target block.")
         .defaultValue(1.1)
-        .sliderRange(1, 5)
         .min(1)
+        .sliderRange(1, 5)
         .build()
     );
 
@@ -1181,12 +1208,13 @@ public class AutoCrystalRewrite extends BlackOutModule {
                 }
             }
             if (idPredict.get()) {
-                int id = getHighest() + idOffset.get();
-                for (int i = 0; i < idPackets.get(); i++) {
+                int id = getHighest() + idStartOffset.get();
+                for (int i = 0; i < idPackets.get() * idOffset.get(); i += idOffset.get()) {
                     Entity en = mc.world.getEntityById(id + i);
-                    if (en == null || (en instanceof EndCrystalEntity)) {
-                        explode(id + i, null, new Vec3d(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5));
-                    }
+                    if (en instanceof ItemEntity) {continue;}
+
+                    int finalI = i;
+                    Managers.DELAY.add(() -> explode(id + finalI, null, new Vec3d(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5)), idDelay.get() + idPacketDelay.get() * i);
                 }
                 confirmed++;
             }
@@ -1419,10 +1447,14 @@ public class AutoCrystalRewrite extends BlackOutModule {
     }
 
     boolean explodeDamageCheck(double[] dmg, double[] health, boolean own, boolean sProt) {
-        boolean checkOwn = expMode.get() == ExplodeMode.FullCheck || expMode.get() == ExplodeMode.SelfDmgCheck
-            || expMode.get() == ExplodeMode.SelfDmgOwn || expMode.get() == ExplodeMode.AlwaysOwn;
-        boolean checkDmg = expMode.get() == ExplodeMode.FullCheck || (expMode.get() == ExplodeMode.SelfDmgOwn && !own) ||
-            (expMode.get() == ExplodeMode.AlwaysOwn && !own);
+        boolean checkOwn = expMode.get() == ExplodeMode.FullCheck
+            || expMode.get() == ExplodeMode.SelfDmgCheck
+            || expMode.get() == ExplodeMode.SelfDmgOwn
+            || expMode.get() == ExplodeMode.AlwaysOwn;
+
+        boolean checkDmg = expMode.get() == ExplodeMode.FullCheck
+            || (expMode.get() == ExplodeMode.SelfDmgOwn && !own)
+            || (expMode.get() == ExplodeMode.AlwaysOwn && !own);
 
         //  0 = enemy, 1 = friend, 2 = self
 
@@ -1492,7 +1524,6 @@ public class AutoCrystalRewrite extends BlackOutModule {
         }
         highestEnemy = -1;
         highestFriend = -1;
-        self = -1;
         enemyHP = -1;
         friendHP = -1;
         for (Map.Entry<PlayerEntity, Box> entry : extPos.entrySet()) {

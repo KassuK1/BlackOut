@@ -31,7 +31,7 @@ public class TargetHud extends HudElement {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<Double> scale = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Renderer scale")
+        .name("Scale")
         .description("Scale to render at")
         .defaultValue(1)
         .range(0, 5)
@@ -40,14 +40,14 @@ public class TargetHud extends HudElement {
     );
 
     private final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
-        .name("Backround color")
+        .name("Background Color")
         .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(0, 0, 0, 155))
         .build()
     );
 
     private final Setting<SettingColor> textcolor = sgGeneral.add(new ColorSetting.Builder()
-        .name("Text color")
+        .name("Text Color")
         .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(255, 255, 255, 155))
         .build()
@@ -72,7 +72,7 @@ public class TargetHud extends HudElement {
     );
 
     private final Setting<Boolean> shadow = sgGeneral.add(new BoolSetting.Builder()
-        .name("Text shadow")
+        .name("Text Shadow")
         .description("Should the text have a shadow.")
         .defaultValue(true)
         .build()

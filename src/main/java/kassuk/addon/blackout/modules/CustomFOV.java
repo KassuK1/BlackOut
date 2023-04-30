@@ -20,8 +20,8 @@ public class CustomFOV extends BlackOutModule {
         .name("FOV")
         .description("What the FOV should be.")
         .defaultValue(120)
-        .range(0, 360)
-        .sliderRange(0, 360)
+        .range(0, 358)
+        .sliderRange(0, 358)
         .build()
     );
 
