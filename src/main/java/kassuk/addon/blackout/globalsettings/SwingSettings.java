@@ -141,10 +141,8 @@ public class SwingSettings extends BlackOutModule {
     }
 
     public enum MiningSwingState {
-        Full,
         Start,
-        End,
-        Double
+        End
     }
 
     public enum SwingHand {
@@ -173,17 +171,12 @@ public class SwingSettings extends BlackOutModule {
     public void mineSwing(MiningSwingState state) {
         switch (state) {
             case Start -> {
-                if (miningState.get() != MiningSwingState.Double && miningState.get() != MiningSwingState.Start && miningState.get() != MiningSwingState.Full) {
+                if (miningState.get() != MiningSwingState.Start) {
                     return;
                 }
             }
             case End -> {
-                if (miningState.get() != MiningSwingState.Double && miningState.get() != MiningSwingState.End && miningState.get() != MiningSwingState.Full) {
-                    return;
-                }
-            }
-            case Full -> {
-                if (miningState.get() != MiningSwingState.Full) {
+                if (miningState.get() != MiningSwingState.End) {
                     return;
                 }
             }

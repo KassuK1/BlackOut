@@ -24,7 +24,9 @@ import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
@@ -80,6 +82,12 @@ public class AutoTrapPlus extends BlackOutModule {
         .name("Only Hole")
         .description("Only places if enemy is in a hole.")
         .defaultValue(false)
+        .build()
+    );
+    private final Setting<Boolean> cevFriendly = sgGeneral.add(new BoolSetting.Builder()
+        .name("Cev Friendly")
+        .description("Doesn't place if there is a crystal on top of the block.")
+        .defaultValue(true)
         .build()
     );
 
@@ -385,11 +393,12 @@ public class AutoTrapPlus extends BlackOutModule {
         if (blocks.isEmpty()) {return list;}
 
         blocks.forEach(block -> {
-            if (!OLEPOSSUtils.replaceable(block) || !SettingUtils.inPlaceRange(block)) {return;}
+            if (!OLEPOSSUtils.replaceable(block)) {return;}
+            if (cevFriendly.get() && crystalAt(block.up())) {return;}
 
-            render.add(new Render(block, false));
-
-            if (SettingUtils.getPlaceData(block).valid()) {
+            PlaceData data = SettingUtils.getPlaceData(block);
+            if (data.valid() && SettingUtils.inPlaceRange(data.pos())) {
+                render.add(new Render(block, false));
                 list.add(block);
                 return;
             }
@@ -398,6 +407,7 @@ public class AutoTrapPlus extends BlackOutModule {
             Direction support1 = getSupport(block);
 
             if (support1 != null) {
+                render.add(new Render(block, false));
                 render.add(new Render(block.offset(support1), true));
                 list.add(block.offset(support1));
                 return;
@@ -410,6 +420,7 @@ public class AutoTrapPlus extends BlackOutModule {
                 Direction support2 = getSupport(block.offset(dir));
 
                 if (support2 != null) {
+                    render.add(new Render(block, false));
                     render.add(new Render(block.offset(dir), true));
                     render.add(new Render(block.offset(dir).offset(support2), true));
                     list.add(block.offset(dir).offset(support2));
@@ -538,6 +549,15 @@ public class AutoTrapPlus extends BlackOutModule {
             HoleUtils.getHole(pos.add(-1, 0, -1), 1).type == HoleType.Quad ||
             HoleUtils.getHole(pos.add(-1, 0, 0), 1).type == HoleType.Quad ||
             HoleUtils.getHole(pos.add(0, 0, -1), 1).type == HoleType.Quad;
+    }
+
+    boolean crystalAt(BlockPos pos) {
+        for (Entity entity : mc.world.getEntities()) {
+            if (entity instanceof EndCrystalEntity && entity.getBlockPos().equals(pos)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     record Render(BlockPos pos, boolean support) {}

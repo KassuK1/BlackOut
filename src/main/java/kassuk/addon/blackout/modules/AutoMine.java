@@ -334,6 +334,10 @@ public class AutoMine extends BlackOutModule {
             this.priority = priority;
         }
     }
+    public enum PlaceTiming {
+        Normal,
+        AntiPingFag
+    }
 
     public Block lastBlock = null;
     boolean speedmining = false;
@@ -371,7 +375,6 @@ public class AutoMine extends BlackOutModule {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onTick(TickEvent.Pre event) {
         if (targetPos != null && getBlock(targetPos) != Blocks.AIR) {
-            SettingUtils.mineSwing(SwingSettings.MiningSwingState.Full);
             if (SettingUtils.shouldRotate(RotationType.Breaking)) {
                 Managers.ROTATION.start(OLEPOSSUtils.getBox(targetPos), 9, RotationType.Breaking);
             }

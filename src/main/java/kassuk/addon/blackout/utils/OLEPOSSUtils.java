@@ -6,10 +6,7 @@ import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import net.minecraft.block.*;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ArmorItem;
-import net.minecraft.item.BedItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.SwordItem;
+import net.minecraft.item.*;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
@@ -157,6 +154,9 @@ public class OLEPOSSUtils {
     public static boolean replaceable(BlockPos block) {
         return ((MixinBlockSettings) AbstractBlock.Settings.copy(mc.world.getBlockState(block).getBlock())).getMaterial().isReplaceable();
     }
+    public static boolean solid2(BlockPos block) {
+        return ((MixinBlockSettings) AbstractBlock.Settings.copy(mc.world.getBlockState(block).getBlock())).getMaterial().isSolid();
+    }
 
     @SuppressWarnings({"BooleanMethodIsAlwaysInverted", "DataFlowIssue"})
     public static boolean solid(BlockPos block) {
@@ -165,5 +165,12 @@ public class OLEPOSSUtils {
     }
     public static BlockPos toPos(Vec3d vec) {
         return new BlockPos((int) Math.floor(vec.x), (int) Math.floor(vec.y), (int) Math.floor(vec.z));
+    }
+
+    public static boolean isGapple(Item item) {
+        return item == Items.GOLDEN_APPLE || item == Items.ENCHANTED_GOLDEN_APPLE;
+    }
+    public static boolean isGapple(ItemStack stack) {
+        return stack.getItem() == Items.GOLDEN_APPLE || stack.getItem() == Items.ENCHANTED_GOLDEN_APPLE;
     }
 }

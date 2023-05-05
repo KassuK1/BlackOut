@@ -10,7 +10,7 @@ import kassuk.addon.blackout.modules.FeetESP;
 import kassuk.addon.blackout.modules.Fog;
 import kassuk.addon.blackout.modules.SwingModifier;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
-import meteordevelopment.meteorclient.systems.commands.Commands;
+import meteordevelopment.meteorclient.commands.Commands;
 import meteordevelopment.meteorclient.systems.hud.Hud;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
@@ -36,7 +36,7 @@ public class BlackOut extends MeteorAddon {
 
         initializeSettings(Modules.get());
 
-        initializeCommands(Commands.get());
+        initializeCommands();
 
         initializeHud(Hud.get());
     }
@@ -51,6 +51,7 @@ public class BlackOut extends MeteorAddon {
         modules.add(new AutoEz());
         modules.add(new AutoMend());
         modules.add(new AutoMine());
+        modules.add(new AutoMinePlus());
         modules.add(new AutoMoan());
         modules.add(new AutoPearl());
         modules.add(new AutoTrapPlus());
@@ -93,9 +94,9 @@ public class BlackOut extends MeteorAddon {
         modules.add(new SwingSettings());
     }
 
-    private void initializeCommands(Commands commands) {
-        commands.add(new BlackoutGit());
-        commands.add(new Coords());
+    private void initializeCommands() {
+        Commands.add(new BlackoutGit());
+        Commands.add(new Coords());
     }
 
     private void initializeHud(Hud hud) {

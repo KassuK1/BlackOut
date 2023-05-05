@@ -8,7 +8,6 @@ import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.timers.BlockTimerList;
 import kassuk.addon.blackout.utils.*;
-import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -23,11 +22,11 @@ import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
-import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -83,7 +82,6 @@ public class SurroundPlus extends BlackOutModule {
         .defaultValue(SwitchMode.Silent)
         .build()
     );
-
     private final Setting<Double> placeDelay = sgPlacing.add(new DoubleSetting.Builder()
         .name("Place Delay")
         .description("Delay between places.")
@@ -146,6 +144,33 @@ public class SurroundPlus extends BlackOutModule {
         .defaultValue(new SettingColor(255, 0, 0, 50))
         .build()
     );
+    private final Setting<Boolean> renderPlaced = sgRender.add(new BoolSetting.Builder()
+        .name("Render Placed")
+        .description("Renders blocks after they have been placed.")
+        .defaultValue(false)
+        .build()
+    );
+    private final Setting<ShapeMode> placedShapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
+        .name("Placed Shape Mode")
+        .description("Which parts of render boxes should be rendered.")
+        .defaultValue(ShapeMode.Both)
+        .visible(renderPlaced::get)
+        .build()
+    );
+    private final Setting<SettingColor> placedLineColor = sgRender.add(new ColorSetting.Builder()
+        .name("Placed Line Color")
+        .description("Color of the outlines")
+        .defaultValue(new SettingColor(255, 0, 0, 255))
+        .visible(renderPlaced::get)
+        .build()
+    );
+    private final Setting<SettingColor> placedSideColor = sgRender.add(new ColorSetting.Builder()
+        .name("Placed Side Color")
+        .description("Color of the sides.")
+        .defaultValue(new SettingColor(255, 0, 0, 50))
+        .visible(renderPlaced::get)
+        .build()
+    );
     private final Setting<ShapeMode> supportShapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
         .name("Support Shape Mode")
         .description("Which parts of render boxes should be rendered for support blocks.")
@@ -200,7 +225,20 @@ public class SurroundPlus extends BlackOutModule {
             placesLeft = places.get();
             placeTimer = 0;
         }
-        render.forEach(item -> event.renderer.box(OLEPOSSUtils.getBox(item.pos), item.support ? supportSideColor.get() : sideColor.get(), item.support ? supportLineColor.get() : lineColor.get(), item.support ? supportShapeMode.get() : shapeMode.get(), 0));
+        render.forEach(item -> event.renderer.box(OLEPOSSUtils.getBox(item.pos),
+            switch (item.type) {
+                case Normal -> sideColor.get();
+                case Support -> supportSideColor.get();
+                case Placed -> placedSideColor.get();
+            }, switch (item.type) {
+                case Normal -> lineColor.get();
+                case Support -> supportLineColor.get();
+                case Placed -> placedLineColor.get();
+            }, switch (item.type) {
+                case Normal -> shapeMode.get();
+                case Support -> supportShapeMode.get();
+                case Placed -> placedShapeMode.get();
+            }, 0));
         update();
     }
 
@@ -361,72 +399,91 @@ public class SurroundPlus extends BlackOutModule {
             return null;
         }
 
-        List<BlockPos> list = new LinkedList<>();
-        List<Render> renders = new LinkedList<>();
-        List<BlockPos> toAttack = new LinkedList<>();
+        List<BlockPos> list = new ArrayList<>();
+        List<Render> renders = new ArrayList<>();
+        List<BlockPos> toAttack = new ArrayList<>();
 
         getBlocks(getSize())
-            .stream()//maybe use a parallel stream here
-            .filter(pos -> OLEPOSSUtils.replaceable(pos) && !placed.contains(pos))
             .forEach(position -> {
-                if (!timers.contains(position)) {
-                    PlaceData data = onlyConfirmed.get() ? SettingUtils.getPlaceData(position) : SettingUtils.getPlaceDataOR(position, placed::contains);
-                    if (data.valid()) {
-                        if ((EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> isAlive(entity) && !entity.isSpectator() && entity.getType() != EntityType.ITEM)) && (EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> entity instanceof EndCrystalEntity))) {
-                            toAttack.add(position);
-                        } else {
-                            list.add(position);
+                PlaceData data = onlyConfirmed.get() ? SettingUtils.getPlaceData(position) : SettingUtils.getPlaceDataOR(position, placed::contains);
+
+                if (data.valid()) {
+                    if (!timers.contains(position)
+                        && !EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> isAlive(entity) && !entity.isSpectator() && entity.getType() != EntityType.ITEM)
+                        && OLEPOSSUtils.replaceable(position)) {
+                        list.add(position);
+                    }
+                    if (EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> isAlive(entity) && entity instanceof EndCrystalEntity) && !EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> !entity.isSpectator() && !(entity instanceof EndCrystalEntity || entity instanceof ItemEntity))) {
+                        toAttack.add(position);
+                    }
+                } else if (OLEPOSSUtils.replaceable(position)) {
+                    Direction support = getSupport(position);
+
+                    if (support != null) {
+                        if (!timers.contains(position.offset(support))) {
+                            list.add(position.offset(support));
                         }
-                    } else {
-                        Direction best = null;
-                        int value = -1;
-                        double dist = Double.MAX_VALUE;
-                        for (Direction dir : Direction.values()) {
-                            if (!OLEPOSSUtils.replaceable(position.offset(dir))) {
-                                continue;
-                            }
-
-                            PlaceData placeData = onlyConfirmed.get() ? SettingUtils.getPlaceData(position.offset(dir)) : SettingUtils.getPlaceDataOR(position.offset(dir), placed::contains);
-
-                            if (!placeData.valid()) {
-                                continue;
-                            }
-
-                            if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> isAlive(entity) && !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
-                                double distance = OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(position.offset(dir)), mc.player.getPos());
-                                if (distance < dist || value <= 1) {
-                                    dist = distance;
-                                    best = dir;
-                                    value = 2;
-                                }
-                            } else if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> isAlive(entity) && !entity.isSpectator() && entity.getType() != EntityType.ITEM && entity.getType() != EntityType.END_CRYSTAL)) {
-                                if (value > 1) {
-                                    continue;
-                                }
-
-                                double distance = OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(position.offset(dir)), mc.player.getPos());
-                                if (distance < dist || value <= 0) {
-                                    value = 1;
-                                    best = dir;
-                                    dist = distance;
-                                }
-                            }
-                        }
-
-                        if (best != null) {
-                            if (!timers.contains(position.offset(best))) {
-                                list.add(position.offset(best));
-                            }
-                            renders.add(new Render(position.offset(best), true));
-                        }
+                        addRender(renders, new Render(position.offset(support), RenderType.Support));
                     }
                 }
-                renders.add(new Render(position, false));
+                if (!renderPlaced.get() && !OLEPOSSUtils.replaceable(position)) {return;}
+
+                addRender(renders, new Render(position, OLEPOSSUtils.replaceable(position) ? RenderType.Normal : RenderType.Placed));
             });
 
         attack = toAttack;
         render = renders;
         return list;
+    }
+
+    private Direction getSupport(BlockPos position) {
+        Direction cDir = null;
+        double cDist = 1000;
+        int value = -1;
+
+        for (Direction dir : Direction.values()) {
+            if (!OLEPOSSUtils.replaceable(position.offset(dir))) {continue;}
+
+            PlaceData data = onlyConfirmed.get() ? SettingUtils.getPlaceData(position.offset(dir)) : SettingUtils.getPlaceDataOR(position.offset(dir), placed::contains);
+
+            if (!data.valid() || !SettingUtils.inPlaceRange(data.pos())) {continue;}
+
+            if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> isAlive(entity) && !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
+                double dist = OLEPOSSUtils.distance(mc.player.getEyePos(), OLEPOSSUtils.getMiddle(position.offset(dir)));
+
+                if (dist < cDist || value < 2) {
+                    value = 2;
+                    cDir = dir;
+                    cDist = dist;
+                }
+            }
+
+            if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> isAlive(entity) && !entity.isSpectator() && entity.getType() != EntityType.ITEM && entity.getType() != EntityType.END_CRYSTAL)) {
+                double dist = OLEPOSSUtils.distance(mc.player.getEyePos(), OLEPOSSUtils.getMiddle(position.offset(dir)));
+
+                if (dist < cDist || value < 1) {
+                    value = 1;
+                    cDir = dir;
+                    cDist = dist;
+                }
+            }
+
+        }
+        return cDir;
+    }
+
+    private void addRender(List<Render> renders, Render render) {
+        for (Render r : renders) {
+            if (r.pos != render.pos) {continue;}
+
+            if (render.type.value < r.type.value) {return;}
+
+            if (r.type.value < render.type.value) {
+                renders.remove(r);
+                break;
+            }
+        }
+        renders.add(render);
     }
 
     private int[] getSize() {
@@ -492,7 +549,7 @@ public class SurroundPlus extends BlackOutModule {
         return !(entity instanceof EndCrystalEntity) || attacked <= 0;
     }
 
-    private record Render(BlockPos pos, boolean support) {}
+    private record Render(BlockPos pos, RenderType type) {}
 
     public enum SwitchMode {
         Disabled,
@@ -507,5 +564,15 @@ public class SurroundPlus extends BlackOutModule {
         Up,
         Down,
         Full
+    }
+    public enum RenderType {
+        Normal(3),
+        Support(1),
+        Placed(2);
+
+        private final int value;
+        RenderType(int value) {
+            this.value = value;
+        }
     }
 }

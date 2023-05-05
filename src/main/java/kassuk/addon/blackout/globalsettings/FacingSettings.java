@@ -8,6 +8,7 @@ import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
+import net.minecraft.block.AirBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.math.BlockPos;
@@ -203,7 +204,7 @@ public class FacingSettings extends BlackOutModule {
                 }
 
                 // Unblocked check (mostly for autocrystal placement facings)
-                if (unblocked.get() && !(getBlock(pos.offset(dir)) == Blocks.AIR)) {
+                if (unblocked.get() && !(getBlock(pos.offset(dir)) instanceof AirBlock)) {
                     continue;
                 }
 

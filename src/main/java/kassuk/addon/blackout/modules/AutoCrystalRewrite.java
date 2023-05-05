@@ -33,6 +33,7 @@ import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
@@ -50,6 +51,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 /**
  * @author OLEPOSSU
@@ -586,6 +588,12 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .defaultValue(true)
         .build()
     );
+    private final Setting<Boolean> alwaysAttack = sgCompatibility.add(new BoolSetting.Builder()
+        .name("Always Attack")
+        .description("Attacks any crystal even when the block is already placed.")
+        .defaultValue(true)
+        .build()
+    );
     private final Setting<Double> autoMineDamage = sgCompatibility.add(new DoubleSetting.Builder()
         .name("Auto Mine Damage")
         .description("Prioritizes placing on automine target block.")
@@ -832,7 +840,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         if (render.get()) {
             switch (renderMode.get()) {
                 case BlackOut -> {
-                    if (placePos != null && !pausedCheck() && holdingCheck()) {
+                    if (placePos != null && !isPaused() && holdingCheck()) {
                         renderProgress = Math.min(1, renderProgress + d);
                         renderTarget = new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ());
                     } else {
@@ -874,7 +882,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
                     }
                 }
                 case Future -> {
-                    if (placePos != null && !pausedCheck() && holdingCheck()) {
+                    if (placePos != null && !isPaused() && holdingCheck()) {
                         renderPos = new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ());
                         renderProgress = fadeTime.get() + renderTime.get();
                     } else {
@@ -991,8 +999,8 @@ public class AutoCrystalRewrite extends BlackOutModule {
         expEntity = null;
         double[] value = null;
         boolean shouldProtectSurround = surroundProt();
-        Hand hand = getHand(Items.END_CRYSTAL);
-        if (!pausedCheck() && (hand != null || switchMode.get() == SwitchMode.Silent || switchMode.get() == SwitchMode.PickSilent || switchMode.get() == SwitchMode.InvSilent) && explode.get()) {
+        Hand hand = getHand(stack -> stack.getItem() == Items.END_CRYSTAL);
+        if (!isPaused() && (hand != null || switchMode.get() == SwitchMode.Silent || switchMode.get() == SwitchMode.PickSilent || switchMode.get() == SwitchMode.InvSilent) && explode.get()) {
             for (Entity en : mc.world.getEntities()) {
                 if (en instanceof EndCrystalEntity) {
                     double[] dmg = getDmg(en.getPos())[0];
@@ -1027,19 +1035,19 @@ public class AutoCrystalRewrite extends BlackOutModule {
         }
         switch (switchMode.get()) {
             case Simple -> {
-                int slot = InvUtils.findInHotbar(itemStack -> itemStack.getItem().equals(Items.END_CRYSTAL)).slot();
+                int slot = InvUtils.findInHotbar(Items.END_CRYSTAL).slot();
                 if (placePos != null && hand == null && slot >= 0) {
                     InvUtils.swap(slot, false);
                     handToUse = Hand.MAIN_HAND;
                 }
             }
             case Smart -> {
-                int gapSlot = InvUtils.findInHotbar(itemStack -> itemStack.getItem().equals(Items.ENCHANTED_GOLDEN_APPLE)).slot();
+                int gapSlot = InvUtils.findInHotbar(OLEPOSSUtils::isGapple).slot();
                 if (shouldGap(gapSlot)) {
-                    if (getHand(Items.ENCHANTED_GOLDEN_APPLE) == null) {
+                    if (getHand(OLEPOSSUtils::isGapple) == null) {
                         InvUtils.swap(gapSlot, false);
                     }
-                    handToUse = getHand(Items.END_CRYSTAL);
+                    handToUse = getHand(itemStack -> itemStack.getItem() == Items.END_CRYSTAL);
                 } else if (!expFriendly.get() || !mc.player.isUsingItem()) {
                     int slot = InvUtils.findInHotbar(itemStack -> itemStack.getItem().equals(Items.END_CRYSTAL)).slot();
                     if (placePos != null && hand == null && slot >= 0) {
@@ -1049,14 +1057,14 @@ public class AutoCrystalRewrite extends BlackOutModule {
                 }
             }
             case Gapple -> {
-                int gapSlot = InvUtils.findInHotbar(itemStack -> itemStack.getItem().equals(Items.ENCHANTED_GOLDEN_APPLE)).slot();
-                if (mc.options.useKey.isPressed() && Managers.HOLDING.isHolding(Items.END_CRYSTAL, Items.ENCHANTED_GOLDEN_APPLE) && gapSlot >= 0) {
-                    if (getHand(Items.ENCHANTED_GOLDEN_APPLE) == null) {
+                int gapSlot = InvUtils.findInHotbar(OLEPOSSUtils::isGapple).slot();
+                if (mc.options.useKey.isPressed() && Managers.HOLDING.isHolding(Items.END_CRYSTAL, Items.ENCHANTED_GOLDEN_APPLE, Items.GOLDEN_APPLE) && gapSlot >= 0) {
+                    if (getHand(OLEPOSSUtils::isGapple) == null) {
                         InvUtils.swap(gapSlot, false);
                     }
-                    handToUse = getHand(Items.END_CRYSTAL);
-                } else if (Managers.HOLDING.isHolding(Items.END_CRYSTAL, Items.ENCHANTED_GOLDEN_APPLE)) {
-                    int slot = InvUtils.findInHotbar(itemStack -> itemStack.getItem().equals(Items.END_CRYSTAL)).slot();
+                    handToUse = getHand(itemStack -> itemStack.getItem() == Items.END_CRYSTAL);
+                } else if (Managers.HOLDING.isHolding(Items.END_CRYSTAL, Items.ENCHANTED_GOLDEN_APPLE, Items.GOLDEN_APPLE)) {
+                    int slot = InvUtils.findInHotbar(Items.END_CRYSTAL).slot();
                     if (placePos != null && hand == null && slot >= 0) {
                         InvUtils.swap(slot, false);
                         handToUse = Hand.MAIN_HAND;
@@ -1066,7 +1074,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         }
 
         if (placePos != null && placeDir != null) {
-            if (!pausedCheck()) {
+            if (!isPaused()) {
                 int silentSlot = InvUtils.find(itemStack -> itemStack.getItem() == Items.END_CRYSTAL).slot();
                 int hotbar = InvUtils.findInHotbar(Items.END_CRYSTAL).slot();
                 if (handToUse != null || (switchMode.get() == SwitchMode.Silent && hotbar >= 0) || ((switchMode.get() == SwitchMode.PickSilent || switchMode.get() == SwitchMode.InvSilent) && silentSlot >= 0)) {
@@ -1117,8 +1125,9 @@ public class AutoCrystalRewrite extends BlackOutModule {
     boolean surroundProt() {
         if (!surroundAttack.get() || !Modules.get().isActive(SurroundPlus.class)) {return false;}
 
-        for (int i = 0; i < SurroundPlus.attack.size(); i++) {
-            if (EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(SurroundPlus.attack.get(i)), entity -> entity instanceof EndCrystalEntity)) {
+        for (BlockPos attack : SurroundPlus.attack) {
+            if ((alwaysAttack.get() || OLEPOSSUtils.replaceable(attack)) &&
+                EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(attack), entity -> entity instanceof EndCrystalEntity)) {
                 return true;
             }
         }
@@ -1134,7 +1143,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
                 return InvUtils.find(Items.END_CRYSTAL).slot() >= 0;
             }
             default -> {
-                return getHand(Items.END_CRYSTAL) != null;
+                return getHand(itemStack -> itemStack.getItem() == Items.END_CRYSTAL) != null;
             }
         }
     }
@@ -1273,8 +1282,8 @@ public class AutoCrystalRewrite extends BlackOutModule {
     }
 
     void attackID(int id, Vec3d pos) {
-        Hand handToUse = getHand(Items.END_CRYSTAL);
-        if (handToUse != null && !pausedCheck()) {
+        Hand handToUse = getHand(itemStack -> itemStack.getItem() == Items.END_CRYSTAL);
+        if (handToUse != null && !isPaused()) {
             EndCrystalEntity en = new EndCrystalEntity(mc.world, pos.x, pos.y, pos.z);
             en.setId(id);
             attackEntity(en, OLEPOSSUtils.getCrystalBox(pos));
@@ -1356,16 +1365,13 @@ public class AutoCrystalRewrite extends BlackOutModule {
         return explodeDamageCheck(result[0], result[1], isOwn(vec), false);
     }
 
-    Hand getHand(Item item) {
-        return Managers.HOLDING.isHolding(item) ? Hand.MAIN_HAND:
-            mc.player.getOffHandStack().getItem().equals(item) ? Hand.OFF_HAND : null;
+    Hand getHand(Predicate<ItemStack> predicate) {
+        return predicate.test(Managers.HOLDING.getStack()) ? Hand.MAIN_HAND :
+            predicate.test(mc.player.getOffHandStack()) ? Hand.OFF_HAND : null;
     }
 
-    boolean pausedCheck() {
-        if (mc.player != null) {
-            return pauseEat.get() && (mc.player.isUsingItem() && (mc.player.getMainHandStack().getItem() == Items.ENCHANTED_GOLDEN_APPLE || mc.player.getOffHandStack().getItem() == Items.ENCHANTED_GOLDEN_APPLE));
-        }
-        return true;
+    boolean isPaused() {
+        return pauseEat.get() && mc.player.isUsingItem();
     }
 
     void setEntityDead(Entity en) {
@@ -1481,7 +1487,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
                 return false;
             }
 
-            if (dmg[1] >= 0 && dmg[1] / dmg[0] < minFriendExpRatio.get()) {
+            if (dmg[1] >= 0 && dmg[0] / dmg[1] < minFriendExpRatio.get()) {
                 return false;
             }
             if (dmg[2] >= 0 && dmg[0] / dmg[2] < minExpRatio.get()) {

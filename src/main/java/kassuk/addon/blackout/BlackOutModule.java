@@ -2,6 +2,7 @@ package kassuk.addon.blackout;
 
 import kassuk.addon.blackout.utils.PriorityUtils;
 import meteordevelopment.meteorclient.mixininterface.IChatHud;
+import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.config.Config;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Module;
@@ -21,12 +22,12 @@ public class BlackOutModule extends Module {
         this.priority = PriorityUtils.get(this);
     }
 
+    //  Messages
     public void sendToggledMsg() {
         if (Config.get().chatFeedback.get() && chatFeedback && mc.world != null) {
             ChatUtils.forceNextPrefixClass(getClass());
             String msg = prefix + " " + Formatting.WHITE + name + (isActive() ? Formatting.GREEN + " ON" : Formatting.RED + " OFF");
-            Text message = Text.of(msg);
-            ((IChatHud) mc.inGameHud.getChatHud()).add(message, hashCode());
+            sendMessage(Text.of(msg), hashCode());
         }
     }
 
@@ -34,8 +35,7 @@ public class BlackOutModule extends Module {
         if (mc.world != null) {
             ChatUtils.forceNextPrefixClass(getClass());
             String msg = prefix + " " + Formatting.WHITE + name + Formatting.RED + " OFF " + Formatting.GRAY + text;
-            Text message = Text.of(msg);
-            ((IChatHud) mc.inGameHud.getChatHud()).add(message, hashCode());
+            sendMessage(Text.of(msg), hashCode());
         }
     }
 
@@ -43,21 +43,34 @@ public class BlackOutModule extends Module {
         if (mc.world != null) {
             ChatUtils.forceNextPrefixClass(getClass());
             String msg = prefix + " " + Formatting.WHITE + name + " " + text;
-            Text message = Text.of(msg);
-            ((IChatHud) mc.inGameHud.getChatHud()).add(message, Objects.hash(name + "-info"));
+            sendMessage(Text.of(msg), Objects.hash(name + "-info"));
         }
     }
     public void debug(String text) {
         if (mc.world != null) {
             ChatUtils.forceNextPrefixClass(getClass());
             String msg = prefix + " " + Formatting.WHITE + name + " " + Formatting.AQUA + text;
-            Text message = Text.of(msg);
-            ((IChatHud) mc.inGameHud.getChatHud()).add(message, 0);
+            sendMessage(Text.of(msg), 0);
         }
     }
 
+    public void sendMessage(Text text, int id) {
+        ((IChatHud) mc.inGameHud.getChatHud()).add(text, id);
+    }
+
+    //  Packets
     public void sendPacket(Packet<?> packet) {
         if (mc.getNetworkHandler() == null) {return;}
         mc.getNetworkHandler().sendPacket(packet);
+    }
+
+    //  Settings
+    public Setting<Boolean> addPauseEat(SettingGroup group) {
+        return group.add(new BoolSetting.Builder()
+            .name("Pause Eat")
+            .description("Pauses when eating")
+            .defaultValue(false)
+            .build()
+        );
     }
 }

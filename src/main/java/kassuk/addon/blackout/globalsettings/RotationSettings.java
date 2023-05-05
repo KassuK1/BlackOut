@@ -186,8 +186,7 @@ public class RotationSettings extends BlackOutModule {
         Disabled,
         Start,
         End,
-        Double,
-        Full
+        Double
     }
 
     public enum RotationCheckMode {
@@ -204,7 +203,6 @@ public class RotationSettings extends BlackOutModule {
             case Crystal -> {return crystalRotate.get();}
             case Attacking -> {return attackRotate.get();}
             case Placing -> {return placeRotate.get();}
-            case Breaking -> {return mineRotate.get() == MiningRotMode.Full;}
             case Interact -> {return interactRotate.get();}
         }
         return false;

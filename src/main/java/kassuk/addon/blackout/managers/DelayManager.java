@@ -25,12 +25,13 @@ public class DelayManager {
     private void onRender(Render3DEvent event) {
         if (!tasks.isEmpty()) {
             List<Delayed> toRemove = new ArrayList<>();
-            tasks.forEach(task -> {
+            for (int i = 0; i < tasks.size(); i++) {
+                Delayed task = tasks.get(i);
                 if (System.currentTimeMillis() > task.time) {
                     task.runnable.run();
                     toRemove.add(task);
                 }
-            });
+            }
             toRemove.forEach(tasks::remove);
         }
     }
