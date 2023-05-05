@@ -151,11 +151,11 @@ public class ScaffoldPlus extends BlackOutModule {
         PickSilent,
         InvSwitch
     }
-    BlockTimerList timers = new BlockTimerList();
-    BlockTimerList placed = new BlockTimerList();
-    Vec3d motion = null;
-    double placeTimer;
-    int placesLeft = 0;
+    private final BlockTimerList timers = new BlockTimerList();
+    private final BlockTimerList placed = new BlockTimerList();
+    private Vec3d motion = null;
+    private double placeTimer;
+    private int placesLeft = 0;
 
     @Override
     public void onDeactivate() {
@@ -273,15 +273,15 @@ public class ScaffoldPlus extends BlackOutModule {
         }
     }
 
-    boolean isValid(ItemStack item) {
+    private boolean isValid(ItemStack item) {
         return item.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) item.getItem()).getBlock());
     }
 
-    boolean canPlace(BlockPos pos) {
+    private boolean canPlace(BlockPos pos) {
         return onlyConfirmed.get() ? SettingUtils.getPlaceData(pos).valid() : SettingUtils.getPlaceDataOR(pos, position -> placed.contains(position)).valid();
     }
 
-    List<BlockPos> getBlocks() {
+    private List<BlockPos> getBlocks() {
         List<BlockPos> list = new ArrayList<>();
         double x = motion.x;
         double z = motion.z;
@@ -297,24 +297,24 @@ public class ScaffoldPlus extends BlackOutModule {
         return list;
     }
 
-    void addBlocks(List<BlockPos> list, Vec3d vec) {
+    private void addBlocks(List<BlockPos> list, Vec3d vec) {
         BlockPos pos = OLEPOSSUtils.toPos(vec).down();
         if (!timers.contains(pos) && OLEPOSSUtils.replaceable(pos) && !list.contains(pos)) {
             list.add(pos);
         }
     }
 
-    Box getBox(Vec3d vec) {
+    private Box getBox(Vec3d vec) {
         Box box = mc.player.getBoundingBox();
         return new Box(vec.x - 0.3, vec.y, vec.z - 0.3, vec.x + 0.3, vec.y + (box.maxY - box.minY), vec.z + 0.3);
     }
 
-    boolean inside(Box bb) {
+    private boolean inside(Box bb) {
         return mc.world.getBlockCollisions(mc.player, bb).iterator().hasNext();
     }
 
 
-    void place(PlaceData d, BlockPos ogPos, Hand hand) {
+    private void place(PlaceData d, BlockPos ogPos, Hand hand) {
         timers.add(ogPos, delay.get());
         placed.add(ogPos, 1);
         placesLeft--;

@@ -21,6 +21,7 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
  */
 public class GearHud extends HudElement {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+
     private final Setting<List<Item>> items = sgGeneral.add(new ItemListSetting.Builder()
         .name("Items")
         .description("Items to show.")

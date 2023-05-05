@@ -41,7 +41,7 @@ public class LightsOut extends BlackOutModule {
         BlockPos block = getLightSource(mc.player.getEyePos(), SettingUtils.getMineRange());
         if (block != null && timer >= delay.get()) {
             timer = 0;
-            SettingUtils.mineSwing(SwingSettings.MiningSwingState.End);
+            SettingUtils.mineSwing(SwingSettings.MiningSwingState.Start);
             mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK,
                 block, Direction.UP));
             mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,

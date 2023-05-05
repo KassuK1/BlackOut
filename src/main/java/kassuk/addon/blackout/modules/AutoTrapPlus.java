@@ -186,13 +186,13 @@ public class AutoTrapPlus extends BlackOutModule {
         Eyes,
         Both
     }
-    BlockTimerList timers = new BlockTimerList();
-    double placeTimer = 0;
-    int placesLeft = 0;
-    BlockPos startPos = new BlockPos(0, 0, 0);
-    boolean lastSneak = false;
-    List<Render> render = new ArrayList<>();
-    BlockTimerList placed = new BlockTimerList();
+    private BlockTimerList timers = new BlockTimerList();
+    private double placeTimer = 0;
+    private int placesLeft = 0;
+    private BlockPos startPos = new BlockPos(0, 0, 0);
+    private boolean lastSneak = false;
+    private List<Render> render = new ArrayList<>();
+    private BlockTimerList placed = new BlockTimerList();
     public static boolean placing = false;
 
     @Override
@@ -357,15 +357,15 @@ public class AutoTrapPlus extends BlackOutModule {
         }
     }
 
-    boolean isValid(ItemStack item) {
+    private boolean isValid(ItemStack item) {
         return item.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) item.getItem()).getBlock());
     }
 
-    boolean canPlace(BlockPos pos) {
+    private boolean canPlace(BlockPos pos) {
         return SettingUtils.getPlaceData(pos).valid();
     }
 
-    void place(PlaceData d, BlockPos ogPos, Hand hand) {
+    private void place(PlaceData d, BlockPos ogPos, Hand hand) {
         timers.add(ogPos, delay.get());
         if (onlyConfirmed.get()) {
             placed.add(ogPos, 1);
@@ -387,7 +387,7 @@ public class AutoTrapPlus extends BlackOutModule {
         }
     }
 
-    List<BlockPos> getValid(List<BlockPos> blocks) {
+    private List<BlockPos> getValid(List<BlockPos> blocks) {
         List<BlockPos> list = new ArrayList<>();
 
         if (blocks.isEmpty()) {return list;}
@@ -431,7 +431,7 @@ public class AutoTrapPlus extends BlackOutModule {
         return list;
     }
 
-    Direction getSupport(BlockPos position) {
+    private Direction getSupport(BlockPos position) {
         Direction cDir = null;
         double cDist = 1000;
         int value = -1;
@@ -465,7 +465,7 @@ public class AutoTrapPlus extends BlackOutModule {
         return cDir;
     }
 
-    List<BlockPos> getBlocks(PlayerEntity player, int[] size, boolean higher) {
+    private List<BlockPos> getBlocks(PlayerEntity player, int[] size, boolean higher) {
         List<BlockPos> list = new ArrayList<>();
         BlockPos pos = player.getBlockPos().up(higher ? 2 : 1);
 
@@ -495,16 +495,15 @@ public class AutoTrapPlus extends BlackOutModule {
         return list;
     }
 
-    boolean top() {
+    private boolean top() {
         return trapMode.get() == TrapMode.Both || trapMode.get() == TrapMode.Top;
     }
 
-    boolean eye() {
+    private boolean eye() {
         return trapMode.get() == TrapMode.Both || trapMode.get() == TrapMode.Eyes;
     }
 
-
-    int[] getSize(BlockPos pos, PlayerEntity player) {
+    private int[] getSize(BlockPos pos, PlayerEntity player) {
         int minX = 0;
         int maxX = 0;
         int minZ = 0;
@@ -526,7 +525,8 @@ public class AutoTrapPlus extends BlackOutModule {
         }
         return new int[]{minX, maxX, minZ, maxZ};
     }
-    boolean holeCamping(PlayerEntity player) {
+
+    private boolean holeCamping(PlayerEntity player) {
         BlockPos pos = player.getBlockPos();
 
         if (HoleUtils.getHole(pos, 1).type == HoleType.Single) {
@@ -551,7 +551,7 @@ public class AutoTrapPlus extends BlackOutModule {
             HoleUtils.getHole(pos.add(0, 0, -1), 1).type == HoleType.Quad;
     }
 
-    boolean crystalAt(BlockPos pos) {
+    private boolean crystalAt(BlockPos pos) {
         for (Entity entity : mc.world.getEntities()) {
             if (entity instanceof EndCrystalEntity && entity.getBlockPos().equals(pos)) {
                 return true;
@@ -560,5 +560,5 @@ public class AutoTrapPlus extends BlackOutModule {
         return false;
     }
 
-    record Render(BlockPos pos, boolean support) {}
+    private record Render(BlockPos pos, boolean support) {}
 }

@@ -46,6 +46,7 @@ public class SelfTrapPlus extends BlackOutModule {
     private final SettingGroup sgPlacing = settings.createGroup("Placing");
     private final SettingGroup sgToggle = settings.createGroup("Toggle");
     private final SettingGroup sgRender = settings.createGroup("Render");
+
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
         .name("Pause Eat")
         .description("Pauses when you are eating.")
@@ -155,25 +156,14 @@ public class SelfTrapPlus extends BlackOutModule {
         .defaultValue(new SettingColor(255, 0, 0, 50))
         .build()
     );
-    public enum SwitchMode {
-        Disabled,
-        Normal,
-        Silent,
-        PickSilent,
-        InvSwitch
-    }
-    public enum TrapMode {
-        Top,
-        Eyes,
-        Both
-    }
-    BlockTimerList timers = new BlockTimerList();
-    double placeTimer = 0;
-    int placesLeft = 0;
-    BlockPos startPos = new BlockPos(0, 0, 0);
-    boolean lastSneak = false;
-    List<Render> render = new ArrayList<>();
-    BlockTimerList placed = new BlockTimerList();
+
+    private final BlockTimerList timers = new BlockTimerList();
+    private double placeTimer = 0;
+    private int placesLeft = 0;
+    private BlockPos startPos = new BlockPos(0, 0, 0);
+    private boolean lastSneak = false;
+    private final List<Render> render = new ArrayList<>();
+    private final BlockTimerList placed = new BlockTimerList();
     public static boolean placing = false;
 
     @Override
@@ -324,15 +314,15 @@ public class SelfTrapPlus extends BlackOutModule {
         }
     }
 
-    boolean isValid(ItemStack item) {
+    private boolean isValid(ItemStack item) {
         return item.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) item.getItem()).getBlock());
     }
 
-    boolean canPlace(BlockPos pos) {
+    private boolean canPlace(BlockPos pos) {
         return SettingUtils.getPlaceData(pos).valid();
     }
 
-    void place(PlaceData d, BlockPos ogPos, Hand hand) {
+    private void place(PlaceData d, BlockPos ogPos, Hand hand) {
         timers.add(ogPos, delay.get());
         if (onlyConfirmed.get()) {
             placed.add(ogPos, 1);
@@ -354,7 +344,7 @@ public class SelfTrapPlus extends BlackOutModule {
         }
     }
 
-    List<BlockPos> getValid(List<BlockPos> blocks) {
+    private List<BlockPos> getValid(List<BlockPos> blocks) {
         List<BlockPos> list = new ArrayList<>();
         blocks.forEach(position -> {
             if (OLEPOSSUtils.replaceable(position) && !placed.contains(position)) {
@@ -406,7 +396,7 @@ public class SelfTrapPlus extends BlackOutModule {
         return list;
     }
 
-    List<BlockPos> getBlocks(int[] size, boolean higher) {
+    private List<BlockPos> getBlocks(int[] size, boolean higher) {
         List<BlockPos> list = new ArrayList<>();
         BlockPos pos = mc.player.getBlockPos().up(higher ? 2 : 1);
         if (mc.player != null && mc.world != null) {
@@ -431,15 +421,15 @@ public class SelfTrapPlus extends BlackOutModule {
         return list;
     }
 
-    boolean top() {
+    private boolean top() {
         return trapMode.get() == TrapMode.Both || trapMode.get() == TrapMode.Top;
     }
 
-    boolean eye() {
+    private boolean eye() {
         return trapMode.get() == TrapMode.Both || trapMode.get() == TrapMode.Eyes;
     }
 
-    int[] getSize(BlockPos pos) {
+    private int[] getSize(BlockPos pos) {
         int minX = 0;
         int maxX = 0;
         int minZ = 0;
@@ -462,6 +452,19 @@ public class SelfTrapPlus extends BlackOutModule {
         return new int[]{minX, maxX, minZ, maxZ};
     }
 
+    public enum SwitchMode {
+        Disabled,
+        Normal,
+        Silent,
+        PickSilent,
+        InvSwitch
+    }
 
-    record Render(BlockPos pos, boolean support) {}
+    public enum TrapMode {
+        Top,
+        Eyes,
+        Both
+    }
+
+    private record Render(BlockPos pos, boolean support) {}
 }

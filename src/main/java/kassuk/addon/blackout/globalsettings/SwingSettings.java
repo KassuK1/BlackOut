@@ -24,6 +24,7 @@ public class SwingSettings extends BlackOutModule {
     private final SettingGroup sgPlace = settings.createGroup("Placing");
     private final SettingGroup sgAttack = settings.createGroup("Attacking");
     private final SettingGroup sgUse = settings.createGroup("Using");
+
     private final Setting<SwingMode> crystalPlace = sgCrystal.add(new EnumSetting.Builder<SwingMode>()
         .name("Crystal Place Swing")
         .description("Swings when placing crystals.")
@@ -133,24 +134,6 @@ public class SwingSettings extends BlackOutModule {
         .build()
     );
 
-    public enum SwingMode {
-        Disabled,
-        Client,
-        Packet,
-        Full
-    }
-
-    public enum MiningSwingState {
-        Start,
-        End
-    }
-
-    public enum SwingHand {
-        MainHand,
-        OffHand,
-        RealHand
-    }
-
     public void swing(SwingState state, SwingType type, Hand hand) {
         if (mc.player == null) {
             return;
@@ -188,7 +171,7 @@ public class SwingSettings extends BlackOutModule {
         swing(mining.get(), hand, Hand.MAIN_HAND);
     }
 
-    Hand gethand(SwingType type, Hand realHand) {
+    private Hand gethand(SwingType type, Hand realHand) {
         SwingHand swingHand = switch (type) {
             case Crystal -> crystalHand.get();
             case Interact -> interactHand.get();
@@ -200,7 +183,7 @@ public class SwingSettings extends BlackOutModule {
         return getHand(swingHand, realHand);
     }
 
-    Hand getHand(SwingHand hand, Hand realHand) {
+    private Hand getHand(SwingHand hand, Hand realHand) {
         return switch (hand) {
             case MainHand -> Hand.MAIN_HAND;
             case OffHand -> Hand.OFF_HAND;
@@ -208,7 +191,7 @@ public class SwingSettings extends BlackOutModule {
         };
     }
 
-    SwingState getState(SwingType type) {
+    private SwingState getState(SwingType type) {
         return switch (type) {
             case Crystal -> crystalState.get();
             case Interact -> interactState.get();
@@ -219,7 +202,7 @@ public class SwingSettings extends BlackOutModule {
         };
     }
 
-    void swing(SwingMode mode, Hand renderHand, Hand hand) {
+    private void swing(SwingMode mode, Hand renderHand, Hand hand) {
         if (mc.player == null) {
             return;
         }
@@ -231,5 +214,23 @@ public class SwingSettings extends BlackOutModule {
             case Packet -> mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(hand));
             case Client -> mc.player.swingHand(renderHand, true);
         }
+    }
+
+    public enum SwingMode {
+        Disabled,
+        Client,
+        Packet,
+        Full
+    }
+
+    public enum MiningSwingState {
+        Start,
+        End
+    }
+
+    public enum SwingHand {
+        MainHand,
+        OffHand,
+        RealHand
     }
 }

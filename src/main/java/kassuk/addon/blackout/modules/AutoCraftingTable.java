@@ -74,13 +74,13 @@ public class AutoCraftingTable extends BlackOutModule {
         .defaultValue(new SettingColor(255, 0, 0, 255))
         .build()
     );
-    BlockPos placePos;
-    PlaceData placeData;
-    BlockPos tablePos;
-    Direction tableDir;
-    double placeTimer = 0;
-    double interactTimer = 0;
-    long lastTime = -1;
+    private BlockPos placePos;
+    private PlaceData placeData;
+    private BlockPos tablePos;
+    private Direction tableDir;
+    private double placeTimer = 0;
+    private double interactTimer = 0;
+    private long lastTime = -1;
 
     public enum SwitchMode {
         Disabled,
@@ -110,12 +110,12 @@ public class AutoCraftingTable extends BlackOutModule {
         update();
         lastTime = System.currentTimeMillis();
     }
-    void update() {
+    private void update() {
         if (screenUpdate()) {return;}
         placeUpdate();
         interactUpdate();
     }
-    boolean screenUpdate() {
+    private boolean screenUpdate() {
         ScreenHandler screenHandler = mc.player.currentScreenHandler;
 
         if (screenHandler instanceof CraftingScreenHandler) {
@@ -125,7 +125,7 @@ public class AutoCraftingTable extends BlackOutModule {
         }
         return false;
     }
-    void placeUpdate() {
+    private void placeUpdate() {
         if (placePos != null && placeData != null && placeData.valid()) {
             if (placeTimer < 1 / placeSpeed.get()) {return;}
 
@@ -135,7 +135,7 @@ public class AutoCraftingTable extends BlackOutModule {
             }
         }
     }
-    void interactUpdate() {
+    private void interactUpdate() {
         if (tablePos != null) {
             tableDir = SettingUtils.getPlaceOnDirection(tablePos);
             if (tableDir == null) {return;}
@@ -147,7 +147,7 @@ public class AutoCraftingTable extends BlackOutModule {
             }
         }
     }
-    boolean interact() {
+    private boolean interact() {
         boolean rotated = !SettingUtils.shouldRotate(RotationType.Placing) || Managers.ROTATION.start(tablePos, priority - 0.1, RotationType.Interact);
         if (!rotated) {return false;}
 
@@ -155,7 +155,7 @@ public class AutoCraftingTable extends BlackOutModule {
 
         return true;
     }
-    boolean place() {
+    private boolean place() {
         Hand hand = Managers.HOLDING.isHolding(Items.CRAFTING_TABLE) ? Hand.MAIN_HAND :
             mc.player.getOffHandStack().getItem() == Items.CRAFTING_TABLE ? Hand.OFF_HAND : null;
 
@@ -198,7 +198,7 @@ public class AutoCraftingTable extends BlackOutModule {
         }
         return true;
     }
-    PlaceData findPos() {
+    private PlaceData findPos() {
         int i = (int) Math.ceil(Math.max(SettingUtils.getPlaceRange(), SettingUtils.getPlaceWallsRange()));
 
         PlaceData closestData = null;
@@ -243,17 +243,17 @@ public class AutoCraftingTable extends BlackOutModule {
         placePos = closestPos;
         return closestData;
     }
-    double value(BlockPos pos) {
+    private double value(BlockPos pos) {
         double val = 0;
         for (Direction dir : Direction.values()) {
             val += getBlastRes(getBlock(pos.offset(dir)));
         }
         return val;
     }
-    double getBlastRes(Block block) {
+    private double getBlastRes(Block block) {
         return block == Blocks.BEDROCK ? 1500 : block.getBlastResistance();
     }
-    double distToEnemySQ(BlockPos pos) {
+    private double distToEnemySQ(BlockPos pos) {
         double closest = Double.MAX_VALUE;
         for (PlayerEntity player : mc.world.getPlayers()) {
             if (player == mc.player) {continue;}
@@ -268,7 +268,7 @@ public class AutoCraftingTable extends BlackOutModule {
 
         return closest;
     }
-    Block getBlock(BlockPos pos) {
+    private Block getBlock(BlockPos pos) {
         return mc.world.getBlockState(pos).getBlock();
     }
 }

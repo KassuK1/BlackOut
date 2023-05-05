@@ -120,22 +120,12 @@ public class SpeedPlus extends BlackOutModule {
         .defaultValue(LiquidMode.Both)
         .build()
     );
-    public enum SpeedMode {
-        Strafe,
-        Instant,
-        Accelerate
-    }
-    public enum LiquidMode {
-        Disabled,
-        Submerged,
-        Touching,
-        Both
-    }
-    boolean move = false;
+
+    private boolean move = false;
     public double velocity;
-    double acceleration = 0;
-    double ax = 0;
-    double az = 0;
+    private double acceleration = 0;
+    private double ax = 0;
+    private double az = 0;
 
     @Override
     public void onActivate() {
@@ -258,14 +248,14 @@ public class SpeedPlus extends BlackOutModule {
         }
     }
 
-    double slipperiness(boolean moving) {
+    private double slipperiness(boolean moving) {
         if (moving) {
             return 1;
         }
         return mc.player.isOnGround() ? mc.world.getBlockState(new BlockPos((int) mc.player.getX(), (int) Math.ceil(mc.player.getY() - 1), (int) mc.player.getZ())).getBlock().getSlipperiness() : 0.98;
     }
 
-    double getYaw(double f, double s) {
+    private double getYaw(double f, double s) {
         double yaw = mc.player.getYaw();
         if (f > 0) {
             move = true;
@@ -278,5 +268,18 @@ public class SpeedPlus extends BlackOutModule {
             yaw += s > 0 ? -90 : s < 0 ? 90 : 0;
         }
         return yaw;
+    }
+
+    public enum SpeedMode {
+        Strafe,
+        Instant,
+        Accelerate
+    }
+
+    public enum LiquidMode {
+        Disabled,
+        Submerged,
+        Touching,
+        Both
     }
 }

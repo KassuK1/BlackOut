@@ -17,6 +17,7 @@ import net.minecraft.util.Identifier;
  */
 public class HudWaterMark extends HudElement {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+
     private final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
         .name("Color")
         .description(BlackOut.COLOR)

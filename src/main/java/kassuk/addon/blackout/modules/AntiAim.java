@@ -210,7 +210,7 @@ public class AntiAim extends BlackOutModule {
         return mode.get().name();
     }
 
-    double closestYaw() {
+    private double closestYaw() {
         PlayerEntity closest = getClosest();
 
         if (closest != null) {
@@ -218,7 +218,8 @@ public class AntiAim extends BlackOutModule {
         }
         return mc.player.getYaw();
     }
-    double closestPitch() {
+
+    private double closestPitch() {
         PlayerEntity closest = getClosest();
 
         if (closest != null) {
@@ -226,13 +227,14 @@ public class AntiAim extends BlackOutModule {
         }
         return mc.player.getPitch();
     }
-    double getSpinYaw() {
+
+    private double getSpinYaw() {
         spinYaw += spinSpeed.get();
 
         return spinYaw;
     }
 
-    PlayerEntity getClosest() {
+    private PlayerEntity getClosest() {
         PlayerEntity closest = null;
         for (PlayerEntity pl : mc.world.getPlayers()) {
             if (pl == mc.player) {continue;}

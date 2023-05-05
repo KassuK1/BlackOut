@@ -153,15 +153,15 @@ public class PacketFly extends BlackOutModule {
         .build()
     );
 
-    int ticks = 0;
-    int id = -1;
-    int sent = 0;
-    int rur = 0;
-    int packetsToSend = 0;
-    Random random = new Random();
-    String info = null;
-    Map<Integer, Vec3d> validPos = new HashMap<>();
-    List<PlayerMoveC2SPacket> validPackets = new ArrayList<>();
+    private int ticks = 0;
+    private int id = -1;
+    private int sent = 0;
+    private int rur = 0;
+    private int packetsToSend = 0;
+    private Random random = new Random();
+    private String info = null;
+    private Map<Integer, Vec3d> validPos = new HashMap<>();
+    private List<PlayerMoveC2SPacket> validPackets = new ArrayList<>();
 
     public boolean moving = false;
 

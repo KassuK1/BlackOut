@@ -81,13 +81,13 @@ public class AutoPearl extends BlackOutModule {
         this.toggle();
     }
 
-    int getYaw(Vec3d pos) {
+    private int getYaw(Vec3d pos) {
         int yaw = (int) Math.round(Rotations.getYaw(new Vec3d(Math.floor(pos.x) + 0.5, pos.y,
             Math.floor(pos.z) + 0.5)));
         return yaw > 0 ? yaw - 180 : yaw + 180;
     }
 
-    Hand getHand() {
+    private Hand getHand() {
         return mc.player.getMainHandStack().getItem() == Items.ENDER_PEARL ? Hand.MAIN_HAND : mc.player.getOffHandStack().getItem() == Items.ENDER_PEARL ? Hand.OFF_HAND : null;
     }
 }

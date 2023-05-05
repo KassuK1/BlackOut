@@ -136,7 +136,7 @@ public class RaytraceSettings extends BlackOutModule {
         Any
     }
 
-    Vec3d vec = new Vec3d(0, 0, 0);
+    private final Vec3d vec = new Vec3d(0, 0, 0);
     public RaycastContext raycastContext;
     public BlockHitResult result;
     public int hit = 0;
@@ -289,7 +289,7 @@ public class RaytraceSettings extends BlackOutModule {
         return false;
     }
 
-    void updateContext() {
+    private void updateContext() {
         if (raycastContext == null) {
             raycastContext = new RaycastContext(mc.player.getEyePos(), null, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.ANY, mc.player);
         } else {

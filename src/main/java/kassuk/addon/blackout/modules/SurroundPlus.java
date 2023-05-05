@@ -50,6 +50,7 @@ public class SurroundPlus extends BlackOutModule {
     private final SettingGroup sgPlacing = settings.createGroup("Placing");
     private final SettingGroup sgToggle = settings.createGroup("Toggle");
     private final SettingGroup sgRender = settings.createGroup("Render");
+
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
         .name("Pause Eat")
         .description("Pauses when you are eating.")

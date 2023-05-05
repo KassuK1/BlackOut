@@ -146,20 +146,20 @@ public class AnchorAuraPlus extends BlackOutModule {
         Loaded
     }
 
-    BlockPos[] blocks = new BlockPos[]{};
-    int lastIndex = 0;
-    int length = 0;
-    long tickTime = -1;
-    double bestDmg = -1;
-    long lastTime = 0;
+    private BlockPos[] blocks = new BlockPos[]{};
+    private int lastIndex = 0;
+    private int length = 0;
+    private long tickTime = -1;
+    private double bestDmg = -1;
+    private long lastTime = 0;
 
-    BlockPos placePos = null;
-    PlaceData placeData = null;
-    BlockPos calcPos = null;
-    PlaceData calcData = null;
-    BlockPos renderPos = null;
-    List<PlayerEntity> targets = new ArrayList<>();
-    Map<BlockPos, Anchor> anchors = new HashMap<>();
+    private BlockPos placePos = null;
+    private PlaceData placeData = null;
+    private BlockPos calcPos = null;
+    private PlaceData calcData = null;
+    private BlockPos renderPos = null;
+    private List<PlayerEntity> targets = new ArrayList<>();
+    private Map<BlockPos, Anchor> anchors = new HashMap<>();
 
     double timer = 0;
 
@@ -213,11 +213,11 @@ public class AnchorAuraPlus extends BlackOutModule {
 
     }
 
-    boolean pauseCheck() {
+    private boolean pauseCheck() {
         return !pauseEat.get() || !mc.player.isUsingItem();
     }
 
-    void calculate(int index) {
+    private void calculate(int index) {
         BlockPos pos;
 
         double dmg;
@@ -249,7 +249,7 @@ public class AnchorAuraPlus extends BlackOutModule {
         lastIndex = index;
     }
 
-    void updateTargets() {
+    private void updateTargets() {
         List<PlayerEntity> players = new ArrayList<>();
         double closestDist = 1000;
         PlayerEntity closest;
@@ -280,7 +280,7 @@ public class AnchorAuraPlus extends BlackOutModule {
         targets = players;
     }
 
-    BlockPos[] getBlocks(Vec3d middle, double radius) {
+    private BlockPos[] getBlocks(Vec3d middle, double radius) {
         ArrayList<BlockPos> result = new ArrayList<>();
         int i = (int) Math.ceil(radius);
         BlockPos pos;
@@ -309,7 +309,7 @@ public class AnchorAuraPlus extends BlackOutModule {
         return result.toArray(new BlockPos[0]);
     }
 
-    boolean inRangeToTargets(BlockPos pos) {
+    private boolean inRangeToTargets(BlockPos pos) {
         for (PlayerEntity target : targets) {
             if (OLEPOSSUtils.distance(target.getPos().add(0, 1, 0), new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5)) < 3.5) {
                 return true;
@@ -318,7 +318,7 @@ public class AnchorAuraPlus extends BlackOutModule {
         return false;
     }
 
-    void update() {
+    private void update() {
         if (placePos == null || placeData == null || !placeData.valid()) {
             return;
         }
@@ -384,7 +384,7 @@ public class AnchorAuraPlus extends BlackOutModule {
         }
     }
 
-    void place(Hand hand) {
+    private void place(Hand hand) {
         SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand);
 
         sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(OLEPOSSUtils.getMiddle(placeData.pos()), placeData.dir(), placeData.pos(), false), 0));
@@ -392,7 +392,7 @@ public class AnchorAuraPlus extends BlackOutModule {
         SettingUtils.swing(SwingState.Post, SwingType.Placing, hand);
     }
 
-    Anchor getAnchor(BlockPos pos) {
+    private Anchor getAnchor(BlockPos pos) {
         if (anchors.containsKey(pos)) {
             return anchors.get(pos);
         }
@@ -400,7 +400,7 @@ public class AnchorAuraPlus extends BlackOutModule {
         return new Anchor(state.getBlock() == Blocks.RESPAWN_ANCHOR ? state.get(Properties.CHARGES) < 1 ? AnchorState.Anchor : AnchorState.Loaded : AnchorState.Air, state.getBlock() == Blocks.RESPAWN_ANCHOR ? state.get(Properties.CHARGES) : 0, System.currentTimeMillis());
     }
 
-    boolean placeUpdate() {
+    private boolean placeUpdate() {
         Hand hand = Managers.HOLDING.isHolding(Items.RESPAWN_ANCHOR) ? Hand.MAIN_HAND : mc.player.getOffHandStack().getItem() == Items.RESPAWN_ANCHOR ? Hand.OFF_HAND : null;
 
         boolean switched = hand != null;
@@ -464,7 +464,7 @@ public class AnchorAuraPlus extends BlackOutModule {
         return true;
     }
 
-    boolean chargeUpdate(BlockPos pos) {
+    private boolean chargeUpdate(BlockPos pos) {
         Hand hand = Managers.HOLDING.isHolding(Items.GLOWSTONE) ? Hand.MAIN_HAND : mc.player.getOffHandStack().getItem() == Items.GLOWSTONE ? Hand.OFF_HAND : null;
         Direction dir = SettingUtils.getPlaceOnDirection(pos);
 
@@ -533,7 +533,7 @@ public class AnchorAuraPlus extends BlackOutModule {
         return true;
     }
 
-    boolean explodeUpdate(BlockPos pos) {
+    private boolean explodeUpdate(BlockPos pos) {
         Hand hand = !Managers.HOLDING.isHolding(Items.GLOWSTONE) ? Hand.MAIN_HAND : mc.player.getOffHandStack().getItem() != Items.GLOWSTONE ? Hand.OFF_HAND : null;
         Direction dir = SettingUtils.getPlaceOnDirection(pos);
 
@@ -601,7 +601,7 @@ public class AnchorAuraPlus extends BlackOutModule {
         return true;
     }
 
-    void interact(BlockPos pos, Direction dir, Hand hand) {
+    private void interact(BlockPos pos, Direction dir, Hand hand) {
         SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand);
 
         sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(OLEPOSSUtils.getMiddle(pos), dir, pos, false), 0));
@@ -609,7 +609,7 @@ public class AnchorAuraPlus extends BlackOutModule {
         SettingUtils.swing(SwingState.Post, SwingType.Interact, hand);
     }
 
-    boolean dmgCheck(double dmg, double self) {
+    private boolean dmgCheck(double dmg, double self) {
         if (dmg < bestDmg) {
             return false;
         }
@@ -627,7 +627,7 @@ public class AnchorAuraPlus extends BlackOutModule {
         return true;
     }
 
-    double getDmg(BlockPos pos) {
+    private double getDmg(BlockPos pos) {
         double highest = -1;
         for (PlayerEntity target : targets) {
             highest = Math.max(highest, BODamageUtils.anchorDamage(target, new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5)));
@@ -635,6 +635,6 @@ public class AnchorAuraPlus extends BlackOutModule {
         return highest;
     }
 
-    record Anchor(AnchorState state, int charges, long time) {
+    private record Anchor(AnchorState state, int charges, long time) {
     }
 }

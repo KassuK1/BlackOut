@@ -73,7 +73,7 @@ public class StrictNoSlow extends BlackOutModule {
         mc.getNetworkHandler().sendPacket(new UpdateSelectedSlotC2SPacket(Managers.HOLDING.slot));
     }
 
-    boolean shouldSend(ItemStack stack) {
+    private boolean shouldSend(ItemStack stack) {
         return mc.player != null && (onlyGap.get() || (stack != null && !stack.isEmpty() && stack.getItem() == Items.ENCHANTED_GOLDEN_APPLE || stack.getItem() == Items.GOLDEN_APPLE));
     }
 }

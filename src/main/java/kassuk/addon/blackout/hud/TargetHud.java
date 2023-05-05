@@ -28,6 +28,7 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 public class TargetHud extends HudElement {
 
     public static final HudElementInfo<TargetHud> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "TargetHud", "A target hud the fuck you thinkin bruv.", TargetHud::new);
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<Double> scale = sgGeneral.add(new DoubleSetting.Builder()
@@ -38,15 +39,13 @@ public class TargetHud extends HudElement {
         .sliderRange(0, 5)
         .build()
     );
-
     private final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
         .name("Background Color")
         .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(0, 0, 0, 155))
         .build()
     );
-
-    private final Setting<SettingColor> textcolor = sgGeneral.add(new ColorSetting.Builder()
+    private final Setting<SettingColor> textColor = sgGeneral.add(new ColorSetting.Builder()
         .name("Text Color")
         .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(255, 255, 255, 155))
@@ -149,8 +148,8 @@ public class TargetHud extends HudElement {
                 });
             }
 
-            renderer.text(renderName, offsetPos[0] + renderSize[0] * 0.05, offsetPos[1] + renderSize[1] / 13, textcolor.get(), shadow.get(), scale.get() * Math.sqrt(scaleAnim));
-            renderer.text(String.valueOf(health), offsetPos[0] + renderSize[0] * 0.05, offsetPos[1] + renderSize[1] * 0.5, textcolor.get(), shadow.get(), scale.get() * Math.sqrt(scaleAnim));
+            renderer.text(renderName, offsetPos[0] + renderSize[0] * 0.05, offsetPos[1] + renderSize[1] / 13, textColor.get(), shadow.get(), scale.get() * Math.sqrt(scaleAnim));
+            renderer.text(String.valueOf(health), offsetPos[0] + renderSize[0] * 0.05, offsetPos[1] + renderSize[1] * 0.5, textColor.get(), shadow.get(), scale.get() * Math.sqrt(scaleAnim));
 
             renderer.quad(offsetPos[0] + renderSize[0] * 0.05, offsetPos[1] + renderSize[1] * 0.8, 180 / 36f * scale.get() * scale.get() * scaleAnim * health, renderSize[1] * 0.1, barColor());
 

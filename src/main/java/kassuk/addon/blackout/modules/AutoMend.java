@@ -271,7 +271,7 @@ public class AutoMend extends BlackOutModule {
         timer = Math.min(1, timer);
     }
 
-    boolean shouldThrow() {
+    private boolean shouldThrow() {
         if (autoCrystal.get() && acTimer > 0) {
             return false;
         } else if (surroundPause.get() && surroundTimer > 0) {
@@ -287,7 +287,7 @@ public class AutoMend extends BlackOutModule {
         return shouldMend();
     }
 
-    void updateTimers() {
+    private void updateTimers() {
         acTimer--;
         surroundTimer--;
         selfTrapTimer--;
@@ -295,7 +295,7 @@ public class AutoMend extends BlackOutModule {
         offGroundTimer--;
     }
 
-    boolean shouldMend() {
+    private boolean shouldMend() {
         List<ItemStack> armors = new ArrayList<>();
 
         for (int i = 0; i < 4; i++) {
@@ -327,7 +327,7 @@ public class AutoMend extends BlackOutModule {
         return lowest <= minDur.get() || started;
     }
 
-    void throwBottle(Hand hand) {
+    private void throwBottle(Hand hand) {
         SettingUtils.swing(SwingState.Pre, SwingType.Using, hand);
 
         //noinspection DataFlowIssue

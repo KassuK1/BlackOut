@@ -24,6 +24,7 @@ public class SwingModifier extends BlackOutModule {
     }
     private final SettingGroup sgMainHand = settings.createGroup("Main Hand");
     private final SettingGroup sgOffHand = settings.createGroup("Off Hand");
+
     // Main
     private final Setting<Double> mSpeed = sgMainHand.add(new DoubleSetting.Builder()
         .name("Main Speed")

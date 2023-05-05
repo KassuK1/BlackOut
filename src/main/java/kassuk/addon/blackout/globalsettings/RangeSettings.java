@@ -213,35 +213,6 @@ public class RangeSettings extends BlackOutModule {
         .build()
     );
 
-    public enum PlaceRangeMode {
-        NCP,
-        Height,
-        Vanilla,
-        CustomBox
-    }
-
-    public enum AttackRangeMode {
-        NCP,
-        UpdatedNCP,
-        Height,
-        Vanilla,
-        Middle,
-        CustomBox
-    }
-
-    public enum MiningRangeMode {
-        NCP,
-        Height,
-        Vanilla,
-        CustomBox
-    }
-
-    public enum FromMode {
-        Eyes,
-        Middle,
-        Feet
-    }
-
     public double rangeMod = 0;
 
     // Place Range Checks
@@ -392,7 +363,7 @@ public class RangeSettings extends BlackOutModule {
         }
     }
 
-    double getRange(Vec3d from, Vec3d to) {
+    private double getRange(Vec3d from, Vec3d to) {
         double x = Math.abs(from.x - to.x);
         double y = Math.abs(from.y - to.y);
         double z = Math.abs(from.z - to.z);
@@ -400,7 +371,7 @@ public class RangeSettings extends BlackOutModule {
         return Math.sqrt(x * x + y * y + z * z);
     }
 
-    Vec3d getFeet(Box bb) {
+    private Vec3d getFeet(Box bb) {
         return new Vec3d((bb.minX + bb.maxX) / 2, bb.minY, (bb.minZ + bb.maxZ) / 2);
     }
 
@@ -453,11 +424,40 @@ public class RangeSettings extends BlackOutModule {
         return -1;
     }
 
-    double getDistXZ(Vec3d vec) {
+    private double getDistXZ(Vec3d vec) {
         return Math.sqrt(vec.x * vec.x + vec.z * vec.z);
     }
 
     public void registerAttack(Box bb) {
         rangeMod = MathHelper.clamp(attackRangeTo(bb, getFeet(bb), null, false) <= attackRange.get() - reduceAmount.get() ? rangeMod - reduceStep.get() : rangeMod + reduceStep.get(), 0D, reduceAmount.get());
+    }
+
+    public enum PlaceRangeMode {
+        NCP,
+        Height,
+        Vanilla,
+        CustomBox
+    }
+
+    public enum AttackRangeMode {
+        NCP,
+        UpdatedNCP,
+        Height,
+        Vanilla,
+        Middle,
+        CustomBox
+    }
+
+    public enum MiningRangeMode {
+        NCP,
+        Height,
+        Vanilla,
+        CustomBox
+    }
+
+    public enum FromMode {
+        Eyes,
+        Middle,
+        Feet
     }
 }

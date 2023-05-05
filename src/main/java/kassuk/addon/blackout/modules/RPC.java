@@ -48,9 +48,9 @@ public class RPC extends BlackOutModule {
         .sliderRange(0, 1000)
         .build()
     );
-    int ticks = 0;
-    int index1 = 0;
-    int index2 = 0;
+    private int ticks = 0;
+    private int index1 = 0;
+    private int index2 = 0;
     private static final RichPresence presence = new RichPresence();
 
     @Override
@@ -86,7 +86,7 @@ public class RPC extends BlackOutModule {
         DiscordIPC.setActivity(presence);
     }
 
-    List<String> getMessages(List<String> stateList) {
+    private List<String> getMessages(List<String> stateList) {
         List<String> messages = new ArrayList<>();
         for (String msg : stateList) {
             Script script = MeteorStarscript.compile(msg);

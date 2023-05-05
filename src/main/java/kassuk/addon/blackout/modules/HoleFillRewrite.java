@@ -217,7 +217,7 @@ public class HoleFillRewrite extends BlackOutModule {
         }
     }
 
-    void update() {
+    private void update() {
         updateHoles(Math.max(SettingUtils.getPlaceRange(), SettingUtils.getPlaceWallsRange()) + 1);
         List<BlockPos> placements = getValid(holes);
 
@@ -285,11 +285,11 @@ public class HoleFillRewrite extends BlackOutModule {
         }
     }
 
-    boolean isValid(ItemStack itemStack) {
+    private boolean isValid(ItemStack itemStack) {
         return itemStack.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) itemStack.getItem()).getBlock());
     }
 
-    List<BlockPos> getValid(List<BlockPos> positions) {
+    private List<BlockPos> getValid(List<BlockPos> positions) {
         List<BlockPos> list = new ArrayList<>();
         for (BlockPos pos : positions) {
             if (!timers.contains(pos)) {
@@ -299,7 +299,7 @@ public class HoleFillRewrite extends BlackOutModule {
         return list;
     }
 
-    void updateHoles(double range) {
+    private void updateHoles(double range) {
         holes = new ArrayList<>();
         for(int x = (int) -Math.ceil(range); x <= Math.ceil(range); x++) {
             for(int y = (int) -Math.ceil(range); y <= Math.ceil(range); y++) {
@@ -327,7 +327,7 @@ public class HoleFillRewrite extends BlackOutModule {
         }
     }
 
-    double closestDist(BlockPos pos) {
+    private double closestDist(BlockPos pos) {
         double closest = -1;
         for (PlayerEntity pl : mc.world.getPlayers()) {
             double dist = OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(pos), pl.getPos());
@@ -341,7 +341,7 @@ public class HoleFillRewrite extends BlackOutModule {
         return closest;
     }
 
-    boolean inHole(PlayerEntity pl) {
+    private boolean inHole(PlayerEntity pl) {
         for (Direction dir : OLEPOSSUtils.horizontals) {
             if (mc.world.getBlockState(pl.getBlockPos().offset(dir)).getBlock().equals(Blocks.AIR)) {
                 return false;
@@ -350,11 +350,11 @@ public class HoleFillRewrite extends BlackOutModule {
         return true;
     }
 
-    boolean canPlace(BlockPos pos) {
+    private boolean canPlace(BlockPos pos) {
         return SettingUtils.getPlaceData(pos).valid();
     }
 
-    void place(PlaceData d, BlockPos ogPos, Hand hand) {
+    private void place(PlaceData d, BlockPos ogPos, Hand hand) {
         timers.add(ogPos, delay.get());
 
         SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand);

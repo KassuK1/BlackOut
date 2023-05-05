@@ -161,7 +161,7 @@ public class KillAuraPlus extends BlackOutModule {
         }
     }
 
-    void attackTarget() {
+    private void attackTarget() {
         timer = 0;
 
         SettingUtils.swing(SwingState.Pre, SwingType.Attacking, Hand.MAIN_HAND);
@@ -171,7 +171,7 @@ public class KillAuraPlus extends BlackOutModule {
         SettingUtils.swing(SwingState.Post, SwingType.Attacking, Hand.MAIN_HAND);
     }
 
-    int bestSlot(boolean inventory) {
+    private int bestSlot(boolean inventory) {
         int slot = -1;
         double hDmg = -1;
         double dmg;
@@ -188,7 +188,7 @@ public class KillAuraPlus extends BlackOutModule {
         return slot;
     }
 
-    void updateTarget() {
+    private void updateTarget() {
         double value = 0;
         target = null;
 

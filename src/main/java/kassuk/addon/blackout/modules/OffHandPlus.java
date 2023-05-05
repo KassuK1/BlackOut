@@ -201,6 +201,7 @@ public class OffHandPlus extends BlackOutModule {
             health <= hp.get() ||
             (safety.get() && health - PlayerUtils.possibleHealthReductions() <= safetyHealth.get());
     }
+
     private int getSlot(Predicate<Item> predicate) {
         double amount = -1;
         int slot = -1;
@@ -231,6 +232,7 @@ public class OffHandPlus extends BlackOutModule {
 
         return slot;
     }
+
     private boolean crystalModuleCheck() {
         return autoMine.isActive() || autoCrystalRewrite.isActive() || crystalAura.isActive();
     }
@@ -245,6 +247,7 @@ public class OffHandPlus extends BlackOutModule {
         Gapple,
         Bed
     }
+
     public enum GapMode {
         Sword(true),
         LastOption(false),
@@ -259,6 +262,7 @@ public class OffHandPlus extends BlackOutModule {
             return sword;
         }
     }
+
     public enum SwordMode {
         Pressed,
         Always
