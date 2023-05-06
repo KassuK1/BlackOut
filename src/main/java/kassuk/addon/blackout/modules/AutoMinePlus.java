@@ -35,12 +35,14 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.effect.StatusEffectUtil;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
+import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -62,7 +64,6 @@ public class AutoMinePlus extends BlackOutModule {
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgSpeed = settings.createGroup("Speed");
-    private final SettingGroup sgManual = settings.createGroup("Manual");
 
     private final SettingGroup sgCev = settings.createGroup("Cev");
     private final SettingGroup sgAntiSurround = settings.createGroup("Anti Surround");
@@ -84,12 +85,28 @@ public class AutoMinePlus extends BlackOutModule {
         .defaultValue(SwitchMode.Silent)
         .build()
     );
-
-    //--------------------Manual--------------------//
-    private final Setting<Boolean> startManually = sgManual.add(new BoolSetting.Builder()
-        .name("Start Manually")
+    private final Setting<Boolean> autoMine = sgGeneral.add(new BoolSetting.Builder()
+        .name("Auto Mine")
         .description("Sets target block to the block you clicked.")
         .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> manualMine = sgGeneral.add(new BoolSetting.Builder()
+        .name("Manual Mine")
+        .description("Sets target block to the block you clicked.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> manualCiv = sgGeneral.add(new BoolSetting.Builder()
+        .name("Manual CIV")
+        .description("Uses civ mine when mining manually.")
+        .defaultValue(false)
+        .build()
+    );
+    private final Setting<Boolean> resetOnSwitch = sgGeneral.add(new BoolSetting.Builder()
+        .name("Reset On Switch")
+        .description("Resets mining when switched held item.")
+        .defaultValue(false)
         .build()
     );
 
@@ -259,6 +276,10 @@ public class AutoMinePlus extends BlackOutModule {
     private long lastExplode = 0;
     private long lastCiv = 0;
 
+    private double normalAlpha = 1;
+    private double modifiedAlpha = 0;
+
+
     private double delta = 0;
     private boolean ignore = false;
 
@@ -274,7 +295,7 @@ public class AutoMinePlus extends BlackOutModule {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
-    private void onSent(PacketEvent.Send event) {
+    private void onSend(PacketEvent.Send event) {
         if (event.packet instanceof PlayerActionC2SPacket packet) {
             if (ignore) {return;}
 
@@ -290,6 +311,12 @@ public class AutoMinePlus extends BlackOutModule {
                 }
             }
         }
+        if (event.packet instanceof UpdateSelectedSlotC2SPacket && resetOnSwitch.get()) {
+            if (target != null && !target.manual) {
+                target = null;
+            }
+            started = false;
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -304,9 +331,27 @@ public class AutoMinePlus extends BlackOutModule {
     private void render(Renderer3D r) {
         if (target == null) {return;}
 
-        double p = MathHelper.clamp(minedFor / getMineTicks(fastestSlot()), 0, 1);
+        int slot = fastestSlot();
 
-        r.box(getRenderBox(p / 2), getColor(startColor.get(), endColor.get(), p), getColor(lineStartColor.get(), lineEndColor.get(), p), shapeMode.get(), 0);
+        if (getMineTicks(slot, true) == getMineTicks(slot, false)) {
+            modifiedAlpha = MathHelper.clamp(modifiedAlpha - delta, 0, 2);
+            normalAlpha = MathHelper.clamp(normalAlpha + delta, 0, 2);
+        } else {
+            modifiedAlpha = MathHelper.clamp(modifiedAlpha + delta, 0, 2);
+            normalAlpha = MathHelper.clamp(normalAlpha - delta, 0, 2);
+        }
+
+        // Normal Speed
+        double p = MathHelper.clamp(minedFor / getMineTicks(slot, false), 0, 1);
+        p = Math.pow(p, animationExp.get());
+
+        r.box(getRenderBox(p / 2), getColor(startColor.get(), endColor.get(), p, MathHelper.clamp(normalAlpha, 0, 1)), getColor(lineStartColor.get(), lineEndColor.get(), p, MathHelper.clamp(normalAlpha, 0, 1)), shapeMode.get(), 0);
+
+        // Modified Speed
+        p = MathHelper.clamp(minedFor / getMineTicks(slot, true), 0, 1);
+        p = Math.pow(p, animationExp.get());
+
+        r.box(getRenderBox(p / 2), getColor(startColor.get(), endColor.get(), p, MathHelper.clamp(modifiedAlpha, 0, 1)), getColor(lineStartColor.get(), lineEndColor.get(), p, MathHelper.clamp(modifiedAlpha, 0, 1)), shapeMode.get(), 0);
     }
 
     private void update() {
@@ -314,10 +359,14 @@ public class AutoMinePlus extends BlackOutModule {
         enemies = mc.world.getPlayers().stream().filter(player -> player != mc.player && !Friends.get().isFriend(player) && player.distanceTo(mc.player) < 10).toList();
 
         Entity targetCrystal = null;
+
         List<BlockPos> toRemove = new ArrayList<>();
+
         for (Map.Entry<BlockPos, Long> entry : explodeAt.entrySet()) {
             if (System.currentTimeMillis() - entry.getValue() > 1000) {toRemove.add(entry.getKey());}
+
             EndCrystalEntity crystal = crystalAt(entry.getKey());
+
             if (crystal != null) {
                 targetCrystal = crystal;
                 break;
@@ -326,7 +375,6 @@ public class AutoMinePlus extends BlackOutModule {
         toRemove.forEach(explodeAt::remove);
 
         if (targetCrystal != null && !isPaused() && System.currentTimeMillis() - lastExplode > 500) {
-
             if (!SettingUtils.shouldRotate(RotationType.Attacking) || Managers.ROTATION.start(targetCrystal.getBoundingBox(), priority, RotationType.Breaking)) {
 
                 SettingUtils.swing(SwingState.Pre, SwingType.Attacking, Hand.MAIN_HAND);
@@ -342,7 +390,10 @@ public class AutoMinePlus extends BlackOutModule {
         }
 
         BlockPos lastPos = target == null || target.pos == null ? null : target.pos;
-        target = target != null && target.manual ? target : getTarget();
+
+        if (target == null || !target.manual) {
+            target = getTarget();
+        }
 
         if (target == null) {return;}
 
@@ -361,6 +412,14 @@ public class AutoMinePlus extends BlackOutModule {
                 started = true;
                 minedFor = 0;
                 civPos = null;
+
+                if (getMineTicks(fastestSlot(), true) == getMineTicks(fastestSlot(), false)) {
+                    normalAlpha = 2;
+                    modifiedAlpha = 0;
+                } else {
+                    normalAlpha = 0;
+                    modifiedAlpha = 2;
+                }
 
                 Direction dir = SettingUtils.getPlaceOnDirection(target.pos);
 
@@ -568,6 +627,8 @@ public class AutoMinePlus extends BlackOutModule {
     private Target getTarget() {
         Target target = null;
 
+        if (!autoMine.get()) {return target;}
+
         if (priorityCheck(target, cevPriority.get())) {
             Target t = getCev();
             if (t != null) {
@@ -765,6 +826,8 @@ public class AutoMinePlus extends BlackOutModule {
 
     private boolean distanceCheck(boolean civ, BlockPos pos, double closest, double distance) {
         if (civ && pos.equals(civPos)) {return true;}
+        if (target != null && pos.equals(target.pos)) {return true;}
+
         return distance < closest;
     }
 
@@ -783,10 +846,11 @@ public class AutoMinePlus extends BlackOutModule {
 
     private void handleStart(PacketEvent.Send event) {
         event.cancel();
+
         BlockPos pos = ((PlayerActionC2SPacket) event.packet).getPos();
-        if (startManually.get() && getBlock(pos) != Blocks.BEDROCK) {
+        if (manualMine.get() && getBlock(pos) != Blocks.BEDROCK) {
             started = false;
-            target = new Target(pos, null, MineType.Manual, 0, false, true);
+            target = new Target(pos, null, MineType.Manual, 0, manualCiv.get(), true);
         }
     }
 
@@ -814,28 +878,28 @@ public class AutoMinePlus extends BlackOutModule {
 
     private boolean miningCheck(int slot) {
         if (target == null || target.pos == null) {return false;}
-        return minedFor * speed.get() >= getMineTicks(slot);
+        return minedFor * speed.get() >= getMineTicks(slot, true);
     }
 
-    private float getTime(BlockPos pos, int slot) {
+    private float getTime(BlockPos pos, int slot, boolean speedMod) {
         BlockState state = mc.world.getBlockState(pos);
         float f = state.getHardness(mc.world, pos);
         if (f == -1.0F) {
             return 0.0F;
         } else {
             float i = !state.isToolRequired() || mc.player.getInventory().getStack(slot).isSuitableFor(state) ? 30 : 100;
-            return getSpeed(state, slot) / f / i;
+            return getSpeed(state, slot, speedMod) / f / i;
         }
     }
 
-    private float getMineTicks(int slot) {
+    private float getMineTicks(int slot, boolean speedMod) {
         if (slot != -1) {
-            return (float) (1 / (getTime(target.pos, slot) * speed.get()));
+            return (float) (1 / (getTime(target.pos, slot, speedMod) * speed.get()));
         }
         return -1;
     }
 
-    private float getSpeed(BlockState state, int slot) {
+    private float getSpeed(BlockState state, int slot, boolean speedMod) {
         ItemStack stack = mc.player.getInventory().getStack(slot);
         float f = mc.player.getInventory().getStack(slot).getMiningSpeedMultiplier(state);
         if (f > 1.0) {
@@ -843,6 +907,10 @@ public class AutoMinePlus extends BlackOutModule {
             if (i > 0 && !stack.isEmpty()) {
                 f += (float) (i * i + 1);
             }
+        }
+
+        if (!speedMod) {
+            return f;
         }
 
         if (effectCheck.get()) {
@@ -878,12 +946,16 @@ public class AutoMinePlus extends BlackOutModule {
         return slot;
     }
 
-    private Color getColor(Color start, Color end, double progress) {
-        double r = (end.r - start.r) * progress;
-        double g = (end.g - start.g) * progress;
-        double b = (end.b - start.b) * progress;
-        double a = (end.a - start.a) * progress;
-        return new Color((int) Math.round(start.r + r), (int) Math.round(start.g + g), (int) Math.round(start.b + b), (int) Math.round(start.a + a));
+    private Color getColor(Color start, Color end, double progress, double alphaMulti) {
+        return new Color(
+            lerp(start.r, end.r, progress, 1),
+            lerp(start.g, end.g, progress, 1),
+            lerp(start.b, end.b, progress, 1),
+            lerp(start.a, end.a, progress, alphaMulti));
+    }
+
+    private int lerp(double start, double end, double d, double multi) {
+        return (int) Math.round((start + (end - start) * d) * multi);
     }
 
     private boolean crystalBlock(BlockPos pos) {

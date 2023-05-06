@@ -106,6 +106,8 @@ public class KillAuraPlus extends BlackOutModule {
             }
         }
 
+        if (!switched) {return;}
+
         boolean rotated = rotationMode.get() != RotationMode.Constant || !SettingUtils.shouldRotate(RotationType.Attacking) || Managers.ROTATION.start(target.getBoundingBox(), priority, RotationType.Attacking);
 
         if (!rotated || timer < delay.get()) {return;}

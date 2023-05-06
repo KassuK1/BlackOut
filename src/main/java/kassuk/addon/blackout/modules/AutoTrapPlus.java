@@ -26,6 +26,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItem;
@@ -385,7 +386,9 @@ public class AutoTrapPlus extends BlackOutModule {
             PlaceData data = SettingUtils.getPlaceData(block);
             if (data.valid() && SettingUtils.inPlaceRange(data.pos())) {
                 render.add(new Render(block, false));
-                list.add(block);
+                if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(block), entity -> !entity.isSpectator() && !(entity instanceof ItemEntity))) {
+                    list.add(block);
+                }
                 return;
             }
 
