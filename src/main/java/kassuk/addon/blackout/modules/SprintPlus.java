@@ -20,7 +20,7 @@ public class SprintPlus extends BlackOutModule {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
-    public final Setting<SprintMode> sprintmode = sgGeneral.add(new EnumSetting.Builder<SprintMode>()
+    public final Setting<SprintMode> sprintMode = sgGeneral.add(new EnumSetting.Builder<SprintMode>()
         .name("Mode")
         .description("The method of sprinting.")
         .defaultValue(SprintMode.Vanilla)
@@ -30,7 +30,7 @@ public class SprintPlus extends BlackOutModule {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onTick(TickEvent.Pre event) {
         if (mc.player != null && mc.world != null) {
-            switch (sprintmode.get()) {
+            switch (sprintMode.get()) {
                 case Vanilla -> {
                     if (mc.options.forwardKey.isPressed()) mc.player.setSprinting(true);
                 }

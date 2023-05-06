@@ -93,7 +93,7 @@ public class KillAuraPlus extends BlackOutModule {
 
         boolean switched = false;
         switch (switchMode.get()) {
-            case Disabled -> switched = true;
+            case Disabled -> switched = !onlyWeapon.get() || mc.player.getMainHandStack().getItem() instanceof SwordItem || mc.player.getMainHandStack().getItem() instanceof AxeItem;
             case Normal -> {
                 int slot = bestSlot(false);
                 if (slot >= 0) {
@@ -213,10 +213,12 @@ public class KillAuraPlus extends BlackOutModule {
         Angle,
         Distance
     }
+
     public enum RotationMode {
         OnHit,
         Constant
     }
+
     public enum SwitchMode {
         Disabled,
         Normal,

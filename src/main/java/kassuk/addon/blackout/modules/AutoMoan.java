@@ -19,7 +19,9 @@ import java.util.Random;
  */
 public class AutoMoan extends BlackOutModule {
 
-    public AutoMoan() {super(BlackOut.BLACKOUT, "Auto Moan","Moans sexual things to the closest person.");}
+    public AutoMoan() {
+        super(BlackOut.BLACKOUT, "Auto Moan","Moans sexual things to the closest person.");
+    }
 
     //Where the fuck did I go so wrong in life to end up coding fucking AutoMoan
 

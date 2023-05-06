@@ -51,6 +51,7 @@ public class SurroundPlus extends BlackOutModule {
     private final SettingGroup sgToggle = settings.createGroup("Toggle");
     private final SettingGroup sgRender = settings.createGroup("Render");
 
+    //--------------------General--------------------//
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
         .name("Pause Eat")
         .description("Pauses when you are eating.")
@@ -76,7 +77,7 @@ public class SurroundPlus extends BlackOutModule {
         .build()
     );
 
-    //   Placing Page
+    //--------------------Placing--------------------//
     private final Setting<SwitchMode> switchMode = sgPlacing.add(new EnumSetting.Builder<SwitchMode>()
         .name("Switch Mode")
         .description("Method of switching. Silent is the most reliable.")
@@ -106,7 +107,7 @@ public class SurroundPlus extends BlackOutModule {
         .build()
     );
 
-    //  Toggle Page
+    //--------------------Toggle--------------------//
     private final Setting<Boolean> toggleMove = sgToggle.add(new BoolSetting.Builder()
         .name("Toggle Move")
         .description("Toggles when you move horizontally.")
@@ -126,7 +127,7 @@ public class SurroundPlus extends BlackOutModule {
         .build()
     );
 
-    //  Render Page
+    //--------------------Render--------------------//
     private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
         .name("Shape Mode")
         .description("Which parts of render boxes should be rendered.")

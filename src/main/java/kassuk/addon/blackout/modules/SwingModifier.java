@@ -22,10 +22,11 @@ public class SwingModifier extends BlackOutModule {
     public SwingModifier() {
         super(BlackOut.BLACKOUT, "Swing Modifier", "Modifies swing rendering.");
     }
+
     private final SettingGroup sgMainHand = settings.createGroup("Main Hand");
     private final SettingGroup sgOffHand = settings.createGroup("Off Hand");
 
-    // Main
+    //--------------------Main-Hand--------------------//
     private final Setting<Double> mSpeed = sgMainHand.add(new DoubleSetting.Builder()
         .name("Main Speed")
         .description("Speed of swinging.")
@@ -69,7 +70,7 @@ public class SwingModifier extends BlackOutModule {
         .build()
     );
 
-    // Off
+    //--------------------Off-Hand--------------------//
     private final Setting<Double> oSpeed = sgOffHand.add(new DoubleSetting.Builder()
         .name("Off Speed")
         .description("Speed of swinging for offhand")

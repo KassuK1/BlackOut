@@ -20,6 +20,7 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
  * @author OLEPOSSU
  */
 public class GearHud extends HudElement {
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<List<Item>> items = sgGeneral.add(new ItemListSetting.Builder()
@@ -54,6 +55,7 @@ public class GearHud extends HudElement {
         .defaultValue(true)
         .build()
     );
+
     public static final HudElementInfo<GearHud> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "GearHud", "Gear.", GearHud::new);
 
     public GearHud() {

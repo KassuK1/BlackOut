@@ -28,7 +28,7 @@ public class OffHandPlus extends BlackOutModule {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgHealth = settings.getDefaultGroup();
 
-    //   General Page
+    //--------------------General--------------------//
     private final Setting<Boolean> onlyInInv = sgGeneral.add(new BoolSetting.Builder()
         .name("Only in inventory")
         .description("Will only switch if you are in your inventory.")
@@ -70,7 +70,7 @@ public class OffHandPlus extends BlackOutModule {
         .build()
     );
 
-    //   Health page
+    //--------------------Health--------------------//
     private final Setting<Integer> hp = sgHealth.add(new IntSetting.Builder()
         .name("Health")
         .description("Switches to totem when health is under this value.")
@@ -101,7 +101,6 @@ public class OffHandPlus extends BlackOutModule {
     private AutoCrystalRewrite autoCrystalRewrite = null;
     private CrystalAura crystalAura = null;
     private AutoMine autoMine = null;
-
     private long lastTime = 0;
 
     @EventHandler(priority = EventPriority.HIGHEST)

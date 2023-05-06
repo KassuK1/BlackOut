@@ -13,7 +13,9 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
  * @author KassuK
  */
 public class OnTope extends HudElement {
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+
     private final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
         .name("Color")
         .description(BlackOut.COLOR)
@@ -34,6 +36,7 @@ public class OnTope extends HudElement {
         .defaultValue(true)
         .build()
     );
+
     public static final HudElementInfo<OnTope> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "OnTope", "I don't even know what this is.", OnTope::new);
 
     public OnTope() {

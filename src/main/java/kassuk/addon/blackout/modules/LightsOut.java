@@ -12,6 +12,7 @@ import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.TorchBlock;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -24,7 +25,9 @@ public class LightsOut extends BlackOutModule {
     public LightsOut() {
         super(BlackOut.BLACKOUT, "Lights Out", "A tribute to Reliant.");
     }
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+
     private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
         .name("Delay")
         .description("Delay between button clicks.")
@@ -64,12 +67,7 @@ public class LightsOut extends BlackOutModule {
                 for (int z = -c; z <= c; z++) {
                     BlockPos pos = mc.player.getBlockPos().add(x, y, z);
                     //best code ever fr
-                    if (mc.world.getBlockState(pos).getBlock() == Blocks.TORCH
-                    || mc.world.getBlockState(pos).getBlock() == Blocks.REDSTONE_TORCH
-                    || mc.world.getBlockState(pos).getBlock() == Blocks.SOUL_TORCH
-                    || mc.world.getBlockState(pos).getBlock() == Blocks.WALL_TORCH
-                    || mc.world.getBlockState(pos).getBlock() == Blocks.REDSTONE_WALL_TORCH
-                    || mc.world.getBlockState(pos).getBlock() == Blocks.SOUL_WALL_TORCH){
+                    if (mc.world.getBlockState(pos).getBlock() instanceof TorchBlock){
                         float dist = (float) OLEPOSSUtils.distance(vec, OLEPOSSUtils.getMiddle(pos));
                         if (dist <= r && (closest == null || dist < closestDist)) {
                             closest = pos;

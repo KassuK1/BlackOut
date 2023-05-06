@@ -21,8 +21,11 @@ import net.minecraft.util.math.BlockPos;
  */
 public class SpeedPlus extends BlackOutModule {
     public SpeedPlus() {super(BlackOut.BLACKOUT, "Speed+", "Speeeeeeeed.");}
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgPause = settings.createGroup("Pause");
+
+    //--------------------General--------------------//
     private final Setting<SpeedMode> mode = sgGeneral.add(new EnumSetting.Builder<SpeedMode>()
         .name("Mode")
         .description("Mode for speed.")
@@ -94,7 +97,7 @@ public class SpeedPlus extends BlackOutModule {
         .build()
     );
 
-    //  Pause Page
+    //--------------------Pause--------------------//
     private final Setting<Boolean> pauseSneak = sgPause.add(new BoolSetting.Builder()
         .name("Pause Sneak")
         .description("Doesn't modify movement while sneaking.")

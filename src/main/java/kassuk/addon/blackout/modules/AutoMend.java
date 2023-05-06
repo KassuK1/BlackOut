@@ -29,9 +29,11 @@ import java.util.List;
  */
 public class AutoMend extends BlackOutModule {
     public AutoMend() {super(BlackOut.BLACKOUT, "Auto Mend", "Automatically mends your armor with experience bottles.");}
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgPause = settings.createGroup("Pause");
-    //   General Page
+
+    //--------------------General--------------------//
     private final Setting<Double> speed = sgGeneral.add(new DoubleSetting.Builder()
         .name("Throw Speed")
         .description("How many bottles to throw every second. 20 is recommended.")
@@ -79,7 +81,7 @@ public class AutoMend extends BlackOutModule {
         .build()
     );
 
-    //   Pause Page
+    //--------------------Pause--------------------//
     private final Setting<Boolean> autoCrystal = sgPause.add(new BoolSetting.Builder()
         .name("Auto Crystal Pause")
         .description("Only throws bottles if auto crystal isn't placing.")
@@ -161,12 +163,11 @@ public class AutoMend extends BlackOutModule {
     private boolean started = false;
     private boolean shouldRot = false;
 
-    // Pause ticks
     private int acTimer = 0;
     private int surroundTimer = 0;
     private int selfTrapTimer = 0;
     private int moveTimer = 0;
-    private  int offGroundTimer = 0;
+    private int offGroundTimer = 0;
 
     @Override
     public void onActivate() {
@@ -274,13 +275,17 @@ public class AutoMend extends BlackOutModule {
     private boolean shouldThrow() {
         if (autoCrystal.get() && acTimer > 0) {
             return false;
-        } else if (surroundPause.get() && surroundTimer > 0) {
+        }
+        if (surroundPause.get() && surroundTimer > 0) {
             return false;
-        } else if (selfTrapPause.get() && selfTrapTimer > 0) {
+        }
+        if (selfTrapPause.get() && selfTrapTimer > 0) {
             return false;
-        } else if (movePause.get() && moveTimer > 0) {
+        }
+        if (movePause.get() && moveTimer > 0) {
             return false;
-        } else if (offGroundPause.get() && offGroundTimer > 0) {
+        }
+        if (offGroundPause.get() && offGroundTimer > 0) {
             return false;
         }
 
@@ -330,8 +335,7 @@ public class AutoMend extends BlackOutModule {
     private void throwBottle(Hand hand) {
         SettingUtils.swing(SwingState.Pre, SwingType.Using, hand);
 
-        //noinspection DataFlowIssue
-        mc.getNetworkHandler().sendPacket(new PlayerInteractItemC2SPacket(hand, 0));
+        sendPacket(new PlayerInteractItemC2SPacket(hand, 0));
 
         SettingUtils.swing(SwingState.Post, SwingType.Using, hand);
     }

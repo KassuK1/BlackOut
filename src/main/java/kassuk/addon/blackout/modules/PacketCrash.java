@@ -26,14 +26,13 @@ public class PacketCrash extends BlackOutModule {
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+
     private final Setting<SendMode> mode = sgGeneral.add(new EnumSetting.Builder<SendMode>()
         .name("Mode")
         .description("Mode for sending packets.")
         .defaultValue(SendMode.Spam)
         .build()
     );
-
-    // Instant
     private final Setting<Integer> packets = sgGeneral.add(new IntSetting.Builder()
         .name("Packets")
         .description("How many packets to send instantly.")
@@ -43,8 +42,6 @@ public class PacketCrash extends BlackOutModule {
         .visible(() -> mode.get().equals(SendMode.InstantBound))
         .build()
     );
-
-    // Spam
     private final Setting<Boolean> bounds = sgGeneral.add(new BoolSetting.Builder()
         .name("Out Of Bounds")
         .description("Send out of bounds packets.")

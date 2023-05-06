@@ -27,8 +27,6 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
  */
 public class TargetHud extends HudElement {
 
-    public static final HudElementInfo<TargetHud> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "TargetHud", "A target hud the fuck you thinkin bruv.", TargetHud::new);
-
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<Double> scale = sgGeneral.add(new DoubleSetting.Builder()
@@ -96,6 +94,8 @@ public class TargetHud extends HudElement {
         .visible(outline::get)
         .build()
     );
+
+    public static final HudElementInfo<TargetHud> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "TargetHud", "A target hud the fuck you thinkin bruv.", TargetHud::new);
 
     public TargetHud() {
         super(INFO);

@@ -29,87 +29,7 @@ public class PacketFly extends BlackOutModule {
     private final SettingGroup sgFly = settings.createGroup("Fly");
     private final SettingGroup sgPhase = settings.createGroup("Phase");
 
-    //  Fly Page
-    private final Setting<Integer> packets = sgFly.add(new IntSetting.Builder()
-        .name("Fly Packets")
-        .description("How many packets to send every movement tick.")
-        .defaultValue(1)
-        .min(1)
-        .sliderRange(0, 10)
-        .build()
-    );
-    private final Setting<Double> speed = sgFly.add(new DoubleSetting.Builder()
-        .name("Fly Speed")
-        .description("Distance to travel each packet.")
-        .defaultValue(0.2873)
-        .min(0)
-        .sliderRange(0, 10)
-        .build()
-    );
-    private final Setting<Boolean> fastVertical = sgFly.add(new BoolSetting.Builder()
-        .name("Fast Vertical Fly")
-        .description("Sends multiple packets every movement tick while going up.")
-        .defaultValue(false)
-        .build()
-    );
-    private final Setting<Double> downSpeed = sgFly.add(new DoubleSetting.Builder()
-        .name("Fly Down Speed")
-        .description("How fast to fly down.")
-        .defaultValue(0.062)
-        .min(0)
-        .sliderRange(0, 10)
-        .build()
-    );
-    private final Setting<Double> upSpeed = sgFly.add(new DoubleSetting.Builder()
-        .name("Fly Up Speed")
-        .description("How fast to fly up.")
-        .defaultValue(0.062)
-        .min(0)
-        .sliderRange(0, 10)
-        .build()
-    );
-
-    //  Phase Page
-    private final Setting<Integer> phasePackets = sgPhase.add(new IntSetting.Builder()
-        .name("Phase Packets")
-        .description("How many packets to send every movement tick.")
-        .defaultValue(1)
-        .min(1)
-        .sliderRange(0, 10)
-        .build()
-    );
-    private final Setting<Double> phaseSpeed = sgPhase.add(new DoubleSetting.Builder()
-        .name("Phase Speed")
-        .description("Distance to travel each packet.")
-        .defaultValue(0.062)
-        .min(0)
-        .sliderRange(0, 10)
-        .build()
-    );
-    private final Setting<Boolean> phaseFastVertical = sgPhase.add(new BoolSetting.Builder()
-        .name("Fast Vertical Phase")
-        .description("Sends multiple packets every movement tick while going up.")
-        .defaultValue(false)
-        .build()
-    );
-    private final Setting<Double> phaseDownSpeed = sgPhase.add(new DoubleSetting.Builder()
-        .name("Phase Down Speed")
-        .description("How fast to phase down.")
-        .defaultValue(0.062)
-        .min(0)
-        .sliderRange(0, 10)
-        .build()
-    );
-    private final Setting<Double> phaseUpSpeed = sgPhase.add(new DoubleSetting.Builder()
-        .name("Phase Up Speed")
-        .description("How fast to phase up.")
-        .defaultValue(0.062)
-        .min(0)
-        .sliderRange(0, 10)
-        .build()
-    );
-
-    //  General Page
+    //--------------------General--------------------//
     private final Setting<Boolean> onGroundSpoof = sgGeneral.add(new BoolSetting.Builder()
         .name("On Ground Spoof")
         .description("Spoofs on ground.")
@@ -153,15 +73,95 @@ public class PacketFly extends BlackOutModule {
         .build()
     );
 
+    //--------------------Fly--------------------//
+    private final Setting<Integer> packets = sgFly.add(new IntSetting.Builder()
+        .name("Fly Packets")
+        .description("How many packets to send every movement tick.")
+        .defaultValue(1)
+        .min(1)
+        .sliderRange(0, 10)
+        .build()
+    );
+    private final Setting<Double> speed = sgFly.add(new DoubleSetting.Builder()
+        .name("Fly Speed")
+        .description("Distance to travel each packet.")
+        .defaultValue(0.2873)
+        .min(0)
+        .sliderRange(0, 10)
+        .build()
+    );
+    private final Setting<Boolean> fastVertical = sgFly.add(new BoolSetting.Builder()
+        .name("Fast Vertical Fly")
+        .description("Sends multiple packets every movement tick while going up.")
+        .defaultValue(false)
+        .build()
+    );
+    private final Setting<Double> downSpeed = sgFly.add(new DoubleSetting.Builder()
+        .name("Fly Down Speed")
+        .description("How fast to fly down.")
+        .defaultValue(0.062)
+        .min(0)
+        .sliderRange(0, 10)
+        .build()
+    );
+    private final Setting<Double> upSpeed = sgFly.add(new DoubleSetting.Builder()
+        .name("Fly Up Speed")
+        .description("How fast to fly up.")
+        .defaultValue(0.062)
+        .min(0)
+        .sliderRange(0, 10)
+        .build()
+    );
+
+    //--------------------Phase--------------------//
+    private final Setting<Integer> phasePackets = sgPhase.add(new IntSetting.Builder()
+        .name("Phase Packets")
+        .description("How many packets to send every movement tick.")
+        .defaultValue(1)
+        .min(1)
+        .sliderRange(0, 10)
+        .build()
+    );
+    private final Setting<Double> phaseSpeed = sgPhase.add(new DoubleSetting.Builder()
+        .name("Phase Speed")
+        .description("Distance to travel each packet.")
+        .defaultValue(0.062)
+        .min(0)
+        .sliderRange(0, 10)
+        .build()
+    );
+    private final Setting<Boolean> phaseFastVertical = sgPhase.add(new BoolSetting.Builder()
+        .name("Fast Vertical Phase")
+        .description("Sends multiple packets every movement tick while going up.")
+        .defaultValue(false)
+        .build()
+    );
+    private final Setting<Double> phaseDownSpeed = sgPhase.add(new DoubleSetting.Builder()
+        .name("Phase Down Speed")
+        .description("How fast to phase down.")
+        .defaultValue(0.062)
+        .min(0)
+        .sliderRange(0, 10)
+        .build()
+    );
+    private final Setting<Double> phaseUpSpeed = sgPhase.add(new DoubleSetting.Builder()
+        .name("Phase Up Speed")
+        .description("How fast to phase up.")
+        .defaultValue(0.062)
+        .min(0)
+        .sliderRange(0, 10)
+        .build()
+    );
+
     private int ticks = 0;
     private int id = -1;
     private int sent = 0;
     private int rur = 0;
     private int packetsToSend = 0;
-    private Random random = new Random();
+    private final Random random = new Random();
     private String info = null;
     private Map<Integer, Vec3d> validPos = new HashMap<>();
-    private List<PlayerMoveC2SPacket> validPackets = new ArrayList<>();
+    private final List<PlayerMoveC2SPacket> validPackets = new ArrayList<>();
 
     public boolean moving = false;
 
@@ -309,17 +309,17 @@ public class PacketFly extends BlackOutModule {
         PlayerMoveC2SPacket.PositionAndOnGround bound = new PlayerMoveC2SPacket.PositionAndOnGround(pos.x + bounds.x, pos.y + bounds.y, pos.z + bounds.z, onGround);
 
         validPackets.add(normal);
-        mc.player.networkHandler.sendPacket(normal);
+        sendPacket(normal);
         validPos.put(id + 1, pos);
 
         validPackets.add(bound);
-        mc.player.networkHandler.sendPacket(bound);
+        sendPacket(bound);
         if (id < 0) {
             return;
         }
 
         id++;
-        mc.player.networkHandler.sendPacket(new TeleportConfirmC2SPacket(id));
+        sendPacket(new TeleportConfirmC2SPacket(id));
     }
 
     private double getYaw() {

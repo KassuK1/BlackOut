@@ -42,6 +42,8 @@ public class AnteroTaateli extends BlackOutModule {
     );
 
     private double timer = 0;
+    private final Random r = new Random();
+
     private final String[] messages = new String[]{
         "Hey brokies top G here",
         "Top G eats raw meat and breathes air",
@@ -50,7 +52,6 @@ public class AnteroTaateli extends BlackOutModule {
         "Top G is never late time is just running ahead of schedule",
         "<NAME>, what color is your Bugatti?"
     };
-    private final Random r = new Random();
 
     @EventHandler
     private void onRender(Render3DEvent event) {

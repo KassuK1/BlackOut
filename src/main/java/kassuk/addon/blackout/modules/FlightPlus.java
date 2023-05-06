@@ -15,7 +15,10 @@ import meteordevelopment.orbit.EventHandler;
  */
 public class FlightPlus extends BlackOutModule {
 
-    public FlightPlus() {super(BlackOut.BLACKOUT, "Flight+", "KasumsSoft Flight.");}
+    public FlightPlus() {
+        super(BlackOut.BLACKOUT, "Flight+", "KasumsSoft Flight.");
+    }
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<FlightMode> flyMode = sgGeneral.add(new EnumSetting.Builder<FlightMode>()
@@ -86,12 +89,6 @@ public class FlightPlus extends BlackOutModule {
         .build()
     );
 
-    public enum FlightMode {
-        Momentum,
-        Jump,
-        Glide,
-    }
-
     private double startY = 0.0;
     private int tick = 0;
 
@@ -102,6 +99,7 @@ public class FlightPlus extends BlackOutModule {
             Modules.get().get(Timer.class).setOverride(timer.get());
         }
     }
+
     @EventHandler
     private void onMove(PlayerMoveEvent event){
         if (mc.player != null && mc.world != null){
@@ -174,5 +172,11 @@ public class FlightPlus extends BlackOutModule {
             yaw += s > 0 ? -90 : s < 0 ? 90 : 0;
         }
         return new double[]{yaw, move};
+    }
+
+    public enum FlightMode {
+        Momentum,
+        Jump,
+        Glide,
     }
 }

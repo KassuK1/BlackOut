@@ -46,7 +46,7 @@ public class BedAuraPlus extends BlackOutModule {
     private final SettingGroup sgDamage = settings.createGroup("Damage");
     private final SettingGroup sgRender = settings.createGroup("Render");
 
-    //   General Page
+    //--------------------General--------------------//
     private final Setting<Boolean> fiveB = sgGeneral.add(new BoolSetting.Builder()
         .name("5B5T")
         .description("For example requires floor for both bed blocks and allows placing inside entities.")
@@ -84,7 +84,7 @@ public class BedAuraPlus extends BlackOutModule {
         .build()
     );
 
-    //   Placing Page
+    //--------------------Placing--------------------//
     private final Setting<SpeedMode> speedMode = sgPlacing.add(new EnumSetting.Builder<SpeedMode>()
         .name("Speed Mode")
         .description("Normal mode should be used in everywhere else than 5B.")
@@ -119,7 +119,7 @@ public class BedAuraPlus extends BlackOutModule {
         .build()
     );
 
-    //   Damage Page
+    //--------------------Damage--------------------//
     private final Setting<Double> minDmg = sgDamage.add(new DoubleSetting.Builder()
         .name("Min Damage")
         .description("Minimum damage to place.")
@@ -191,7 +191,7 @@ public class BedAuraPlus extends BlackOutModule {
         .build()
     );
 
-    //   Render Page
+    //--------------------Render--------------------//
     public final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
         .name("Shape Mode")
         .description("Which parts of the render should be rendered.")
@@ -223,27 +223,6 @@ public class BedAuraPlus extends BlackOutModule {
         .build()
     );
 
-    public enum LogicMode {
-        PlaceBreak,
-        BreakPlace
-    }
-    public enum RotationMode {
-        Packet,
-        Manager
-    }
-    public enum SwitchMode {
-        Silent,
-        Normal,
-        PickSilent,
-        InvSwitch,
-        Disabled
-    }
-    public enum SpeedMode {
-        Normal,
-        Damage
-    }
-
-    private BlockPos[] blocks = new BlockPos[]{};
     private int lastIndex = 0;
     private int length = 0;
     private long tickTime = -1;
@@ -258,9 +237,10 @@ public class BedAuraPlus extends BlackOutModule {
     private PlaceData calcData = null;
     private BlockPos renderPos = null;
     private Direction renderDir = null;
-    private List<PlayerEntity> targets = new ArrayList<>();
-    private List<PlayerEntity> friends = new ArrayList<>();
-    private List<Bed> beds = new ArrayList<>();
+    private BlockPos[] blocks = new BlockPos[]{};
+    private final List<PlayerEntity> targets = new ArrayList<>();
+    private final List<PlayerEntity> friends = new ArrayList<>();
+    private final List<Bed> beds = new ArrayList<>();
 
     private double timer = 0;
 
@@ -363,10 +343,13 @@ public class BedAuraPlus extends BlackOutModule {
     private void updateTargets() {
         friends.clear();
         targets.clear();
+
         List<PlayerEntity> players = new ArrayList<>();
+
         double closestDist = 1000;
         PlayerEntity closest;
         double dist;
+
         for (int i = 3; i > 0; i--) {
 
             closest = null;
@@ -476,9 +459,7 @@ public class BedAuraPlus extends BlackOutModule {
                 toRemove.add(bed);
             }
         });
-        toRemove.forEach(bed -> {
-            beds.remove(bed);
-        });
+        toRemove.forEach(beds::remove);
     }
 
     private void place(Hand hand) {
@@ -652,9 +633,8 @@ public class BedAuraPlus extends BlackOutModule {
         if (friend > maxFriendDmg.get()) {return false;}
 
         if (dmg / self < minRatio.get()) {return false;}
-        if (friendHP >= 0 && dmg / friend < minFriendRatio.get()) {return false;}
 
-        return true;
+        return !(friendHP >= 0) || !(dmg / friend < minFriendRatio.get());
     }
 
     private double getDmg(BlockPos pos) {
@@ -722,6 +702,29 @@ public class BedAuraPlus extends BlackOutModule {
             }
         }
         return 2;
+    }
+
+    public enum LogicMode {
+        PlaceBreak,
+        BreakPlace
+    }
+
+    public enum RotationMode {
+        Packet,
+        Manager
+    }
+
+    public enum SwitchMode {
+        Silent,
+        Normal,
+        PickSilent,
+        InvSwitch,
+        Disabled
+    }
+
+    public enum SpeedMode {
+        Normal,
+        Damage
     }
 
     private record Bed(BlockPos feetBlock, BlockPos headBlock, boolean isBed, long time) {}

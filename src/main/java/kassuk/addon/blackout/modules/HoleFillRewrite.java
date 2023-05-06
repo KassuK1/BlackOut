@@ -45,12 +45,13 @@ public class HoleFillRewrite extends BlackOutModule {
     public HoleFillRewrite() {
         super(BlackOut.BLACKOUT, "Hole Fill+", "Automatically is a cunt to your enemies.");
     }
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgPlacing = settings.createGroup("Placing");
     private final SettingGroup sgRender = settings.createGroup("Render");
     private final SettingGroup sgHole = settings.createGroup("Hole");
 
-    //   General Page
+    //--------------------General--------------------//
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
         .name("Pause Eat")
         .description("Pauses when you are eating")
@@ -84,7 +85,7 @@ public class HoleFillRewrite extends BlackOutModule {
         .build()
     );
 
-    //  Placing Page
+    //--------------------Placing--------------------//
     private final Setting<SwitchMode> switchMode = sgPlacing.add(new EnumSetting.Builder<SwitchMode>()
         .name("Switch Mode")
         .description("Method of switching. Silent is the most reliable but delays crystals on some servers.")
@@ -122,7 +123,7 @@ public class HoleFillRewrite extends BlackOutModule {
         .build()
     );
 
-    //   Hole Page
+    //--------------------Hole--------------------//
     private final Setting<Boolean> single = sgHole.add(new BoolSetting.Builder()
         .name("Single")
         .description("Fills 1x1 holes")
@@ -142,7 +143,7 @@ public class HoleFillRewrite extends BlackOutModule {
         .build()
     );
 
-    //   Render Page
+    //--------------------Render--------------------//
     private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
         .name("Shape Mode")
         .description(".")
@@ -177,16 +178,11 @@ public class HoleFillRewrite extends BlackOutModule {
         .defaultValue(new SettingColor(255, 0, 0, 50))
         .build()
     );
-    public enum SwitchMode {
-        Disabled,
-        Silent,
-        PickSilent,
-        InvSwitch
-    }
-    List<BlockPos> holes = new ArrayList<>();
-    BlockTimerList timers = new BlockTimerList();
-    double placeTimer = 0;
-    Map<BlockPos, Double[]> toRender = new HashMap<>();
+
+    private List<BlockPos> holes = new ArrayList<>();
+    private final BlockTimerList timers = new BlockTimerList();
+    private double placeTimer = 0;
+    private final Map<BlockPos, Double[]> toRender = new HashMap<>();
 
     @Override
     public void onActivate() {
@@ -343,7 +339,7 @@ public class HoleFillRewrite extends BlackOutModule {
 
     private boolean inHole(PlayerEntity pl) {
         for (Direction dir : OLEPOSSUtils.horizontals) {
-            if (mc.world.getBlockState(pl.getBlockPos().offset(dir)).getBlock().equals(Blocks.AIR)) {
+            if (mc.world.getBlockState(pl.getBlockPos().offset(dir)).getBlock() == Blocks.AIR) {
                 return false;
             }
         }
@@ -359,7 +355,7 @@ public class HoleFillRewrite extends BlackOutModule {
 
         SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand);
 
-        mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand,
+        sendPacket(new PlayerInteractBlockC2SPacket(hand,
             new BlockHitResult(new Vec3d(d.pos().getX() + 0.5, d.pos().getY() + 0.5, d.pos().getZ() + 0.5),
                 d.dir(), d.pos(), false), 0));
 
@@ -376,5 +372,12 @@ public class HoleFillRewrite extends BlackOutModule {
         } else {
             toRender.replace(ogPos, new Double[]{fadeTime.get() + renderTime.get(), fadeTime.get()});
         }
+    }
+
+    public enum SwitchMode {
+        Disabled,
+        Silent,
+        PickSilent,
+        InvSwitch
     }
 }

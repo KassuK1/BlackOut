@@ -46,14 +46,14 @@ import java.util.Map;
  */
 public class AnchorAuraPlus extends BlackOutModule {
     public AnchorAuraPlus() {
-        super(BlackOut.BLACKOUT, "Anchor Aura+", "Automatically places and breaks respawn anchors to cause damage to your opponents but better.");
+        super(BlackOut.BLACKOUT, "Anchor Aura+", "Automatically destroys people using anchors.");
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgDamage = settings.createGroup("Damage");
     private final SettingGroup sgRender = settings.createGroup("Render");
 
-    //   General Page
+    //--------------------General--------------------//
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
         .name("Pause Eat")
         .description("Pauses when you are eating.")
@@ -81,7 +81,7 @@ public class AnchorAuraPlus extends BlackOutModule {
         .build()
     );
 
-    //   Damage Page
+    //--------------------Damage--------------------//
     private final Setting<Double> minDmg = sgDamage.add(new DoubleSetting.Builder()
         .name("Min Damage")
         .description("Minimum damage required to place.")
@@ -107,7 +107,7 @@ public class AnchorAuraPlus extends BlackOutModule {
         .build()
     );
 
-    //   Render Page
+    //--------------------Render--------------------//
     public final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
         .name("Shape Mode")
         .description("Which parts should be renderer.")
@@ -127,25 +127,6 @@ public class AnchorAuraPlus extends BlackOutModule {
         .build()
     );
 
-    public enum LogicMode {
-        PlaceBreak,
-        BreakPlace
-    }
-
-    public enum SwitchMode {
-        Silent,
-        Normal,
-        PickSilent,
-        InvSwitch,
-        Disabled
-    }
-
-    public enum AnchorState {
-        Air,
-        Anchor,
-        Loaded
-    }
-
     private BlockPos[] blocks = new BlockPos[]{};
     private int lastIndex = 0;
     private int length = 0;
@@ -159,7 +140,7 @@ public class AnchorAuraPlus extends BlackOutModule {
     private PlaceData calcData = null;
     private BlockPos renderPos = null;
     private List<PlayerEntity> targets = new ArrayList<>();
-    private Map<BlockPos, Anchor> anchors = new HashMap<>();
+    private final Map<BlockPos, Anchor> anchors = new HashMap<>();
 
     double timer = 0;
 
@@ -633,6 +614,25 @@ public class AnchorAuraPlus extends BlackOutModule {
             highest = Math.max(highest, BODamageUtils.anchorDamage(target, new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5)));
         }
         return highest;
+    }
+
+    public enum LogicMode {
+        PlaceBreak,
+        BreakPlace
+    }
+
+    public enum SwitchMode {
+        Silent,
+        Normal,
+        PickSilent,
+        InvSwitch,
+        Disabled
+    }
+
+    public enum AnchorState {
+        Air,
+        Anchor,
+        Loaded
     }
 
     private record Anchor(AnchorState state, int charges, long time) {

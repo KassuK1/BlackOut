@@ -27,6 +27,8 @@ public class AntiAim extends BlackOutModule {
     }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgIgnore = settings.createGroup("Ignore");
+
+    //--------------------General--------------------//
     private final Setting<Modes> mode = sgGeneral.add(new EnumSetting.Builder<Modes>()
         .name("Mode")
         .description(".")
@@ -43,7 +45,6 @@ public class AntiAim extends BlackOutModule {
         .sliderMax(1000)
         .build()
     );
-
     private final Setting<Double> spinSpeed = sgGeneral.add(new DoubleSetting.Builder()
         .name("Spin Speed")
         .description("How many degrees should be turned every tick.")
@@ -88,7 +89,6 @@ public class AntiAim extends BlackOutModule {
         .sliderMax(100)
         .build()
     );
-
     private final Setting<Integer> yaw = sgGeneral.add(new IntSetting.Builder()
         .name("Yaw")
         .description("Sets yaw to this")
@@ -121,6 +121,8 @@ public class AntiAim extends BlackOutModule {
         .defaultValue(true)
         .build()
     );
+
+    //--------------------Ignore--------------------//
     private final Setting<Boolean> iYaw = sgIgnore.add(new BoolSetting.Builder()
         .name("Ignore Yaw")
         .description("Doesn't change yaw when holding specific items.")
@@ -146,16 +148,9 @@ public class AntiAim extends BlackOutModule {
         .build()
     );
 
-    public enum Modes {
-        Enemy,
-        Spin,
-        CSGO,
-        Custom
-    }
-    Random r = new Random();
-
-    double spinYaw;
-    double csTick = 0;
+    private final Random r = new Random();
+    private double spinYaw;
+    private double csTick = 0;
     private double csYaw;
     private double csPitch;
 
@@ -251,5 +246,12 @@ public class AntiAim extends BlackOutModule {
             }
         }
         return closest;
+    }
+
+    public enum Modes {
+        Enemy,
+        Spin,
+        CSGO,
+        Custom
     }
 }

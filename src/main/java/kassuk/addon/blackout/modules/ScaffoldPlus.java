@@ -42,6 +42,7 @@ public class ScaffoldPlus extends BlackOutModule {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgPlacing = settings.createGroup("Placing");
+
     private final Setting<ScaffoldMode> scaffoldMode = sgGeneral.add(new EnumSetting.Builder<ScaffoldMode>()
         .name("Scaffold Mode")
         .description("Mode for scaffold.")
@@ -54,9 +55,8 @@ public class ScaffoldPlus extends BlackOutModule {
         .defaultValue(true)
         .build()
     );
-    // Normal
 
-    //   General Page
+    //--------------------General--------------------//
     private final Setting<Boolean> sSprint = sgGeneral.add(new BoolSetting.Builder()
         .name("Stop Sprint")
         .description("Stops you from sprinting.")
@@ -89,7 +89,7 @@ public class ScaffoldPlus extends BlackOutModule {
         .build()
     );
 
-    //   Placing Page
+    //--------------------Placing--------------------//
     private final Setting<SwitchMode> switchMode = sgPlacing.add(new EnumSetting.Builder<SwitchMode>()
         .name("Switch Mode")
         .description("Method of switching. Silent is the most reliable.")
@@ -140,17 +140,7 @@ public class ScaffoldPlus extends BlackOutModule {
         .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
         .build()
     );
-    public enum ScaffoldMode {
-        Normal,
-        Legit
-    }
-    public enum SwitchMode {
-        Disabled,
-        Normal,
-        Silent,
-        PickSilent,
-        InvSwitch
-    }
+
     private final BlockTimerList timers = new BlockTimerList();
     private final BlockTimerList placed = new BlockTimerList();
     private Vec3d motion = null;
@@ -330,5 +320,18 @@ public class ScaffoldPlus extends BlackOutModule {
         if (SettingUtils.shouldRotate(RotationType.Placing)) {
             Managers.ROTATION.end(d.pos());
         }
+    }
+
+    public enum ScaffoldMode {
+        Normal,
+        Legit
+    }
+
+    public enum SwitchMode {
+        Disabled,
+        Normal,
+        Silent,
+        PickSilent,
+        InvSwitch
     }
 }

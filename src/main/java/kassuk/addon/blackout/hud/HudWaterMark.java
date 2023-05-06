@@ -16,6 +16,7 @@ import net.minecraft.util.Identifier;
  * @author KassuK
  */
 public class HudWaterMark extends HudElement {
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
@@ -46,8 +47,10 @@ public class HudWaterMark extends HudElement {
         .sliderRange(0, 10)
         .build()
     );
-    public static final HudElementInfo<HudWaterMark> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "BlackoutWatermark", "The Blackout watermark.", HudWaterMark::new);
+
     private final Identifier LOGO = new Identifier("blackout", "logo.png");
+
+    public static final HudElementInfo<HudWaterMark> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "BlackoutWatermark", "The Blackout watermark.", HudWaterMark::new);
 
     public HudWaterMark() {
         super(INFO);

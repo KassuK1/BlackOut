@@ -29,16 +29,13 @@ import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
-import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
@@ -57,7 +54,10 @@ import java.util.function.Predicate;
  * @author OLEPOSSU
  */
 public class AutoCrystalRewrite extends BlackOutModule {
-    public AutoCrystalRewrite() {super(BlackOut.BLACKOUT, "Auto Crystal Rewrite", "Breaks and places crystals automatically (but better).");}
+    public AutoCrystalRewrite() {
+        super(BlackOut.BLACKOUT, "Auto Crystal Rewrite", "Breaks and places crystals automatically (but better).");
+    }
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgPlace = settings.createGroup("Place");
     private final SettingGroup sgExplode = settings.createGroup("Explode");
@@ -69,7 +69,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     private final SettingGroup sgCompatibility = settings.createGroup("Compatibility");
     private final SettingGroup sgDebug = settings.createGroup("Debug");
 
-    //  General Page
+    //--------------------General--------------------//
     private final Setting<Boolean> place = sgGeneral.add(new BoolSetting.Builder()
         .name("Place")
         .description("Places crystals.")
@@ -107,7 +107,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .build()
     );
 
-    //  Place Page
+    //--------------------Place--------------------//
     private final Setting<Boolean> oldVerPlacements = sgPlace.add(new BoolSetting.Builder()
         .name("1.12 Placements")
         .description("Uses 1.12 crystal mechanics.")
@@ -182,7 +182,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .build()
     );
 
-    //  Explode Page
+    //--------------------Explode--------------------//
     private final Setting<Boolean> onlyOwn = sgExplode.add(new BoolSetting.Builder()
         .name("Only Own")
         .description("Only attacks own crystals.")
@@ -245,7 +245,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .build()
     );
 
-    //  Switch Page
+    //--------------------Switch--------------------//
     private final Setting<SwitchMode> switchMode = sgSwitch.add(new EnumSetting.Builder<SwitchMode>()
         .name("Switch Mode")
         .description("Mode for switching to crystal in main hand.")
@@ -282,7 +282,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .build()
     );
 
-    //  Damage Page
+    //--------------------Damage--------------------//
     private final Setting<DmgCheckMode> dmgCheckMode = sgDamage.add(new EnumSetting.Builder<DmgCheckMode>()
         .name("Dmg Check Mode")
         .description("How safe are the placements (normal is good).")
@@ -400,7 +400,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .build()
     );
 
-    //  ID-Predict Page
+    //--------------------ID-Predict--------------------//
     private final Setting<Boolean> idPredict = sgID.add(new BoolSetting.Builder()
         .name("ID Predict")
         .description("Hits the crystal before it spawns.")
@@ -448,7 +448,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .build()
     );
 
-    //  Extrapolation Page
+    //--------------------Extrapolation--------------------//
     private final Setting<Integer> selfExt = sgExtrapolation.add(new IntSetting.Builder()
         .name("Self Extrapolation")
         .description("How many ticks of movement should be predicted for self damage checks.")
@@ -490,7 +490,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .build()
     );
 
-    //  Render Page
+    //--------------------Render--------------------//
     private final Setting<Boolean> render = sgRender.add(new BoolSetting.Builder()
         .name("Render")
         .description("Renders box on placement.")
@@ -581,7 +581,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .build()
     );
 
-    //  Compatibility Page
+    //--------------------Compatibility--------------------//
     private final Setting<Boolean> surroundAttack = sgCompatibility.add(new BoolSetting.Builder()
         .name("Surround Attack")
         .description("Attacks any crystal blocking surround placement.")
@@ -603,7 +603,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .build()
     );
 
-    //  Debug Page
+    //--------------------Debug--------------------//
     private final Setting<Boolean> renderExt = sgDebug.add(new BoolSetting.Builder()
         .name("Render Extrapolation")
         .description("Renders boxes at players' predicted positions.")
@@ -618,11 +618,6 @@ public class AutoCrystalRewrite extends BlackOutModule {
     );
 
     private long ticksEnabled = 0;
-    private double highestEnemy = 0;
-    private double enemyHP = 0;
-    private double highestFriend = 0;
-    private double friendHP = 0;
-    private double self = 0;
     private double placeTimer = 0;
     private double placeLimitTimer = 0;
     private double delayTimer = 0;
@@ -632,18 +627,17 @@ public class AutoCrystalRewrite extends BlackOutModule {
     private Direction placeDir = null;
     private Entity expEntity = null;
     private Box expEntityBB = null;
-    private IntTimerList attacked = new IntTimerList(false);
-    private Map<BlockPos, Long> existedList = new HashMap<>();
-    private Map<BlockPos, Long> existedTicksList = new HashMap<>();
-    private Map<BlockPos, Long> own = new HashMap<>();
+    private final IntTimerList attacked = new IntTimerList(false);
+    private final Map<BlockPos, Long> existedList = new HashMap<>();
+    private final Map<BlockPos, Long> existedTicksList = new HashMap<>();
+    private final Map<BlockPos, Long> own = new HashMap<>();
     private Map<PlayerEntity, Box> extPos = new HashMap<>();
     private Map<PlayerEntity, Box> extHitbox = new HashMap<>();
     private Vec3d rangePos = null;
-    private Map<String, List<Vec3d>> motions = new HashMap<>();
-    private List<Box> blocked = new ArrayList<>();
-    private Map<Vec3d, double[][]> dmgCache = new HashMap<>();
-    private BlockPos lastPos = null;
-    private Map<BlockPos, Double[]> earthMap = new HashMap<>();
+    private final Map<String, List<Vec3d>> motions = new HashMap<>();
+    private final List<Box> blocked = new ArrayList<>();
+    private final Map<Vec3d, double[][]> dmgCache = new HashMap<>();
+    private final Map<BlockPos, Double[]> earthMap = new HashMap<>();
     private double attackTimer = 0;
     private double switchTimer = 0;
     private int confirmed = Integer.MIN_VALUE;
@@ -655,69 +649,9 @@ public class AutoCrystalRewrite extends BlackOutModule {
     private boolean suicide = false;
     public static boolean placing = false;
 
-    //Used in placement calculation
-    private BlockPos bestPos;
-    private Direction bestDir;
-    private double[] highest;
-    private int r;
-    private BlockPos pos;
-    private Direction dir;
-    private double[][] result;
-
-    //BlackOut Render
     private Vec3d renderTarget = null;
     private Vec3d renderPos = null;
     private double renderProgress = 0;
-
-    public enum DmgCheckMode {
-        Normal,
-        Safe
-    }
-    public enum RenderMode {
-        BlackOut,
-        Future,
-        Earthhack
-    }
-    public enum SwitchMode {
-        Disabled,
-        Simple,
-        Smart,
-        Gapple,
-        Silent,
-        InvSilent,
-        PickSilent
-    }
-    public enum DelayMode {
-        Seconds,
-        Sequential
-    }
-    public enum SequentialMode {
-        Weak,
-        Strong,
-        Strict
-    }
-    public enum ExplodeMode {
-        FullCheck,
-        SelfDmgCheck,
-        SelfDmgOwn,
-        AlwaysOwn,
-        Always
-    }
-    public enum ExistedMode {
-        Seconds,
-        Ticks
-    }
-    public enum EarthFadeMode {
-        Normal,
-        Up,
-        Down,
-        Shrink
-    }
-    public enum FadeMode {
-        Up,
-        Down,
-        Normal
-    }
 
     @Override
     public void onActivate() {
@@ -1086,7 +1020,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
                 }
             }
         } else {
-            lastPos = null;
+            BlockPos lastPos = null;
         }
     }
 
@@ -1384,29 +1318,30 @@ public class AutoCrystalRewrite extends BlackOutModule {
 
     private BlockPos getPlacePos() {
 
-        r = (int) Math.ceil(Math.max(SettingUtils.getPlaceRange(), SettingUtils.getPlaceWallsRange()));
-        bestPos = null;
-        bestDir = null;
-        highest = null;
+        int r = (int) Math.ceil(Math.max(SettingUtils.getPlaceRange(), SettingUtils.getPlaceWallsRange()));
+        //Used in placement calculation
+        BlockPos bestPos = null;
+        Direction bestDir = null;
+        double[] highest = null;
 
         BlockPos pPos = OLEPOSSUtils.toPos(mc.player.getEyePos());
 
         for (int x = -r; x <= r; x++) {
             for (int y = -r; y <= r; y++) {
                 for (int z = -r; z <= r; z++) {
-                    pos = pPos.add(x, y, z);
+                    BlockPos pos = pPos.add(x, y, z);
                     // Checks if crystal can be placed
                     if (!air(pos) || !(!oldVerPlacements.get() || air(pos.up())) || !crystalBlock(pos.down())) {continue;}
 
                     // Checks if there is possible placing direction
-                    dir = SettingUtils.getPlaceOnDirection(pos.down());
+                    Direction dir = SettingUtils.getPlaceOnDirection(pos.down());
                     if (dir == null) {continue;}
 
                     // Checks if the placement is in range
                     if (!inPlaceRange(pos.down()) || !inExplodeRangePlacing(new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5))) {continue;}
 
                     // Calculates damages and healths
-                    result = getDmg(new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5));
+                    double[][] result = getDmg(new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5));
 
                     // Checks if damages are valid
                     if (!placeDamageCheck(result[0], result[1], highest)) {continue;}
@@ -1524,7 +1459,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     }
 
     private double[][] getDmg(Vec3d vec) {
-        self = BODamageUtils.crystalDamage(mc.player, extPos.containsKey(mc.player) ? extPos.get(mc.player) : mc.player.getBoundingBox(), vec, null, ignoreTerrain.get());
+        double self = BODamageUtils.crystalDamage(mc.player, extPos.containsKey(mc.player) ? extPos.get(mc.player) : mc.player.getBoundingBox(), vec, null, ignoreTerrain.get());
 
         if (suicide) {
             return new double[][]{new double[] {self, -1, -1}, new double[]{20, 20}};
@@ -1532,10 +1467,10 @@ public class AutoCrystalRewrite extends BlackOutModule {
         if (dmgCache.containsKey(vec)) {
             return dmgCache.get(vec);
         }
-        highestEnemy = -1;
-        highestFriend = -1;
-        enemyHP = -1;
-        friendHP = -1;
+        double highestEnemy = -1;
+        double highestFriend = -1;
+        double enemyHP = -1;
+        double friendHP = -1;
         for (Map.Entry<PlayerEntity, Box> entry : extPos.entrySet()) {
             PlayerEntity player = entry.getKey();
             Box box = entry.getValue();
@@ -1807,5 +1742,63 @@ public class AutoCrystalRewrite extends BlackOutModule {
         }
 
         return !(entity instanceof PlayerEntity) || !entity.isSpectator();
+    }
+
+    public enum DmgCheckMode {
+        Normal,
+        Safe
+    }
+
+    public enum RenderMode {
+        BlackOut,
+        Future,
+        Earthhack
+    }
+
+    public enum SwitchMode {
+        Disabled,
+        Simple,
+        Smart,
+        Gapple,
+        Silent,
+        InvSilent,
+        PickSilent
+    }
+
+    public enum DelayMode {
+        Seconds,
+        Sequential
+    }
+
+    public enum SequentialMode {
+        Weak,
+        Strong,
+        Strict
+    }
+
+    public enum ExplodeMode {
+        FullCheck,
+        SelfDmgCheck,
+        SelfDmgOwn,
+        AlwaysOwn,
+        Always
+    }
+
+    public enum ExistedMode {
+        Seconds,
+        Ticks
+    }
+
+    public enum EarthFadeMode {
+        Normal,
+        Up,
+        Down,
+        Shrink
+    }
+
+    public enum FadeMode {
+        Up,
+        Down,
+        Normal
     }
 }

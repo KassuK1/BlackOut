@@ -29,7 +29,7 @@ public class AutoEz extends BlackOutModule {
     private final SettingGroup sgKill = settings.createGroup("Kill");
     private final SettingGroup sgPop = settings.createGroup("Pop");
 
-    //   General Page
+    //--------------------General--------------------//
     private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
         .name("Enemy Range")
         .description("Only send message if enemy died inside this range.")
@@ -47,7 +47,7 @@ public class AutoEz extends BlackOutModule {
         .build()
     );
 
-    //   Kill Page
+    //--------------------Kill--------------------//
     private final Setting<Boolean> kill = sgKill.add(new BoolSetting.Builder()
         .name("Kill")
         .description("Should we send a message when enemy dies")
@@ -68,7 +68,7 @@ public class AutoEz extends BlackOutModule {
         .build()
     );
 
-    //   Pop Page
+    //--------------------Pop--------------------//
     private final Setting<Boolean> pop = sgPop.add(new BoolSetting.Builder()
         .name("Pop")
         .description("Should we send a message when enemy pops a totem")

@@ -33,14 +33,12 @@ public class KassuKAura extends BlackOutModule {
         .sliderMax(6)
         .build()
     );
-
     private final Setting<Boolean> iFriends = sgGeneral.add(new BoolSetting.Builder()
         .name("Ignore Friends")
         .description(".")
         .defaultValue(true)
         .build()
     );
-
     private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
         .name("Delay")
         .description("Delay that will be used for hits")
@@ -49,14 +47,12 @@ public class KassuKAura extends BlackOutModule {
         .sliderMax(2)
         .build()
     );
-
     private final Setting<Boolean> debug = sgGeneral.add(new BoolSetting.Builder()
         .name("Debug")
         .description("Prints debug stuff")
         .defaultValue(true)
         .build()
     );
-
     private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder()
         .name("Rotate")
         .description("Rotates towards the enemy before attacking")
@@ -70,22 +66,18 @@ public class KassuKAura extends BlackOutModule {
         .visible(rotate::get)
         .build()
     );
-
-
     private final Setting<Boolean> noCA = sgGeneral.add(new BoolSetting.Builder()
         .name("Stop on CA")
         .description("Does not hit while a CA is enabled")
         .defaultValue(false)
         .build()
     );
-
     private final Setting<Boolean> noMenu = sgGeneral.add(new BoolSetting.Builder()
         .name("Don't hit in menus")
         .description("Does not hit in menus")
         .defaultValue(false)
         .build()
     );
-
     private final Setting<Boolean> autoBlock = sgGeneral.add(new BoolSetting.Builder()
         .name("AutoBlock")
         .description("1.8 module on 1.9+ wow")
@@ -99,7 +91,6 @@ public class KassuKAura extends BlackOutModule {
         .visible(autoBlock::get)
         .build()
     );
-
     private final Setting<Boolean> onlyHurt = sgGeneral.add(new BoolSetting.Builder()
         .name("Only hit damaged")
         .description("Only hits enemies whose health is below the set threshold ")

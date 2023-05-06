@@ -14,8 +14,6 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
  */
 public class Welcomer extends HudElement {
 
-    public static final HudElementInfo<Welcomer> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "Welcomer", "Welcomes you.", Welcomer::new);
-
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<Double> scale = sgGeneral.add(new DoubleSetting.Builder()
@@ -39,6 +37,7 @@ public class Welcomer extends HudElement {
         .build()
     );
 
+    public static final HudElementInfo<Welcomer> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "Welcomer", "Welcomes you.", Welcomer::new);
 
     public Welcomer() {
         super(INFO);

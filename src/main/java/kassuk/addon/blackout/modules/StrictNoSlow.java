@@ -25,6 +25,7 @@ public class StrictNoSlow extends BlackOutModule {
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+
     public final Setting<Boolean> onlyGap = sgGeneral.add(new BoolSetting.Builder()
         .name("Only Gapples")
         .description("Only sends packets when eating gapples.")

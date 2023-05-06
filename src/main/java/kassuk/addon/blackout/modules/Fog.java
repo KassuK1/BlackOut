@@ -13,7 +13,9 @@ public class Fog extends BlackOutModule {
     public Fog() {
         super(BlackOut.BLACKOUT, "Fog", "Customizable fog.");
     }
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+
     public final Setting<FogShape> shape = sgGeneral.add(new EnumSetting.Builder<FogShape>()
         .name("Shape")
         .description("Fog shape.")

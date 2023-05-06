@@ -88,6 +88,7 @@ public class PurpleSpinnyThingBlowerUpererAndPlacer extends BlackOutModule {
         .defaultValue(true)
         .build()
     );
+
     PlayerEntity target = null;
     double timer = 0;
     IntTimerList attacked = new IntTimerList();

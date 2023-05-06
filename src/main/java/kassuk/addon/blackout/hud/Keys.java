@@ -19,7 +19,6 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
  * @author KassuK
  */
 public class Keys extends HudElement {
-    public static final HudElementInfo<Keys> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "Keys", "Draws pressed movement keys.", Keys::new);
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
@@ -87,6 +86,8 @@ public class Keys extends HudElement {
     );
 
     private List<Key> keys = null;
+
+    public static final HudElementInfo<Keys> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "Keys", "Draws pressed movement keys.", Keys::new);
 
     public Keys() {
         super(INFO);

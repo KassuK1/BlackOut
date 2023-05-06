@@ -207,7 +207,7 @@ public class AutoMinePlus extends BlackOutModule {
         .build()
     );
 
-    //--------------------General--------------------//
+    //--------------------Render--------------------//
     private final Setting<Double> animationExp = sgRender.add(new DoubleSetting.Builder()
         .name("Animation Exponent")
         .description("3 - 4 look cool.")
@@ -262,7 +262,7 @@ public class AutoMinePlus extends BlackOutModule {
     private double delta = 0;
     private boolean ignore = false;
 
-    private Map<BlockPos, Long> explodeAt = new HashMap<>();
+    private final Map<BlockPos, Long> explodeAt = new HashMap<>();
 
     @Override
     public void onActivate() {
@@ -290,11 +290,6 @@ public class AutoMinePlus extends BlackOutModule {
                 }
             }
         }
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST)
-    private void onTick(TickEvent.Pre event) {
-        if (mc.world == null) {return;}
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -330,7 +325,7 @@ public class AutoMinePlus extends BlackOutModule {
         }
         toRemove.forEach(explodeAt::remove);
 
-        if (targetCrystal != null && System.currentTimeMillis() - lastExplode > 500) {
+        if (targetCrystal != null && !isPaused() && System.currentTimeMillis() - lastExplode > 500) {
 
             if (!SettingUtils.shouldRotate(RotationType.Attacking) || Managers.ROTATION.start(targetCrystal.getBoundingBox(), priority, RotationType.Breaking)) {
 
@@ -382,6 +377,8 @@ public class AutoMinePlus extends BlackOutModule {
 
         minedFor += delta * 20;
 
+        if (isPaused()) {return;}
+
         if (!miningCheck(fastestSlot())) {return;}
 
         if (!civCheck()) {return;}
@@ -393,6 +390,10 @@ public class AutoMinePlus extends BlackOutModule {
         if (!rotated) {return;}
 
         if (!endMine()) {return;}
+    }
+
+    private boolean isPaused() {
+        return pauseEat.get() && mc.player.isUsingItem();
     }
 
     private boolean civCheck() {
@@ -893,13 +894,6 @@ public class AutoMinePlus extends BlackOutModule {
         return new Box(target.pos.getX() + 0.5 - progress, target.pos.getY() + 0.5 - progress, target.pos.getZ() + 0.5 - progress, target.pos.getX() + 0.5 + progress, target.pos.getY() + 0.5 + progress, target.pos.getZ() + 0.5 + progress);
     }
 
-    public enum AutoMineMode {
-        SpeedMine,
-        Smart,
-        AutoMine,
-        CIV
-    }
-
     public enum SwitchMode {
         Silent,
         PickSilent,
@@ -921,6 +915,7 @@ public class AutoMinePlus extends BlackOutModule {
             this.priority = priority;
         }
     }
+
     public enum MineType {
         Cev,
         TrapCev,

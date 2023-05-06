@@ -20,6 +20,7 @@ public class WeakAlert extends BlackOutModule {
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+
     private final Setting<Boolean> single = sgGeneral.add(new BoolSetting.Builder()
         .name("Single")
         .description("Only sends the message once.")

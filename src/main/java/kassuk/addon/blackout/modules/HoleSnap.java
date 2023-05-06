@@ -27,10 +27,12 @@ public class HoleSnap extends BlackOutModule {
     public HoleSnap() {
         super(BlackOut.BLACKOUT, "Hole Snap", "For the times when you cant even press W.");
     }
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgSpeed = settings.createGroup("Speed");
     private final SettingGroup sgHole = settings.createGroup("Hole");
-    //   General Page
+
+    //--------------------General--------------------//
     private final Setting<Boolean> jump = sgGeneral.add(new BoolSetting.Builder()
         .name("Jump")
         .description("Jumps to the hole (very useful).")
@@ -78,7 +80,7 @@ public class HoleSnap extends BlackOutModule {
         .build()
     );
 
-    //   Speed Page
+    //--------------------Speed--------------------//
     private final Setting<Double> speed = sgSpeed.add(new DoubleSetting.Builder()
         .name("Speed")
         .description("Movement Speed.")
@@ -120,7 +122,7 @@ public class HoleSnap extends BlackOutModule {
         .build()
     );
 
-    //   Hole Page
+    //--------------------Hole--------------------//
     private final Setting<Boolean> singleTarget = sgHole.add(new BoolSetting.Builder()
         .name("Single Target")
         .description("Only chooses target hole once.")
@@ -285,6 +287,7 @@ public class HoleSnap extends BlackOutModule {
     {
         return (float) Rotations.getYaw(pos);
     }
+
     private double getSpeed() {
         return boostLeft > 0 ? boostedSpeed.get() : speed.get();
     }

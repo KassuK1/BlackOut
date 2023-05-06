@@ -25,7 +25,9 @@ public class RPC extends BlackOutModule {
     public RPC() {
         super(BlackOut.BLACKOUT, "RPC", "Epic rpc.");
     }
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+
     private final Setting<List<String>> l1 = sgGeneral.add(new StringListSetting.Builder()
         .name("Line 1")
         .description(".")
@@ -48,6 +50,7 @@ public class RPC extends BlackOutModule {
         .sliderRange(0, 1000)
         .build()
     );
+
     private int ticks = 0;
     private int index1 = 0;
     private int index2 = 0;

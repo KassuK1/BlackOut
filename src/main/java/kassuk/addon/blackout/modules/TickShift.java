@@ -19,6 +19,7 @@ public class TickShift extends BlackOutModule {
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+
     public final Setting<SmoothMode> smooth = sgGeneral.add(new EnumSetting.Builder<SmoothMode>()
         .name("Smoothness")
         .description(".")

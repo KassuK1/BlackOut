@@ -42,11 +42,13 @@ public class SelfTrapPlus extends BlackOutModule {
     public SelfTrapPlus() {
         super(BlackOut.BLACKOUT, "Self Trap+", "Traps yourself with blocks.");
     }
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgPlacing = settings.createGroup("Placing");
     private final SettingGroup sgToggle = settings.createGroup("Toggle");
     private final SettingGroup sgRender = settings.createGroup("Render");
 
+    //--------------------General--------------------//
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
         .name("Pause Eat")
         .description("Pauses when you are eating.")
@@ -73,7 +75,7 @@ public class SelfTrapPlus extends BlackOutModule {
         .build()
     );
 
-    //   Placing Page
+    //--------------------Placing--------------------//
     private final Setting<List<Block>> blocks = sgPlacing.add(new BlockListSetting.Builder()
         .name("Blocks")
         .description("Blocks to use.")
@@ -105,7 +107,7 @@ public class SelfTrapPlus extends BlackOutModule {
         .build()
     );
 
-    //   Toggle Page
+    //--------------------Toggle--------------------//
     private final Setting<Boolean> toggleMove = sgToggle.add(new BoolSetting.Builder()
         .name("Toggle Move")
         .description("Toggles when you move horizontally.")
@@ -125,7 +127,7 @@ public class SelfTrapPlus extends BlackOutModule {
         .build()
     );
 
-    //   Render Page
+    //--------------------Render--------------------//
     private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
         .name("Shape Mode")
         .description("Which parts of the boxes should be rendered.")

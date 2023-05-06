@@ -48,12 +48,13 @@ public class AutoTrapPlus extends BlackOutModule {
     public AutoTrapPlus() {
         super(BlackOut.BLACKOUT, "Auto Trap+", "Traps enemies (literally selftrap but places on enemies).");
     }
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgPlacing = settings.createGroup("Placing");
     private final SettingGroup sgToggle = settings.createGroup("Toggle");
     private final SettingGroup sgRender = settings.createGroup("Render");
 
-    //   General Page
+    //--------------------General--------------------//
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
         .name("Pause Eat")
         .description("Pauses when you are eating.")
@@ -91,7 +92,7 @@ public class AutoTrapPlus extends BlackOutModule {
         .build()
     );
 
-    //   Placing Page
+    //--------------------Placing--------------------//
     private final Setting<List<Block>> blocks = sgPlacing.add(new BlockListSetting.Builder()
         .name("Blocks")
         .description("Blocks to use.")
@@ -123,7 +124,7 @@ public class AutoTrapPlus extends BlackOutModule {
         .build()
     );
 
-    //  Toggle Page
+    //--------------------Toggle--------------------//
     private final Setting<Boolean> toggleMove = sgToggle.add(new BoolSetting.Builder()
         .name("Toggle Move")
         .description("Toggles when you move horizontally.")
@@ -143,7 +144,7 @@ public class AutoTrapPlus extends BlackOutModule {
         .build()
     );
 
-    //  Render Page
+    //--------------------Render--------------------//
     private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
         .name("Shape Mode")
         .description("Which parts of the boxes should be rendered.")
@@ -174,25 +175,14 @@ public class AutoTrapPlus extends BlackOutModule {
         .defaultValue(new SettingColor(255, 0, 0, 50))
         .build()
     );
-    public enum SwitchMode {
-        Disabled,
-        Normal,
-        Silent,
-        PickSilent,
-        InvSwitch
-    }
-    public enum TrapMode {
-        Top,
-        Eyes,
-        Both
-    }
-    private BlockTimerList timers = new BlockTimerList();
+
+    private final BlockTimerList timers = new BlockTimerList();
     private double placeTimer = 0;
     private int placesLeft = 0;
     private BlockPos startPos = new BlockPos(0, 0, 0);
     private boolean lastSneak = false;
-    private List<Render> render = new ArrayList<>();
-    private BlockTimerList placed = new BlockTimerList();
+    private final List<Render> render = new ArrayList<>();
+    private final BlockTimerList placed = new BlockTimerList();
     public static boolean placing = false;
 
     @Override
@@ -208,10 +198,6 @@ public class AutoTrapPlus extends BlackOutModule {
         placesLeft = places.get();
         placeTimer = 0;
         Modules.get().get(Timer.class).setOverride(1);
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST)
-    private void onTick(TickEvent.Pre event) {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -333,7 +319,7 @@ public class AutoTrapPlus extends BlackOutModule {
                         placing = true;
 
                         for (int i = 0; i < Math.min(obsidian, toPlace.size()); i++) {
-                            PlaceData placeData = onlyConfirmed.get() ? SettingUtils.getPlaceData(toPlace.get(i)) : SettingUtils.getPlaceDataOR(toPlace.get(i), pos -> placed.contains(pos));
+                            PlaceData placeData = onlyConfirmed.get() ? SettingUtils.getPlaceData(toPlace.get(i)) : SettingUtils.getPlaceDataOR(toPlace.get(i), placed::contains);
                             if (placeData.valid()) {
                                 boolean rotated = !SettingUtils.shouldRotate(RotationType.Placing) || Managers.ROTATION.start(placeData.pos().offset(placeData.dir()), 1, RotationType.Placing);
 
@@ -376,7 +362,7 @@ public class AutoTrapPlus extends BlackOutModule {
 
         SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand);
 
-        mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand,
+        sendPacket(new PlayerInteractBlockC2SPacket(hand,
             new BlockHitResult(new Vec3d(d.pos().getX() + 0.5, d.pos().getY() + 0.5, d.pos().getZ() + 0.5),
                 d.dir(), d.pos(), false), 0));
 
@@ -437,7 +423,7 @@ public class AutoTrapPlus extends BlackOutModule {
         int value = -1;
 
         for (Direction dir : Direction.values()) {
-            PlaceData data = onlyConfirmed.get() ? SettingUtils.getPlaceData(position.offset(dir)) : SettingUtils.getPlaceDataOR(position.offset(dir), pos -> placed.contains(pos));
+            PlaceData data = onlyConfirmed.get() ? SettingUtils.getPlaceData(position.offset(dir)) : SettingUtils.getPlaceDataOR(position.offset(dir), placed::contains);
 
             if (!data.valid() || !SettingUtils.inPlaceRange(data.pos())) {continue;}
 
@@ -558,6 +544,20 @@ public class AutoTrapPlus extends BlackOutModule {
             }
         }
         return false;
+    }
+
+    public enum SwitchMode {
+        Disabled,
+        Normal,
+        Silent,
+        PickSilent,
+        InvSwitch
+    }
+
+    public enum TrapMode {
+        Top,
+        Eyes,
+        Both
     }
 
     private record Render(BlockPos pos, boolean support) {}

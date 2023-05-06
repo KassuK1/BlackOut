@@ -17,14 +17,16 @@ public class FastXP extends BlackOutModule {
     public FastXP() {
         super(BlackOut.BLACKOUT, "Fast XP", "XP spamming moment.");
     }
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private final Setting<rotationmode> rotmode = sgGeneral.add(new EnumSetting.Builder<rotationmode>()
+
+    private final Setting<RotationMode> rotMode = sgGeneral.add(new EnumSetting.Builder<RotationMode>()
         .name("Rotation mode")
         .description("ken i put mi balls in yo jawzz")
-        .defaultValue(rotationmode.Silent)
+        .defaultValue(RotationMode.Silent)
         .build()
     );
-    private final Setting<Integer> YeetDelay = sgGeneral.add(new IntSetting.Builder()
+    private final Setting<Integer> yeetDelay = sgGeneral.add(new IntSetting.Builder()
         .name("Throw Delay")
         .description("Delay between throws.")
         .defaultValue(0)
@@ -32,8 +34,7 @@ public class FastXP extends BlackOutModule {
         .sliderMax(10)
         .build()
     );
-
-    private final Setting<Integer> Pitch = sgGeneral.add(new IntSetting.Builder()
+    private final Setting<Integer> pitch = sgGeneral.add(new IntSetting.Builder()
         .name("Pitch")
         .description("Where to set pitch.")
         .defaultValue(45)
@@ -41,31 +42,33 @@ public class FastXP extends BlackOutModule {
         .sliderMax(90)
         .build()
     );
-
-    private final Setting<Boolean> Rotate = sgGeneral.add(new BoolSetting.Builder()
+    private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder()
         .name("Rotate")
         .description("Should we do a bit of rotating.")
         .defaultValue(true)
         .build()
     );
-    public enum rotationmode {
-        Silent,
-        Vanilla,
-    }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onTick(TickEvent.Pre event) {
-        if (mc.player != null && mc.world != null) {
-        int ticks = Math.min(((MinecraftClientAccessor) mc).getItemUseCooldown(), YeetDelay.get());
+        if (mc.player == null || mc.world == null) {return;}
+
+        int ticks = Math.min(((MinecraftClientAccessor) mc).getItemUseCooldown(), yeetDelay.get());
+
         if (mc.player.getMainHandStack().getItem() == Items.EXPERIENCE_BOTTLE  && mc.options.useKey.isPressed()){
             ((MinecraftClientAccessor) mc).setItemUseCooldown(ticks);
 
-            if (rotmode.get().equals(rotationmode.Silent) && Rotate.get()){
-                Rotations.rotate(mc.player.getYaw(), Pitch.get());
+            if (rotMode.get() == RotationMode.Silent && rotate.get()){
+                Rotations.rotate(mc.player.getYaw(), pitch.get());
             }
-            if (rotmode.get().equals(rotationmode.Vanilla) && Rotate.get()) {
-                mc.player.setPitch(Pitch.get());
+            if (rotMode.get() == RotationMode.Vanilla && rotate.get()) {
+                mc.player.setPitch(pitch.get());
             }
         }
     }
-}}
+
+    public enum RotationMode {
+        Silent,
+        Vanilla,
+    }
+}

@@ -57,11 +57,13 @@ public class AutoMine extends BlackOutModule {
     public AutoMine() {
         super(BlackOut.BLACKOUT, "Auto Mine", "Automatically mines blocks to destroy your enemies.");
     }
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgValue = settings.createGroup("Priority");
     private final SettingGroup sgSpeed = settings.createGroup("Speed");
     private final SettingGroup sgCrystal = settings.createGroup("Crystal");
     private final SettingGroup sgRender = settings.createGroup("Render");
+
     private final Setting<AutoMineMode> mode = sgGeneral.add(new EnumSetting.Builder<AutoMineMode>()
         .name("Mode")
         .description("Mode of auto mine. All of them are different.")
@@ -305,39 +307,6 @@ public class AutoMine extends BlackOutModule {
         .defaultValue(new SettingColor(255, 0, 0, 50))
         .build()
     );
-
-    public enum AutoMineMode {
-        SpeedMine,
-        Smart,
-        AutoMine,
-        CIV
-    }
-
-    public enum SwitchMode {
-        Silent,
-        PickSilent,
-        InvSwitch
-    }
-
-    public enum Priority {
-        Highest(6),
-        Higher(5),
-        High(4),
-        Normal(3),
-        Low(2),
-        Lower(1),
-        Lowest(0),
-        Disabled(-1);
-
-        public final int priority;
-        Priority(int priority) {
-            this.priority = priority;
-        }
-    }
-    public enum PlaceTiming {
-        Normal,
-        AntiPingFag
-    }
 
     public Block lastBlock = null;
     boolean speedmining = false;
@@ -1082,5 +1051,34 @@ public class AutoMine extends BlackOutModule {
 
     boolean canPlaceCrystal(BlockPos pos) {
         return getBlock(pos) == Blocks.AIR && (!oldVerPlacements.get() || getBlock(pos.up()) == Blocks.AIR);
+    }
+
+    public enum AutoMineMode {
+        SpeedMine,
+        Smart,
+        AutoMine,
+        CIV
+    }
+
+    public enum SwitchMode {
+        Silent,
+        PickSilent,
+        InvSwitch
+    }
+
+    public enum Priority {
+        Highest(6),
+        Higher(5),
+        High(4),
+        Normal(3),
+        Low(2),
+        Lower(1),
+        Lowest(0),
+        Disabled(-1);
+
+        public final int priority;
+        Priority(int priority) {
+            this.priority = priority;
+        }
     }
 }

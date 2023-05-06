@@ -26,7 +26,7 @@ public class BlackoutArray extends HudElement {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgWave = settings.createGroup("Wave");
 
-    //   General Page
+    //--------------------General--------------------//
     private final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
         .name("Module Color")
         .description("The color the ArrayList will use for module names.")
@@ -78,7 +78,7 @@ public class BlackoutArray extends HudElement {
         .build()
     );
 
-    //   Wave Page
+    //--------------------Wave--------------------//
     private final Setting<Boolean> wave = sgWave.add(new BoolSetting.Builder()
         .name("Wave")
         .description("The wave color.")
