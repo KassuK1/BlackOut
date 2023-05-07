@@ -302,22 +302,8 @@ public class AutoTrapPlus extends BlackOutModule {
                     }
 
                     if (obsidian >= 0) {
-                        if (hand == null) {
-                            switch (switchMode.get()) {
-                                case Silent, Normal -> {
-                                    obsidian = hotbar.count();
-                                    InvUtils.swap(hotbar.slot(), true);
-                                }
-                                case PickSilent -> obsidian = BOInvUtils.pickSwitch(inventory.slot()) ? inventory.count() : -1;
-                                case InvSwitch -> obsidian = BOInvUtils.invSwitch(inventory.slot()) ? inventory.count() : -1;
-                            }
-                        }
-
-                        if (obsidian <= 0) {
-                            return;
-                        }
-
                         placing = true;
+                        boolean switched = false;
 
                         for (int i = 0; i < Math.min(obsidian, toPlace.size()); i++) {
                             PlaceData placeData = onlyConfirmed.get() ? SettingUtils.getPlaceData(toPlace.get(i)) : SettingUtils.getPlaceDataOR(toPlace.get(i), placed::contains);
@@ -327,15 +313,30 @@ public class AutoTrapPlus extends BlackOutModule {
                                 if (!rotated) {
                                     break;
                                 }
+
+                                if (!switched) {
+                                    if (hand == null) {
+                                        switched = true;
+                                        switch (switchMode.get()) {
+                                            case Silent, Normal -> {
+                                                obsidian = hotbar.count();
+                                                InvUtils.swap(hotbar.slot(), true);
+                                            }
+                                            case PickSilent -> BOInvUtils.pickSwitch(inventory.slot());
+                                            case InvSwitch -> BOInvUtils.invSwitch(inventory.slot());
+                                        }
+                                    }
+                                }
+
                                 place(placeData, toPlace.get(i), hand == null ? Hand.MAIN_HAND : hand);
                             }
                         }
 
-                        if (hand == null) {
+                        if (switched) {
                             switch (switchMode.get()) {
                                 case Silent -> InvUtils.swapBack();
-                                case PickSilent -> BOInvUtils.swapBack();
-                                case InvSwitch -> BOInvUtils.pickSwapBack();
+                                case PickSilent -> BOInvUtils.pickSwapBack();
+                                case InvSwitch -> BOInvUtils.swapBack();
                             }
                         }
                     }
@@ -386,7 +387,8 @@ public class AutoTrapPlus extends BlackOutModule {
             PlaceData data = SettingUtils.getPlaceData(block);
             if (data.valid() && SettingUtils.inPlaceRange(data.pos())) {
                 render.add(new Render(block, false));
-                if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(block), entity -> !entity.isSpectator() && !(entity instanceof ItemEntity))) {
+                if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(block), entity -> !entity.isSpectator() && !(entity instanceof ItemEntity)) &&
+                    !timers.contains(block)) {
                     list.add(block);
                 }
                 return;
@@ -398,7 +400,10 @@ public class AutoTrapPlus extends BlackOutModule {
             if (support1 != null) {
                 render.add(new Render(block, false));
                 render.add(new Render(block.offset(support1), true));
-                list.add(block.offset(support1));
+                if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(block.offset(support1)), entity -> !entity.isSpectator() && !(entity instanceof ItemEntity)) &&
+                    !timers.contains(block.offset(support1))) {
+                    list.add(block.offset(support1));
+                }
                 return;
             }
 
@@ -412,7 +417,10 @@ public class AutoTrapPlus extends BlackOutModule {
                     render.add(new Render(block, false));
                     render.add(new Render(block.offset(dir), true));
                     render.add(new Render(block.offset(dir).offset(support2), true));
-                    list.add(block.offset(dir).offset(support2));
+                    if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(block.offset(dir).offset(support2)), entity -> !entity.isSpectator() && !(entity instanceof ItemEntity)) &&
+                        !timers.contains(block.offset(dir).offset(support2))) {
+                        list.add(block.offset(dir).offset(support2));
+                    }
                     return;
                 }
             }

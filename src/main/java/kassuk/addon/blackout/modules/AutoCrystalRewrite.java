@@ -652,6 +652,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     private Vec3d renderTarget = null;
     private Vec3d renderPos = null;
     private double renderProgress = 0;
+    private AutoMine autoMine = null;
 
     @Override
     public void onActivate() {
@@ -750,6 +751,9 @@ public class AutoCrystalRewrite extends BlackOutModule {
 
     @EventHandler(priority = EventPriority.HIGHEST + 1)
     private void onRender3D(Render3DEvent event) {
+        if (autoMine == null) {
+            autoMine = Modules.get().get(AutoMine.class);
+        }
         suicide = Modules.get().isActive(Suicide.class);
         double d = (System.currentTimeMillis() - lastMillis) / 1000f;
         lastMillis = System.currentTimeMillis();
@@ -1479,7 +1483,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
             }
 
             double dmg = BODamageUtils.crystalDamage(player, box, vec, null, ignoreTerrain.get());
-            if (OLEPOSSUtils.toPos(vec).down().equals(AutoMine.targetPos)) {
+            if (OLEPOSSUtils.toPos(vec).down().equals(autoMine.targetPos())) {
                 dmg *= autoMineDamage.get();
             }
             double hp = player.getHealth() + player.getAbsorptionAmount();
