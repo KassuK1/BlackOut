@@ -59,7 +59,7 @@ public class HoleUtils {
     }
 
     static boolean isBlock(BlockPos pos) {
-        return !OLEPOSSUtils.replaceable(pos);
+        return OLEPOSSUtils.collidable(pos);
     }
 
     static boolean isHole(BlockPos pos, int depth) {

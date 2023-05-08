@@ -297,6 +297,7 @@ public class HoleFillRewrite extends BlackOutModule {
 
     private void updateHoles(double range) {
         holes = new ArrayList<>();
+
         for(int x = (int) -Math.ceil(range); x <= Math.ceil(range); x++) {
             for(int y = (int) -Math.ceil(range); y <= Math.ceil(range); y++) {
                 for(int z = (int) -Math.ceil(range); z <= Math.ceil(range); z++) {
@@ -304,17 +305,18 @@ public class HoleFillRewrite extends BlackOutModule {
 
                     Hole h = HoleUtils.getHole(pos, single.get(), doubleHole.get(), quad.get(), 3);
 
-                    if (h.type != HoleType.NotHole) {
-                        for (BlockPos p : h.positions()) {
-                            if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(p), entity -> !entity.isSpectator() && !(entity instanceof ItemEntity))) {
-                                double closest = closestDist(p);
+                    if (h.type == HoleType.NotHole) {continue;}
 
-                                PlaceData d = SettingUtils.getPlaceData(p);
-                                if (d.valid() && closest >= 0 && closest <= holeRange.get() && (!efficient.get() || OLEPOSSUtils.distance(mc.player.getPos(), OLEPOSSUtils.getMiddle(p)) > closest)) {
-                                    if (SettingUtils.inPlaceRange(d.pos())) {
-                                        holes.add(p);
-                                    }
-                                }
+                    for (BlockPos p : h.positions()) {
+                        if (!OLEPOSSUtils.replaceable(p)) {continue;}
+                        if (EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(p), entity -> !entity.isSpectator() && !(entity instanceof ItemEntity))) {continue;}
+
+                        double closest = closestDist(p);
+
+                        PlaceData d = SettingUtils.getPlaceData(p);
+                        if (d.valid() && closest >= 0 && closest <= holeRange.get() && (!efficient.get() || OLEPOSSUtils.distance(mc.player.getPos(), OLEPOSSUtils.getMiddle(p)) > closest)) {
+                            if (SettingUtils.inPlaceRange(d.pos())) {
+                                holes.add(p);
                             }
                         }
                     }

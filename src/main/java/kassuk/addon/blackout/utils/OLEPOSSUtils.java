@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.utils;
 
 import kassuk.addon.blackout.mixins.MixinBlockSettings;
+import meteordevelopment.meteorclient.mixin.AbstractBlockAccessor;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import net.minecraft.block.*;
@@ -172,5 +173,8 @@ public class OLEPOSSUtils {
     }
     public static boolean isGapple(ItemStack stack) {
         return stack.getItem() == Items.GOLDEN_APPLE || stack.getItem() == Items.ENCHANTED_GOLDEN_APPLE;
+    }
+    public static boolean collidable(BlockPos block) {
+        return ((AbstractBlockAccessor) mc.world.getBlockState(block).getBlock()).isCollidable();
     }
 }

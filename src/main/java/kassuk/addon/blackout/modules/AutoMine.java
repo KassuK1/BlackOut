@@ -77,8 +77,14 @@ public class AutoMine extends BlackOutModule {
         .defaultValue(false)
         .build()
     );
-    private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
-        .name("Switch Mode")
+    private final Setting<SwitchMode> pickAxeSwitchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
+        .name("Pickaxe Switch Mode")
+        .description("Method of switching. InvSwitch is used in most clients.")
+        .defaultValue(SwitchMode.Silent)
+        .build()
+    );
+    private final Setting<SwitchMode> crystalSwitchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
+        .name("Crystal Switch Mode")
         .description("Method of switching. InvSwitch is used in most clients.")
         .defaultValue(SwitchMode.Silent)
         .build()
@@ -99,6 +105,12 @@ public class AutoMine extends BlackOutModule {
         .name("Manual CIV")
         .description("Uses civ mine when mining manually.")
         .defaultValue(false)
+        .build()
+    );
+    private final Setting<Boolean> manualRangeReset = sgGeneral.add(new BoolSetting.Builder()
+        .name("Manual Range Reset")
+        .description("Resets manual mining if out of range.")
+        .defaultValue(true)
         .build()
     );
     private final Setting<Boolean> resetOnSwitch = sgGeneral.add(new BoolSetting.Builder()
@@ -412,6 +424,11 @@ public class AutoMine extends BlackOutModule {
 
         BlockPos lastPos = target == null || target.pos == null ? null : target.pos;
 
+        if (target != null && target.manual && manualRangeReset.get() && !SettingUtils.inMineRange(target.pos)) {
+            target = null;
+            started = false;
+        }
+
         if (target == null || !target.manual) {
             target = getTarget();
         }
@@ -495,7 +512,7 @@ public class AutoMine extends BlackOutModule {
         if (SettingUtils.shouldRotate(RotationType.Breaking) && !Managers.ROTATION.start(target.pos, priority, RotationType.Breaking)) {return false;}
 
         if (!switched) {
-            switch (switchMode.get()) {
+            switch (pickAxeSwitchMode.get()) {
                 case Silent -> {
                     switched = true;
                     InvUtils.swap(slot, true);
@@ -523,7 +540,7 @@ public class AutoMine extends BlackOutModule {
         }
 
         if (swapBack) {
-            switch (switchMode.get()) {
+            switch (pickAxeSwitchMode.get()) {
                 case Silent -> InvUtils.swapBack();
                 case PickSilent -> BOInvUtils.pickSwapBack();
                 case InvSwitch -> BOInvUtils.swapBack();
@@ -580,6 +597,10 @@ public class AutoMine extends BlackOutModule {
         int crystalSlot = InvUtils.find(Items.END_CRYSTAL).slot();
         if (hand == null && crystalSlot < 0) {return false;}
 
+        Direction dir = SettingUtils.getPlaceOnDirection(target.crystalPos.down());
+
+        if (dir == null) {return false;}
+
         boolean rotated = !SettingUtils.shouldRotate(RotationType.Placing) || Managers.ROTATION.start(target.crystalPos.down(), priority, RotationType.Placing);
 
         if (!rotated) {return false;}
@@ -587,14 +608,13 @@ public class AutoMine extends BlackOutModule {
         boolean switched = hand != null;
 
         if (!switched) {
-            switch (switchMode.get()) {
+            switch (crystalSwitchMode.get()) {
                 case Silent -> {
                     switched = true;
                     InvUtils.swap(crystalSlot, true);
                 }
                 case PickSilent -> {
-                    switched = true;
-                    BOInvUtils.pickSwitch(crystalSlot);
+                    switched = BOInvUtils.pickSwitch(crystalSlot);
                 }
                 case InvSwitch -> {
                     switched = BOInvUtils.invSwitch(crystalSlot);
@@ -603,10 +623,6 @@ public class AutoMine extends BlackOutModule {
         }
 
         if (!switched) {return false;}
-
-        Direction dir = SettingUtils.getPlaceOnDirection(target.crystalPos.down());
-
-        if (dir == null) {return false;}
 
         SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand == null ? Hand.MAIN_HAND : hand);
         sendPacket(new PlayerInteractBlockC2SPacket(hand == null ? Hand.MAIN_HAND : hand, new BlockHitResult(OLEPOSSUtils.getMiddle(target.crystalPos.down()), dir, target.crystalPos.down(), false), 0));
@@ -621,7 +637,7 @@ public class AutoMine extends BlackOutModule {
         Managers.ROTATION.end(target.crystalPos.down());
 
         if (hand == null) {
-            switch (switchMode.get()) {
+            switch (crystalSwitchMode.get()) {
                 case Silent -> InvUtils.swapBack();
                 case PickSilent -> BOInvUtils.pickSwapBack();
                 case InvSwitch -> BOInvUtils.swapBack();
@@ -639,9 +655,8 @@ public class AutoMine extends BlackOutModule {
     private boolean shouldExplode() {
         return switch (target.type) {
             case Cev, SurroundCev, TrapCev -> true;
-            case SurroundMiner, AntiBurrow -> false;
+            case SurroundMiner, AntiBurrow, Manual -> false;
             case AutoCity -> explodeCrystal.get();
-            case Manual -> false;
         };
     }
 
@@ -959,7 +974,7 @@ public class AutoMine extends BlackOutModule {
         if (mc.player == null || mc.world == null) {
             return -1;
         }
-        for (int i = 0; i < (switchMode.get() == SwitchMode.Silent ? 9 : 35); i++) {
+        for (int i = 0; i < (pickAxeSwitchMode.get() == SwitchMode.Silent ? 9 : 35); i++) {
             if (slot == -1 || (mc.player.getInventory().getStack(i).getMiningSpeedMultiplier(mc.world.getBlockState(target.pos)) > mc.player.getInventory().getStack(slot).getMiningSpeedMultiplier(mc.world.getBlockState(target.pos)))) {
                 slot = i;
             }

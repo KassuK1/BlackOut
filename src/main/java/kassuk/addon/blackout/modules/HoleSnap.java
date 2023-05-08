@@ -239,8 +239,10 @@ public class HoleSnap extends BlackOutModule {
     }
 
     private boolean singleBlocked() {
+        if (!singleTarget.get()) {return false;}
+
         for (BlockPos pos : singleHole.positions) {
-            if (mc.world.getBlockState(pos).getBlock() != Blocks.AIR) {
+            if (OLEPOSSUtils.collidable(pos)) {
                 return true;
             }
         }
