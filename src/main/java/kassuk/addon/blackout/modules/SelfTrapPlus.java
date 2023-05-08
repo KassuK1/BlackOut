@@ -22,6 +22,7 @@ import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.ItemEntity;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
@@ -292,7 +293,7 @@ public class SelfTrapPlus extends BlackOutModule {
                         placing = true;
 
                         for (int i = 0; i < Math.min(obsidian, toPlace.size()); i++) {
-                            PlaceData placeData = onlyConfirmed.get() ? SettingUtils.getPlaceData(toPlace.get(i)) : SettingUtils.getPlaceDataOR(toPlace.get(i), pos -> placed.contains(pos));
+                            PlaceData placeData = onlyConfirmed.get() ? SettingUtils.getPlaceData(toPlace.get(i)) : SettingUtils.getPlaceDataOR(toPlace.get(i), placed::contains);
                             if (placeData.valid()) {
                                 boolean rotated = !SettingUtils.shouldRotate(RotationType.Placing) || Managers.ROTATION.start(placeData.pos(), 1, RotationType.Placing);
 
@@ -335,7 +336,7 @@ public class SelfTrapPlus extends BlackOutModule {
 
         SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand);
 
-        mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand,
+        sendPacket(new PlayerInteractBlockC2SPacket(hand,
             new BlockHitResult(new Vec3d(d.pos().getX() + 0.5, d.pos().getY() + 0.5, d.pos().getZ() + 0.5),
                 d.dir(), d.pos(), false), 0));
 
@@ -348,54 +349,90 @@ public class SelfTrapPlus extends BlackOutModule {
 
     private List<BlockPos> getValid(List<BlockPos> blocks) {
         List<BlockPos> list = new ArrayList<>();
-        blocks.forEach(position -> {
-            if (OLEPOSSUtils.replaceable(position) && !placed.contains(position)) {
-                if (!timers.contains(position) && !EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
-                    PlaceData data = onlyConfirmed.get() ? SettingUtils.getPlaceData(position) : SettingUtils.getPlaceDataOR(position, pos -> placed.contains(pos));
 
-                    if (data.valid()) {
-                        list.add(position);
-                    } else {
-                        Direction best = null;
-                        int value = -1;
-                        double dist = Double.MAX_VALUE;
-                        for (Direction dir : Direction.values()) {
-                            if (OLEPOSSUtils.replaceable(position.offset(dir))) {
-                                PlaceData placeData = onlyConfirmed.get() ? SettingUtils.getPlaceData(position.offset(dir)) : SettingUtils.getPlaceDataOR(position.offset(dir), pos -> placed.contains(pos));
-                                if (placeData.valid()) {
-                                    if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
-                                        double distance = OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(position.offset(dir)), mc.player.getPos());
-                                        if (distance < dist || value <= 1) {
-                                            dist = distance;
-                                            best = dir;
-                                            value = 2;
-                                        }
-                                    } else if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM && entity.getType() != EntityType.END_CRYSTAL)) {
-                                        if (value <= 1) {
-                                            double distance = OLEPOSSUtils.distance(OLEPOSSUtils.getMiddle(position.offset(dir)), mc.player.getPos());
-                                            if (distance < dist || value <= 0) {
-                                                best = dir;
-                                                value = 1;
-                                                dist = distance;
+        if (blocks.isEmpty()) {return list;}
 
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        if (best != null) {
-                            if (!timers.contains(position.offset(best))) {
-                                list.add(position.offset(best));
-                            }
-                            render.add(new Render(position.offset(best), true));
-                        }
-                    }
+        blocks.forEach(block -> {
+            if (!OLEPOSSUtils.replaceable(block)) {return;}
+
+            PlaceData data = SettingUtils.getPlaceData(block);
+            if (data.valid() && SettingUtils.inPlaceRange(data.pos())) {
+                render.add(new Render(block, false));
+                if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(block), entity -> !entity.isSpectator() && !(entity instanceof ItemEntity)) &&
+                    !timers.contains(block)) {
+                    list.add(block);
                 }
-                render.add(new Render(position, false));
+                return;
+            }
+
+            // 1 block support
+            Direction support1 = getSupport(block);
+
+            if (support1 != null) {
+                render.add(new Render(block, false));
+                render.add(new Render(block.offset(support1), true));
+
+                if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(block.offset(support1)), entity -> !entity.isSpectator() && !(entity instanceof ItemEntity)) &&
+                    !timers.contains(block.offset(support1))) {
+                    list.add(block.offset(support1));
+                }
+                return;
+            }
+
+            // 2 block support
+            for (Direction dir : Direction.values()) {
+                if (!OLEPOSSUtils.replaceable(block.offset(dir)) || !SettingUtils.inPlaceRange(block.offset(dir))) {continue;}
+
+                Direction support2 = getSupport(block.offset(dir));
+
+                if (support2 != null) {
+                    render.add(new Render(block, false));
+                    render.add(new Render(block.offset(dir), true));
+                    render.add(new Render(block.offset(dir).offset(support2), true));
+
+                    if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(block.offset(dir).offset(support2)), entity -> !entity.isSpectator() && !(entity instanceof ItemEntity)) &&
+                        !timers.contains(block.offset(dir).offset(support2))) {
+                        list.add(block.offset(dir).offset(support2));
+                    }
+                    return;
+                }
             }
         });
         return list;
+    }
+
+    private Direction getSupport(BlockPos position) {
+        Direction cDir = null;
+        double cDist = 1000;
+        int value = -1;
+
+        for (Direction dir : Direction.values()) {
+            PlaceData data = onlyConfirmed.get() ? SettingUtils.getPlaceData(position.offset(dir)) : SettingUtils.getPlaceDataOR(position.offset(dir), placed::contains);
+
+            if (!data.valid() || !SettingUtils.inPlaceRange(data.pos())) {continue;}
+
+            if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
+                double dist = OLEPOSSUtils.distance(mc.player.getEyePos(), OLEPOSSUtils.getMiddle(position.offset(dir)));
+
+                if (dist < cDist || value < 2) {
+                    value = 2;
+                    cDir = dir;
+                    cDist = dist;
+                }
+            }
+
+            if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> !entity.isSpectator() && entity.getType() != EntityType.ITEM && entity.getType() != EntityType.END_CRYSTAL)) {
+                double dist = OLEPOSSUtils.distance(mc.player.getEyePos(), OLEPOSSUtils.getMiddle(position.offset(dir)));
+
+                if (dist < cDist || value < 1) {
+                    value = 1;
+                    cDir = dir;
+                    cDist = dist;
+                }
+            }
+
+        }
+        return cDir;
     }
 
     private List<BlockPos> getBlocks(int[] size, boolean higher) {
