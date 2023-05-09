@@ -21,6 +21,7 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
+import meteordevelopment.meteorclient.utils.player.DamageUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
@@ -636,7 +637,6 @@ public class AutoCrystalRewrite extends BlackOutModule {
     private Vec3d rangePos = null;
     private final Map<String, List<Vec3d>> motions = new HashMap<>();
     private final List<Box> blocked = new ArrayList<>();
-    private final Map<Vec3d, double[][]> dmgCache = new HashMap<>();
     private final Map<BlockPos, Double[]> earthMap = new HashMap<>();
     private double attackTimer = 0;
     private double switchTimer = 0;
@@ -666,7 +666,6 @@ public class AutoCrystalRewrite extends BlackOutModule {
         motions.clear();
         extPos.clear();
         own.clear();
-        dmgCache.clear();
         renderPos = null;
         renderProgress = 0;
         lastMillis = System.currentTimeMillis();
@@ -851,7 +850,6 @@ public class AutoCrystalRewrite extends BlackOutModule {
                                 case Normal -> {
                                     up = 1;
                                     down = 0;
-                                    width = 0.5;
                                 }
                                 case Up -> {
                                     up = 1;
@@ -932,8 +930,8 @@ public class AutoCrystalRewrite extends BlackOutModule {
     // Other stuff
     private void update() {
         placing = false;
-        dmgCache.clear();
         expEntity = null;
+
         double[] value = null;
         boolean shouldProtectSurround = surroundProt();
         Hand hand = getHand(stack -> stack.getItem() == Items.END_CRYSTAL);
@@ -1468,9 +1466,6 @@ public class AutoCrystalRewrite extends BlackOutModule {
         if (suicide) {
             return new double[][]{new double[] {self, -1, -1}, new double[]{20, 20}};
         }
-        if (dmgCache.containsKey(vec)) {
-            return dmgCache.get(vec);
-        }
         double highestEnemy = -1;
         double highestFriend = -1;
         double enemyHP = -1;
@@ -1502,9 +1497,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
             }
         }
 
-        double[][] result = new double[][]{new double[] {highestEnemy, highestFriend, self}, new double[]{enemyHP, friendHP}};
-        dmgCache.put(vec, result);
-        return result;
+        return new double[][]{new double[] {highestEnemy, highestFriend, self}, new double[]{enemyHP, friendHP}};
     }
 
     private boolean air(BlockPos pos) {

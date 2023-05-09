@@ -25,6 +25,7 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.item.BlockItem;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.util.Hand;
@@ -68,6 +69,12 @@ public class SurroundPlus extends BlackOutModule {
         .name("Blocks")
         .description("Blocks to use.")
         .defaultValue(Blocks.OBSIDIAN, Blocks.CRYING_OBSIDIAN, Blocks.NETHERITE_BLOCK)
+        .build()
+    );
+    private final Setting<List<Block>> sBlocks = sgGeneral.add(new BlockListSetting.Builder()
+        .name("Secondary Blocks")
+        .description("Blocks to use.")
+        .defaultValue()
         .build()
     );
     private final Setting<Boolean> floor = sgGeneral.add(new BoolSetting.Builder()
@@ -297,9 +304,10 @@ public class SurroundPlus extends BlackOutModule {
         List<BlockPos> placements = check();
         if (placements == null) return;
 
-        FindItemResult hotbar = InvUtils.findInHotbar(item -> item.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) item.getItem()).getBlock()));
-        FindItemResult inventory = InvUtils.find(item -> item.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) item.getItem()).getBlock()));
-        Hand hand = isValid(Managers.HOLDING.getStack()) ? Hand.MAIN_HAND : isValid(mc.player.getOffHandStack()) ? Hand.OFF_HAND : null;
+        FindItemResult hotbar = InvUtils.findInHotbar(item -> validItem(item.getItem(), shouldSecondary(false)));
+        FindItemResult inventory = InvUtils.find(item -> validItem(item.getItem(), shouldSecondary(true)));
+
+        Hand hand = validItem(Managers.HOLDING.getStack().getItem(), shouldSecondary(false)) ? Hand.MAIN_HAND : validItem(mc.player.getOffHandStack().getItem(), false) ? Hand.OFF_HAND : null;
 
         if ((hand != null || ((switchMode.get() == SwitchMode.PickSilent || switchMode.get() == SwitchMode.InvSwitch) && inventory.slot() >= 0) || ((switchMode.get() == SwitchMode.Silent || switchMode.get() == SwitchMode.Normal) && hotbar.slot() >= 0)) && (!pauseEat.get() || !mc.player.isUsingItem()) && placesLeft > 0 && !placements.isEmpty()) {
 
@@ -313,13 +321,37 @@ public class SurroundPlus extends BlackOutModule {
             toPlace = sort(toPlace);
 
             if (!toPlace.isEmpty()) {
-                switchItems(hand, hotbar, inventory, toPlace);
+                placeBlocks(hand, hotbar, inventory, toPlace);
             }
         }
 
     }
 
-    private void switchItems(Hand hand, FindItemResult hotbar, FindItemResult inventory, Map<PlaceData, BlockPos> toPlace) {
+    private boolean validItem(Item item, boolean secondary) {
+        if (!(item instanceof BlockItem block)) {return false;}
+
+        if (secondary) {
+            return sBlocks.get().contains(block.getBlock());
+        }
+        return blocks.get().contains(block.getBlock());
+    }
+
+    private boolean shouldSecondary(boolean inv) {
+        for (Block b : blocks.get()) {
+            if (inv) {
+                if (InvUtils.find(b.asItem()).found()) {
+                    return false;
+                }
+                continue;
+            }
+            if (InvUtils.findInHotbar(b.asItem()).found()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void placeBlocks(Hand hand, FindItemResult hotbar, FindItemResult inventory, Map<PlaceData, BlockPos> toPlace) {
         @SuppressWarnings("DataFlowIssue")
         int obsidian = hand == Hand.MAIN_HAND ? Managers.HOLDING.getStack().getCount() : hand == Hand.OFF_HAND ? mc.player.getOffHandStack().getCount() : -1;
 
@@ -390,10 +422,6 @@ public class SurroundPlus extends BlackOutModule {
         if (SettingUtils.shouldRotate(RotationType.Placing)) {
             Managers.ROTATION.end(d.pos());
         }
-    }
-
-    private boolean isValid(ItemStack item) {
-        return item.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) item.getItem()).getBlock());
     }
 
     private List<BlockPos> check() {
@@ -505,7 +533,9 @@ public class SurroundPlus extends BlackOutModule {
                 for (int z = size[2] - 1; z <= size[3] + 1; z++) {
                     boolean isX = x == size[0] - 1 || x == size[1] + 1;
                     boolean isZ = z == size[2] - 1 || z == size[3] + 1;
+
                     boolean ignore = (isX && !isZ ? (!OLEPOSSUtils.replaceable(pPos.add(OLEPOSSUtils.closerToZero(x), 0, z)) || placed.contains(pPos.add(OLEPOSSUtils.closerToZero(x), 0, z))) : !isX && isZ && (!OLEPOSSUtils.replaceable(pPos.add(x, 0, OLEPOSSUtils.closerToZero(z)))) && !(x == 0 && z == 0) || placed.contains(pPos.add(x, 0, OLEPOSSUtils.closerToZero(z))));
+
                     if (isX != isZ && !ignore) {
                         list.add(pPos.add(x, 0, z));
                     } else if (!isX && !isZ && floor.get() && OLEPOSSUtils.replaceable(pPos.add(x, 0, z)) && !placed.contains(pPos.add(x, 0, z))) {

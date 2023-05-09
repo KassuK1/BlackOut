@@ -122,7 +122,7 @@ public class OffHandPlus extends BlackOutModule {
 
     private void update() {
         if (timer > 0) {return;}
-        if (mc.player.getOffHandStack().getItem() == item) {return;}
+        if (getPredicate(item).test(mc.player.getOffHandStack().getItem())) {return;}
         if (onlyInInv.get() && !(mc.currentScreen instanceof InventoryScreen)) {return;}
 
         int slot = getSlot(getPredicate(item));
