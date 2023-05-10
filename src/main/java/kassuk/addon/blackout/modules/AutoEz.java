@@ -262,6 +262,20 @@ public class AutoEz extends BlackOutModule {
         "%s you're so fat, that your bellybutton reaches your house 20 minutes before you do",
         "%s your dick is so small, that you bang cheerios"
     };
+    private final String[] noclue = new String[]{
+        "Yeah, these niggas say, I’ll catch a foul, what do they know?",
+        "Just tryna score a point in the end zone",
+        "Didn’t ask your opinion, nigga who the fuck are you?",
+        "Hand on my choppa, I'll turn you to pasta linguini, Yeah okay",
+        "Niggas be hostile, I know that they just wanna be me, in my lane",
+        "Vibin' with the gang, smoking gas in the coupe",
+        "Had to drop her and she had no clue",
+        "Run up, you done up, your ass gon' get toast",
+        "All you niggas on lame shit",
+        "Your bitch come back to my place, I do the most",
+        "Break their net, with the rolex, that two-tone",
+        "Mobbin' with a thick bitch, might be a redbone",
+    };
 
     @Override
     public void onActivate() {
@@ -347,6 +361,14 @@ public class AutoEz extends BlackOutModule {
                     messageQueue.add(0, new Message(killMessages.get().get(num), true));
                 }
             }
+            case NoClue -> {
+                int num = r.nextInt(0, noclue.length - 1);
+                if (num == lastNum) {
+                    num = num < noclue.length - 1 ? num + 1 : 0;
+                }
+                lastNum = num;
+                messageQueue.add(0, new Message(noclue[num].replace("%s",name == null ? "You" : name), true));
+            }
         }
     }
 
@@ -366,5 +388,6 @@ public class AutoEz extends BlackOutModule {
     public enum MessageMode {
         Blackout,
         Exhibition,
+        NoClue,
     }
 }
