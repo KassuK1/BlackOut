@@ -357,6 +357,7 @@ public class AutoMine extends BlackOutModule {
         render(event.renderer);
     }
 
+
     private void explodeUpdate() {
         Entity targetCrystal = null;
 
@@ -613,12 +614,8 @@ public class AutoMine extends BlackOutModule {
                     switched = true;
                     InvUtils.swap(crystalSlot, true);
                 }
-                case PickSilent -> {
-                    switched = BOInvUtils.pickSwitch(crystalSlot);
-                }
-                case InvSwitch -> {
-                    switched = BOInvUtils.invSwitch(crystalSlot);
-                }
+                case PickSilent -> switched = BOInvUtils.pickSwitch(crystalSlot);
+                case InvSwitch -> switched = BOInvUtils.invSwitch(crystalSlot);
             }
         }
 

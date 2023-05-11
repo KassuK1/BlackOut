@@ -68,7 +68,7 @@ public class BedAuraPlus extends BlackOutModule {
     private final Setting<LogicMode> logicMode = sgGeneral.add(new EnumSetting.Builder<LogicMode>()
         .name("Logic Mode")
         .description("Logic for bullying kids.")
-        .defaultValue(LogicMode.BreakPlace)
+        .defaultValue(LogicMode.PlaceBreak)
         .build()
     );
     private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
@@ -80,7 +80,7 @@ public class BedAuraPlus extends BlackOutModule {
     private final Setting<RotationMode> rotMode = sgGeneral.add(new EnumSetting.Builder<RotationMode>()
         .name("Rotation Mode")
         .description("Packet- Sends 1 rotation packet for each bed. Manager- Modifies movement packets to set rotation.")
-        .defaultValue(RotationMode.Packet)
+        .defaultValue(RotationMode.Manager)
         .build()
     );
 
