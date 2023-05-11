@@ -3,6 +3,7 @@ package kassuk.addon.blackout.modules;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.EnumSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
@@ -26,10 +27,22 @@ public class SprintPlus extends BlackOutModule {
         .defaultValue(SprintMode.Vanilla)
         .build()
     );
+    public final Setting <Boolean> hungerCheck = sgGeneral.add(new BoolSetting.Builder()
+        .name("HungerCheck")
+        .description("Should we check if we have enough hunger to sprint")
+        .defaultValue(true)
+        .build()
+    );
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onTick(TickEvent.Pre event) {
         if (mc.player != null && mc.world != null) {
+            if (hungerCheck.get()) {
+                if (mc.player.getHungerManager().getFoodLevel() < 6) {
+                    mc.player.setSprinting(false);
+                    return;
+                }
+            }
             switch (sprintMode.get()) {
                 case Vanilla -> {
                     if (mc.options.forwardKey.isPressed()) mc.player.setSprinting(true);
