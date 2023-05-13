@@ -120,3 +120,5 @@ The development of the addon might not be super active due to us having our own 
 
 #### Welcomer
 </details>
+
+### Once you go black you never go back
