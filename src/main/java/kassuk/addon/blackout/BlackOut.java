@@ -99,6 +99,7 @@ public class BlackOut extends MeteorAddon {
     }
 
     private void initializeHud(Hud hud) {
+        hud.register(ArmorHudPlus.INFO);
         hud.register(BlackoutArray.INFO);
         hud.register(GearHud.INFO);
         hud.register(HudWaterMark.INFO);
