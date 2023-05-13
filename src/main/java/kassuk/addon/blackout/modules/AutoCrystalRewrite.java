@@ -6,6 +6,7 @@ import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
+import kassuk.addon.blackout.mixins.MixinInteractEntityC2SPacket;
 import kassuk.addon.blackout.timers.IntTimerList;
 import kassuk.addon.blackout.utils.BOInvUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
@@ -21,15 +22,14 @@ import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
-import meteordevelopment.meteorclient.utils.player.DamageUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
+import net.minecraft.block.AirBlock;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -50,6 +50,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
+
+import static net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket.attack;
 
 /**
  * @author OLEPOSSU
@@ -190,7 +192,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .defaultValue(false)
         .build()
     );
-    private final Setting<ExistedMode> existedMode = sgPlace.add(new EnumSetting.Builder<ExistedMode>()
+    private final Setting<ExistedMode> existedMode = sgExplode.add(new EnumSetting.Builder<ExistedMode>()
         .name("Existed Mode")
         .description("Should crystal existed times be counted in seconds or ticks.")
         .defaultValue(ExistedMode.Seconds)
@@ -652,7 +654,11 @@ public class AutoCrystalRewrite extends BlackOutModule {
     private Vec3d renderTarget = null;
     private Vec3d renderPos = null;
     private double renderProgress = 0;
+
     private AutoMine autoMine = null;
+
+    private final List<Predict> predicts = new ArrayList<>();
+    private final List<SetDead> setDeads = new ArrayList<>();
 
     @Override
     public void onActivate() {
@@ -672,6 +678,9 @@ public class AutoCrystalRewrite extends BlackOutModule {
         cps = 0;
         infoCps = 0;
         cpsTime = System.currentTimeMillis();
+
+        predicts.clear();
+        setDeads.clear();
     }
 
     @Override
@@ -680,7 +689,6 @@ public class AutoCrystalRewrite extends BlackOutModule {
 
         return ((float) Math.round(infoCps * 10) / 10) + " CPS";
     }
-
 
     @EventHandler(priority = EventPriority.HIGHEST + 1)
     private void onTickPre(TickEvent.Pre event) {
@@ -771,7 +779,9 @@ public class AutoCrystalRewrite extends BlackOutModule {
         placeLimitTimer += d;
         delayTimer += d;
         switchTimer = Math.max(0, switchTimer - d);
+
         update();
+        checkDelayed();
 
         //Rendering
         if (render.get()) {
@@ -956,7 +966,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
                         if (SettingUtils.shouldRotate(RotationType.Attacking)) {
                             expEntityBB = expEntity.getBoundingBox();
                         }
-                        explode(expEntity.getId(), expEntity, expEntity.getPos());
+                        explode(expEntity.getId(), expEntity.getPos());
                     }
                 }
             }
@@ -1021,8 +1031,6 @@ public class AutoCrystalRewrite extends BlackOutModule {
                     }
                 }
             }
-        } else {
-            BlockPos lastPos = null;
         }
     }
 
@@ -1157,15 +1165,12 @@ public class AutoCrystalRewrite extends BlackOutModule {
                 }
             }
             if (idPredict.get()) {
-                int id = getHighest() + idStartOffset.get();
+                int highest = getHighest();
+                debug(String.valueOf(highest));
+                int id = highest + idStartOffset.get();
                 for (int i = 0; i < idPackets.get() * idOffset.get(); i += idOffset.get()) {
-                    Entity en = mc.world.getEntityById(id + i);
-                    if (en instanceof ItemEntity) {continue;}
-
-                    int finalI = i;
-                    Managers.DELAY.add(() -> explode(id + finalI, null, new Vec3d(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5)), idDelay.get() + idPacketDelay.get() * i);
+                    addPredict(id + i, new Vec3d(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5), idDelay.get() + idPacketDelay.get() * i);
                 }
-                confirmed++;
             }
         }
     }
@@ -1196,6 +1201,9 @@ public class AutoCrystalRewrite extends BlackOutModule {
                 highest = entity.getId();
             }
         }
+        if (highest > confirmed) {
+            confirmed = highest;
+        }
         return highest;
     }
 
@@ -1213,26 +1221,13 @@ public class AutoCrystalRewrite extends BlackOutModule {
         return attacked.contains(id);
     }
 
-    private void explode(int id, Entity en, Vec3d vec) {
-        if (en != null) {
-            attackEntity(en, en.getBoundingBox());
-        } else {
-            attackID(id, vec);
-        }
+    private void explode(int id, Vec3d vec) {
+        attackEntity(id, OLEPOSSUtils.getCrystalBox(vec), vec);
     }
 
-    private void attackID(int id, Vec3d pos) {
-        Hand handToUse = getHand(itemStack -> itemStack.getItem() == Items.END_CRYSTAL);
-        if (handToUse != null && !isPaused()) {
-            EndCrystalEntity en = new EndCrystalEntity(mc.world, pos.x, pos.y, pos.z);
-            en.setId(id);
-            attackEntity(en, OLEPOSSUtils.getCrystalBox(pos));
-        }
-    }
-
-    private void attackEntity(Entity en, Box bb) {
+    private void attackEntity(int id, Box bb, Vec3d vec) {
         if (mc.player != null) {
-            attacked.add(en.getId(), 1 / expSpeed.get());
+            attacked.add(id, 1 / expSpeed.get());
             attackTimer = expSpeedLimit.get() <= 0 ? 0 : 1 / expSpeedLimit.get();
 
             delayTimer = 0;
@@ -1240,10 +1235,13 @@ public class AutoCrystalRewrite extends BlackOutModule {
 
             SettingUtils.swing(SwingState.Pre, SwingType.Attacking, Hand.MAIN_HAND);
 
-            removeExisted(en.getBlockPos());
+            removeExisted(OLEPOSSUtils.toPos(vec));
 
             SettingUtils.registerAttack(bb);
-            mc.player.networkHandler.sendPacket(PlayerInteractEntityC2SPacket.attack(en, mc.player.isSneaking()));
+            PlayerInteractEntityC2SPacket packet = attack(mc.player, mc.player.isSneaking());
+            ((MixinInteractEntityC2SPacket) packet).setId(id);
+
+            mc.player.networkHandler.sendPacket(packet);
 
             if (surroundAttack.get()) {
                 SurroundPlus.attacked = 2;
@@ -1253,7 +1251,10 @@ public class AutoCrystalRewrite extends BlackOutModule {
 
             blocked.clear();
             if (setDead.get()) {
-                Managers.DELAY.add(() -> setEntityDead(en), setDeadDelay.get());
+                Entity entity = mc.world.getEntityById(id);
+                if (entity == null) {return;}
+
+                addSetDead(entity, setDeadDelay.get());
             }
         }
     }
@@ -1501,7 +1502,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     }
 
     private boolean air(BlockPos pos) {
-        return mc.world.getBlockState(pos).getBlock().equals(Blocks.AIR);
+        return mc.world.getBlockState(pos).getBlock() instanceof AirBlock;
     }
 
     private boolean crystalBlock(BlockPos pos) {
@@ -1741,6 +1742,34 @@ public class AutoCrystalRewrite extends BlackOutModule {
         return !(entity instanceof PlayerEntity) || !entity.isSpectator();
     }
 
+    private void addPredict(int id, Vec3d pos, double delay) {
+        predicts.add(new Predict(id, pos, Math.round(System.currentTimeMillis() + delay * 1000)));
+    }
+
+    private void addSetDead(Entity entity, double delay) {
+        setDeads.add(new SetDead(entity, Math.round(System.currentTimeMillis() + delay * 1000)));
+    }
+
+    private void checkDelayed() {
+        List<Predict> toRemove = new ArrayList<>();
+        for (Predict p : predicts) {
+            if (System.currentTimeMillis() >= p.time) {
+                explode(p.id, p.pos);
+                toRemove.add(p);
+            }
+        }
+        toRemove.forEach(predicts::remove);
+
+        List<SetDead> toRemove2 = new ArrayList<>();
+        for (SetDead p : setDeads) {
+            if (System.currentTimeMillis() >= p.time) {
+                setEntityDead(p.entity);
+                toRemove2.add(p);
+            }
+        }
+        toRemove2.forEach(setDeads::remove);
+    }
+
     public enum DmgCheckMode {
         Normal,
         Safe
@@ -1798,4 +1827,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         Down,
         Normal
     }
+
+    private record Predict(int id, Vec3d pos, long time) {}
+    private record SetDead(Entity entity, long time) {}
 }

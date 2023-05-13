@@ -9,6 +9,7 @@
     "MixinEntity",
     "MixinExplosion",
     "MixinHeldItemRenderer",
+    "MixinInteractEntityC2SPacket",
     "MixinLivingEntityRenderer",
     "MixinPlayerEntity",
     "MixinPlayerMoveC2SPacket",

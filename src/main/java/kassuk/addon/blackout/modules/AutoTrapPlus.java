@@ -384,7 +384,8 @@ public class AutoTrapPlus extends BlackOutModule {
             if (!OLEPOSSUtils.replaceable(block)) {return;}
             if (cevFriendly.get() && crystalAt(block.up())) {return;}
 
-            PlaceData data = SettingUtils.getPlaceData(block);
+            PlaceData data = onlyConfirmed.get() ? SettingUtils.getPlaceData(block) : SettingUtils.getPlaceDataOR(block, placed::contains);
+
             if (data.valid() && SettingUtils.inPlaceRange(data.pos())) {
                 render.add(new Render(block, false));
                 if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(block), entity -> !entity.isSpectator() && !(entity instanceof ItemEntity)) &&

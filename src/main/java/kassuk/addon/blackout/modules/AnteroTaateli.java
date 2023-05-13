@@ -46,7 +46,7 @@ public class AnteroTaateli extends BlackOutModule {
 
     private final String[] messages = new String[]{
         "Hey brokies top G here",
-        "Top G eats raw meat and breathes air",
+        "Top G drinks sparkling water and breathes air",
         "I hate dead people all you do is fucking laying down like pussies",
         "Get up and do some push-ups",
         "Top G is never late time is just running ahead of schedule",

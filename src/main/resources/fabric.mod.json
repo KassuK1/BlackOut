@@ -19,7 +19,7 @@
     ]
   },
   "mixins": [
-    "addon.mixins.json"
+    "blackout.mixins.json"
   ],
   "custom": {
     "meteor-client:color": "225,25,25"

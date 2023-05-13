@@ -49,6 +49,7 @@ public class BlackOut extends MeteorAddon {
         modules.add(new AutoCraftingTable());
         modules.add(new AutoCrystalRewrite());
         modules.add(new AutoEz());
+        modules.add(new Automation());
         modules.add(new AutoMend());
         modules.add(new AutoMine());
         modules.add(new AutoMoan());

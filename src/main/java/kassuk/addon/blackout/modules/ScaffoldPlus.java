@@ -10,6 +10,7 @@ import kassuk.addon.blackout.timers.BlockTimerList;
 import kassuk.addon.blackout.utils.*;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
+import meteordevelopment.meteorclient.mixininterface.IVec3d;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.movement.SafeWalk;
@@ -22,6 +23,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
+import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -53,6 +55,14 @@ public class ScaffoldPlus extends BlackOutModule {
         .name("Only Confirmed")
         .description("Only places on blocks the server has confirmed to exist.")
         .defaultValue(true)
+        .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
+        .build()
+    );
+    private final Setting<Boolean> strict = sgGeneral.add(new BoolSetting.Builder()
+        .name("Strict")
+        .description("Doesn't set blocks client side before server has confirmed that they exist.")
+        .defaultValue(false)
+        .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
         .build()
     );
 
@@ -74,7 +84,7 @@ public class ScaffoldPlus extends BlackOutModule {
     private final Setting<Boolean> useTimer = sgGeneral.add(new BoolSetting.Builder()
         .name("Use timer")
         .description("Should we use timer.")
-        .defaultValue(true)
+        .defaultValue(false)
         .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
         .build()
     );
@@ -85,7 +95,7 @@ public class ScaffoldPlus extends BlackOutModule {
         .defaultValue(1.088)
         .min(0)
         .sliderMax(10)
-        .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
+        .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal && useTimer.get())
         .build()
     );
 
@@ -135,7 +145,7 @@ public class ScaffoldPlus extends BlackOutModule {
         .name("Extrapolation")
         .description("Predicts movement.")
         .defaultValue(3)
-        .range(0, 20)
+        .range(1, 20)
         .sliderRange(0, 20)
         .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
         .build()
@@ -173,92 +183,106 @@ public class ScaffoldPlus extends BlackOutModule {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = 10000)
     private void onMove(PlayerMoveEvent event) {
         if (scaffoldMode.get() == ScaffoldMode.Legit) {
             mc.options.sneakKey.setPressed(mc.world.getBlockState(mc.player.getBlockPos().down()).getBlock().equals(Blocks.AIR));
             return;
         }
 
-        if (mc.player != null && mc.world != null) {
+        if (mc.player == null || mc.world == null) {return;}
 
-            FindItemResult hotbar = InvUtils.findInHotbar(item -> item.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) item.getItem()).getBlock()));
-            FindItemResult inventory = InvUtils.find(item -> item.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) item.getItem()).getBlock()));
-            Hand hand = isValid(Managers.HOLDING.getStack()) ? Hand.MAIN_HAND : isValid(mc.player.getOffHandStack()) ? Hand.OFF_HAND : null;
+        FindItemResult hotbar = InvUtils.findInHotbar(item -> item.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) item.getItem()).getBlock()));
+        FindItemResult inventory = InvUtils.find(item -> item.getItem() instanceof BlockItem && blocks.get().contains(((BlockItem) item.getItem()).getBlock()));
+        Hand hand = isValid(Managers.HOLDING.getStack()) ? Hand.MAIN_HAND : isValid(mc.player.getOffHandStack()) ? Hand.OFF_HAND : null;
 
-            if (hand != null || ((switchMode.get() == SwitchMode.PickSilent || switchMode.get() == SwitchMode.InvSwitch) && inventory.slot() >= 0) ||
-                ((switchMode.get() == SwitchMode.Silent || switchMode.get() == SwitchMode.Normal) && hotbar.slot() >= 0)) {
+        if (hand != null || ((switchMode.get() == SwitchMode.PickSilent || switchMode.get() == SwitchMode.InvSwitch) && inventory.slot() >= 0) ||
+            ((switchMode.get() == SwitchMode.Silent || switchMode.get() == SwitchMode.Normal) && hotbar.slot() >= 0)) {
 
-                if (safeWalk.get() && !Modules.get().get(SafeWalk.class).isActive()) {
-                    Modules.get().get(SafeWalk.class).toggle();
+            if (safeWalk.get() && !Modules.get().get(SafeWalk.class).isActive()) {
+                Modules.get().get(SafeWalk.class).toggle();
 
+            }
+
+            motion = event.movement;
+
+            if (sSprint.get()) mc.player.setSprinting(false);
+            if (useTimer.get()) Modules.get().get(Timer.class).setOverride(timer.get());
+
+            List<BlockPos> placements = getBlocks();
+
+            if (!placements.isEmpty() && placesLeft > 0) {
+                List<BlockPos> toPlace = new ArrayList<>();
+
+                for (BlockPos placement : placements) {
+                    if (toPlace.size() < placesLeft && canPlace(placement)) {
+                        toPlace.add(placement);
+                    }
                 }
 
-                motion = event.movement;
-                if (sSprint.get()) mc.player.setSprinting(false);
-                if (useTimer.get()) Modules.get().get(Timer.class).setOverride(timer.get());
+                if (!toPlace.isEmpty()) {
+                    int obsidian = hand == Hand.MAIN_HAND ? Managers.HOLDING.getStack().getCount() :
+                        hand == Hand.OFF_HAND ? mc.player.getOffHandStack().getCount() : -1;
 
-                List<BlockPos> placements = getBlocks();
 
-                if (!placements.isEmpty() && placesLeft > 0) {
-                    List<BlockPos> toPlace = new ArrayList<>();
-
-                    for (BlockPos placement : placements) {
-                        if (toPlace.size() < placesLeft && canPlace(placement)) {
-                            toPlace.add(placement);
+                    if (hand == null) {
+                        switch (switchMode.get()) {
+                            case Silent, Normal -> obsidian = hotbar.count();
+                            case PickSilent, InvSwitch -> obsidian = inventory.slot() >= 0 ? inventory.count() : -1;
                         }
                     }
 
-                    if (!toPlace.isEmpty()) {
-                        int obsidian = hand == Hand.MAIN_HAND ? Managers.HOLDING.getStack().getCount() :
-                            hand == Hand.OFF_HAND ? mc.player.getOffHandStack().getCount() : -1;
+                    if (obsidian >= 0) {
+                        Block block = null;
+                        if (hand == Hand.MAIN_HAND) {
+                            block = ((BlockItem) Managers.HOLDING.getStack().getItem()).getBlock();
+                        }
+                        if (hand == Hand.OFF_HAND) {
+                            block = ((BlockItem) mc.player.getOffHandStack().getItem()).getBlock();
+                        } else {
+                            switch (switchMode.get()) {
+                                case Silent, Normal -> {
+                                    obsidian = hotbar.count();
+                                    InvUtils.swap(hotbar.slot(), true);
+                                    block = ((BlockItem) mc.player.getInventory().getStack(hotbar.slot()).getItem()).getBlock();
+                                }
+                                case InvSwitch -> {
+                                    obsidian = BOInvUtils.invSwitch(inventory.slot()) ? inventory.count() : -1;
+                                    block = ((BlockItem) mc.player.getInventory().getStack(inventory.slot()).getItem()).getBlock();
+                                }
+                                case PickSilent -> {
+                                    obsidian = BOInvUtils.pickSwitch(inventory.slot()) ? inventory.count() : -1;
+                                    block = ((BlockItem) mc.player.getInventory().getStack(inventory.slot()).getItem()).getBlock();
+                                }
+                                default -> block = Blocks.OBSIDIAN;
+                            }
+                        }
 
+                        for (int i = 0; i < Math.min(obsidian, toPlace.size()); i++) {
+                            PlaceData placeData = onlyConfirmed.get() ? SettingUtils.getPlaceData(toPlace.get(i)) : SettingUtils.getPlaceDataOR(toPlace.get(i), placed::contains);
+                            if (placeData.valid()) {
+                                boolean rotated = !SettingUtils.shouldRotate(RotationType.Placing) || Managers.ROTATION.start(placeData.pos(), 1, RotationType.Placing);
+
+                                if (!rotated) {
+                                    break;
+                                }
+                                place(placeData, toPlace.get(i), hand == null ? Hand.MAIN_HAND : hand, block);
+                            }
+                        }
 
                         if (hand == null) {
                             switch (switchMode.get()) {
-                                case Silent, Normal -> obsidian = hotbar.count();
-                                case PickSilent, InvSwitch -> obsidian = inventory.slot() >= 0 ? inventory.count() : -1;
-                            }
-                        }
-
-                        if (obsidian >= 0) {
-                            if (hand == null) {
-                                switch (switchMode.get()) {
-                                    case Silent, Normal -> {
-                                        obsidian = hotbar.count();
-                                        InvUtils.swap(hotbar.slot(), true);
-                                    }
-                                    case InvSwitch -> obsidian = BOInvUtils.invSwitch(inventory.slot()) ? inventory.count() : -1;
-                                    case PickSilent -> obsidian = BOInvUtils.pickSwitch(inventory.slot()) ? inventory.count() : -1;
-                                }
-                            }
-
-                            for (int i = 0; i < Math.min(obsidian, toPlace.size()); i++) {
-                                PlaceData placeData = onlyConfirmed.get() ? SettingUtils.getPlaceData(toPlace.get(i)) : SettingUtils.getPlaceDataOR(toPlace.get(i), pos -> placed.contains(pos));
-                                if (placeData.valid()) {
-                                    boolean rotated = !SettingUtils.shouldRotate(RotationType.Placing) || Managers.ROTATION.start(placeData.pos(), 1, RotationType.Placing);
-
-                                    if (!rotated) {
-                                        break;
-                                    }
-                                    place(placeData, toPlace.get(i), hand == null ? Hand.MAIN_HAND : hand);
-                                }
-                            }
-
-                            if (hand == null) {
-                                switch (switchMode.get()) {
-                                    case Silent -> InvUtils.swapBack();
-                                    case PickSilent -> BOInvUtils.pickSwapBack();
-                                    case InvSwitch -> BOInvUtils.swapBack();
-                                }
+                                case Silent -> InvUtils.swapBack();
+                                case PickSilent -> BOInvUtils.pickSwapBack();
+                                case InvSwitch -> BOInvUtils.swapBack();
                             }
                         }
                     }
                 }
-            } else {
-                if (safeWalk.get() && Modules.get().get(SafeWalk.class).isActive()) {
-                    Modules.get().get(SafeWalk.class).toggle();
-                }
+            }
+        } else {
+            if (safeWalk.get() && Modules.get().get(SafeWalk.class).isActive()) {
+                Modules.get().get(SafeWalk.class).toggle();
             }
         }
     }
@@ -268,7 +292,7 @@ public class ScaffoldPlus extends BlackOutModule {
     }
 
     private boolean canPlace(BlockPos pos) {
-        return onlyConfirmed.get() ? SettingUtils.getPlaceData(pos).valid() : SettingUtils.getPlaceDataOR(pos, position -> placed.contains(position)).valid();
+        return onlyConfirmed.get() ? SettingUtils.getPlaceData(pos).valid() : SettingUtils.getPlaceDataOR(pos, placed::contains).valid();
     }
 
     private List<BlockPos> getBlocks() {
@@ -276,8 +300,9 @@ public class ScaffoldPlus extends BlackOutModule {
         double x = motion.x;
         double z = motion.z;
         Vec3d vec = mc.player.getPos();
-        for (int i = 0; i < extrapolation.get(); i++) {
-            vec = vec.add(x, 0, z);
+        for (int i = 0; i < extrapolation.get() * 10; i++) {
+            vec = vec.add(x / 10, 0, z / 10);
+
             if (inside(getBox(vec))) {
                 break;
             } else {
@@ -304,18 +329,22 @@ public class ScaffoldPlus extends BlackOutModule {
     }
 
 
-    private void place(PlaceData d, BlockPos ogPos, Hand hand) {
+    private void place(PlaceData d, BlockPos ogPos, Hand hand, Block block) {
         timers.add(ogPos, delay.get());
         placed.add(ogPos, 1);
         placesLeft--;
 
         SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand);
 
-        mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand,
+        sendPacket(new PlayerInteractBlockC2SPacket(hand,
             new BlockHitResult(new Vec3d(d.pos().getX() + 0.5, d.pos().getY() + 0.5, d.pos().getZ() + 0.5),
                 d.dir(), d.pos(), false), 0));
 
         SettingUtils.swing(SwingState.Post, SwingType.Placing, hand);
+
+        if (!strict.get()) {
+            mc.world.setBlockState(ogPos, block.getDefaultState());
+        }
 
         if (SettingUtils.shouldRotate(RotationType.Placing)) {
             Managers.ROTATION.end(d.pos());

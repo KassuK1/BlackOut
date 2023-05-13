@@ -5,9 +5,7 @@ import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.PlaceData;
 import kassuk.addon.blackout.utils.SettingUtils;
-import meteordevelopment.meteorclient.settings.BoolSetting;
-import meteordevelopment.meteorclient.settings.Setting;
-import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.settings.*;
 import net.minecraft.block.AirBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
@@ -46,10 +44,10 @@ public class FacingSettings extends BlackOutModule {
         .defaultValue(false)
         .build()
     );
-    public final Setting<Boolean> maxHeight = sgGeneral.add(new BoolSetting.Builder()
+    public final Setting<MaxHeight> maxHeight = sgGeneral.add(new EnumSetting.Builder<MaxHeight>()
         .name("Max Height")
-        .description("Doesn't place on top sides of blocks at max height.")
-        .defaultValue(true)
+        .description("Doesn't place on top sides of blocks at max height. Old: 1.12, New: 1.17+")
+        .defaultValue(MaxHeight.New)
         .build()
     );
 
@@ -67,7 +65,7 @@ public class FacingSettings extends BlackOutModule {
                 for (Direction dir : Direction.values()) {
 
                     // Doesn't place on top of max height
-                    if (maxHeight.get() && mc.world.isOutOfHeightLimit(pos.offset(dir))) {
+                    if (heightCheck(pos.offset(dir))) {
                         continue;
                     }
 
@@ -111,7 +109,7 @@ public class FacingSettings extends BlackOutModule {
                 for (Direction dir : Direction.values()) {
 
                     // Doesn't place on top of max height
-                    if (maxHeight.get() && mc.world.isOutOfHeightLimit(pos.offset(dir))) {
+                    if (heightCheck(pos.offset(dir))) {
                         continue;
                     }
 
@@ -155,7 +153,7 @@ public class FacingSettings extends BlackOutModule {
                 for (Direction dir : Direction.values()) {
 
                     // Doesn't place on top of max height
-                    if (maxHeight.get() && mc.world.isOutOfHeightLimit(pos.offset(dir))) {
+                    if (heightCheck(pos.offset(dir))) {
                         continue;
                     }
 
@@ -187,9 +185,6 @@ public class FacingSettings extends BlackOutModule {
     }
 
     public Direction getPlaceOnDirection(BlockPos pos) {
-        if (!strictDir.get()) {
-            return Direction.UP;
-        }
         if (pos == null) {
             return null;
         }
@@ -199,7 +194,7 @@ public class FacingSettings extends BlackOutModule {
             for (Direction dir : Direction.values()) {
 
                 // Doesn't place on top of max height
-                if (maxHeight.get() && mc.world.isOutOfHeightLimit(pos.offset(dir))) {
+                if (heightCheck(pos.offset(dir))) {
                     continue;
                 }
 
@@ -224,17 +219,32 @@ public class FacingSettings extends BlackOutModule {
         return best;
     }
 
+    private boolean heightCheck(BlockPos pos) {
+        return pos.getY() >= switch (maxHeight.get()) {
+            case Old -> 255;
+            case New -> 319;
+            case Disabled -> 1000; // im pretty sure 1000 is enough
+        };
+    }
+
     private double dist(BlockPos pos, Direction dir) {
         if (mc.player == null) {
             return 0;
         }
+
         Vec3d vec = new Vec3d(pos.getX() + dir.getOffsetX() / 2f, pos.getY() + dir.getOffsetY() / 2f, pos.getZ() + dir.getOffsetZ() / 2f);
         Vec3d dist = mc.player.getEyePos().add(-vec.x, -vec.y, -vec.z);
+
         return Math.sqrt(dist.x * dist.x + dist.y * dist.y + dist.z * dist.z);
     }
 
     private Block getBlock(BlockPos pos) {
-        assert mc.world != null;
         return mc.world.getBlockState(pos).getBlock();
+    }
+
+    public enum MaxHeight {
+        Old,
+        New,
+        Disabled
     }
 }

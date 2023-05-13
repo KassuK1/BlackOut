@@ -31,6 +31,14 @@ public class BlackOutModule extends Module {
         }
     }
 
+    public void sendToggledMsg(String message) {
+        if (Config.get().chatFeedback.get() && chatFeedback && mc.world != null) {
+            ChatUtils.forceNextPrefixClass(getClass());
+            String msg = prefix + " " + Formatting.WHITE + name + (isActive() ? Formatting.GREEN + " ON " : Formatting.RED + " OFF ") + Formatting.GRAY + message;
+            sendMessage(Text.of(msg), hashCode());
+        }
+    }
+
     public void sendDisableMsg(String text) {
         if (mc.world != null) {
             ChatUtils.forceNextPrefixClass(getClass());

@@ -21,8 +21,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ClientPlayerEntity.class)
 public abstract class MixinClientPlayerEntity {
     @Shadow
-    public Input input;
-    @Shadow
     @Final
     public ClientPlayNetworkHandler networkHandler;
     @Shadow
