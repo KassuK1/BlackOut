@@ -225,7 +225,8 @@ public class SwingSettings extends BlackOutModule {
 
     public enum MiningSwingState {
         Start,
-        End
+        End,
+        Double
     }
 
     public enum SwingHand {

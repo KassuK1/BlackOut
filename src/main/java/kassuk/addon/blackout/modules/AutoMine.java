@@ -313,6 +313,8 @@ public class AutoMine extends BlackOutModule {
 
     private final Map<BlockPos, Long> explodeAt = new HashMap<>();
 
+    private boolean reset = false;
+
     @Override
     public void onActivate() {
         target = null;
@@ -320,6 +322,7 @@ public class AutoMine extends BlackOutModule {
         started = false;
         lastTime = System.currentTimeMillis();
         civPos = null;
+        reset = false;
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -328,22 +331,13 @@ public class AutoMine extends BlackOutModule {
             if (ignore) {return;}
 
             switch (packet.getAction()) {
-                case START_DESTROY_BLOCK -> {
-                    handleStart(event);
-                }
-                case ABORT_DESTROY_BLOCK -> {
-                    handleAbort(event);
-                }
-                case STOP_DESTROY_BLOCK -> {
-                    handleStop(event);
-                }
+                case START_DESTROY_BLOCK -> handleStart(event);
+                case ABORT_DESTROY_BLOCK -> handleAbort(event);
+                case STOP_DESTROY_BLOCK -> handleStop(event);
             }
         }
         if (event.packet instanceof UpdateSelectedSlotC2SPacket && resetOnSwitch.get()) {
-            if (target != null && !target.manual) {
-                target = null;
-            }
-            started = false;
+            reset = true;
         }
     }
 
@@ -421,6 +415,15 @@ public class AutoMine extends BlackOutModule {
 
     private void update() {
         if (mc.world == null) {return;}
+
+        if (reset) {
+            if (target != null && !target.manual) {
+                target = null;
+            }
+            started = false;
+            reset = false;
+        }
+
         enemies = mc.world.getPlayers().stream().filter(player -> player != mc.player && !Friends.get().isFriend(player) && player.distanceTo(mc.player) < 10).toList();
 
         BlockPos lastPos = target == null || target.pos == null ? null : target.pos;
@@ -487,7 +490,7 @@ public class AutoMine extends BlackOutModule {
 
         if (!rotated) {return;}
 
-        if (!endMine()) {return;}
+        endMine();
     }
 
     private boolean isPaused() {
@@ -500,7 +503,7 @@ public class AutoMine extends BlackOutModule {
         return OLEPOSSUtils.solid2(civPos);
     }
 
-    private boolean endMine() {
+    private void endMine() {
         int slot = fastestSlot();
 
         boolean switched = miningCheck(Managers.HOLDING.slot);
@@ -508,9 +511,9 @@ public class AutoMine extends BlackOutModule {
 
         Direction dir = SettingUtils.getPlaceOnDirection(target.pos);
 
-        if (dir == null) {return false;}
+        if (dir == null) {return;}
 
-        if (SettingUtils.shouldRotate(RotationType.Breaking) && !Managers.ROTATION.start(target.pos, priority, RotationType.Breaking)) {return false;}
+        if (SettingUtils.shouldRotate(RotationType.Breaking) && !Managers.ROTATION.start(target.pos, priority, RotationType.Breaking)) {return;}
 
         if (!switched) {
             switch (pickAxeSwitchMode.get()) {
@@ -527,7 +530,7 @@ public class AutoMine extends BlackOutModule {
             swapBack = switched;
         }
 
-        if (!switched) {return false;}
+        if (!switched) {return;}
 
         send(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, target.pos, dir, 0));
         SettingUtils.mineSwing(SwingSettings.MiningSwingState.End);
@@ -555,8 +558,6 @@ public class AutoMine extends BlackOutModule {
             civPos = target.pos;
             lastCiv = System.currentTimeMillis();
         }
-
-        return true;
     }
 
     private boolean crystalCheck() {
@@ -883,6 +884,11 @@ public class AutoMine extends BlackOutModule {
         BlockPos pos = ((PlayerActionC2SPacket) event.packet).getPos();
         if (manualMine.get() && getBlock(pos) != Blocks.BEDROCK) {
             started = false;
+
+            if (target != null && pos.equals(target.pos))  {
+                reset = true;
+                return;
+            }
             target = new Target(pos, null, MineType.Manual, 0, manualCiv.get(), true);
         }
     }

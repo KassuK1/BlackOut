@@ -35,15 +35,23 @@ public class ArmorHudPlus extends HudElement {
 
     private final Setting<Double> scale = sgGeneral.add(new DoubleSetting.Builder()
         .name("Scale")
-        .description("Scale to render at")
+        .description("Scale to render at.")
         .defaultValue(1)
         .range(0, 5)
         .sliderRange(0, 5)
         .build()
     );
+    private final Setting<Integer> rounding = sgGeneral.add(new IntSetting.Builder()
+        .name("Rounding")
+        .description("How rounded should the background be.")
+        .defaultValue(50)
+        .range(0, 100)
+        .sliderRange(0, 100)
+        .build()
+    );
     private final Setting<Boolean> bg = sgGeneral.add(new BoolSetting.Builder()
         .name("Background")
-        .description("Renders a background behind armor pieces")
+        .description("Renders a background behind armor pieces.")
         .defaultValue(false)
         .build()
     );
@@ -83,7 +91,7 @@ public class ArmorHudPlus extends HudElement {
         stack.scale((float)(scale.get() * 2), (float)(scale.get() * 2), 1);
 
         if (bg.get()) {
-            RenderUtils.rounded(stack, 10, 10, 80, 8, 10, 10, bgColor.get().getPacked());
+            RenderUtils.rounded(stack, rounding.get() * 0.14f, rounding.get() * 0.14f, 100 - rounding.get() * 0.28f, 28 - rounding.get() * 0.28f, rounding.get() * 0.14f, 10, bgColor.get().getPacked());
         }
 
         for (int i = 0; i < 4; i++) {

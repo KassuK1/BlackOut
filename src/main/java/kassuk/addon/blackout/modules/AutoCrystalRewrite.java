@@ -1166,7 +1166,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
             }
             if (idPredict.get()) {
                 int highest = getHighest();
-                debug(String.valueOf(highest));
+
                 int id = highest + idStartOffset.get();
                 for (int i = 0; i < idPackets.get() * idOffset.get(); i += idOffset.get()) {
                     addPredict(id + i, new Vec3d(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5), idDelay.get() + idPacketDelay.get() * i);

@@ -172,7 +172,7 @@ public class RotationManager {
             } else {
                 next = new float[]{RotationUtils.nextYaw(lastDir[0], ((AngleTarget) target).yaw, settings.yawStep.get()), RotationUtils.nextPitch(lastDir[1], ((AngleTarget) target).pitch, settings.pitchStep.get())};
             }
-            rotated = Math.abs(next[0] - lastDir[0]) > 0 || Math.abs(next[1] - lastDir[1]) > 0;
+            rotated = Math.abs(RotationUtils.yawAngle(next[0], lastDir[0])) > 0 || Math.abs(next[1] - lastDir[1]) > 0;
 
             return;
         }
