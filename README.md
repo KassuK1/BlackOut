@@ -19,6 +19,10 @@ The development of the addon might not be super active due to us having our own 
  - Enjoy the addon.
  - Join the discord if you have any issues with it.
 
-#### Latest build: https://github.com/KassuK1/BlackOut/releases/download/latest/blackout-0.3.2.jar
+#### Latest build: https://github.com/KassuK1/BlackOut/releases/download/1.0.0/blackout-1.0.0.jar
+
+#### Credits
+Doogie13 for helping with the block mining calculations.
+RickyTheRaccoon for his InvSwitch.
 
 ### Once you go black you never go back
