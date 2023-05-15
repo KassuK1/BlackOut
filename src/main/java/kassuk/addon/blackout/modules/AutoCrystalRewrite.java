@@ -753,7 +753,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
             explosions = 0;
         }
 
-        attacked.update(d);
+        attacked.update();
         attackTimer = Math.max(attackTimer - d, 0);
         placeTimer = Math.max(placeTimer - d * getSpeed(), 0);
         placeLimitTimer += d;
