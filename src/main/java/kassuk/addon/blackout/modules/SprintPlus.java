@@ -14,6 +14,7 @@ import meteordevelopment.orbit.EventPriority;
 /**
  * @author KassuK
  */
+
 public class SprintPlus extends BlackOutModule {
     public SprintPlus() {
         super(BlackOut.BLACKOUT, "Sprint+", "Non shit sprint!");

@@ -39,6 +39,7 @@ import java.util.List;
 /**
  * @author OLEPOSSU
  */
+
 public class SelfTrapPlus extends BlackOutModule {
     public SelfTrapPlus() {
         super(BlackOut.BLACKOUT, "Self Trap+", "Traps yourself with blocks.");

@@ -6,6 +6,10 @@ import net.minecraft.command.CommandSource;
 
 import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
 
+/**
+ * @author KassuK
+ */
+
 public class BlackoutGit extends Command {
     public BlackoutGit() {
         super("blackoutinfo", "Gives the Blackout GitHub");

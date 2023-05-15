@@ -14,6 +14,10 @@ import net.minecraft.util.math.Vec3d;
 
 import java.util.function.Predicate;
 
+/**
+ * @author OLEPOSSU
+ */
+
 public class SettingUtils extends Utils {
 
     private static final FacingSettings facing = Modules.get().get(FacingSettings.class);

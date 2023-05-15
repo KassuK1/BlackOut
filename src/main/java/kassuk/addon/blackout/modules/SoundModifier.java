@@ -10,6 +10,7 @@ import meteordevelopment.meteorclient.settings.SettingGroup;
 /**
  * @author OLEPOSSU
  */
+
 public class SoundModifier extends BlackOutModule {
     public SoundModifier() {
         super(BlackOut.BLACKOUT, "Sound Modifier", "Modifies sounds to make crystal pvp less horrible for ears.");

@@ -12,19 +12,20 @@ import net.minecraft.screen.slot.SlotActionType;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
+/**
+ * @author OLEPOSSU
+ */
+
 @SuppressWarnings("DataFlowIssue")
 public class BOInvUtils {
     private static int[] slots;
     public static int pickSlot = -1;
-    public static boolean modify = false;
 
     public static boolean pickSwitch(int slot) {
         if (slot >= 0) {
             Managers.HOLDING.modifyStartTime = System.currentTimeMillis();
             pickSlot = slot;
-            modify = true;
             mc.getNetworkHandler().sendPacket(new PickFromInventoryC2SPacket(slot));
-            modify = false;
 
             return true;
         }

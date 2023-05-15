@@ -15,6 +15,7 @@ import net.minecraft.util.Hand;
 /**
  * @author OLEPOSSU
  */
+
 public class SwingSettings extends BlackOutModule {
     public SwingSettings() {
         super(BlackOut.SETTINGS, "Swing", "Global swing settings for every blackout module.");

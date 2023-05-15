@@ -12,6 +12,7 @@ import net.minecraft.client.gui.screen.DeathScreen;
 /**
  * @author OLEPOSSU
  */
+
 public class Suicide extends BlackOutModule {
     public Suicide() {
         super(BlackOut.BLACKOUT, "Suicide", "Kills yourself. Recommended.");

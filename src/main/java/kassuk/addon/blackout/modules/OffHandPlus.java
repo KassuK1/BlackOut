@@ -3,7 +3,6 @@ package kassuk.addon.blackout.modules;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
-import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Modules;
@@ -20,6 +19,7 @@ import java.util.function.Predicate;
 /**
  * @author OLEPOSSU
  */
+
 public class OffHandPlus extends BlackOutModule {
     public OffHandPlus() {
         super(BlackOut.BLACKOUT, "Offhand+", "Better offhand.");
@@ -133,7 +133,7 @@ public class OffHandPlus extends BlackOutModule {
 
     private Predicate<Item> getPredicate(Item item) {
         if (item == Items.GOLDEN_APPLE) {return OLEPOSSUtils::isGapple;}
-        if (item == Items.RED_BED) {return OLEPOSSUtils::isBedItem;}
+        if (item == Items.RED_BED) {return item1 -> item1 instanceof BedItem;}
 
         return item::equals;
     }

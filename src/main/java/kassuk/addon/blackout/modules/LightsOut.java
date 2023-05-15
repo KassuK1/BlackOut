@@ -11,7 +11,6 @@ import meteordevelopment.meteorclient.settings.DoubleSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.Blocks;
 import net.minecraft.block.TorchBlock;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.util.math.BlockPos;
@@ -21,6 +20,7 @@ import net.minecraft.util.math.Vec3d;
 /**
  * @author KassuK
  */
+
 public class LightsOut extends BlackOutModule {
     public LightsOut() {
         super(BlackOut.BLACKOUT, "Lights Out", "A tribute to Reliant.");

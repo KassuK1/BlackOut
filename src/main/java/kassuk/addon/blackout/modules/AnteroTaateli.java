@@ -20,10 +20,12 @@ import java.util.Random;
 /**
  * @author KassuK
  */
+
 public class AnteroTaateli extends BlackOutModule {
     public AnteroTaateli() {
         super(BlackOut.BLACKOUT, "Auto Andrew Tate", "What colour is your bugatti?");
     }
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<Boolean> iFriends = sgGeneral.add(new BoolSetting.Builder()

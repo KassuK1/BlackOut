@@ -15,7 +15,6 @@ import meteordevelopment.meteorclient.systems.modules.world.Timer;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
-import net.minecraft.block.Blocks;
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -23,6 +22,7 @@ import net.minecraft.util.math.Vec3d;
 /**
  * @author OLEPOSSU
  */
+
 public class HoleSnap extends BlackOutModule {
     public HoleSnap() {
         super(BlackOut.BLACKOUT, "Hole Snap", "For the times when you cant even press W.");

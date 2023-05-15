@@ -12,6 +12,7 @@ import net.minecraft.util.math.*;
 /**
  * @author OLEPOSSU
  */
+
 public class RangeSettings extends BlackOutModule {
     public RangeSettings() {
         super(BlackOut.SETTINGS, "Range", "Global range settings for every blackout module.");

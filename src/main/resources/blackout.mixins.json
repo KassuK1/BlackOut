@@ -13,8 +13,7 @@
     "MixinLivingEntityRenderer",
     "MixinPlayerEntity",
     "MixinPlayerMoveC2SPacket",
-    "MixinRaycastContext",
-    "MixinSound"
+    "MixinRaycastContext"
   ],
   "injectors": {
     "defaultRequire": 1

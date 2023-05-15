@@ -2,6 +2,7 @@
 Modified from Meteor Client
 https://github.com/MeteorDevelopment/meteor-client/blob/master/src/main/java/meteordevelopment/meteorclient/utils/player/DamageUtils.java
 */
+
 package kassuk.addon.blackout.utils.meteor;
 
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
@@ -22,8 +23,6 @@ import net.minecraft.entity.DamageUtil;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.damage.DamageSources;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -85,15 +84,7 @@ public class BODamageUtils {
         return damage < 0 ? 0 : damage;
     }
 
-    public static double crystalDamage(PlayerEntity player, Vec3d crystal) {
-        return crystalDamage(player, player.getBoundingBox(), crystal, null, false);
-    }
-    public static double crystalDamage(PlayerEntity player, Box bb, Vec3d crystal) {
-        return crystalDamage(player, bb, crystal, null, false);
-    }
-
     // Sword damage
-
     public static double getSwordDamage(ItemStack stack, PlayerEntity player, PlayerEntity target, boolean charged) {
         // Get sword damage
         double damage = 0;

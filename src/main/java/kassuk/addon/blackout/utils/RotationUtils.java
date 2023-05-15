@@ -6,6 +6,10 @@ import net.minecraft.util.math.Vec3d;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
+/**
+ * @author OLEPOSSU
+ */
+
 public class RotationUtils {
     public static float nextYaw(double current, double target, double step) {
         double i = yawAngle(current, target);
@@ -39,7 +43,7 @@ public class RotationUtils {
         return Math.acos(p);
     }
 
-    // These 2 are from meteor
+    // These 2 are from meteor rotation utils
     public static double getYaw(Vec3d start, Vec3d target) {
         return mc.player.getYaw() + MathHelper.wrapDegrees((float) Math.toDegrees(Math.atan2(target.getZ() - start.getZ(), target.getX() - start.getX())) - 90f - mc.player.getYaw());
     }

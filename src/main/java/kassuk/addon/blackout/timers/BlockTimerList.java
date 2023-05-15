@@ -11,10 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/*
-Made by OLEPOSSU / Raksamies
-*/
-
 public class BlockTimerList {
     public List<BlockTimer> timers;
 

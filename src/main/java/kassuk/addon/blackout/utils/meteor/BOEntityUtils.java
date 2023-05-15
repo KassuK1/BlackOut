@@ -27,7 +27,6 @@ import java.util.function.Predicate;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class BOEntityUtils {
-    // Meteor guys are some wizards for making this
     public static boolean intersectsWithEntity(Box box, Predicate<Entity> predicate, Map<PlayerEntity, Box> customBoxes) {
         EntityLookup<Entity> entityLookup = ((WorldAccessor) mc.world).getEntityLookup();
 

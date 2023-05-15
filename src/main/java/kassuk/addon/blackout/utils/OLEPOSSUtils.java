@@ -2,19 +2,22 @@ package kassuk.addon.blackout.utils;
 
 import kassuk.addon.blackout.mixins.MixinBlockSettings;
 import meteordevelopment.meteorclient.mixin.AbstractBlockAccessor;
-import meteordevelopment.meteorclient.utils.player.ChatUtils;
-import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import net.minecraft.block.*;
-import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.*;
-import net.minecraft.text.Text;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
+
+/**
+ * @author OLEPOSSU
+ * @author OLEPOSSU
+ */
 
 public class OLEPOSSUtils {
     public static double distance(Vec3d v1, Vec3d v2) {
@@ -32,64 +35,12 @@ public class OLEPOSSUtils {
         Direction.SOUTH
     };
 
-    public static boolean isBedItem(Item item) {
-        return item instanceof BedItem;
-    }
-
-    public static boolean isBedBlock(Block block) {
-        return block instanceof BedBlock;
-    }
-
-    public static boolean isHelmet(Item item) {
-        return item instanceof ArmorItem armorItem && armorItem.getSlotType() == EquipmentSlot.HEAD;
-    }
-
-    public static boolean isChestPlate(Item item) {
-        return item instanceof ArmorItem armorItem && armorItem.getSlotType() == EquipmentSlot.CHEST;
-    }
-
-    public static boolean isLegging(Item item) {
-        return item instanceof ArmorItem armorItem && armorItem.getSlotType() == EquipmentSlot.LEGS;
-    }
-
-    public static boolean isBoot(Item item) {
-        return item instanceof ArmorItem armorItem && armorItem.getSlotType() == EquipmentSlot.FEET;
-    }
-
-    public static boolean isSword(Item item) {
-        return item instanceof SwordItem;
-    }
-
-    public static boolean isArmor(Item item) {
-        return item instanceof ArmorItem;
-    }
-
-    public static String armorCategory(Item item) {
-        if (item instanceof ArmorItem armorItem) {
-            return switch (armorItem.getSlotType()) {
-                case FEET -> "boots";
-                case LEGS -> "leggings";
-                case CHEST -> "chestplate";
-                case HEAD -> "head";
-                default -> null;
-            };
-        } else return null;
-    }
-
-    public static boolean isAnvilBlock(Block block) {
-        return block instanceof AnvilBlock;
-    }
-
     public static Vec3d getMiddle(BlockPos pos) {
         return new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
     }
 
     public static Vec3d getMiddle(Box box) {
         return new Vec3d((box.minX + box.maxX) / 2, (box.minY + box.maxY) / 2, (box.minZ + box.maxZ) / 2);
-    }
-
-    public static void sendBlockPos(BlockPos pos) {
-        ChatUtils.sendMsg(Text.literal("x" + pos.getX() + "  y" + pos.getY() + "  z" + pos.getZ()));
     }
 
     public static boolean inside(PlayerEntity en, Box bb) {
@@ -105,20 +56,6 @@ public class OLEPOSSUtils {
 
     public static int closerToZero(int x) {
         return (int) (x - Math.signum(x));
-    }
-
-    public static Direction closestDir(BlockPos pos, Vec3d vec) {
-        Direction closest = null;
-        double closestDist = -1;
-        for (Direction dir : Direction.values()) {
-            double dist = distance(new Vec3d(pos.getX() + 0.5 + dir.getOffsetX() / 2f, pos.getY() + 0.5 + dir.getOffsetY() / 2f, pos.getZ() + 0.5 + dir.getOffsetZ() / 2f), vec);
-
-            if (closest == null || dist < closestDist) {
-                closest = dir;
-                closestDist = dist;
-            }
-        }
-        return closest;
     }
 
     public static Vec3d getClosest(Vec3d pPos, Vec3d middle, double width, double height) {
@@ -141,10 +78,6 @@ public class OLEPOSSUtils {
 
     public static Box getCrystalBox(BlockPos pos) {
         return new Box(pos.getX() - 0.5, pos.getY(), pos.getZ() - 0.5, pos.getX() + 1.5, pos.getY() + 2, pos.getZ() + 1.5);
-    }
-
-    public static boolean isCrystalBlock(Block block) {
-        return block == Blocks.OBSIDIAN || block == Blocks.BEDROCK;
     }
 
     public static Box getCrystalBox(Vec3d pos) {

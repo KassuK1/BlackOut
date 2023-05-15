@@ -15,6 +15,7 @@ import net.minecraft.world.RaycastContext;
 /**
  * @author OLEPOSSU
  */
+
 public class RaytraceSettings extends BlackOutModule {
     public RaytraceSettings() {
         super(BlackOut.SETTINGS, "Raytrace", "Global raytrace settings for every blackout module.");

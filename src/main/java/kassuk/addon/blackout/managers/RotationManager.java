@@ -26,6 +26,7 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 /**
  * @author OLEPOSSU
  */
+
 public class RotationManager {
 
     public Target target = null;

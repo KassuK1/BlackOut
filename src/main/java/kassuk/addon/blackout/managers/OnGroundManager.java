@@ -9,6 +9,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 /**
  * @author OLEPOSSU
  */
+
 public class OnGroundManager {
 
     private boolean onGround;

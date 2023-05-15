@@ -7,6 +7,10 @@ import net.minecraft.command.CommandSource;
 import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
+/**
+ * @author KassuK
+ */
+
 @SuppressWarnings("SpellCheckingInspection")
 public class Coords extends Command {
 

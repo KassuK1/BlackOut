@@ -45,6 +45,7 @@ import java.util.List;
 /**
  * @author OLEPOSSU
  */
+
 public class AutoTrapPlus extends BlackOutModule {
     public AutoTrapPlus() {
         super(BlackOut.BLACKOUT, "Auto Trap+", "Traps enemies (literally selftrap but places on enemies).");

@@ -13,6 +13,7 @@ import net.minecraft.item.Items;
 /**
  * @author KassuK
  */
+
 public class FastXP extends BlackOutModule {
     public FastXP() {
         super(BlackOut.BLACKOUT, "Fast XP", "XP spamming moment.");

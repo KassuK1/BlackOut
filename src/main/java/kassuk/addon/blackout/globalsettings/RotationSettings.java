@@ -4,25 +4,19 @@ import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.managers.RotationManager;
-import kassuk.addon.blackout.mixins.MixinRaycastContext;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.RotationUtils;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
-import kassuk.addon.blackout.utils.meteor.BODamageUtils;
 import meteordevelopment.meteorclient.mixininterface.IVec3d;
 import meteordevelopment.meteorclient.settings.*;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
 
 import java.util.List;
 
 /**
  * @author OLEPOSSU
  */
+
 public class RotationSettings extends BlackOutModule {
     public RotationSettings() {
         super(BlackOut.SETTINGS, "Rotate", "Global rotation settings for every blackout module.");
@@ -194,8 +188,6 @@ public class RotationSettings extends BlackOutModule {
         Angle
     }
 
-    public RaycastContext raycastContext;
-    public BlockHitResult result;
     public Vec3d vec = new Vec3d(0, 0, 0);
 
     public boolean shouldRotate(RotationType type) {
@@ -258,19 +250,6 @@ public class RotationSettings extends BlackOutModule {
         }
         return false;
     }
-    public boolean raytraceCheck(Vec3d pos, double y, double p, BlockPos blockPos) {
-        updateContext();
-
-        double range = OLEPOSSUtils.distance(pos, OLEPOSSUtils.getMiddle(blockPos)) + 1;
-        Vec3d end = new Vec3d(range * Math.cos(Math.toRadians(y + 90)) * Math.abs(Math.cos(Math.toRadians(p))),
-            range * -Math.sin(Math.toRadians(p)),
-            range * Math.sin(Math.toRadians(y + 90)) * Math.abs(Math.cos(Math.toRadians(p)))).add(pos);
-
-        ((MixinRaycastContext) raycastContext).setEnd(end);
-        result = BODamageUtils.raycast(raycastContext);
-
-        return result.getBlockPos().equals(blockPos);
-    }
 
     public boolean endMineRot() {
         return mineRotate.get() == MiningRotMode.End || mineRotate.get() == MiningRotMode.Double;
@@ -289,13 +268,5 @@ public class RotationSettings extends BlackOutModule {
             case Use -> useTime.get();
             case Other -> 1;
         };
-    }
-
-    private void updateContext() {
-        if (raycastContext == null) {
-            raycastContext = new RaycastContext(mc.player.getEyePos(), null, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.ANY, mc.player);
-        } else {
-            ((MixinRaycastContext) raycastContext).setStart(mc.player.getEyePos());
-        }
     }
 }

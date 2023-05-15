@@ -15,6 +15,7 @@ import net.minecraft.util.Identifier;
 /**
  * @author KassuK
  */
+
 public class HudWaterMark extends HudElement {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();

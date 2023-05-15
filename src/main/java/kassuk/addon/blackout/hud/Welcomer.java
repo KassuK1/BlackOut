@@ -12,6 +12,7 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 /**
  * @author KassuK
  */
+
 public class Welcomer extends HudElement {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();

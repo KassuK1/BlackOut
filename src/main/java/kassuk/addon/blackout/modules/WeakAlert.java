@@ -14,6 +14,7 @@ import net.minecraft.entity.effect.StatusEffect;
 /**
  * @author KassuK
  */
+
 public class WeakAlert extends BlackOutModule {
     public WeakAlert() {
         super(BlackOut.BLACKOUT, "Weak Alert", "Alerts you if you get weakness.");

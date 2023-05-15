@@ -21,6 +21,7 @@ import java.util.List;
 /**
  * @author OLEPOSSU
  */
+
 public class RPC extends BlackOutModule {
     public RPC() {
         super(BlackOut.BLACKOUT, "RPC", "Epic rpc.");

@@ -55,10 +55,12 @@ import java.util.Map;
 /**
  * @author OLEPOSSU
  */
+
 public class AutoMine extends BlackOutModule {
     public AutoMine() {
         super(BlackOut.BLACKOUT, "Auto Mine", "Automatically mines blocks to destroy your enemies.");
     }
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgSpeed = settings.createGroup("Speed");
     private final SettingGroup sgExplode = settings.createGroup("Explode");

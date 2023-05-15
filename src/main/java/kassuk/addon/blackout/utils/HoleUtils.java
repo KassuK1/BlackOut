@@ -4,10 +4,9 @@ import kassuk.addon.blackout.enums.HoleType;
 import net.minecraft.util.math.BlockPos;
 
 /**
- * North -Z
- * West -X
- * If spam
+ * @author OLEPOSSU
  */
+
 public class HoleUtils {
 
     public static Hole getHole(BlockPos pos) {
@@ -72,7 +71,6 @@ public class HoleUtils {
                 return false;
             }
         }
-
         return true;
     }
 }

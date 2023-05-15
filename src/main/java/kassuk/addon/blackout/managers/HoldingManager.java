@@ -13,6 +13,7 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 /**
  * @author OLEPOSSU
  */
+
 public class HoldingManager {
 
     public int slot;

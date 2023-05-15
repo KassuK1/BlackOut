@@ -44,6 +44,7 @@ import java.util.Map;
 /**
  * @author OLEPOSSU
  */
+
 public class AnchorAuraPlus extends BlackOutModule {
     public AnchorAuraPlus() {
         super(BlackOut.BLACKOUT, "Anchor Aura+", "Automatically destroys people using anchors.");

@@ -56,6 +56,7 @@ import static net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacke
 /**
  * @author OLEPOSSU
  */
+
 public class AutoCrystalRewrite extends BlackOutModule {
     public AutoCrystalRewrite() {
         super(BlackOut.BLACKOUT, "Auto Crystal Rewrite", "Breaks and places crystals automatically (but better).");

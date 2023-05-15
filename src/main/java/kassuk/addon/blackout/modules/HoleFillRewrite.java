@@ -41,6 +41,7 @@ import java.util.Map;
 /**
  * @author OLEPOSSU
  */
+
 public class HoleFillRewrite extends BlackOutModule {
     public HoleFillRewrite() {
         super(BlackOut.BLACKOUT, "Hole Fill+", "Automatically is a cunt to your enemies.");

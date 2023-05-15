@@ -13,8 +13,8 @@ import meteordevelopment.orbit.EventHandler;
 /**
  * @author KassuK
  */
-public class FlightPlus extends BlackOutModule {
 
+public class FlightPlus extends BlackOutModule {
     public FlightPlus() {
         super(BlackOut.BLACKOUT, "Flight+", "KasumsSoft Flight.");
     }

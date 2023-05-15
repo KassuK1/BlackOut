@@ -18,6 +18,11 @@ import meteordevelopment.meteorclient.systems.modules.Modules;
 import net.minecraft.item.Items;
 import org.slf4j.Logger;
 
+/**
+ * @author OLEPOSSU
+ * @author KassuK
+ */
+
 public class BlackOut extends MeteorAddon {
     public static final Logger LOG = LogUtils.getLogger();
 

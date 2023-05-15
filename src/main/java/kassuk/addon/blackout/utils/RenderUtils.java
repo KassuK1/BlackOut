@@ -1,19 +1,16 @@
 package kassuk.addon.blackout.utils;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import meteordevelopment.meteorclient.utils.misc.BaritoneUtils;
-import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.ColorHelper;
 import org.joml.Matrix4f;
 
-import java.awt.*;
-
 import static meteordevelopment.meteorclient.MeteorClient.mc;
+
+/**
+ * @author OLEPOSSU
+ */
 
 public class RenderUtils {
     public static void rounded(MatrixStack stack, float x, float y, float w, float h, float radius, int p, int color) {

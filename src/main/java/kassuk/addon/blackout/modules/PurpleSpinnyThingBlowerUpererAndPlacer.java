@@ -29,6 +29,7 @@ import net.minecraft.util.math.Vec3d;
 /**
  * @author KassuK
  */
+
 public class PurpleSpinnyThingBlowerUpererAndPlacer extends BlackOutModule {
     public PurpleSpinnyThingBlowerUpererAndPlacer() {
         super(BlackOut.BLACKOUT, "NN-Nuker", "PurpleSpinnyThingBlowerUpererAndPlacer, should not be used");

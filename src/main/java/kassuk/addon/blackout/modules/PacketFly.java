@@ -19,8 +19,8 @@ import java.util.*;
 /**
  * @author OLEPOSSU
  */
-public class PacketFly extends BlackOutModule {
 
+public class PacketFly extends BlackOutModule {
     public PacketFly() {
         super(BlackOut.BLACKOUT, "Packet Fly", "Flies with packets.");
     }

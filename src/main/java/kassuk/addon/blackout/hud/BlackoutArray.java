@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
  * @author OLEPOSSU
  * @author ccetl
  */
+
 public class BlackoutArray extends HudElement {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();

@@ -21,10 +21,12 @@ import java.util.Random;
 /**
  * @author OLEPOSSU
  */
+
 public class AutoEz extends BlackOutModule {
     public AutoEz() {
         super(BlackOut.BLACKOUT, "Auto EZ", "Sends message after enemy dies (too EZ nn's).");
     }
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgKill = settings.createGroup("Kill");
     private final SettingGroup sgPop = settings.createGroup("Pop");

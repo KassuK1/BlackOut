@@ -13,6 +13,10 @@ import net.minecraft.util.Formatting;
 
 import java.util.Objects;
 
+/**
+ * @author OLEPOSSU
+ */
+
 public class BlackOutModule extends Module {
     private final String prefix = Formatting.DARK_RED + "[BlackOut]";
     public int priority;

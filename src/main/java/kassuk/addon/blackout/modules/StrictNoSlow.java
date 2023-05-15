@@ -19,6 +19,7 @@ import net.minecraft.util.Hand;
 /**
  * @author OLEPOSSU
  */
+
 public class StrictNoSlow extends BlackOutModule {
     public StrictNoSlow() {
         super(BlackOut.BLACKOUT, "Strict No Slow", "Should only be used on very strict servers. Requires any other noslow to work.");

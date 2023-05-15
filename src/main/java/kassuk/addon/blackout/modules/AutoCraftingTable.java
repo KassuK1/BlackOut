@@ -33,6 +33,7 @@ import net.minecraft.util.math.Direction;
 /**
  * @author OLEPOSSU
  */
+
 public class AutoCraftingTable extends BlackOutModule {
     public AutoCraftingTable() {
         super(BlackOut.BLACKOUT, "Auto Crafting Table", "Automatically places and opens an Crafting table.");

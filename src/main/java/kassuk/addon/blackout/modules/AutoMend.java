@@ -27,8 +27,11 @@ import java.util.List;
 /**
  * @author OLEPOSSU
  */
+
 public class AutoMend extends BlackOutModule {
-    public AutoMend() {super(BlackOut.BLACKOUT, "Auto Mend", "Automatically mends your armor with experience bottles.");}
+    public AutoMend() {
+        super(BlackOut.BLACKOUT, "Auto Mend", "Automatically mends your armor with experience bottles.");
+    }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgPause = settings.createGroup("Pause");

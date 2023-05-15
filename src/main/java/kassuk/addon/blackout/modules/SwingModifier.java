@@ -1,6 +1,5 @@
 package kassuk.addon.blackout.modules;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
@@ -9,15 +8,12 @@ import meteordevelopment.meteorclient.settings.DoubleSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Hand;
 
 /**
  * @author OLEPOSSU
  */
+
 public class SwingModifier extends BlackOutModule {
     public SwingModifier() {
         super(BlackOut.BLACKOUT, "Swing Modifier", "Modifies swing rendering.");

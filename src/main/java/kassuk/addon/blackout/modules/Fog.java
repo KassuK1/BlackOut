@@ -9,6 +9,7 @@ import net.minecraft.client.render.FogShape;
 /**
  * @author OLEPOSSU
  */
+
 public class Fog extends BlackOutModule {
     public Fog() {
         super(BlackOut.BLACKOUT, "Fog", "Customizable fog.");

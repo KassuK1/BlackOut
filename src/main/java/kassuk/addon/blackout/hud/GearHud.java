@@ -9,7 +9,6 @@ import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.RenderUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 
 import java.util.List;
@@ -19,6 +18,7 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 /**
  * @author OLEPOSSU
  */
+
 public class GearHud extends HudElement {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();

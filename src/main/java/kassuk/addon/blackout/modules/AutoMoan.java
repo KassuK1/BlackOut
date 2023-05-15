@@ -13,10 +13,10 @@ import net.minecraft.entity.player.PlayerEntity;
 
 import java.util.Random;
 
-
 /**
  * @author KassuK
  */
+
 public class AutoMoan extends BlackOutModule {
 
     public AutoMoan() {

@@ -5,10 +5,12 @@ import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.PlaceData;
 import kassuk.addon.blackout.utils.SettingUtils;
-import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.settings.BoolSetting;
+import meteordevelopment.meteorclient.settings.EnumSetting;
+import meteordevelopment.meteorclient.settings.Setting;
+import meteordevelopment.meteorclient.settings.SettingGroup;
 import net.minecraft.block.AirBlock;
 import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
@@ -18,6 +20,7 @@ import java.util.function.Predicate;
 /**
  * @author OLEPOSSU
  */
+
 public class FacingSettings extends BlackOutModule {
     public FacingSettings() {
         super(BlackOut.SETTINGS, "Facing", "Global facing settings for every blackout module.");
