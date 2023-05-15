@@ -205,7 +205,7 @@ public class TargetHud extends HudElement {
         }
 
         target = closest;
-        if (target == null) {
+        if (target == null && isInEditor()) {
             target = mc.player;
         }
 
