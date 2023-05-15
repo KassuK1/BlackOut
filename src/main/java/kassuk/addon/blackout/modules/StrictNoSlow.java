@@ -47,8 +47,8 @@ public class StrictNoSlow extends BlackOutModule {
         .visible(() -> !single.get())
         .build()
     );
-    private int timer = 0;
 
+    private int timer = 0;
 
     @EventHandler
     private void onSend(PacketEvent.Sent event) {
@@ -70,8 +70,7 @@ public class StrictNoSlow extends BlackOutModule {
     }
 
     private void send() {
-        //noinspection DataFlowIssue
-        mc.getNetworkHandler().sendPacket(new UpdateSelectedSlotC2SPacket(Managers.HOLDING.slot));
+        sendPacket(new UpdateSelectedSlotC2SPacket(Managers.HOLDING.slot));
     }
 
     private boolean shouldSend(ItemStack stack) {

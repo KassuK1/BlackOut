@@ -45,6 +45,7 @@ public class HoleSnap extends BlackOutModule {
         .defaultValue(5)
         .min(0)
         .sliderMax(100)
+        .visible(jump::get)
         .build()
     );
     private final Setting<Integer> range = sgGeneral.add(new IntSetting.Builder()

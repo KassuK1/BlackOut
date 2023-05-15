@@ -60,16 +60,16 @@ public class AnchorAuraPlus extends BlackOutModule {
         .defaultValue(true)
         .build()
     );
-    private final Setting<LogicMode> logicMode = sgGeneral.add(new EnumSetting.Builder<LogicMode>()
-        .name("Logic Mode")
-        .description("Logic for bullying kids.")
-        .defaultValue(LogicMode.BreakPlace)
-        .build()
-    );
     private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
         .name("Switch Mode")
         .description("Switching method. Silent is the most reliable but doesn't work everywhere.")
         .defaultValue(SwitchMode.Silent)
+        .build()
+    );
+    private final Setting<LogicMode> logicMode = sgGeneral.add(new EnumSetting.Builder<LogicMode>()
+        .name("Logic Mode")
+        .description("Logic for bullying kids.")
+        .defaultValue(LogicMode.BreakPlace)
         .build()
     );
     private final Setting<Double> speed = sgGeneral.add(new DoubleSetting.Builder()

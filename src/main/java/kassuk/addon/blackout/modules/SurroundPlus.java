@@ -550,7 +550,6 @@ public class SurroundPlus extends BlackOutModule {
     // Very shitty sorting
     private Map<PlaceData, BlockPos> sort(Map<PlaceData, BlockPos> original) {
         Map<PlaceData, BlockPos> map = new HashMap<>();
-        List<PlaceData> ignored = new ArrayList<>();
         double lowest;
         PlaceData lData;
         BlockPos lPos;
@@ -560,17 +559,16 @@ public class SurroundPlus extends BlackOutModule {
             lPos = null;
 
             for (Map.Entry<PlaceData, BlockPos> entry : original.entrySet()) {
-                if (ignored.contains(entry.getKey())) {
+                if (map.containsKey(entry.getKey())) {
                     continue;
                 }
-                double yaw = MathHelper.wrapDegrees(Rotations.getYaw(entry.getValue())) + 360;
+                double yaw = MathHelper.wrapDegrees(Rotations.getYaw(entry.getValue()));
                 if (yaw < lowest) {
                     lowest = yaw;
                     lData = entry.getKey();
                     lPos = entry.getValue();
                 }
             }
-            ignored.add(lData);
             map.put(lData, lPos);
         }
 

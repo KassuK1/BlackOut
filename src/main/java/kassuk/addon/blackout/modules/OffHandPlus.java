@@ -139,10 +139,6 @@ public class OffHandPlus extends BlackOutModule {
     }
 
     private Item getItem() {
-        if (inDanger() && !suicide.isActive() && itemAvailable(itemStack -> itemStack.getItem() == Items.TOTEM_OF_UNDYING)) {
-            return Items.TOTEM_OF_UNDYING;
-        }
-
         if (mc.player.getMainHandStack().getItem() instanceof SwordItem && (!safeSword.get() || !inDanger())) {
             if (gapMode.get().sword) {
                 switch (swordMode.get()) {
@@ -156,6 +152,10 @@ public class OffHandPlus extends BlackOutModule {
                     }
                 }
             }
+        }
+
+        if (inDanger() && !suicide.isActive() && itemAvailable(itemStack -> itemStack.getItem() == Items.TOTEM_OF_UNDYING)) {
+            return Items.TOTEM_OF_UNDYING;
         }
 
         switch (itemMode.get()) {

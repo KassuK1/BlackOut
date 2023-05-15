@@ -101,8 +101,8 @@ public class AutoMine extends BlackOutModule {
         .defaultValue(true)
         .build()
     );
-    private final Setting<Boolean> manualCiv = sgGeneral.add(new BoolSetting.Builder()
-        .name("Manual CIV")
+    private final Setting<Boolean> manualInsta = sgGeneral.add(new BoolSetting.Builder()
+        .name("Manual Instant")
         .description("Uses civ mine when mining manually.")
         .defaultValue(false)
         .build()
@@ -889,7 +889,7 @@ public class AutoMine extends BlackOutModule {
                 reset = true;
                 return;
             }
-            target = new Target(pos, null, MineType.Manual, 0, manualCiv.get(), true);
+            target = new Target(pos, null, MineType.Manual, 0, manualInsta.get(), true);
         }
     }
 

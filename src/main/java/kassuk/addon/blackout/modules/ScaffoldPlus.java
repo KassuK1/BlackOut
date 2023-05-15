@@ -10,6 +10,7 @@ import kassuk.addon.blackout.timers.BlockTimerList;
 import kassuk.addon.blackout.utils.*;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
+import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.mixininterface.IVec3d;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Modules;
@@ -18,6 +19,7 @@ import meteordevelopment.meteorclient.systems.modules.world.Timer;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.block.AirBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.BlockItem;
@@ -184,9 +186,15 @@ public class ScaffoldPlus extends BlackOutModule {
     }
 
     @EventHandler(priority = 10000)
+    private void onMove(TickEvent.Pre event) {
+        if (scaffoldMode.get() == ScaffoldMode.Legit) {
+            mc.player.setSneaking(mc.world.getBlockState(mc.player.getBlockPos().down()).getBlock() instanceof AirBlock);
+        }
+    }
+
+    @EventHandler(priority = 10000)
     private void onMove(PlayerMoveEvent event) {
         if (scaffoldMode.get() == ScaffoldMode.Legit) {
-            mc.options.sneakKey.setPressed(mc.world.getBlockState(mc.player.getBlockPos().down()).getBlock().equals(Blocks.AIR));
             return;
         }
 

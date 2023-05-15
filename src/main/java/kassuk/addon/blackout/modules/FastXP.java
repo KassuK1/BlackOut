@@ -20,12 +20,6 @@ public class FastXP extends BlackOutModule {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
-    private final Setting<RotationMode> rotMode = sgGeneral.add(new EnumSetting.Builder<RotationMode>()
-        .name("Rotation mode")
-        .description("ken i put mi balls in yo jawzz")
-        .defaultValue(RotationMode.Silent)
-        .build()
-    );
     private final Setting<Integer> yeetDelay = sgGeneral.add(new IntSetting.Builder()
         .name("Throw Delay")
         .description("Delay between throws.")
@@ -34,20 +28,29 @@ public class FastXP extends BlackOutModule {
         .sliderMax(10)
         .build()
     );
-    private final Setting<Integer> pitch = sgGeneral.add(new IntSetting.Builder()
-        .name("Pitch")
-        .description("Where to set pitch.")
-        .defaultValue(45)
-        .range(-90, 90)
-        .sliderMax(90)
-        .build()
-    );
     private final Setting<Boolean> rotate = sgGeneral.add(new BoolSetting.Builder()
         .name("Rotate")
         .description("Should we do a bit of rotating.")
         .defaultValue(true)
         .build()
     );
+    private final Setting<RotationMode> rotMode = sgGeneral.add(new EnumSetting.Builder<RotationMode>()
+        .name("Rotation mode")
+        .description("ken i put mi balls in yo jawzz")
+        .defaultValue(RotationMode.Silent)
+        .visible(rotate::get)
+        .build()
+    );
+    private final Setting<Integer> pitch = sgGeneral.add(new IntSetting.Builder()
+        .name("Pitch")
+        .description("Where to set pitch.")
+        .defaultValue(90)
+        .range(-90, 90)
+        .sliderMax(90)
+        .visible(rotate::get)
+        .build()
+    );
+
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onTick(TickEvent.Pre event) {
@@ -58,7 +61,7 @@ public class FastXP extends BlackOutModule {
         if (mc.player.getMainHandStack().getItem() == Items.EXPERIENCE_BOTTLE  && mc.options.useKey.isPressed()){
             ((MinecraftClientAccessor) mc).setItemUseCooldown(ticks);
 
-            if (rotMode.get() == RotationMode.Silent && rotate.get()){
+            if (rotMode.get() == RotationMode.Silent && rotate.get()) {
                 Rotations.rotate(mc.player.getYaw(), pitch.get());
             }
             if (rotMode.get() == RotationMode.Vanilla && rotate.get()) {

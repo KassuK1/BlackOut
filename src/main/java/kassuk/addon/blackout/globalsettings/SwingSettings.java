@@ -4,9 +4,11 @@ import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
+import kassuk.addon.blackout.modules.SwingModifier;
 import meteordevelopment.meteorclient.settings.EnumSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.systems.modules.Modules;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.util.Hand;
 
@@ -210,9 +212,13 @@ public class SwingSettings extends BlackOutModule {
             case Full -> {
                 mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(hand));
                 mc.player.swingHand(renderHand, true);
+                Modules.get().get(SwingModifier.class).startSwing(renderHand);
             }
             case Packet -> mc.player.networkHandler.sendPacket(new HandSwingC2SPacket(hand));
-            case Client -> mc.player.swingHand(renderHand, true);
+            case Client -> {
+                mc.player.swingHand(renderHand, true);
+                Modules.get().get(SwingModifier.class).startSwing(renderHand);
+            }
         }
     }
 

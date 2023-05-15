@@ -41,6 +41,7 @@ import java.util.List;
  */
 public class BedAuraPlus extends BlackOutModule {
     public BedAuraPlus() {super(BlackOut.BLACKOUT, "Bed Aura+", "Automatically places and breaks beds to cause damage to your opponents but better.");}
+
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgPlacing = settings.createGroup("Placing");
     private final SettingGroup sgDamage = settings.createGroup("Damage");

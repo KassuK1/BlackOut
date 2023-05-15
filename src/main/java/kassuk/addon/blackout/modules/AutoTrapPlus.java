@@ -62,12 +62,6 @@ public class AutoTrapPlus extends BlackOutModule {
         .defaultValue(true)
         .build()
     );
-    private final Setting<Boolean> onlyConfirmed = sgGeneral.add(new BoolSetting.Builder()
-        .name("Only Confirmed")
-        .description("Only places on blocks the server has confirmed to exist.")
-        .defaultValue(true)
-        .build()
-    );
     private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
         .name("Switch Mode")
         .description("Method of switching. Silent is the most reliable.")
@@ -94,6 +88,12 @@ public class AutoTrapPlus extends BlackOutModule {
     );
 
     //--------------------Placing--------------------//
+    private final Setting<Boolean> onlyConfirmed = sgPlacing.add(new BoolSetting.Builder()
+        .name("Only Confirmed")
+        .description("Only places on blocks the server has confirmed to exist.")
+        .defaultValue(true)
+        .build()
+    );
     private final Setting<List<Block>> blocks = sgPlacing.add(new BlockListSetting.Builder()
         .name("Blocks")
         .description("Blocks to use.")

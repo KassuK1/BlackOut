@@ -4,7 +4,6 @@ import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.modules.SwingModifier;
 import kassuk.addon.blackout.modules.TickShift;
 import meteordevelopment.meteorclient.systems.modules.Modules;
-import net.minecraft.client.input.Input;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.network.packet.Packet;
@@ -23,8 +22,6 @@ public abstract class MixinClientPlayerEntity {
     @Shadow
     @Final
     public ClientPlayNetworkHandler networkHandler;
-    @Shadow
-    private boolean inSneakingPose;
     private static boolean sent = false;
 
     @Inject(method = "swingHand(Lnet/minecraft/util/Hand;)V", at = @At(value = "HEAD"))

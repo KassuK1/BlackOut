@@ -48,7 +48,6 @@ public class TickShift extends BlackOutModule {
     private boolean lastMoving = false;
     private final Timer timerModule = Modules.get().get(Timer.class);
 
-
     @Override
     public void onActivate() {
         super.onActivate();

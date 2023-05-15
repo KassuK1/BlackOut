@@ -30,7 +30,7 @@ public class FlightPlus extends BlackOutModule {
     private final Setting<Boolean> useTimer = sgGeneral.add(new BoolSetting.Builder()
         .name("Use Timer")
         .description("Should we use timer.")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
     private final Setting<Double> timer = sgGeneral.add(new DoubleSetting.Builder()
@@ -40,6 +40,7 @@ public class FlightPlus extends BlackOutModule {
         .defaultValue(1.088)
         .min(0)
         .sliderMax(10)
+        .visible(useTimer::get)
         .build()
     );
     private final Setting<Double> speed = sgGeneral.add(new DoubleSetting.Builder()
@@ -48,6 +49,7 @@ public class FlightPlus extends BlackOutModule {
         .defaultValue(0.6)
         .min(0)
         .sliderMax(10)
+        .visible(() -> flyMode.get() == FlightMode.Momentum)
         .build()
     );
     private final Setting<Double> ySpeed = sgGeneral.add(new DoubleSetting.Builder()
@@ -56,6 +58,7 @@ public class FlightPlus extends BlackOutModule {
         .defaultValue(0.5)
         .min(0)
         .sliderMax(10)
+        .visible(() -> flyMode.get() == FlightMode.Momentum)
         .build()
     );
     private final Setting<Double> antiKickDelay = sgGeneral.add(new DoubleSetting.Builder()
@@ -64,6 +67,7 @@ public class FlightPlus extends BlackOutModule {
         .defaultValue(10)
         .min(0)
         .sliderMax(100)
+        .visible(() -> flyMode.get() == FlightMode.Momentum)
         .build()
     );
     private final Setting<Double> antiKickAmount = sgGeneral.add(new DoubleSetting.Builder()
@@ -72,12 +76,14 @@ public class FlightPlus extends BlackOutModule {
         .defaultValue(1)
         .min(0)
         .sliderMax(10)
+        .visible(() -> flyMode.get() == FlightMode.Momentum)
         .build()
     );
     private final Setting<Boolean> keepY = sgGeneral.add(new BoolSetting.Builder()
         .name("KeepY")
         .description("Should we try to keep the same y level when jump flying.")
         .defaultValue(true)
+        .visible(() -> flyMode.get() == FlightMode.Jump)
         .build()
     );
     private final Setting<Double> glideAmount = sgGeneral.add(new DoubleSetting.Builder()
@@ -86,6 +92,7 @@ public class FlightPlus extends BlackOutModule {
         .defaultValue(0.2)
         .min(0)
         .sliderMax(1)
+        .visible(() -> flyMode.get() == FlightMode.Glide)
         .build()
     );
 
@@ -140,7 +147,7 @@ public class FlightPlus extends BlackOutModule {
             }
             if (flyMode.get().equals(FlightMode.Glide)){
                 if (!mc.player.isOnGround())
-                    ((IVec3d) event.movement).set(mc.player.getVelocity().getX(),-glideAmount.get(), mc.player.getVelocity().getZ());
+                    ((IVec3d) event.movement).setY(-glideAmount.get());
 
             }
         }

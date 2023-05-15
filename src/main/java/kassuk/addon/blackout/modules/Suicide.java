@@ -19,13 +19,6 @@ public class Suicide extends BlackOutModule {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
-    public final Setting<Boolean> offhand = sgGeneral.add(new BoolSetting.Builder()
-        .name("Offhand")
-        .description("Doesn't hold totem in offhand.")
-        .defaultValue(true)
-        .build()
-    );
-
     public final Setting<Boolean> disableDeath = sgGeneral.add(new BoolSetting.Builder()
         .name("Disable On Death")
         .description("Disables the module on death.")

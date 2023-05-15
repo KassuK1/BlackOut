@@ -255,27 +255,6 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .defaultValue(SwitchMode.Disabled)
         .build()
     );
-    private final Setting<Boolean> expFriendly = sgSwitch.add(new BoolSetting.Builder()
-        .name("Exp Friendly")
-        .description("Doesn't switch to crystals when using any item.")
-        .defaultValue(false)
-        .visible(() -> switchMode.get().equals(SwitchMode.Smart))
-        .build()
-    );
-    private final Setting<Boolean> alwaysGap = sgSwitch.add(new BoolSetting.Builder()
-        .name("Always Gapple")
-        .description("Switches to gapple even when not placing.")
-        .defaultValue(false)
-        .visible(() -> switchMode.get().equals(SwitchMode.Smart))
-        .build()
-    );
-    private final Setting<Boolean> onlyCrystal = sgSwitch.add(new BoolSetting.Builder()
-        .name("Only On Crystal")
-        .description("Only switches to gapple when holding crystal.")
-        .defaultValue(true)
-        .visible(() -> !alwaysGap.get() && switchMode.get().equals(SwitchMode.Smart))
-        .build()
-    );
     private final Setting<Double> switchPenalty = sgSwitch.add(new DoubleSetting.Builder()
         .name("Switch Penalty")
         .description("Time to wait after switching before hitting crystals.")
@@ -694,34 +673,34 @@ public class AutoCrystalRewrite extends BlackOutModule {
     private void onTickPre(TickEvent.Pre event) {
         delayTicks++;
         ticksEnabled++;
-        if (mc.player != null && mc.world != null) {
-            for (PlayerEntity pl : mc.world.getPlayers()) {
-                String key = pl.getName().getString();
-                if (motions.containsKey(key)) {
-                    List<Vec3d> vec = motions.get(key);
-                    if (vec != null) {
-                        if (vec.size() >= extSmoothness.get()) {
-                            int p = vec.size() - extSmoothness.get();
-                            for (int i = 0; i < p; i++) {
-                                vec.remove(0);
-                            }
+
+        if (mc.player == null || mc.world == null) {return;}
+
+        for (PlayerEntity pl : mc.world.getPlayers()) {
+            String key = pl.getName().getString();
+            if (motions.containsKey(key)) {
+                List<Vec3d> vec = motions.get(key);
+
+                if (vec != null) {
+                    if (vec.size() >= extSmoothness.get()) {
+                        int p = vec.size() - extSmoothness.get();
+
+                        if (p > 0) {
+                            vec.subList(0, p).clear();
                         }
-                        vec.add(motionCalc(pl));
-                    } else {
-                        List<Vec3d> list = new ArrayList<>();
-                        list.add(motionCalc(pl));
-                        motions.put(key, list);
                     }
-                } else {
-                    List<Vec3d> list = new ArrayList<>();
-                    list.add(motionCalc(pl));
-                    motions.put(key, list);
+                    vec.add(motionCalc(pl));
+                    continue;
                 }
             }
-            extPos = getExtPos();
-            rangePos = getRangeExt();
-            extHitbox = getHitboxExt();
+
+            List<Vec3d> list = new ArrayList<>();
+            list.add(motionCalc(pl));
+            motions.put(key, list);
         }
+        extPos = getExtPos();
+        rangePos = getRangeExt();
+        extHitbox = getHitboxExt();
 
         List<BlockPos> toRemove = new ArrayList<>();
         existedList.forEach((key, val) -> {
@@ -740,7 +719,6 @@ public class AutoCrystalRewrite extends BlackOutModule {
         toRemove.forEach(existedTicksList::remove);
 
         toRemove.clear();
-
         own.forEach((key, val) -> {
             if (System.currentTimeMillis() - val >= 5000) {
                 toRemove.add(key);
@@ -761,6 +739,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         if (autoMine == null) {
             autoMine = Modules.get().get(AutoMine.class);
         }
+
         suicide = Modules.get().isActive(Suicide.class);
         double d = (System.currentTimeMillis() - lastMillis) / 1000f;
         lastMillis = System.currentTimeMillis();
@@ -912,16 +891,19 @@ public class AutoCrystalRewrite extends BlackOutModule {
             if (event.packet instanceof UpdateSelectedSlotC2SPacket) {
                 switchTimer = switchPenalty.get();
             }
-            if (event.packet instanceof PlayerInteractBlockC2SPacket packet && (packet.getHand() == Hand.MAIN_HAND ? Managers.HOLDING.isHolding(Items.END_CRYSTAL) : mc.player.getOffHandStack().getItem() == Items.END_CRYSTAL)) {
-                if (!isOwn(packet.getBlockHitResult().getBlockPos().up())) {
-                    own.put(packet.getBlockHitResult().getBlockPos().up(), System.currentTimeMillis());
-                } else {
+
+            if (event.packet instanceof PlayerInteractBlockC2SPacket packet) {
+
+                if (!(packet.getHand() == Hand.MAIN_HAND ? Managers.HOLDING.isHolding(Items.END_CRYSTAL) : mc.player.getOffHandStack().getItem() == Items.END_CRYSTAL)) {return;}
+
+                if (isOwn(packet.getBlockHitResult().getBlockPos().up())) {
                     own.remove(packet.getBlockHitResult().getBlockPos().up());
-                    own.put(packet.getBlockHitResult().getBlockPos().up(), System.currentTimeMillis());
                 }
-                blocked.add(new Box(packet.getBlockHitResult().getBlockPos().getX() - 0.5, packet.getBlockHitResult().getBlockPos().getY() + 1,
-                    packet.getBlockHitResult().getBlockPos().getZ() - 0.5, packet.getBlockHitResult().getBlockPos().getX() + 1.5,
-                    packet.getBlockHitResult().getBlockPos().getY() + 3, packet.getBlockHitResult().getBlockPos().getZ() + 1.5));
+
+                own.put(packet.getBlockHitResult().getBlockPos().up(), System.currentTimeMillis());
+
+                blocked.add(OLEPOSSUtils.getCrystalBox(packet.getBlockHitResult().getBlockPos().up()));
+
                 addExisted(packet.getBlockHitResult().getBlockPos().up());
             }
         }
@@ -942,63 +924,52 @@ public class AutoCrystalRewrite extends BlackOutModule {
         placing = false;
         expEntity = null;
 
-        double[] value = null;
         boolean shouldProtectSurround = surroundProt();
+        double[] value = null;
         Hand hand = getHand(stack -> stack.getItem() == Items.END_CRYSTAL);
+
         if (!isPaused() && (hand != null || switchMode.get() == SwitchMode.Silent || switchMode.get() == SwitchMode.PickSilent || switchMode.get() == SwitchMode.InvSilent) && explode.get()) {
             for (Entity en : mc.world.getEntities()) {
-                if (en instanceof EndCrystalEntity) {
-                    double[] dmg = getDmg(en.getPos())[0];
-                    if (switchTimer <= 0 && canExplode(en.getPos(), shouldProtectSurround)) {
-                        if ((expEntity == null || value == null) || ((dmgCheckMode.get().equals(DmgCheckMode.Normal) && dmg[0] > value[0]) || (dmgCheckMode.get().equals(DmgCheckMode.Safe) && dmg[2] / dmg[0] < value[2] / dmg[0]))) {
-                            expEntity = en;
-                            value = dmg;
-                        }
-                    }
+                if (!(en instanceof EndCrystalEntity)) {continue;}
+                if (switchTimer > 0) {continue;}
+
+                double[] dmg = getDmg(en.getPos())[0];
+
+                if (!canExplode(en.getPos(), shouldProtectSurround)) {continue;}
+
+                if ((expEntity == null || value == null) || ((dmgCheckMode.get().equals(DmgCheckMode.Normal) && dmg[0] > value[0]) || (dmgCheckMode.get().equals(DmgCheckMode.Safe) && dmg[2] / dmg[0] < value[2] / dmg[0]))) {
+                    expEntity = en;
+                    value = dmg;
                 }
             }
         }
 
         if (expEntity != null) {
-            if (!isAttacked(expEntity.getId()) && attackTimer <= 0) {
-                if (existedCheck(expEntity.getBlockPos())) {
-                    if (!SettingUtils.shouldRotate(RotationType.Attacking) || startAttackRot()) {
-                        if (SettingUtils.shouldRotate(RotationType.Attacking)) {
-                            expEntityBB = expEntity.getBoundingBox();
-                        }
-                        explode(expEntity.getId(), expEntity.getPos());
+            if (!isAttacked(expEntity.getId()) && attackTimer <= 0 && existedCheck(expEntity.getBlockPos())) {
+                if (!SettingUtils.shouldRotate(RotationType.Attacking) || startAttackRot()) {
+                    if (SettingUtils.shouldRotate(RotationType.Attacking)) {
+                        expEntityBB = expEntity.getBoundingBox();
                     }
+                    explode(expEntity.getId(), expEntity.getPos());
                 }
             }
         }
+
         if (!isAlive(expEntityBB) && SettingUtils.shouldRotate(RotationType.Attacking)) {
             Managers.ROTATION.end(expEntityBB);
         }
+
         Hand handToUse = hand;
         if (!performance.get()) {
             updatePlacement();
         }
+
         switch (switchMode.get()) {
             case Simple -> {
                 int slot = InvUtils.findInHotbar(Items.END_CRYSTAL).slot();
                 if (placePos != null && hand == null && slot >= 0) {
                     InvUtils.swap(slot, false);
                     handToUse = Hand.MAIN_HAND;
-                }
-            }
-            case Smart -> {
-                int gapSlot = InvUtils.findInHotbar(OLEPOSSUtils::isGapple).slot();
-                if (shouldGap(gapSlot)) {
-                    if (getHand(OLEPOSSUtils::isGapple) == null) {
-                        InvUtils.swap(gapSlot, false);
-                    }
-                    handToUse = getHand(itemStack -> itemStack.getItem() == Items.END_CRYSTAL);
-                } else if (!expFriendly.get() || !mc.player.isUsingItem()) {
-                    int slot = InvUtils.findInHotbar(itemStack -> itemStack.getItem().equals(Items.END_CRYSTAL)).slot();
-                    if (placePos != null && hand == null && slot >= 0) {
-                        InvUtils.swap(slot, false);
-                        handToUse = Hand.MAIN_HAND;
-                    }
                 }
             }
             case Gapple -> {
@@ -1103,14 +1074,6 @@ public class AutoCrystalRewrite extends BlackOutModule {
             return;
         }
         placePos = getPlacePos();
-    }
-
-    private boolean shouldGap(int slot) {
-        if (slot < 0) {return false;}
-        if (!mc.options.useKey.isPressed()) {return false;}
-        if (placePos == null && !alwaysGap.get()) {return false;}
-        if (!Managers.HOLDING.isHolding(Items.END_CRYSTAL) && !Managers.HOLDING.isHolding(Items.ENCHANTED_GOLDEN_APPLE) && onlyCrystal.get()) {return false;}
-        return true;
     }
 
     private void placeCrystal(BlockPos pos, Direction dir, Hand handToUse, int sl, int hsl) {
@@ -1784,7 +1747,6 @@ public class AutoCrystalRewrite extends BlackOutModule {
     public enum SwitchMode {
         Disabled,
         Simple,
-        Smart,
         Gapple,
         Silent,
         InvSilent,

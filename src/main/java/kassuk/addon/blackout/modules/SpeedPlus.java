@@ -214,6 +214,7 @@ public class SpeedPlus extends BlackOutModule {
             }
 
             velocity = Math.max(speed.get(), velocity * (1 - decreaseSpeed.get() * 0.025));
+
             double motion = velocity;
             if (velocity < 0.01) {
                 motion = 0;

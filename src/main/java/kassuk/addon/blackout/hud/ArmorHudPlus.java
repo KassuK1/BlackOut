@@ -94,7 +94,7 @@ public class ArmorHudPlus extends HudElement {
             RenderUtils.rounded(stack, rounding.get() * 0.14f, rounding.get() * 0.14f, 100 - rounding.get() * 0.28f, 28 - rounding.get() * 0.28f, rounding.get() * 0.14f, 10, bgColor.get().getPacked());
         }
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 3; i >= 0; i--) {
             ItemStack itemStack = mc.player.getInventory().armor.get(i);
 
             mc.getItemRenderer().renderInGui(stack, itemStack, i * 20 + 12, durMode.get() == DurMode.Top ? 10 : 0);

@@ -40,6 +40,12 @@ public class AutoCraftingTable extends BlackOutModule {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
+    private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
+        .name("Switch Mode")
+        .description("Switching method. Silent is the most reliable but doesn't work everywhere..")
+        .defaultValue(SwitchMode.Silent)
+        .build()
+    );
     private final Setting<Double> placeSpeed = sgGeneral.add(new DoubleSetting.Builder()
         .name("Place Speed")
         .description("Tries to place this many times every second.")
@@ -54,12 +60,6 @@ public class AutoCraftingTable extends BlackOutModule {
         .defaultValue(1)
         .min(0)
         .sliderMin(0)
-        .build()
-    );
-    private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
-        .name("Switch Mode")
-        .description("Switching method. Silent is the most reliable but doesn't work everywhere..")
-        .defaultValue(SwitchMode.Silent)
         .build()
     );
     public final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()

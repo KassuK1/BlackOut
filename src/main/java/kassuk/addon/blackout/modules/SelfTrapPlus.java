@@ -355,7 +355,7 @@ public class SelfTrapPlus extends BlackOutModule {
         blocks.forEach(block -> {
             if (!OLEPOSSUtils.replaceable(block)) {return;}
 
-            PlaceData data = SettingUtils.getPlaceData(block);
+            PlaceData data = onlyConfirmed.get() ? SettingUtils.getPlaceData(block) : SettingUtils.getPlaceDataOR(block, placed::contains);
             if (data.valid() && SettingUtils.inPlaceRange(data.pos())) {
                 render.add(new Render(block, false));
                 if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(block), entity -> !entity.isSpectator() && !(entity instanceof ItemEntity)) &&
