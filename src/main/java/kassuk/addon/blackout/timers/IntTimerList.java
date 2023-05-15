@@ -8,10 +8,6 @@ import meteordevelopment.orbit.EventPriority;
 import java.util.ArrayList;
 import java.util.List;
 
-/*
-Made by OLEPOSSU / Raksamies
-*/
-
 public class IntTimerList {
     public List<IntTimer> timers;
 
