@@ -98,7 +98,6 @@ public class TargetHud extends HudElement {
 
     private double scaleProgress = 0;
     private long damageTime;
-    private float barAnimation = 0;
 
     private UUID lastTarget = null;
     private float lastHp = 0;
@@ -175,7 +174,7 @@ public class TargetHud extends HudElement {
         // Health
         RenderUtils.text(String.valueOf(Math.round((renderHealth) * 10) / 10f), stack, 20, 81 - mc.textRenderer.fontHeight / 2f, textColor.get().getPacked());
 
-        barAnimation = MathHelper.lerp(mc.getTickDelta() / 10, lastHp, renderHealth);
+        float barAnimation = MathHelper.lerp(mc.getTickDelta() / 10, lastHp, renderHealth);
 
         float barStart = Math.max(mc.textRenderer.getWidth(String.valueOf(Math.round((renderHealth) * 10) / 10f)),
             mc.textRenderer.getWidth("36.0")) + 28;
@@ -206,6 +205,9 @@ public class TargetHud extends HudElement {
         }
 
         target = closest;
+        if (target == null) {
+            target = mc.player;
+        }
 
         if (target != null) {
             renderName = target.getName().getString();

@@ -186,9 +186,9 @@ public class ScaffoldPlus extends BlackOutModule {
     }
 
     @EventHandler(priority = 10000)
-    private void onMove(TickEvent.Pre event) {
+    private void onTick(TickEvent.Pre event) {
         if (scaffoldMode.get() == ScaffoldMode.Legit) {
-            mc.player.setSneaking(mc.world.getBlockState(mc.player.getBlockPos().down()).getBlock() instanceof AirBlock);
+            mc.options.sneakKey.setPressed(mc.world.getBlockState(mc.player.getBlockPos().down()).getBlock() instanceof AirBlock);
         }
     }
 
