@@ -456,7 +456,7 @@ public class SurroundPlus extends BlackOutModule {
                         addRender(renders, new Render(position.offset(support), RenderType.Support));
                     }
                 }
-                if (!renderPlaced.get() && !OLEPOSSUtils.replaceable(position)) {return;}
+                if (!renderPlaced.get() && !OLEPOSSUtils.replaceable(position) || mc.world.getBlockState(position).getBlock() == Blocks.BEDROCK) {return;}
 
                 addRender(renders, new Render(position, OLEPOSSUtils.replaceable(position) ? RenderType.Normal : RenderType.Placed));
             });
