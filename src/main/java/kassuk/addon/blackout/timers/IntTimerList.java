@@ -29,10 +29,10 @@ public class IntTimerList {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
-        update(event.frameTime);
+        update();
     }
 
-    public void update(double delta) {
+    public void update() {
         timers.removeIf(item -> !item.isValid());
     }
 
