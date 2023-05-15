@@ -203,6 +203,7 @@ public class HoleSnap extends BlackOutModule {
                     if (mc.player.getY() == hole.middle.y) {
                         this.toggle();
                         sendDisableMsg("in hole");
+                        ((IVec3d) event.movement).setXZ(0, 0);
                     } else if (OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox().offset(0, -0.05, 0))){
                         this.toggle();
                         sendDisableMsg("hole unreachable");
@@ -214,6 +215,7 @@ public class HoleSnap extends BlackOutModule {
                     double dX = hole.middle.x - mc.player.getX();
                     double z = getSpeed() * pit;
                     double dZ = hole.middle.z - mc.player.getZ();
+
                     if (OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox().offset(x, 0, z))) {
                         collisions++;
                         if (collisions >= coll.get() && coll.get() > 0) {
