@@ -264,7 +264,6 @@ public class ScaffoldPlus extends BlackOutModule {
                                     obsidian = BOInvUtils.pickSwitch(inventory.slot()) ? inventory.count() : -1;
                                     block = ((BlockItem) mc.player.getInventory().getStack(inventory.slot()).getItem()).getBlock();
                                 }
-                                default -> block = Blocks.OBSIDIAN;
                             }
                         }
 

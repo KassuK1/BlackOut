@@ -232,10 +232,6 @@ public class OffHandPlus extends BlackOutModule {
         return slot;
     }
 
-    private boolean crystalModuleCheck() {
-        return autoMine.isActive() || autoCrystalRewrite.isActive() || crystalAura.isActive();
-    }
-
     private boolean itemAvailable(Predicate<ItemStack> predicate) {
         return InvUtils.find(predicate).found();
     }

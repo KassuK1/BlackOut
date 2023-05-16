@@ -62,6 +62,7 @@ public class BlackOut extends MeteorAddon {
         modules.add(new AutoTrapPlus());
         modules.add(new BedAuraPlus());
         modules.add(new CustomFOV());
+        modules.add(new ElytraFlyPlus());
         modules.add(new FastXP());
         modules.add(new FeetESP());
         modules.add(new FlightPlus());

@@ -114,6 +114,12 @@ public class SpeedPlus extends BlackOutModule {
         .defaultValue(true)
         .build()
     );
+    private final Setting<Boolean> pauseFly = sgPause.add(new BoolSetting.Builder()
+        .name("Pause Fly")
+        .description("Doesn't modify movement while flying.")
+        .defaultValue(true)
+        .build()
+    );
     private final Setting<LiquidMode> pauseWater = sgPause.add(new EnumSetting.Builder<LiquidMode>()
         .name("Pause Water")
         .description("Doesn't modify movement when in water.")
@@ -171,6 +177,9 @@ public class SpeedPlus extends BlackOutModule {
                 return;
             }
             if (pauseElytra.get() && mc.player.isFallFlying()) {
+                return;
+            }
+            if (pauseFly.get() && mc.player.getAbilities().flying) {
                 return;
             }
 
@@ -231,6 +240,7 @@ public class SpeedPlus extends BlackOutModule {
 
             double forward = mc.player.input.movementForward;
             double sideways = mc.player.input.movementSideways;
+
             double yaw = getYaw(forward, sideways);
             double x = Math.cos(Math.toRadians(yaw + 90.0f));
             double y = mc.player.getVelocity().y;
