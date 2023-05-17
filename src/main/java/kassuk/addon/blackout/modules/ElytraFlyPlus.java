@@ -165,8 +165,9 @@ public class ElytraFlyPlus extends BlackOutModule {
             if (p < 0) {
                 velocity = speed.get();
             }
-            debug(String.valueOf(p));
+
             pitch = Math.max(Math.max(p, 0) * -90, -90);
+
             movingUp = true;
             moving = false;
         } else {
