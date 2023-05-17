@@ -160,21 +160,19 @@ public class ElytraFlyPlus extends BlackOutModule {
 
         boolean movingUp = false;
 
-        if (!mc.options.sneakKey.isPressed() && mc.options.jumpKey.isPressed() && p < 0.6) {
+        if (!mc.options.sneakKey.isPressed() && mc.options.jumpKey.isPressed() && velocity > speed.get() * 0.4) {
             p = (float) Math.min(p + 0.1 * (1 - p) * (1 - p) * (1 - p), 1f);
-            if (p < 0) {
-                velocity = speed.get();
-            }
 
             pitch = Math.max(Math.max(p, 0) * -90, -90);
 
             movingUp = true;
             moving = false;
         } else {
+            velocity = speed.get();
             p = -0.2f;
         }
 
-        velocity = moving ? speed.get() : Math.min(velocity * 0.99, speed.get());
+        velocity = moving ? speed.get() : Math.min(velocity + Math.sin(Math.toRadians(pitch)) * 0.08, speed.get());
 
         double cos = Math.cos(Math.toRadians(yaw + 90));
         double sin = Math.sin(Math.toRadians(yaw + 90));

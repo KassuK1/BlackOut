@@ -131,8 +131,8 @@ public class AutoMine extends BlackOutModule {
         .sliderRange(0, 2)
         .build()
     );
-    private final Setting<Double> civDelay = sgSpeed.add(new DoubleSetting.Builder()
-        .name("Civ Delay")
+    private final Setting<Double> instaDelay = sgSpeed.add(new DoubleSetting.Builder()
+        .name("Instant Delay")
         .description("Delay between civ mines.")
         .defaultValue(0.5)
         .min(0)
@@ -183,8 +183,8 @@ public class AutoMine extends BlackOutModule {
         .defaultValue(Priority.Normal)
         .build()
     );
-    private final Setting<Boolean> cevCiv = sgCev.add(new BoolSetting.Builder()
-        .name("Cev CIV")
+    private final Setting<Boolean> instaCev = sgCev.add(new BoolSetting.Builder()
+        .name("Instant Cev")
         .description("Only sends 1 mine start packet for each block.")
         .defaultValue(false)
         .build()
@@ -195,8 +195,8 @@ public class AutoMine extends BlackOutModule {
         .defaultValue(Priority.Normal)
         .build()
     );
-    private final Setting<Boolean> trapCevCiv = sgCev.add(new BoolSetting.Builder()
-        .name("Trap Cev CIV")
+    private final Setting<Boolean> instaTrapCev = sgCev.add(new BoolSetting.Builder()
+        .name("Instant Trap Cev")
         .description("Only sends 1 mine start packet for each block.")
         .defaultValue(false)
         .build()
@@ -207,8 +207,8 @@ public class AutoMine extends BlackOutModule {
         .defaultValue(Priority.Normal)
         .build()
     );
-    private final Setting<Boolean> surroundCevCiv = sgCev.add(new BoolSetting.Builder()
-        .name("Surround Cev CIV")
+    private final Setting<Boolean> instaSurroundCev = sgCev.add(new BoolSetting.Builder()
+        .name("Instant Surround Cev")
         .description("Only sends 1 mine start packet for each block.")
         .defaultValue(false)
         .build()
@@ -221,8 +221,8 @@ public class AutoMine extends BlackOutModule {
         .defaultValue(Priority.Normal)
         .build()
     );
-    private final Setting<Boolean> surroundMinerCiv = sgAntiSurround.add(new BoolSetting.Builder()
-        .name("Surround Miner CIV")
+    private final Setting<Boolean> instaSurroundMiner = sgAntiSurround.add(new BoolSetting.Builder()
+        .name("Instant Surround Miner")
         .description("Only sends 1 mine start packet for each block.")
         .defaultValue(false)
         .build()
@@ -233,8 +233,8 @@ public class AutoMine extends BlackOutModule {
         .defaultValue(Priority.Normal)
         .build()
     );
-    private final Setting<Boolean> autoCityCiv = sgAntiSurround.add(new BoolSetting.Builder()
-        .name("Auto City CIV")
+    private final Setting<Boolean> instaAutoCity = sgAntiSurround.add(new BoolSetting.Builder()
+        .name("Instant Auto City")
         .description("Only sends 1 mine start packet for each block.")
         .defaultValue(false)
         .build()
@@ -501,7 +501,7 @@ public class AutoMine extends BlackOutModule {
 
     private boolean civCheck() {
         if (civPos == null) {return true;}
-        if (System.currentTimeMillis() - lastCiv < civDelay.get() * 1000) {return false;}
+        if (System.currentTimeMillis() - lastCiv < instaDelay.get() * 1000) {return false;}
         return OLEPOSSUtils.solid2(civPos);
     }
 
@@ -705,7 +705,7 @@ public class AutoMine extends BlackOutModule {
     }
 
     private Target getCev() {
-        boolean civ = cevCiv.get();
+        boolean civ = instaCev.get();
         Target best = null;
         double distance = 1000;
         for (AbstractClientPlayerEntity player : enemies) {
@@ -732,7 +732,7 @@ public class AutoMine extends BlackOutModule {
     }
 
     Target getTrapCev() {
-        boolean civ = trapCevCiv.get();
+        boolean civ = instaTrapCev.get();
             Target best = null;
         double distance = 1000;
         for (AbstractClientPlayerEntity player : enemies) {
@@ -761,7 +761,7 @@ public class AutoMine extends BlackOutModule {
     }
 
     private Target getSurroundCev() {
-        boolean civ = surroundCevCiv.get();
+        boolean civ = instaSurroundCev.get();
         Target best = null;
         double distance = 1000;
         for (AbstractClientPlayerEntity player : enemies) {
@@ -790,7 +790,7 @@ public class AutoMine extends BlackOutModule {
     }
 
     private Target getSurroundMiner() {
-        boolean civ = surroundMinerCiv.get();
+        boolean civ = instaSurroundMiner.get();
         Target best = null;
         double distance = 1000;
         for (AbstractClientPlayerEntity player : enemies) {
@@ -813,7 +813,7 @@ public class AutoMine extends BlackOutModule {
     }
 
     private Target getAutoCity() {
-        boolean civ = autoCityCiv.get();
+        boolean civ = instaAutoCity.get();
         Target best = null;
         double distance = 1000;
         for (AbstractClientPlayerEntity player : enemies) {
