@@ -33,6 +33,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.effect.StatusEffectUtil;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.Packet;
@@ -76,6 +77,12 @@ public class AutoMine extends BlackOutModule {
     private final Setting<Boolean> newVer = sgGeneral.add(new BoolSetting.Builder()
         .name("1.12.2 Crystals")
         .description("Uses 1.12.2 crystal mechanics.")
+        .defaultValue(false)
+        .build()
+    );
+    private final Setting<Boolean> cc = sgGeneral.add(new BoolSetting.Builder()
+        .name("CC Crystals")
+        .description("Uses crystalpvp.cc crystal mechanics.")
         .defaultValue(false)
         .build()
     );
@@ -721,6 +728,8 @@ public class AutoMine extends BlackOutModule {
             if (!SettingUtils.inPlaceRange(pos)) {continue;}
             if (!SettingUtils.inAttackRange(OLEPOSSUtils.getCrystalBox(pos.up()))) {continue;}
 
+            if (blocked(pos.up())) {continue;}
+
             double d = OLEPOSSUtils.distance(mc.player.getEyePos(), OLEPOSSUtils.getMiddle(pos));
 
             if (distanceCheck(civ, pos, distance, d)) {
@@ -748,6 +757,8 @@ public class AutoMine extends BlackOutModule {
                 if (!SettingUtils.inMineRange(pos)) {continue;}
                 if (!SettingUtils.inPlaceRange(pos)) {continue;}
                 if (!SettingUtils.inAttackRange(OLEPOSSUtils.getCrystalBox(pos.up()))) {continue;}
+
+                if (blocked(pos.up())) {continue;}
 
                 double d = OLEPOSSUtils.distance(mc.player.getEyePos(), OLEPOSSUtils.getMiddle(pos));
 
@@ -777,6 +788,8 @@ public class AutoMine extends BlackOutModule {
                 if (!SettingUtils.inMineRange(pos)) {continue;}
                 if (!SettingUtils.inPlaceRange(pos)) {continue;}
                 if (!SettingUtils.inAttackRange(OLEPOSSUtils.getCrystalBox(pos.up()))) {continue;}
+
+                if (blocked(pos.up())) {continue;}
 
                 double d = OLEPOSSUtils.distance(mc.player.getEyePos(), OLEPOSSUtils.getMiddle(pos));
 
@@ -828,6 +841,8 @@ public class AutoMine extends BlackOutModule {
 
                 if (!SettingUtils.inMineRange(pos)) {continue;}
                 if (!SettingUtils.inPlaceRange(pos.offset(dir).down())) {continue;}
+
+                if (blocked(pos.offset(dir))) {continue;}
 
                 double d = OLEPOSSUtils.distance(mc.player.getEyePos(), OLEPOSSUtils.getMiddle(pos));
 
@@ -1005,6 +1020,12 @@ public class AutoMine extends BlackOutModule {
 
     private Box getRenderBox(double progress) {
         return new Box(target.pos.getX() + 0.5 - progress, target.pos.getY() + 0.5 - progress, target.pos.getZ() + 0.5 - progress, target.pos.getX() + 0.5 + progress, target.pos.getY() + 0.5 + progress, target.pos.getZ() + 0.5 + progress);
+    }
+
+    private boolean blocked(BlockPos pos) {
+        Box box = new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + (cc.get() ? 1 : 2), pos.getZ() + 1);
+
+        return EntityUtils.intersectsWithEntity(box, entity -> entity instanceof PlayerEntity && !entity.isSpectator());
     }
 
     public BlockPos targetPos() {

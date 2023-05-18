@@ -127,7 +127,7 @@ public class BlackoutArray extends HudElement {
             Collections.reverse(lines);
         }
 
-        setSize(lines.isEmpty() ? 120 * scale.get() * scale.get() : width(renderer, lines.stream().max(Comparator.comparingInt(line -> line.toString().length())).get().toString()), lines.size() > 0 ? height * lines.size() : 30 * scale.get() * scale.get());
+        setSize(120 * scale.get() * scale.get(), lines.size() > 0 ? height * lines.size() : 30 * scale.get() * scale.get());
 
         for (int i = 0; i < lines.size(); i++) {
             Line line = lines.get(i);

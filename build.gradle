@@ -27,6 +27,9 @@ dependencies {
 
     // Meteor
     modImplementation "meteordevelopment:meteor-client:${project.meteor_version}"
+
+    modImplementation "baritone:fabric:${project.minecraft_version}-SNAPSHOT"
+
 }
 
 processResources {
