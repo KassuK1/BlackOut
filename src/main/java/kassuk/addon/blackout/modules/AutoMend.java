@@ -7,10 +7,13 @@ import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.utils.BOInvUtils;
+import kassuk.addon.blackout.utils.RaksuTone.RaksuPath;
+import kassuk.addon.blackout.utils.RaksuTone.RaksuTone;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.orbit.EventHandler;
@@ -204,7 +207,7 @@ public class AutoMend extends BlackOutModule {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onTick(TickEvent.Pre event) {
-        if (mc.player == null || mc.world == null) {
+        if (mc.player == null || mc.world == null || Modules.get().isActive(Suicide.class)) {
             return;
         }
 

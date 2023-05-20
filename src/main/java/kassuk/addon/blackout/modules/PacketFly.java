@@ -46,7 +46,7 @@ public class PacketFly extends BlackOutModule {
     private final Setting<Integer> xzBound = sgGeneral.add(new IntSetting.Builder()
         .name("XZ Bound")
         .description("Bounds offset horizontally.")
-        .defaultValue(512)
+        .defaultValue(1337)
         .sliderRange(-1337, 1337)
         .build()
     );
