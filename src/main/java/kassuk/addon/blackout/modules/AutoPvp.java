@@ -324,7 +324,7 @@ public class AutoPvp extends BlackOutModule {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onMove(PlayerMoveEvent event) {
-        if (!inRange) {
+        if (!inRange || shouldSuicide) {
             if (lastPos == null) {
                 lastPos = mc.player.getBlockPos();
             }

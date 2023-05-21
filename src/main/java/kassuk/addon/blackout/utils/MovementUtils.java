@@ -54,12 +54,9 @@ public class MovementUtils {
             !OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox()) &&
             OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox().offset(x, 0, z))) {
 
-            ChatUtils.sendMsg(Text.of("sus"));
-
             double s = getStep(mc.player.getBoundingBox().offset(x, 0, z), step);
 
             if (s > 0) {
-                ChatUtils.sendMsg(Text.of("sus2"));
                 ((IVec3d) movement).setY(s);
                 mc.player.setVelocity(mc.player.getVelocity().x, 0, mc.player.getVelocity().z);
             }
