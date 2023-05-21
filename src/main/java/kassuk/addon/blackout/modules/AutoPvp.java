@@ -418,7 +418,10 @@ public class AutoPvp extends BlackOutModule {
             if (!Modules.get().isActive(SurroundPlus.class)) {
                 Modules.get().get(SurroundPlus.class).toggle();
             }
-
+        } else {
+            if (Modules.get().isActive(SurroundPlus.class)) {
+                Modules.get().get(SurroundPlus.class).toggle();
+            }
         }
 
         if (shouldSuicide) {
