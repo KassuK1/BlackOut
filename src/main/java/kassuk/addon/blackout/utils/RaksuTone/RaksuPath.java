@@ -25,9 +25,18 @@ public class RaksuPath {
     public void calculate(int blocks, BlockPos target) {
         BlockPos pos = mc.player.getBlockPos().toImmutable();
 
+        if (!is(pos.down()) && !OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox().offset(0, -0.2, 0))) {
+            for (int i = 0; i < fallDist; i++) {
+
+                if (is(pos.down(i + 1))) {
+                    path.add(new Movement(true, pos.down(i), MovementType.Fall));
+                    break;
+                }
+            }
+        }
 
         for (int i = 0; i < blocks; i++) {
-            Movement m = nextPos(pos, target);
+            Movement m = nextPos(pos, target, true);
 
             if (m == null || !m.valid) {
                 return;
@@ -42,7 +51,7 @@ public class RaksuPath {
         }
     }
 
-    private Movement nextPos(BlockPos pos, BlockPos target) {
+    private Movement nextPos(BlockPos pos, BlockPos target, boolean stuckCheck) {
         closestDir(pos, target);
 
         for (Direction dir : dirs) {
@@ -50,6 +59,13 @@ public class RaksuPath {
 
             if (!m.valid()) {
                 continue;
+            }
+            // Stuck check
+            if (stuckCheck) {
+                Movement m1 = nextPos(m.pos, target, false);
+                if (m1 != null && m1.valid && m1.pos.equals(pos)) {
+                    continue;
+                }
             }
             return m;
         }

@@ -9,12 +9,9 @@ import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.HoleType;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.managers.Managers;
-import kassuk.addon.blackout.utils.Hole;
-import kassuk.addon.blackout.utils.HoleUtils;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
+import kassuk.addon.blackout.utils.*;
 import kassuk.addon.blackout.utils.RaksuTone.RaksuPath;
 import kassuk.addon.blackout.utils.RaksuTone.RaksuTone;
-import kassuk.addon.blackout.utils.RotationUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
@@ -59,7 +56,8 @@ public class AutoPvp extends BlackOutModule {
     private final SettingGroup sgSuicide = settings.createGroup("Suicide");
     private final SettingGroup sgRotations = settings.createGroup("Rotations");
     private final SettingGroup sgEating = settings.createGroup("Eating");
-    private final SettingGroup sgMovement = settings.createGroup("Movement");
+    private final SettingGroup sgBaritone = settings.createGroup("Baritone");
+    private final SettingGroup sgRaksu = settings.createGroup("Raksutone");
 
     //--------------------General--------------------//
     private final Setting<Boolean> autoMessage = sgGeneral.add(new BoolSetting.Builder()
@@ -263,17 +261,35 @@ public class AutoPvp extends BlackOutModule {
         .build()
     );
 
-    //--------------------Movement--------------------//
-    private final Setting<Boolean> assumeStep = sgMovement.add(new BoolSetting.Builder()
-        .name("Assume Step")
+    //--------------------Baritone--------------------//
+    private final Setting<Boolean> assumeStep = sgBaritone.add(new BoolSetting.Builder()
+        .name("Baritone Step")
         .description(desc)
         .defaultValue(true)
         .build()
     );
-    private final Setting<Boolean> parkour = sgMovement.add(new BoolSetting.Builder()
-        .name("Parkour")
+    private final Setting<Boolean> parkour = sgBaritone.add(new BoolSetting.Builder()
+        .name("Baritone Parkour")
         .description(desc)
         .defaultValue(true)
+        .build()
+    );
+
+    //--------------------Raksutone--------------------//
+    private final Setting<Double> stepCooldown = sgRaksu.add(new DoubleSetting.Builder()
+        .name("Step Cooldown")
+        .description("How many seconds to wait between steps.")
+        .defaultValue(0.1)
+        .min(0)
+        .sliderRange(0, 1)
+        .build()
+    );
+    private final Setting<Double> rStepCooldown = sgRaksu.add(new DoubleSetting.Builder()
+        .name("Reverse Step Cooldown")
+        .description("How many seconds to wait between reverse steps.")
+        .defaultValue(0.1)
+        .min(0)
+        .sliderRange(0, 1)
         .build()
     );
 
@@ -286,6 +302,9 @@ public class AutoPvp extends BlackOutModule {
     private int eatingSlot = -1;
     private BlockPos lastPos = null;
     private final Map<PlayerEntity, Camp> camps = new HashMap<>();
+
+    private long lastStep = 0;
+    private long lastReverse = 0;
 
 
     private boolean shouldSuicide = false;
@@ -328,14 +347,15 @@ public class AutoPvp extends BlackOutModule {
 
             if (path == null || path.path.isEmpty()) {return;}
 
-            move(event, path.path.get(0));
+            move(event.movement, path.path.get(0).pos().toCenterPos());
+            return;
         }
 
         if (surroundMove.get()) {
             BlockPos walkPos = getSurroundWalk();
 
             if (walkPos != null) {
-                performSurroundMove(mc.player.getPos(), walkPos.toCenterPos(), event.movement);
+                move(event.movement, walkPos.toCenterPos());
             }
         }
     }
@@ -416,23 +436,21 @@ public class AutoPvp extends BlackOutModule {
 
             if (!baritone.get()) {
                 path = RaksuTone.getPath(blocks.get(), target.getBlockPos());
-                path.path.forEach(m -> {
-                    event.renderer.box(OLEPOSSUtils.getBox(m.pos()), new Color(255, 0, 0, 50), new Color(255, 0, 0, 255), ShapeMode.Both, 0);
-                });
             }
         }
     }
 
-    private void move(PlayerMoveEvent event, RaksuPath.Movement m) {
-        double yaw = RotationUtils.getYaw(mc.player.getPos(), m.pos().toCenterPos());
+    private void move(Vec3d movement, Vec3d vec) {
+        MovementUtils.moveTowards(movement, 0.2873, vec,
+            System.currentTimeMillis() - lastStep > stepCooldown.get() * 1000 ? 2 : 0,
+            System.currentTimeMillis() - lastReverse > rStepCooldown.get() * 1000 ? 3 : 0);
 
-        double x = Math.cos(Math.toRadians(yaw + 90)) * 0.2873;
-        double z = Math.sin(Math.toRadians(yaw + 90)) * 0.2873;
-
-        double xd = m.pos().toCenterPos().x - mc.player.getX();
-        double zd = m.pos().toCenterPos().z - mc.player.getZ();
-
-        ((IVec3d) event.movement).setXZ(Math.abs(x) <= Math.abs(xd) ? x : xd, Math.abs(z) <= Math.abs(zd) ? z : zd);
+        if (movement.y >= 0.6) {
+            lastStep = System.currentTimeMillis();
+        }
+        if (movement.y <= 0.6) {
+            lastReverse = System.currentTimeMillis();
+        }
     }
 
     private BlockPos getSurroundWalk() {
@@ -507,20 +525,6 @@ public class AutoPvp extends BlackOutModule {
             return OLEPOSSUtils::isGapple;
         }
         return null;
-    }
-
-    private void performSurroundMove(Vec3d current, Vec3d target, Vec3d movement) {
-        double yaw = RotationUtils.getYaw(current, target) + 90;
-
-        double xMov = Math.cos(Math.toRadians(yaw)) * 0.2873;
-        double zMov = Math.sin(Math.toRadians(yaw)) * 0.2873;
-
-        double xDiff = current.x - target.x;
-        double zDiff = current.z - target.z;
-
-        ((IVec3d) movement).setXZ(
-            Math.abs(xDiff) <= Math.abs(xMov) ? xDiff : xMov,
-            Math.abs(zDiff) <= Math.abs(zMov) ? zDiff : zMov);
     }
 
     private boolean available(Predicate<ItemStack> predicate) {

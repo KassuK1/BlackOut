@@ -62,7 +62,7 @@ public class SurroundPlus extends BlackOutModule {
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
         .name("Pause Eat")
         .description("Pauses when you are eating.")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
     private final Setting<Boolean> onlyConfirmed = sgGeneral.add(new BoolSetting.Builder()

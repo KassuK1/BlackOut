@@ -60,7 +60,7 @@ public class AutoTrapPlus extends BlackOutModule {
     private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
         .name("Pause Eat")
         .description("Pauses when you are eating.")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
     private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
