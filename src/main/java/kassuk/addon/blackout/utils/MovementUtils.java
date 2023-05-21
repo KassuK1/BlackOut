@@ -1,7 +1,9 @@
 package kassuk.addon.blackout.utils;
 
 import meteordevelopment.meteorclient.mixininterface.IVec3d;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
@@ -41,43 +43,53 @@ public class MovementUtils {
         double x = Math.abs(xm) <= Math.abs(xd) ? xm : xd;
         double z = Math.abs(zm) <= Math.abs(zd) ? zm : zd;
 
-        if (mc.player.isOnGround()) {
-            if (!OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox()) &&
-                OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox().offset(x, 0, z))) {
-
-                // Step
-                double s = getStep(mc.player.getBoundingBox().offset(x, 0, z), step);
-
-                if (s > 0) {
-                    ((IVec3d) movement).setY(s);
-                    mc.player.setVelocity(mc.player.getVelocity().x, 0, mc.player.getVelocity().z);
-                } else {
-                    s = getReverse(mc.player.getBoundingBox().offset(x, 0, z), reverseStep);
-
-                    if (reverseStep > 0) {
-                        ((IVec3d) movement).setY(-s);
-                        mc.player.setVelocity(mc.player.getVelocity().x, 0, mc.player.getVelocity().z);
-                    }
-                }
-            }
-        }
+        y(movement, x, z, step, reverseStep);
 
         ((IVec3d) movement).setXZ(x, z);
     }
 
+    private static void y(Vec3d movement, double x, double z, int step, int rev) {
+        // Step
+        if (mc.player.isOnGround() &&
+            !OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox()) &&
+            OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox().offset(x, 0, z))) {
+
+            ChatUtils.sendMsg(Text.of("sus"));
+
+            double s = getStep(mc.player.getBoundingBox().offset(x, 0, z), step);
+
+            if (s > 0) {
+                ChatUtils.sendMsg(Text.of("sus2"));
+                ((IVec3d) movement).setY(s);
+                mc.player.setVelocity(mc.player.getVelocity().x, 0, mc.player.getVelocity().z);
+            }
+            return;
+        }
+
+        // Reverse
+        if (mc.player.isOnGround() &&
+            !OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox().offset(x, -0.04, z))) {
+
+            double s = getReverse(mc.player.getBoundingBox(), rev);
+
+            if (s > 0) {
+                ((IVec3d) movement).setY(-s);
+                mc.player.setVelocity(mc.player.getVelocity().x, 0, mc.player.getVelocity().z);
+            }
+        }
+    }
+
     private static double getStep(Box box, int step) {
-        for (double i = 0; i <= step; i += 0.1) {
-            if (!OLEPOSSUtils.inside(mc.player, box.offset(0, i, 0)) &&
-                OLEPOSSUtils.inside(mc.player, box.offset(0, i - 0.1, 0))) {
+        for (double i = 0; i <= step + 0.125; i += 0.125) {
+            if (!OLEPOSSUtils.inside(mc.player, box.offset(0, i, 0))) {
                 return i;
             }
         }
         return 0;
     }
     private static double getReverse(Box box, int reverse) {
-        for (double i = 0; i <= reverse; i += 0.1) {
-            if (!OLEPOSSUtils.inside(mc.player, box.offset(0, -i, 0)) &&
-                OLEPOSSUtils.inside(mc.player, box.offset(0, -i - 0.1, 0))) {
+        for (double i = 0; i <= reverse; i += 0.125) {
+            if (OLEPOSSUtils.inside(mc.player, box.offset(0, -i - 0.125, 0))) {
                 return i;
             }
         }

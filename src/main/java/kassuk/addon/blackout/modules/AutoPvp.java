@@ -80,14 +80,6 @@ public class AutoPvp extends BlackOutModule {
         .sliderRange(0, 500)
         .build()
     );
-    private final Setting<Integer> blocks = sgTarget.add(new IntSetting.Builder()
-        .name("Blocks")
-        .description("Blocks.")
-        .defaultValue(5)
-        .min(0)
-        .sliderRange(0, 100)
-        .build()
-    );
     private final Setting<Boolean> baritone = sgGeneral.add(new BoolSetting.Builder()
         .name("Baritone")
         .description("Moves using baritone. Should be true.")
@@ -414,7 +406,7 @@ public class AutoPvp extends BlackOutModule {
                 priority, RotationType.Other);
         }
 
-        if (inRange && surround.get()) {
+        if (inRange && surround.get() && !shouldSuicide) {
             if (!Modules.get().isActive(SurroundPlus.class)) {
                 Modules.get().get(SurroundPlus.class).toggle();
             }
@@ -427,8 +419,10 @@ public class AutoPvp extends BlackOutModule {
         if (shouldSuicide) {
             if (baritone.get()) {
                 BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalRunAway(50, target.getBlockPos()));
-                return;
+            } else {
+                path = RaksuTone.runAway(3, target.getBlockPos());
             }
+            return;
         }
 
         if (!inRange && (mc.player.getY() > 100 || baritone.get())) {
@@ -438,7 +432,7 @@ public class AutoPvp extends BlackOutModule {
             BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(null);
 
             if (!baritone.get()) {
-                path = RaksuTone.getPath(blocks.get(), target.getBlockPos());
+                path = RaksuTone.getPath(3, target.getBlockPos());
             }
         }
     }
@@ -451,7 +445,7 @@ public class AutoPvp extends BlackOutModule {
         if (movement.y >= 0.6) {
             lastStep = System.currentTimeMillis();
         }
-        if (movement.y <= 0.6) {
+        if (movement.y <= -0.6) {
             lastReverse = System.currentTimeMillis();
         }
     }

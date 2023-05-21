@@ -4,11 +4,13 @@ import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.mixin.AbstractBlockAccessor;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import org.reflections.vfs.Vfs;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
@@ -22,7 +24,7 @@ public class RaksuPath {
 
     private List<Direction> dirs = null;
 
-    public void calculate(int blocks, BlockPos target) {
+    public void calculate(int blocks, BlockPos target, boolean opposite) {
         BlockPos pos = mc.player.getBlockPos().toImmutable();
 
         if (!is(pos.down()) && !OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox().offset(0, -0.2, 0))) {
@@ -36,7 +38,7 @@ public class RaksuPath {
         }
 
         for (int i = 0; i < blocks; i++) {
-            Movement m = nextPos(pos, target, true);
+            Movement m = nextPos(pos, target, true, opposite);
 
             if (m == null || !m.valid) {
                 return;
@@ -51,8 +53,8 @@ public class RaksuPath {
         }
     }
 
-    private Movement nextPos(BlockPos pos, BlockPos target, boolean stuckCheck) {
-        closestDir(pos, target);
+    private Movement nextPos(BlockPos pos, BlockPos target, boolean stuckCheck, boolean reversed) {
+        closestDir(pos, target, reversed);
 
         for (Direction dir : dirs) {
             Movement m = getMovement(pos, dir);
@@ -62,7 +64,7 @@ public class RaksuPath {
             }
             // Stuck check
             if (stuckCheck) {
-                Movement m1 = nextPos(m.pos, target, false);
+                Movement m1 = nextPos(m.pos, target, false, reversed);
                 if (m1 != null && m1.valid && m1.pos.equals(pos)) {
                     continue;
                 }
@@ -129,8 +131,13 @@ public class RaksuPath {
         return !is(pos.offset(dir)) && !is(pos.offset(dir).up());
     }
 
-    private void closestDir(BlockPos from, BlockPos target) {
-        dirs = Arrays.stream(OLEPOSSUtils.horizontals).sorted(Comparator.comparingDouble(i -> OLEPOSSUtils.distance(from.offset(i).toCenterPos(), target.toCenterPos()))).toList();
+    private void closestDir(BlockPos from, BlockPos target, boolean reversed) {
+        if (reversed) {
+            Comparator<Direction> c = Comparator.comparingDouble(i -> OLEPOSSUtils.distance(from.offset(i).toCenterPos(), target.toCenterPos()));
+            dirs = Arrays.stream(OLEPOSSUtils.horizontals).sorted(c.reversed()).toList();
+        } else {
+            dirs = Arrays.stream(OLEPOSSUtils.horizontals).sorted(Comparator.comparingDouble(i -> OLEPOSSUtils.distance(from.offset(i).toCenterPos(), target.toCenterPos()))).toList();
+        }
     }
 
     private boolean is(BlockPos pos) {
