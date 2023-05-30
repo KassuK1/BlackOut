@@ -7,20 +7,24 @@ import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.utils.BOInvUtils;
+import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.RotationUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
-import meteordevelopment.meteorclient.settings.EnumSetting;
-import meteordevelopment.meteorclient.settings.IntSetting;
-import meteordevelopment.meteorclient.settings.Setting;
-import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
+import net.minecraft.item.BlockItem;
 import net.minecraft.item.Items;
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.util.Hand;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
 /**
@@ -34,6 +38,18 @@ public class AutoPearl extends BlackOutModule {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
+    private final Setting<Boolean> ccBypass = sgGeneral.add(new BoolSetting.Builder()
+        .name("CC Bypass")
+        .description("Does funny stuff to bypass cc's anti delay.")
+        .defaultValue(false)
+        .build()
+    );
+    private final Setting<SwitchMode> ccSwitchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
+        .name("CC Switch Mode")
+        .description("Which method of switching should be used for cc items.")
+        .defaultValue(SwitchMode.Silent)
+        .build()
+    );
     private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
         .name("Switch Mode")
         .description("Which method of switching should be used.")
@@ -48,6 +64,18 @@ public class AutoPearl extends BlackOutModule {
         .sliderRange(0, 90)
         .build()
     );
+    private final Setting<Boolean> instaRot = sgGeneral.add(new BoolSetting.Builder()
+        .name("Instant Rotation")
+        .description("Instantly rotates.")
+        .defaultValue(false)
+        .build()
+    );
+
+    private boolean placed = false;
+
+    public void onActivate() {
+        placed = false;
+    }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
@@ -60,8 +88,16 @@ public class AutoPearl extends BlackOutModule {
             case PickSilent, InvSwitch -> !InvUtils.find(Items.ENDER_PEARL).found();
         }) {return;}
 
-        boolean rotated = Managers.ROTATION.start(getYaw(), pitch.get(), priority, RotationType.Other) || (RotationUtils.yawAngle(Managers.ROTATION.lastDir[0], getYaw()) < 0.1 && pitch.get() - Managers.ROTATION.lastDir[1] < 0.1);
+        if (ccBypass.get() && !cc() && !placed) {
+            return;
+        }
+
+        boolean rotated = instaRot.get() || Managers.ROTATION.start(getYaw(), pitch.get(), priority, RotationType.Other) || (RotationUtils.yawAngle(Managers.ROTATION.lastDir[0], getYaw()) < 0.1 && pitch.get() - Managers.ROTATION.lastDir[1] < 0.1);
         if (!rotated) {return;}
+
+        if (instaRot.get()) {
+            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(getYaw(), pitch.get(), Managers.ONGROUND.isOnGround()));
+        }
 
         boolean switched = hand != null;
 
@@ -92,6 +128,59 @@ public class AutoPearl extends BlackOutModule {
                 case InvSwitch -> BOInvUtils.swapBack();
             }
         }
+    }
+
+    private boolean cc() {
+        if (switch (switchMode.get()) {
+            case Normal, Silent -> !InvUtils.findInHotbar(item -> item.getItem() instanceof BlockItem).found();
+            case PickSilent, InvSwitch -> !InvUtils.find(item -> item.getItem() instanceof BlockItem).found();
+        }) {
+            toggle();
+            sendToggledMsg("cc blocks not found");
+            return false;
+        }
+
+        BlockPos pos = mc.player.getBlockPos();
+
+        boolean rotated = instaRot.get() || Managers.ROTATION.start(getYaw(), pitch.get(), priority, RotationType.Other) || (RotationUtils.yawAngle(Managers.ROTATION.lastDir[0], getYaw()) < 0.1 && pitch.get() - Managers.ROTATION.lastDir[1] < 0.1);
+        if (!rotated) {return false;}
+
+        if (instaRot.get()) {
+            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround((float) RotationUtils.getYaw(mc.player.getEyePos(), pos.toCenterPos()), (float) RotationUtils.getPitch(mc.player.getEyePos(), pos.toCenterPos()), Managers.ONGROUND.isOnGround()));
+        }
+
+        Hand hand = mc.player.getOffHandStack().getItem() instanceof BlockItem ? Hand.OFF_HAND :
+            Managers.HOLDING.getStack().getItem() instanceof BlockItem ? Hand.MAIN_HAND : null;
+
+        boolean switched = false;
+
+        if (hand == null) {
+            switch (switchMode.get()) {
+                case Silent -> {
+                    InvUtils.swap(InvUtils.findInHotbar(item -> item.getItem() instanceof BlockItem).slot(), true);
+                    switched = true;
+                }
+                case PickSilent -> switched = BOInvUtils.pickSwitch(InvUtils.find(item -> item.getItem() instanceof BlockItem).slot());
+                case InvSwitch -> switched = BOInvUtils.invSwitch(InvUtils.find(item -> item.getItem() instanceof BlockItem).slot());
+            }
+        }
+
+        if (hand == null && !switched) {
+            return false;
+        }
+
+        sendPacket(new PlayerInteractBlockC2SPacket(hand == null ? Hand.MAIN_HAND : Hand.OFF_HAND, new BlockHitResult(pos.down().toCenterPos(), Direction.UP, pos.down(), false), 0));
+        placed = true;
+
+        if (hand == null) {
+            switch (switchMode.get()) {
+                case Silent -> InvUtils.swapBack();
+                case PickSilent -> BOInvUtils.pickSwapBack();
+                case InvSwitch -> BOInvUtils.swapBack();
+            }
+        }
+
+        return true;
     }
 
     private int getYaw() {

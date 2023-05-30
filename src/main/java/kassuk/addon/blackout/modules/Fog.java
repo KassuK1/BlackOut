@@ -1,5 +1,6 @@
 package kassuk.addon.blackout.modules;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import meteordevelopment.meteorclient.settings.*;
@@ -31,10 +32,25 @@ public class Fog extends BlackOutModule {
         .sliderRange(0, 100)
         .build()
     );
+    public final Setting<Integer> fading = sgGeneral.add(new IntSetting.Builder()
+        .name("Fading")
+        .description("How smoothly should the fog fade.")
+        .defaultValue(25)
+        .min(0)
+        .sliderRange(0, 1000)
+        .build()
+    );
     public final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
         .name("Color")
         .description("Color of the fog.")
         .defaultValue(new SettingColor(255, 0, 0, 255))
         .build()
     );
+
+    public void modifyFog() {
+        RenderSystem.setShaderFogColor(color.get().r, color.get().g, color.get().b, color.get().a / 255f);
+        RenderSystem.setShaderFogStart((float) (distance.get() * 1f));
+        RenderSystem.setShaderFogEnd((float) (distance.get() + fading.get()));
+        RenderSystem.setShaderFogShape(shape.get());
+    }
 }

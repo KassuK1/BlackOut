@@ -15,18 +15,24 @@ import meteordevelopment.meteorclient.utils.PreInit;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.meteorclient.utils.entity.fakeplayer.FakePlayerEntity;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.advancement.criterion.Criteria;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.DamageUtil;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.enchantment.ProtectionEnchantment;
+import net.minecraft.entity.*;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.registry.tag.DamageTypeTags;
+import net.minecraft.registry.tag.EntityTypeTags;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.stat.Stats;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.*;
@@ -61,6 +67,31 @@ public class BODamageUtils {
 
     // Crystal damage
 
+    public static double cDamage(PlayerEntity entity, Box bb, Vec3d crystal, boolean ignoreTerrain) {
+        double q = 12; // power * 2
+
+        if (!entity.isImmuneToExplosion()) {
+            double w = Math.sqrt(entity.squaredDistanceTo(crystal)) / (double)q;
+            if (w <= 1.0) {
+                double x = entity.getX() - crystal.x;
+                double y = entity.getEyeY() - crystal.y;
+                double z = entity.getZ() - crystal.z;
+
+                double aa = Math.sqrt(x * x + y * y + z * z);
+
+                if (aa != 0.0) {
+                    x /= aa;
+                    y /= aa;
+                    z /= aa;
+                    double ab = getExposure(crystal, entity, bb);
+                    double ac = (1.0 - w) * ab;
+                    return damage(entity, explosion.getDamageSource(), (float)((int)((ac * ac + ac) / 2.0 * 7.0 * (double)q + 1.0)));
+                }
+            }
+        }
+        return 0;
+    }
+
     public static double crystalDamage(PlayerEntity player, Box bb, Vec3d crystal, BlockPos obsidianPos, boolean ignoreTerrain) {
         if (player == null) return 0;
         if (EntityUtils.getGameMode(player) == GameMode.CREATIVE && !(player instanceof FakePlayerEntity)) return 0;
@@ -75,13 +106,35 @@ public class BODamageUtils {
         double damage = ((impact * impact + impact) / 2 * 7 * (6 * 2) + 1);
 
         damage = damage * 3 / 2;
-        damage = DamageUtil.getDamageLeft((float) damage, (float) player.getArmor() * 2, (float) player.getAttributeInstance(EntityAttributes.GENERIC_ARMOR_TOUGHNESS).getValue());
+        damage = DamageUtil.getDamageLeft((float) damage, (float) player.getArmor(), (float) player.getAttributeInstance(EntityAttributes.GENERIC_ARMOR_TOUGHNESS).getValue());
         damage = resistanceReduction(player, damage);
 
         ((IExplosion) explosion).set(crystal, 6, false);
         damage = blastProtReduction(player, damage, explosion);
 
         return damage < 0 ? 0 : damage;
+    }
+
+    public static float damage(PlayerEntity player, DamageSource source, float amount) {
+        if (player.isInvulnerableTo(source)) {
+            return 0;
+        } else if (player.world.isClient) {
+            return 0;
+        } else if (player.isDead()) {
+            return 0;
+        } else if (source.isIn(DamageTypeTags.IS_FIRE) && player.hasStatusEffect(StatusEffects.FIRE_RESISTANCE)) {
+            return 0;
+        } else {
+            if (source.isIn(DamageTypeTags.IS_FREEZING) && player.getType().isIn(EntityTypeTags.FREEZE_HURTS_EXTRA_TYPES)) {
+                amount *= 5.0F;
+            }
+
+            if (source.isIn(DamageTypeTags.DAMAGES_HELMET) && !player.getEquippedStack(EquipmentSlot.HEAD).isEmpty()) {
+                //this.damageHelmet(source, amount);
+                amount *= 0.75F;
+            }
+        }
+        return amount;
     }
 
     // Sword damage
@@ -197,6 +250,38 @@ public class BODamageUtils {
         }
 
         return damage < 0 ? 0 : damage;
+    }
+
+    public static float getExposure(Vec3d source, Entity entity, Box box) {
+        double d = 1.0 / ((box.maxX - box.minX) * 2.0 + 1.0);
+        double e = 1.0 / ((box.maxY - box.minY) * 2.0 + 1.0);
+        double f = 1.0 / ((box.maxZ - box.minZ) * 2.0 + 1.0);
+        double g = (1.0 - Math.floor(1.0 / d) * d) / 2.0;
+        double h = (1.0 - Math.floor(1.0 / f) * f) / 2.0;
+        if (!(d < 0.0) && !(e < 0.0) && !(f < 0.0)) {
+            int i = 0;
+            int j = 0;
+
+            for(double k = 0.0; k <= 1.0; k += d) {
+                for(double l = 0.0; l <= 1.0; l += e) {
+                    for(double m = 0.0; m <= 1.0; m += f) {
+                        double n = MathHelper.lerp(k, box.minX, box.maxX);
+                        double o = MathHelper.lerp(l, box.minY, box.maxY);
+                        double p = MathHelper.lerp(m, box.minZ, box.maxZ);
+                        Vec3d vec3d = new Vec3d(n + g, o, p + h);
+                        if (entity.world.raycast(new RaycastContext(vec3d, source, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, entity)).getType() == HitResult.Type.MISS) {
+                            ++i;
+                        }
+
+                        ++j;
+                    }
+                }
+            }
+
+            return (float)i / (float)j;
+        } else {
+            return 0.0F;
+        }
     }
 
     public static double getExposure(Vec3d source, Entity entity, Box box, RaycastContext raycastContext, BlockPos obsidianPos, boolean ignoreTerrain) {

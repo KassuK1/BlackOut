@@ -445,11 +445,11 @@ public class SurroundPlus extends BlackOutModule {
 
                 if (data.valid()) {
                     if (!timers.contains(position)
-                        && !EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> isAlive(entity) && !entity.isSpectator() && entity.getType() != EntityType.ITEM)
+                        && !EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> isAlive() && !entity.isSpectator() && entity.getType() != EntityType.ITEM)
                         && OLEPOSSUtils.replaceable(position)) {
                         list.add(position);
                     }
-                    if (EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> isAlive(entity) && entity instanceof EndCrystalEntity) && !EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> !entity.isSpectator() && !(entity instanceof EndCrystalEntity || entity instanceof ItemEntity))) {
+                    if (EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> isAlive() && entity instanceof EndCrystalEntity) && !EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> !entity.isSpectator() && !(entity instanceof EndCrystalEntity || entity instanceof ItemEntity))) {
                         toAttack.add(position);
                     }
                 } else if (OLEPOSSUtils.replaceable(position)) {
@@ -484,7 +484,7 @@ public class SurroundPlus extends BlackOutModule {
 
             if (!data.valid() || !SettingUtils.inPlaceRange(data.pos())) {continue;}
 
-            if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> isAlive(entity) && !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
+            if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> isAlive() && !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
                 double dist = OLEPOSSUtils.distance(mc.player.getEyePos(), OLEPOSSUtils.getMiddle(position.offset(dir)));
 
                 if (dist < cDist || value < 2) {
@@ -494,7 +494,7 @@ public class SurroundPlus extends BlackOutModule {
                 }
             }
 
-            if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> isAlive(entity) && !entity.isSpectator() && entity.getType() != EntityType.ITEM && entity.getType() != EntityType.END_CRYSTAL)) {
+            if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> isAlive() && !entity.isSpectator() && entity.getType() != EntityType.ITEM && entity.getType() != EntityType.END_CRYSTAL)) {
                 double dist = OLEPOSSUtils.distance(mc.player.getEyePos(), OLEPOSSUtils.getMiddle(position.offset(dir)));
 
                 if (dist < cDist || value < 1) {
@@ -581,8 +581,8 @@ public class SurroundPlus extends BlackOutModule {
         return map;
     }
 
-    private boolean isAlive(Entity entity) {
-        return !(entity instanceof EndCrystalEntity) || attacked <= 0;
+    private boolean isAlive() {
+        return attacked < 0;
     }
 
     private record Render(BlockPos pos, RenderType type) {}
