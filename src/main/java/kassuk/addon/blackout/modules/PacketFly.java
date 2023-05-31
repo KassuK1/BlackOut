@@ -189,21 +189,22 @@ public class PacketFly extends BlackOutModule {
         }
 
         boolean phasing = isPhasing();
-        mc.player.noClip = phasing;
+        boolean semiPhasing = isSemiPhase();
 
-        packetsToSend += phasing ? phasePackets.get() : packets.get();
+        mc.player.noClip = semiPhasing;
+        packetsToSend += semiPhasing ? phasePackets.get() : packets.get();
 
         boolean shouldAntiKick = ticks % antiKickDelay.get() == 0;
 
         double yaw = getYaw();
-        double motion = phasing ? phaseSpeed.get() : speed.get();
+        double motion = semiPhasing ? phaseSpeed.get() : speed.get();
 
         double x = 0, y = 0, z = 0;
 
         if (jumping()) {
-            y = phasing ? phaseUpSpeed.get() : upSpeed.get();
+            y = semiPhasing ? phaseUpSpeed.get() : upSpeed.get();
         } else if (sneaking()) {
-            y = phasing ? -phaseDownSpeed.get() : -downSpeed.get();
+            y = semiPhasing ? -phaseDownSpeed.get() : -downSpeed.get();
         }
 
         if (y != 0) {
@@ -214,10 +215,10 @@ public class PacketFly extends BlackOutModule {
             x = Math.cos(Math.toRadians(yaw + 90)) * motion;
             z = Math.sin(Math.toRadians(yaw + 90)) * motion;
         } else {
-            if (phasing && !phaseFastVertical.get()) {
+            if (semiPhasing && !phaseFastVertical.get()) {
                 packetsToSend = Math.min(packetsToSend, 1);
             }
-            if (!phasing && !fastVertical.get()) {
+            if (!semiPhasing && !fastVertical.get()) {
                 packetsToSend = Math.min(packetsToSend, 1);
             }
         }
@@ -227,7 +228,7 @@ public class PacketFly extends BlackOutModule {
         for (; packetsToSend >= 1; packetsToSend--) {
             newPosition = newPosition.add(x, 0, z);
 
-            if (shouldAntiKick && !phasing && y >= 0 && !antiKickSent) {
+            if (shouldAntiKick && !phasing && !mc.player.isOnGround() && y >= 0 && !antiKickSent) {
                 newPosition = newPosition.add(0, antiKick.get() * -0.04, 0);
                 antiKickSent = true;
             } else {
@@ -293,7 +294,11 @@ public class PacketFly extends BlackOutModule {
     }
 
     private boolean isPhasing() {
-        return OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox());
+        return OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox().shrink(0.0625, 0, 0.0625));
+    }
+
+    private boolean isSemiPhase() {
+        return OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox().expand(0.01, 0, 0.01));
     }
 
     private boolean jumping() {

@@ -67,31 +67,6 @@ public class BODamageUtils {
 
     // Crystal damage
 
-    public static double cDamage(PlayerEntity entity, Box bb, Vec3d crystal, boolean ignoreTerrain) {
-        double q = 12; // power * 2
-
-        if (!entity.isImmuneToExplosion()) {
-            double w = Math.sqrt(entity.squaredDistanceTo(crystal)) / (double)q;
-            if (w <= 1.0) {
-                double x = entity.getX() - crystal.x;
-                double y = entity.getEyeY() - crystal.y;
-                double z = entity.getZ() - crystal.z;
-
-                double aa = Math.sqrt(x * x + y * y + z * z);
-
-                if (aa != 0.0) {
-                    x /= aa;
-                    y /= aa;
-                    z /= aa;
-                    double ab = getExposure(crystal, entity, bb);
-                    double ac = (1.0 - w) * ab;
-                    return damage(entity, explosion.getDamageSource(), (float)((int)((ac * ac + ac) / 2.0 * 7.0 * (double)q + 1.0)));
-                }
-            }
-        }
-        return 0;
-    }
-
     public static double crystalDamage(PlayerEntity player, Box bb, Vec3d crystal, BlockPos obsidianPos, boolean ignoreTerrain) {
         if (player == null) return 0;
         if (EntityUtils.getGameMode(player) == GameMode.CREATIVE && !(player instanceof FakePlayerEntity)) return 0;
@@ -105,7 +80,7 @@ public class BODamageUtils {
         double impact = (1 - (modDistance / 12)) * exposure;
         double damage = ((impact * impact + impact) / 2 * 7 * (6 * 2) + 1);
 
-        damage = damage * 3 / 2;
+        damage = getDamageForDifficulty(damage);
         damage = DamageUtil.getDamageLeft((float) damage, (float) player.getArmor(), (float) player.getAttributeInstance(EntityAttributes.GENERIC_ARMOR_TOUGHNESS).getValue());
         damage = resistanceReduction(player, damage);
 
@@ -113,28 +88,6 @@ public class BODamageUtils {
         damage = blastProtReduction(player, damage, explosion);
 
         return damage < 0 ? 0 : damage;
-    }
-
-    public static float damage(PlayerEntity player, DamageSource source, float amount) {
-        if (player.isInvulnerableTo(source)) {
-            return 0;
-        } else if (player.world.isClient) {
-            return 0;
-        } else if (player.isDead()) {
-            return 0;
-        } else if (source.isIn(DamageTypeTags.IS_FIRE) && player.hasStatusEffect(StatusEffects.FIRE_RESISTANCE)) {
-            return 0;
-        } else {
-            if (source.isIn(DamageTypeTags.IS_FREEZING) && player.getType().isIn(EntityTypeTags.FREEZE_HURTS_EXTRA_TYPES)) {
-                amount *= 5.0F;
-            }
-
-            if (source.isIn(DamageTypeTags.DAMAGES_HELMET) && !player.getEquippedStack(EquipmentSlot.HEAD).isEmpty()) {
-                //this.damageHelmet(source, amount);
-                amount *= 0.75F;
-            }
-        }
-        return amount;
     }
 
     // Sword damage
@@ -182,6 +135,7 @@ public class BODamageUtils {
         return damage < 0 ? 0 : damage;
     }
 
+
     // Bed damage
 
     public static double bedDamage(LivingEntity player, Vec3d bed) {
@@ -195,7 +149,7 @@ public class BODamageUtils {
         double damage = (impact * impact + impact) / 2 * 7 * (5 * 2) + 1;
 
         // Multiply damage by difficulty
-        damage = damage * 3 / 2;
+        damage = getDamageForDifficulty(damage);
 
         // Reduce by resistance
         damage = resistanceReduction(player, damage);
@@ -226,6 +180,14 @@ public class BODamageUtils {
     }
 
     // Utils
+
+    private static double getDamageForDifficulty(double damage) {
+        return switch (mc.world.getDifficulty()) {
+            case EASY -> Math.min(damage / 2 + 1, damage);
+            case HARD, PEACEFUL -> damage * 3 / 2;
+            default -> damage;
+        };
+    }
 
     private static double normalProtReduction(Entity player, double damage) {
         int protLevel = EnchantmentHelper.getProtectionAmount(player.getArmorItems(), mc.world.getDamageSources().generic());

@@ -14,6 +14,7 @@ import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.mixininterface.IVec3d;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.movement.SafeWalk;
@@ -160,6 +161,8 @@ public class ScaffoldPlus extends BlackOutModule {
     private Vec3d motion = null;
     private double placeTimer;
     private int placesLeft = 0;
+    private double towerStart = 0;
+    private boolean lastTower = false;
 
     @Override
     public void onDeactivate() {
@@ -211,7 +214,6 @@ public class ScaffoldPlus extends BlackOutModule {
 
             if (safeWalk.get() && !Modules.get().get(SafeWalk.class).isActive()) {
                 Modules.get().get(SafeWalk.class).toggle();
-
             }
 
             motion = event.movement;
@@ -306,26 +308,27 @@ public class ScaffoldPlus extends BlackOutModule {
 
     private List<BlockPos> getBlocks() {
         List<BlockPos> list = new ArrayList<>();
-        double x = motion.x;
-        double z = motion.z;
+
+        double y = motion.y;
+
         Vec3d vec = mc.player.getPos();
         for (int i = 0; i < extrapolation.get() * 10; i++) {
-            vec = vec.add(x / 10, 0, z / 10);
+            y = Math.max(y - 0.008, 0);
+
+            vec = vec.add(motion.x / 10, y / 10, motion.z / 10);
 
             if (inside(getBox(vec))) {
                 break;
             } else {
-                addBlocks(list, vec);
+                BlockPos pos = OLEPOSSUtils.toPos(vec).down();
+
+                if (!timers.contains(pos) && OLEPOSSUtils.replaceable(pos) && !list.contains(pos) &&
+                    !mc.player.getBoundingBox().intersects(OLEPOSSUtils.getBox(pos))) {
+                    list.add(pos);
+                }
             }
         }
         return list;
-    }
-
-    private void addBlocks(List<BlockPos> list, Vec3d vec) {
-        BlockPos pos = OLEPOSSUtils.toPos(vec).down();
-        if (!timers.contains(pos) && OLEPOSSUtils.replaceable(pos) && !list.contains(pos)) {
-            list.add(pos);
-        }
     }
 
     private Box getBox(Vec3d vec) {
