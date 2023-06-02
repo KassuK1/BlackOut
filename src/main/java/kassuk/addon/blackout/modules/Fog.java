@@ -40,6 +40,14 @@ public class Fog extends BlackOutModule {
         .sliderRange(0, 1000)
         .build()
     );
+    public final Setting<Double> thickness = sgGeneral.add(new DoubleSetting.Builder()
+        .name("Thickness")
+        .description(".")
+        .defaultValue(10)
+        .range(1, 100)
+        .sliderRange(1, 100)
+        .build()
+    );
     public final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
         .name("Color")
         .description("Color of the fog.")
@@ -48,7 +56,7 @@ public class Fog extends BlackOutModule {
     );
 
     public void modifyFog() {
-        RenderSystem.setShaderFogColor(color.get().r, color.get().g, color.get().b, color.get().a / 255f);
+        RenderSystem.setShaderFogColor(color.get().r, color.get().g, color.get().b, color.get().a / (float) ((100 - thickness.get()) * 2.55f));
         RenderSystem.setShaderFogStart((float) (distance.get() * 1f));
         RenderSystem.setShaderFogEnd((float) (distance.get() + fading.get()));
         RenderSystem.setShaderFogShape(shape.get());

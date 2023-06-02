@@ -115,7 +115,7 @@ public class AutoPearl extends BlackOutModule {
         if (!switched) {return;}
 
         SettingUtils.swing(SwingState.Pre, SwingType.Using, Hand.MAIN_HAND);
-        mc.getNetworkHandler().sendPacket(new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, 0));
+        sendPacket(new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, 0));
         SettingUtils.swing(SwingState.Post, SwingType.Using, Hand.MAIN_HAND);
 
         toggle();

@@ -36,6 +36,7 @@ import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.item.SwordItem;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
@@ -74,6 +75,12 @@ public class AutoMine extends BlackOutModule {
 
     //--------------------General--------------------//
     private final Setting<Boolean> pauseEat = addPauseEat(sgGeneral);
+    private final Setting<Boolean> pauseSword = sgGeneral.add(new BoolSetting.Builder()
+        .name("Pause Sword")
+        .description("Doesn't mine while holding sword.")
+        .defaultValue(false)
+        .build()
+    );
     private final Setting<Boolean> newVer = sgGeneral.add(new BoolSetting.Builder()
         .name("1.12.2 Crystals")
         .description("Uses 1.12.2 crystal mechanics.")
@@ -503,7 +510,13 @@ public class AutoMine extends BlackOutModule {
     }
 
     private boolean isPaused() {
-        return pauseEat.get() && mc.player.isUsingItem();
+        if (pauseEat.get() && mc.player.isUsingItem()) {
+            return true;
+        }
+        if (pauseSword.get() && mc.player.getMainHandStack().getItem() instanceof SwordItem) {
+            return true;
+        }
+        return false;
     }
 
     private boolean civCheck() {

@@ -307,7 +307,6 @@ public class BedAuraPlus extends BlackOutModule {
                 event.renderer.box(bedBox(renderPos.offset(renderDir)), fColor.get(), fLineColor.get(), shapeMode.get(), 0);
             }
         }
-
     }
 
     private boolean pauseCheck() {

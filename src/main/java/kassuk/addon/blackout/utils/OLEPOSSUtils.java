@@ -3,6 +3,7 @@ package kassuk.addon.blackout.utils;
 import kassuk.addon.blackout.mixins.MixinBlockSettings;
 import meteordevelopment.meteorclient.mixin.AbstractBlockAccessor;
 import net.minecraft.block.*;
+import net.minecraft.block.piston.PistonBehavior;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -33,6 +34,13 @@ public class OLEPOSSUtils {
         Direction.WEST,
         Direction.NORTH,
         Direction.SOUTH
+    };
+    public static Direction[] noUp = new Direction[]{
+        Direction.EAST,
+        Direction.WEST,
+        Direction.NORTH,
+        Direction.SOUTH,
+        Direction.DOWN
     };
 
     public static Vec3d getMiddle(BlockPos pos) {
