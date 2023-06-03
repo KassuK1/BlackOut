@@ -6,22 +6,18 @@ import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
-import kassuk.addon.blackout.mixins.MixinBlockSettings;
 import kassuk.addon.blackout.utils.*;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
-import meteordevelopment.meteorclient.utils.world.Dir;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.*;
-import net.minecraft.block.piston.PistonBehavior;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.EndCrystalEntity;
@@ -42,8 +38,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
-
-import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 /**
  * @author OLEPOSSU
@@ -90,9 +84,9 @@ public class PistonCrystal extends BlackOutModule {
     private final Setting<Double> attackDelay = sgGeneral.add(new DoubleSetting.Builder()
         .name("Attack Delay")
         .description("Waits for x seconds after placing redstone before attacking the crystal.")
-        .defaultValue(4)
+        .defaultValue(0.1)
         .min(0)
-        .sliderRange(0, 20)
+        .sliderRange(0, 1)
         .build()
     );
 
@@ -138,6 +132,8 @@ public class PistonCrystal extends BlackOutModule {
     private Direction crystalDir = null;
     private PlaceData redstoneData = null;
 
+    private PlayerEntity targetPlayer = null;
+
     private int ticksleft = 0;
     private int ticksBroken = 0;
     private boolean pushed = false;
@@ -153,6 +149,7 @@ public class PistonCrystal extends BlackOutModule {
     private void onTick(TickEvent.Pre event) {
         ticksleft--;
         ticksBroken++;
+        mineUpdate();
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -168,7 +165,6 @@ public class PistonCrystal extends BlackOutModule {
         }
 
         if (crystalPos == null) {return;}
-        mineUpdate();
 
         updateAttack();
         updatePiston();
@@ -536,6 +532,8 @@ public class PistonCrystal extends BlackOutModule {
 
             crystalPos = cPos;
             crystalDir = cDir;
+
+            targetPlayer = player;
         });
     }
 

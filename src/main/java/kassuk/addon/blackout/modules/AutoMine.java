@@ -320,9 +320,7 @@ public class AutoMine extends BlackOutModule {
     private long lastExplode = 0;
     private long lastCiv = 0;
 
-    private double normalAlpha = 1;
-    private double modifiedAlpha = 0;
-
+    private double render = 1;
 
     private double delta = 0;
     private boolean ignore = false;
@@ -406,27 +404,21 @@ public class AutoMine extends BlackOutModule {
 
         int slot = fastestSlot();
 
-        if (getMineTicks(slot, true) == getMineTicks(slot, false)) {
-            modifiedAlpha = MathHelper.clamp(modifiedAlpha - delta, 0, 2);
-            normalAlpha = MathHelper.clamp(normalAlpha + delta, 0, 2);
-        } else {
-            modifiedAlpha = MathHelper.clamp(modifiedAlpha + delta, 0, 2);
-            normalAlpha = MathHelper.clamp(normalAlpha - delta, 0, 2);
-        }
+        render = MathHelper.clamp(getMineTicks(slot, true) == getMineTicks(slot, false) ? render + delta * 2 : render - delta * 2, -2, 2);
 
         // Normal Speed
         double p = 1 - MathHelper.clamp(minedFor / getMineTicks(slot, false), 0, 1);
         p = Math.pow(p, animationExp.get());
         p = 1 - p;
 
-        r.box(getRenderBox(p / 2), getColor(startColor.get(), endColor.get(), p, MathHelper.clamp(normalAlpha, 0, 1)), getColor(lineStartColor.get(), lineEndColor.get(), p, MathHelper.clamp(normalAlpha, 0, 1)), shapeMode.get(), 0);
+        r.box(getRenderBox(p / 2), getColor(startColor.get(), endColor.get(), p, MathHelper.clamp(render, 0, 1)), getColor(lineStartColor.get(), lineEndColor.get(), p, MathHelper.clamp(render, 0, 1)), shapeMode.get(), 0);
 
         // Modified Speed
         p = 1 - MathHelper.clamp(minedFor / getMineTicks(slot, true), 0, 1);
         p = Math.pow(p, animationExp.get());
         p = 1 - p;
 
-        r.box(getRenderBox(p / 2), getColor(startColor.get(), endColor.get(), p, MathHelper.clamp(modifiedAlpha, 0, 1)), getColor(lineStartColor.get(), lineEndColor.get(), p, MathHelper.clamp(modifiedAlpha, 0, 1)), shapeMode.get(), 0);
+        r.box(getRenderBox(p / 2), getColor(startColor.get(), endColor.get(), p, MathHelper.clamp(-render, 0, 1)), getColor(lineStartColor.get(), lineEndColor.get(), p, MathHelper.clamp(-render, 0, 1)), shapeMode.get(), 0);
     }
 
     private void update() {
@@ -472,11 +464,9 @@ public class AutoMine extends BlackOutModule {
                 civPos = null;
 
                 if (getMineTicks(fastestSlot(), true) == getMineTicks(fastestSlot(), false)) {
-                    normalAlpha = 2;
-                    modifiedAlpha = 0;
+                    render = 2;
                 } else {
-                    normalAlpha = 0;
-                    modifiedAlpha = 2;
+                    render = -2;
                 }
 
                 Direction dir = SettingUtils.getPlaceOnDirection(target.pos);
@@ -912,13 +902,12 @@ public class AutoMine extends BlackOutModule {
         event.cancel();
 
         BlockPos pos = ((PlayerActionC2SPacket) event.packet).getPos();
+        if (target != null && pos.equals(target.pos)) {
+            return;
+        }
         if (manualMine.get() && getBlock(pos) != Blocks.BEDROCK) {
             started = false;
 
-            if (target != null && pos.equals(target.pos))  {
-                reset = true;
-                return;
-            }
             target = new Target(pos, null, MineType.Manual, 0, manualInsta.get(), true);
         }
     }
