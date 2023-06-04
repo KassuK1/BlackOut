@@ -70,6 +70,13 @@ public class ScaffoldPlus extends BlackOutModule {
         .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
         .build()
     );
+    private final Setting<Boolean> smart = sgGeneral.add(new BoolSetting.Builder()
+        .name("Smart")
+        .description("Only places on blocks that you can reach.")
+        .defaultValue(true)
+        .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
+        .build()
+    );
 
     //--------------------General--------------------//
     private final Setting<Boolean> sSprint = sgGeneral.add(new BoolSetting.Builder()
@@ -309,15 +316,11 @@ public class ScaffoldPlus extends BlackOutModule {
     private List<BlockPos> getBlocks() {
         List<BlockPos> list = new ArrayList<>();
 
-        double y = motion.y;
-
         Vec3d vec = mc.player.getPos();
         for (int i = 0; i < extrapolation.get() * 10; i++) {
-            y = Math.max(y - 0.008, 0);
+            vec = vec.add(motion.x / 10, 0, motion.z / 10);
 
-            vec = vec.add(motion.x / 10, y / 10, motion.z / 10);
-
-            if (inside(getBox(vec))) {
+            if (smart.get() && inside(getBox(vec))) {
                 break;
             } else {
                 BlockPos pos = OLEPOSSUtils.toPos(vec).down();

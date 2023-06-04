@@ -53,6 +53,12 @@ public class PistonCrystal extends BlackOutModule {
 
     //--------------------General--------------------//
     private final Setting<Boolean> pauseEat = addPauseEat(sgGeneral);
+    private final Setting<Boolean> oldVer = sgGeneral.add(new BoolSetting.Builder()
+        .name("1.12 Crystals")
+        .description("Crystals require 2 blocks tall space to be placed.")
+        .defaultValue(false)
+        .build()
+    );
     private final Setting<Boolean> fire = sgGeneral.add(new BoolSetting.Builder()
         .name("Fire")
         .description("Uses fire to blow up the crystal.")
@@ -129,6 +135,7 @@ public class PistonCrystal extends BlackOutModule {
 
     private Direction pistonDir = null;
     private PlaceData pistonData = null;
+    private Direction crystalPlaceDir = null;
     private Direction crystalDir = null;
     private PlaceData redstoneData = null;
 
@@ -195,7 +202,7 @@ public class PistonCrystal extends BlackOutModule {
 
         for (Entity entity : mc.world.getEntities()) {
             if (!(entity instanceof EndCrystalEntity c)) {continue;}
-            if (c.getBlockPos().equals(crystalPos.offset(crystalDir.getOpposite()))) {}
+            if (c.getBlockPos().equals(crystalPos.offset(crystalPlaceDir.getOpposite()))) {}
 
             double d = OLEPOSSUtils.distance(mc.player.getEyePos(), c.getPos());
 
@@ -208,10 +215,11 @@ public class PistonCrystal extends BlackOutModule {
         if (!pushed) {return true;}
         if (crystal == null) {return true;}
 
+        if (SettingUtils.shouldRotate(RotationType.Attacking) && !Managers.ROTATION.start(crystal.getBoundingBox(), priority - 0.1, RotationType.Attacking)) {return false;}
+
         if (System.currentTimeMillis() - redstoneTime < attackDelay.get() * 1000) {return false;}
         if (System.currentTimeMillis() - lastAttack < 1000 / attackSpeed.get()) {return false;}
         if (pauseEat.get() && mc.player.isUsingItem()) {return false;}
-        if (SettingUtils.shouldRotate(RotationType.Attacking) && !Managers.ROTATION.start(crystal.getBoundingBox(), priority, RotationType.Attacking)) {return false;}
 
         SettingUtils.swing(SwingState.Pre, SwingType.Attacking, Hand.MAIN_HAND);
         sendPacket(PlayerInteractEntityC2SPacket.attack(crystal, mc.player.isSneaking()));
@@ -280,7 +288,8 @@ public class PistonCrystal extends BlackOutModule {
         if (System.currentTimeMillis() - lastCrystal < 1000 / speed.get()) {return false;}
         if (pauseEat.get() && mc.player.isUsingItem()) {return false;}
 
-        if (crystalDir == null) {return true;}
+        if (crystalPlaceDir == null) {return true;}
+        if (EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(crystalPos), entity -> !entity.isSpectator() && !(entity instanceof EndCrystalEntity))) {return true;}
 
         Hand hand = getHand(Items.END_CRYSTAL);
         boolean available = hand != null;
@@ -314,7 +323,7 @@ public class PistonCrystal extends BlackOutModule {
         hand = hand == null ? Hand.MAIN_HAND : hand;
 
         SettingUtils.swing(SwingState.Pre, SwingType.Crystal, Hand.MAIN_HAND);
-        sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(OLEPOSSUtils.getMiddle(crystalPos.down()), crystalDir, crystalPos.down(), false), 0));
+        sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(OLEPOSSUtils.getMiddle(crystalPos.down()), crystalPlaceDir, crystalPos.down(), false), 0));
         SettingUtils.swing(SwingState.Post, SwingType.Crystal, Hand.MAIN_HAND);
 
         ticksleft = 2;
@@ -394,10 +403,10 @@ public class PistonCrystal extends BlackOutModule {
         return true;
     }
 
-    private boolean updateFire() {
-        if (!fire.get()) {return true;}
-        if (System.currentTimeMillis() - lastFire < 1000 / speed.get()) {return false;}
-        if (pauseEat.get() && mc.player.isUsingItem()) {return false;}
+    private void updateFire() {
+        if (!fire.get()) {return;}
+        if (System.currentTimeMillis() - lastFire < 1000 / speed.get()) {return;}
+        if (pauseEat.get() && mc.player.isUsingItem()) {return;}
 
         double closesD = 10000;
         firePos = null;
@@ -429,17 +438,22 @@ public class PistonCrystal extends BlackOutModule {
                     double d = OLEPOSSUtils.distance(pos.toCenterPos(), mc.player.getEyePos());
                     if (d >= closesD) {continue;}
 
-                    data = SettingUtils.getPlaceData(pos);
+                    PlaceData da = SettingUtils.getPlaceData(pos);
 
+                    if (!da.valid()) {continue;}
+                    if (!SettingUtils.inPlaceRange(da.pos())) {continue;}
+
+                    data = da;
                     closesD = d;
                     firePos = pos;
                 }
             }
         }
 
-        if (firePos == null) {return true;}
+        if (firePos == null) {return;}
 
-        if (data == null || !data.valid()) {return true;}
+        if (data == null || !data.valid()) {return;}
+        if (mc.world.getBlockState(firePos).getBlock() instanceof FireBlock) {return;}
 
         Hand hand = getHand(Items.FLINT_AND_STEEL);
         boolean available = hand != null;
@@ -451,9 +465,9 @@ public class PistonCrystal extends BlackOutModule {
             }
         }
 
-        if (!available) {return true;}
+        if (!available) {return;}
 
-        if (SettingUtils.shouldRotate(RotationType.Placing) && !Managers.ROTATION.start(data.pos(), priority, RotationType.Placing)) {return false;}
+        if (SettingUtils.shouldRotate(RotationType.Placing) && !Managers.ROTATION.start(data.pos(), priority, RotationType.Placing)) {return;}
 
         boolean switched = false;
 
@@ -468,7 +482,7 @@ public class PistonCrystal extends BlackOutModule {
             }
         }
 
-        if (hand == null && !switched) {return false;}
+        if (hand == null && !switched) {return;}
 
         hand = hand == null ? Hand.MAIN_HAND : hand;
 
@@ -486,7 +500,7 @@ public class PistonCrystal extends BlackOutModule {
             }
         }
 
-        return true;
+        return;
     }
 
     private void updatePos() {
@@ -517,8 +531,12 @@ public class PistonCrystal extends BlackOutModule {
 
             Block b = mc.world.getBlockState(cPos).getBlock();
             if (!(b instanceof AirBlock) && b != Blocks.PISTON_HEAD && b != Blocks.MOVING_PISTON) {return;}
+            b = mc.world.getBlockState(cPos.up()).getBlock();
+            if (oldVer.get() && !(b instanceof AirBlock) && b != Blocks.PISTON_HEAD && b != Blocks.MOVING_PISTON) {return;}
             if (mc.world.getBlockState(cPos.down()).getBlock() != Blocks.OBSIDIAN && mc.world.getBlockState(cPos.down()).getBlock() != Blocks.BEDROCK) {return;}
             if (EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(cPos).withMaxY(cPos.getY() + 2), entity -> !entity.isSpectator() && entity instanceof PlayerEntity)) {return;}
+            if (!SettingUtils.inPlaceRange(cPos)) {return;}
+            if (!SettingUtils.inAttackRange(OLEPOSSUtils.getCrystalBox(cPos))) {return;}
 
             Direction cDir = SettingUtils.getPlaceOnDirection(cPos);
             if (cDir == null) {
@@ -531,7 +549,8 @@ public class PistonCrystal extends BlackOutModule {
             }
 
             crystalPos = cPos;
-            crystalDir = cDir;
+            crystalPlaceDir = cDir;
+            crystalDir = dir;
 
             targetPlayer = player;
         });
@@ -549,6 +568,7 @@ public class PistonCrystal extends BlackOutModule {
                 mc.world.getBlockState(b).getBlock() == Blocks.MOVING_PISTON));
 
             if (!placeData.valid()) {continue;}
+            if (!SettingUtils.inPlaceRange(placeData.pos())) {return;}
 
             redstonePos(position, dir.getOpposite(), pos);
 
@@ -613,7 +633,7 @@ public class PistonCrystal extends BlackOutModule {
                     return direction != d.getOpposite();
                 }, b -> true);
 
-                if (redstoneData.valid()) {
+                if (redstoneData.valid() && SettingUtils.inPlaceRange(redstoneData.pos()) && SettingUtils.inMineRange(position)) {
                     redstonePos = position;
                     return;
                 }
@@ -687,7 +707,7 @@ public class PistonCrystal extends BlackOutModule {
         pistonDir = null;
 
         pistonData = null;
-        crystalDir = null;
+        crystalPlaceDir = null;
         redstoneData = null;
     }
 

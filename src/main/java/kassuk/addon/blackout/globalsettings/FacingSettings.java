@@ -161,7 +161,7 @@ public class FacingSettings extends BlackOutModule {
                     }
 
                     // Checks if block is an entity (chests, shulkers)
-                    if (ignoreContainers && mc.world.getBlockState(pos.offset(dir)).hasBlockEntity()) {
+                    if (ignoreContainers && mc.world.getBlockState(pos.offset(dir)).hasBlockEntity() ) {
                         continue;
                     }
 
