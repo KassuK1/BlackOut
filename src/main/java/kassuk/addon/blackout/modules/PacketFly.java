@@ -57,9 +57,21 @@ public class PacketFly extends BlackOutModule {
         .sliderRange(-1337, 1337)
         .build()
     );
-    private final Setting<Double> antiKick = sgGeneral.add(new DoubleSetting.Builder()
+    private final Setting<Boolean> strictVertical = sgGeneral.add(new BoolSetting.Builder()
+        .name("Strict Vertical")
+        .description("Doesn't move horizontally and vertically in the same packet.")
+        .defaultValue(false)
+        .build()
+    );
+    private final Setting<Boolean> antiKick = sgGeneral.add(new BoolSetting.Builder()
         .name("Anti-Kick")
-        .description("Slowly glides down.")
+        .description("Slowly falls down.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Double> antiKickAmount = sgGeneral.add(new DoubleSetting.Builder()
+        .name("Anti-Kick Multiplier")
+        .description("Fall speed multiplier for antikick (0.04 blocks * multiplier).")
         .defaultValue(1)
         .sliderRange(0, 10)
         .build()
@@ -210,7 +222,7 @@ public class PacketFly extends BlackOutModule {
         mc.player.noClip = semiPhasing;
         packetsToSend += packets(semiPhasing);
 
-        boolean shouldAntiKick = ticks % antiKickDelay.get() == 0 && !phasing && !onGround();
+        boolean shouldAntiKick = antiKick.get() && ticks % antiKickDelay.get() == 0 && !phasing && !onGround();
 
         double yaw = getYaw();
         double motion = semiPhasing ? phaseSpeed.get() : speed.get();
@@ -239,26 +251,27 @@ public class PacketFly extends BlackOutModule {
             }
         }
 
-        Vec3d newPosition = new Vec3d(0, 0, 0);
+        Vec3d offset = new Vec3d(0, 0, 0);
         boolean antiKickSent = false;
         for (; packetsToSend >= 1; packetsToSend -= 1) {
-            newPosition = newPosition.add(x, 0, z);
-
+            double yOffset;
             if (shouldAntiKick && y >= 0 && !antiKickSent) {
-                newPosition = newPosition.add(0, antiKick.get() * -0.04, 0);
+                yOffset = antiKickAmount.get() * -0.04;
                 antiKickSent = true;
             } else {
-                newPosition = newPosition.add(0, y, 0);
+                yOffset = y;
             }
 
-            send(newPosition.add(mc.player.getPos()), getBounds(), getOnGround());
+            offset = offset.add(strictVertical.get() && yOffset != 0 ? 0 : x, yOffset, strictVertical.get() && yOffset != 0 ? 0 : z);
+
+            send(offset.add(mc.player.getPos()), getBounds(), getOnGround());
 
             if (x == 0 && z == 0 && y == 0) {
                 break;
             }
         }
 
-        ((IVec3d) e.movement).set(newPosition.x, newPosition.y, newPosition.z);
+        ((IVec3d) e.movement).set(offset.x, offset.y, offset.z);
 
         packetsToSend = Math.min(packetsToSend, 1);
     }
