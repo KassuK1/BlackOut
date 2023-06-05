@@ -185,6 +185,12 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .sliderRange(0, 20)
         .build()
     );
+    private final Setting<Boolean> hitboxExpand = sgPlace.add(new BoolSetting.Builder()
+        .name("Hitbox Expand")
+        .description("Expands enemy hitboxes to counter funny exploits")
+        .defaultValue(false)
+        .build()
+    );
 
     //--------------------Explode--------------------//
     private final Setting<Boolean> onlyOwn = sgExplode.add(new BoolSetting.Builder()
@@ -1624,7 +1630,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
                         }
                     }
 
-                    map.put(en, box);
+                    map.put(en, hitboxExpand.get() ? box.expand(0.00001, 0, 0.00001) : box);
                 }
             }
         }

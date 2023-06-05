@@ -298,7 +298,9 @@ public class PacketFly extends BlackOutModule {
             Vec3d vec = new Vec3d(packet.getX(), packet.getY(), packet.getZ());
 
             if (validPos.containsKey(packet.getTeleportId()) && validPos.get(packet.getTeleportId()).equals(vec)) {
-                debug("true");
+                if (debugID.get()) {
+                    debug("true");
+                }
                 e.cancel();
                 if (!predictID.get()) {
                     sendPacket(new TeleportConfirmC2SPacket(packet.getTeleportId()));
@@ -306,7 +308,9 @@ public class PacketFly extends BlackOutModule {
                 validPos.remove(packet.getTeleportId());
                 return;
             }
-            debug("false");
+            if (debugID.get()) {
+                debug("false");
+            }
 
             id = packet.getTeleportId();
         }
