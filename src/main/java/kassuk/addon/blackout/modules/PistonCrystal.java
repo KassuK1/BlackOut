@@ -190,7 +190,7 @@ public class PistonCrystal extends BlackOutModule {
 
         if (mc.world.getBlockState(redstonePos).getBlock() != redstone.get().b) {return;}
 
-        if (Modules.get().isActive(AutoMine.class) && Modules.get().get(AutoMine.class).targetPos() == null) {return;}
+        if (Modules.get().isActive(AutoMine.class) && redstonePos.equals(Modules.get().get(AutoMine.class).targetPos())) {return;}
 
         Direction mineDir = SettingUtils.getPlaceOnDirection(redstonePos);
         if (mineDir != null) {
