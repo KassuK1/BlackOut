@@ -135,6 +135,18 @@ public class AutoMine extends BlackOutModule {
         .defaultValue(false)
         .build()
     );
+    private final Setting<Boolean> mineBeds = sgGeneral.add(new BoolSetting.Builder()
+        .name("Mine Beds")
+        .description("Allows the automine to mine beds.")
+        .defaultValue(false)
+        .build()
+    );
+    private final Setting<Boolean> mineAnchors = sgGeneral.add(new BoolSetting.Builder()
+        .name("Mine Anchors")
+        .description("Allows the automine to mine respawn anchors.")
+        .defaultValue(false)
+        .build()
+    );
 
     //--------------------Speed--------------------//
     private final Setting<Double> speed = sgSpeed.add(new DoubleSetting.Builder()

@@ -187,6 +187,9 @@ public class TargetHud extends HudElement {
     }
 
     private void updateTarget() {
+        target = null;
+        if (mc.world == null) {return;}
+
         AbstractClientPlayerEntity closest = null;
         double distance = Double.MAX_VALUE;
 

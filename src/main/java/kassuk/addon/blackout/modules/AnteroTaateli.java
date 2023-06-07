@@ -56,12 +56,8 @@ public class AnteroTaateli extends BlackOutModule {
     };
 
     @EventHandler
-    private void onRender(Render3DEvent event) {
-        timer = Math.min(delay.get(), timer + event.frameTime);
-    }
-
-    @EventHandler
     private void onTick(TickEvent.Pre event) {
+        timer++;
         if (mc.player != null && mc.world != null) {
             PlayerEntity bugatti = getClosest();
             if (timer >= delay.get() && bugatti != null) {

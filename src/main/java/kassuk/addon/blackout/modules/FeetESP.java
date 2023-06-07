@@ -9,6 +9,9 @@ import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
+import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
+import net.minecraft.network.packet.s2c.play.EntityStatusS2CPacket;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.Vec3d;
 
 /**
@@ -86,6 +89,8 @@ public class FeetESP extends BlackOutModule {
             ));
         });
     }
+
+
 
     private double lerp(double delta, double min, double max) {
         return min + (max - min) * delta;

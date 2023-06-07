@@ -131,7 +131,7 @@ public class AutoPearl extends BlackOutModule {
     }
 
     private boolean cc() {
-        if (switch (switchMode.get()) {
+        if (switch (ccSwitchMode.get()) {
             case Normal, Silent -> !InvUtils.findInHotbar(item -> item.getItem() instanceof BlockItem).found();
             case PickSilent, InvSwitch -> !InvUtils.find(item -> item.getItem() instanceof BlockItem).found();
         }) {
@@ -155,7 +155,7 @@ public class AutoPearl extends BlackOutModule {
         boolean switched = false;
 
         if (hand == null) {
-            switch (switchMode.get()) {
+            switch (ccSwitchMode.get()) {
                 case Silent -> {
                     InvUtils.swap(InvUtils.findInHotbar(item -> item.getItem() instanceof BlockItem).slot(), true);
                     switched = true;
@@ -173,7 +173,7 @@ public class AutoPearl extends BlackOutModule {
         placed = true;
 
         if (hand == null) {
-            switch (switchMode.get()) {
+            switch (ccSwitchMode.get()) {
                 case Silent -> InvUtils.swapBack();
                 case PickSilent -> BOInvUtils.pickSwapBack();
                 case InvSwitch -> BOInvUtils.swapBack();

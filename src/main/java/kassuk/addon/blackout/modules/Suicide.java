@@ -6,6 +6,7 @@ import meteordevelopment.meteorclient.events.game.OpenScreenEvent;
 import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.gui.screen.DeathScreen;
 
@@ -26,6 +27,19 @@ public class Suicide extends BlackOutModule {
         .defaultValue(true)
         .build()
     );
+    public final Setting<Boolean> enableCA = sgGeneral.add(new BoolSetting.Builder()
+        .name("Enable Auto Crystal")
+        .description("Enables auto crystal when enabled.")
+        .defaultValue(true)
+        .build()
+    );
+
+    @Override
+    public void onActivate() {
+        if (enableCA.get() && !Modules.get().isActive(AutoCrystalRewrite.class)) {
+            Modules.get().get(AutoCrystalRewrite.class).toggle();
+        }
+    }
 
     @EventHandler(priority = 6969)
     private void onDeath(OpenScreenEvent event) {

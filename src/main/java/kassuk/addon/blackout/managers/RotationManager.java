@@ -290,10 +290,8 @@ public class RotationManager {
 
     public void addHistory(double yaw, double pitch) {
         if (history.size() > 10) {
-            int i = history.size() - 9;
-            while (i > 0) {
+            for (int i = history.size() - 9; i > 0; i--) {
                 history.remove(history.size() - 1);
-                i++;
             }
         } else if (history.size() == 10) {
             history.remove(9);

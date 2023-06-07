@@ -98,7 +98,7 @@ public class RangeSettings extends BlackOutModule {
     public final Setting<Boolean> reduce = sgAttack.add(new BoolSetting.Builder()
         .name("Reduce")
         .description("Reduces range on every hit by reduce step until it reaches (range - reduce amount).")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
     public final Setting<Double> reduceAmount = sgAttack.add(new DoubleSetting.Builder()

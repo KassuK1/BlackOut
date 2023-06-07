@@ -286,6 +286,11 @@ public class AutoEz extends BlackOutModule {
         lastNum = -1;
     }
 
+    @Override
+    public String getInfoString() {
+        return killMsgMode.get().name();
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onTick(TickEvent.Pre event) {
         timer++;
