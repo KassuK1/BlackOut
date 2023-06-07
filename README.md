@@ -25,4 +25,6 @@ The development of the addon might not be super active due to us having our own 
 Doogie13 for helping with the block mining calculations.
 RickyTheRaccoon for his InvSwitch.
 
+#### Official youtube channel https://www.youtube.com/channel/UCq_NxTxgS-Xk0TsSmhqXoyg
+
 ### Once you go black you never go back
