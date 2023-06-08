@@ -233,11 +233,11 @@ public class PistonCrystal extends BlackOutModule {
         return;
     }
 
-    private boolean updatePiston() {
-        if (System.currentTimeMillis() - lastPiston < 1000 / speed.get()) {return false;}
-        if (pauseEat.get() && mc.player.isUsingItem()) {return false;}
+    private void updatePiston() {
+        if (System.currentTimeMillis() - lastPiston < 1000 / speed.get()) {return;}
+        if (pauseEat.get() && mc.player.isUsingItem()) {return;}
 
-        if (pistonData == null) {return true;}
+        if (pistonData == null) {return;}
 
         Hand hand = getHand(Items.PISTON);
         boolean available = hand != null;
@@ -249,9 +249,9 @@ public class PistonCrystal extends BlackOutModule {
             }
         }
 
-        if (!available) {return true;}
+        if (!available) {return;}
 
-        if (SettingUtils.shouldRotate(RotationType.Placing) && !Managers.ROTATION.start(pistonData.pos(), priority, RotationType.Placing)) {return false;}
+        if (SettingUtils.shouldRotate(RotationType.Placing) && !Managers.ROTATION.start(pistonData.pos(), priority, RotationType.Placing)) {return;}
 
         boolean switched = false;
 
@@ -266,7 +266,7 @@ public class PistonCrystal extends BlackOutModule {
             }
         }
 
-        if (hand == null && !switched) {return false;}
+        if (hand == null && !switched) {return;}
 
         sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(pistonDir.getOpposite().asRotation(), Managers.ROTATION.lastDir[1], Managers.ONGROUND.isOnGround()));
 
@@ -286,15 +286,15 @@ public class PistonCrystal extends BlackOutModule {
             }
         }
 
-        return true;
+        return;
     }
 
-    private boolean updateCrystal() {
-        if (System.currentTimeMillis() - lastCrystal < 1000 / speed.get()) {return false;}
-        if (pauseEat.get() && mc.player.isUsingItem()) {return false;}
+    private void updateCrystal() {
+        if (System.currentTimeMillis() - lastCrystal < 1000 / speed.get()) {return;}
+        if (pauseEat.get() && mc.player.isUsingItem()) {return;}
 
-        if (crystalPlaceDir == null) {return true;}
-        if (EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(crystalPos), entity -> !entity.isSpectator() && !(entity instanceof EndCrystalEntity))) {return true;}
+        if (crystalPlaceDir == null) {return;}
+        if (EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(crystalPos), entity -> !entity.isSpectator() && !(entity instanceof EndCrystalEntity))) {return;}
 
         Hand hand = getHand(Items.END_CRYSTAL);
         boolean available = hand != null;
@@ -306,9 +306,9 @@ public class PistonCrystal extends BlackOutModule {
             }
         }
 
-        if (!available) {return true;}
+        if (!available) {return;}
 
-        if (SettingUtils.shouldRotate(RotationType.Crystal) && !Managers.ROTATION.start(crystalPos.down(), priority, RotationType.Crystal)) {return false;}
+        if (SettingUtils.shouldRotate(RotationType.Crystal) && !Managers.ROTATION.start(crystalPos.down(), priority, RotationType.Crystal)) {return;}
 
         boolean switched = false;
 
@@ -323,7 +323,7 @@ public class PistonCrystal extends BlackOutModule {
             }
         }
 
-        if (hand == null && !switched) {return false;}
+        if (hand == null && !switched) {return;}
 
         hand = hand == null ? Hand.MAIN_HAND : hand;
 
@@ -342,19 +342,19 @@ public class PistonCrystal extends BlackOutModule {
             }
         }
 
-        return true;
+        return;
     }
 
-    private boolean updateRedstone() {
+    private void updateRedstone() {
         Entity crystal = crystalAt();
 
-        if (crystal == null) {return false;}
-        if (ticksBroken <= 1) {return false;}
-        if (ticksleft > 0) {return false;}
-        if (System.currentTimeMillis() - lastRedstone < 1000 / speed.get()) {return false;}
-        if (pauseEat.get() && mc.player.isUsingItem()) {return false;}
+        if (crystal == null) {return;}
+        if (ticksBroken <= 1) {return;}
+        if (ticksleft > 0) {return;}
+        if (System.currentTimeMillis() - lastRedstone < 1000 / speed.get()) {return;}
+        if (pauseEat.get() && mc.player.isUsingItem()) {return;}
 
-        if (redstoneData == null) {return true;}
+        if (redstoneData == null) {return;}
 
         Hand hand = getHand(redstone.get().i);
         boolean available = hand != null;
@@ -366,9 +366,9 @@ public class PistonCrystal extends BlackOutModule {
             }
         }
 
-        if (!available) {return true;}
+        if (!available) {return;}
 
-        if (SettingUtils.shouldRotate(RotationType.Placing) && !Managers.ROTATION.start(redstoneData.pos(), priority, RotationType.Placing)) {return false;}
+        if (SettingUtils.shouldRotate(RotationType.Placing) && !Managers.ROTATION.start(redstoneData.pos(), priority, RotationType.Placing)) {return;}
 
         boolean switched = false;
 
@@ -383,7 +383,7 @@ public class PistonCrystal extends BlackOutModule {
             }
         }
 
-        if (hand == null && !switched) {return false;}
+        if (hand == null && !switched) {return;}
 
         hand = hand == null ? Hand.MAIN_HAND : hand;
 
@@ -403,7 +403,7 @@ public class PistonCrystal extends BlackOutModule {
             }
         }
 
-        return true;
+        return;
     }
 
     private void updateFire() {
