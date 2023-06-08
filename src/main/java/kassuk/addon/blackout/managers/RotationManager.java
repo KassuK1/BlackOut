@@ -10,10 +10,12 @@ import meteordevelopment.meteorclient.events.entity.player.SendMovementPacketsEv
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.systems.modules.Modules;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
@@ -43,7 +45,6 @@ public class RotationManager {
     boolean shouldRotate = false;
     float[] next;
     boolean rotated = false;
-
 
     public RotationManager() {
         MeteorClient.EVENT_BUS.subscribe(this);
@@ -289,14 +290,8 @@ public class RotationManager {
     }
 
     public void addHistory(double yaw, double pitch) {
-        if (history.size() > 10) {
-            for (int i = history.size() - 9; i > 0; i--) {
-                history.remove(history.size() - 1);
-            }
-        } else if (history.size() == 10) {
-            history.remove(9);
-        }
         history.add(0, new Rotation(yaw, pitch, mc.player.getEyePos()));
+        history = history.subList(0, Math.min(history.size(), 20));
     }
 
     public record Rotation(double yaw, double pitch, Vec3d vec) {

@@ -4,10 +4,13 @@ import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.managers.RotationManager;
+import kassuk.addon.blackout.modules.AutoMine;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.RotationUtils;
 import meteordevelopment.meteorclient.mixininterface.IVec3d;
+import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.utils.render.color.Color;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 
@@ -202,7 +205,7 @@ public class RotationSettings extends BlackOutModule {
 
     public boolean rotationCheck(Box box) {
         List<RotationManager.Rotation> history = RotationManager.history;
-        if (box == null){return false;}
+        if (box == null) {return false;}
 
         switch (rotationCheckMode.get()) {
             case Raytrace -> {
@@ -226,7 +229,7 @@ public class RotationSettings extends BlackOutModule {
                 }
             }
         }
-        return true;
+        return false;
     }
     public boolean angleCheck(Vec3d pos, double y, double p, Box box) {
         return RotationUtils.yawAngle(y, RotationUtils.getYaw(pos, box.getCenter())) <= yawAngle.get() && Math.abs(p - RotationUtils.getPitch(pos, box.getCenter())) <= pitchAngle.get();
@@ -238,7 +241,6 @@ public class RotationSettings extends BlackOutModule {
             range * -Math.sin(Math.toRadians(p)),
             range * Math.sin(Math.toRadians(y + 90)) * Math.abs(Math.cos(Math.toRadians(p)))).add(pos);
 
-        Vec3d vec = new Vec3d(0, 0, 0);
         for (float i = 0; i < 1; i += 0.01) {
             ((IVec3d) vec).set(pos.x + (end.x - pos.x) * i, pos.y + (end.y - pos.y) * i, pos.z + (end.z - pos.z) * i);
 
@@ -254,6 +256,7 @@ public class RotationSettings extends BlackOutModule {
     public boolean endMineRot() {
         return mineRotate.get() == MiningRotMode.End || mineRotate.get() == MiningRotMode.Double;
     }
+
     public boolean startMineRot() {
         return mineRotate.get() == MiningRotMode.Start || mineRotate.get() == MiningRotMode.Double;
     }

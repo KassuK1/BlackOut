@@ -124,6 +124,12 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .defaultValue(false)
         .build()
     );
+    private final Setting<Boolean> multitask = sgGeneral.add(new BoolSetting.Builder()
+        .name("Multitask")
+        .description("Allows attacking and placing during the same tick.")
+        .defaultValue(true)
+        .build()
+    );
     private final Setting<Boolean> instantPlace = sgPlace.add(new BoolSetting.Builder()
         .name("Instant Place")
         .description("Ignores delay after crystal has disappeared.")
@@ -616,7 +622,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     private Direction placeDir = null;
     private Entity expEntity = null;
     private Box expEntityBB = null;
-    private final IntTimerList attacked = new IntTimerList(false);
+    private final IntTimerList attackedList = new IntTimerList(false);
     private final Map<BlockPos, Long> existedList = new HashMap<>();
     private final Map<BlockPos, Long> existedTicksList = new HashMap<>();
     private final Map<BlockPos, Long> own = new HashMap<>();
@@ -642,6 +648,8 @@ public class AutoCrystalRewrite extends BlackOutModule {
     private double renderProgress = 0;
 
     private AutoMine autoMine = null;
+
+    private boolean attacked = false;
 
     private final List<Predict> predicts = new ArrayList<>();
     private final List<SetDead> setDeads = new ArrayList<>();
@@ -680,6 +688,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     private void onTickPre(TickEvent.Pre event) {
         delayTicks++;
         ticksEnabled++;
+        attacked = false;
 
         if (mc.player == null || mc.world == null) {return;}
 
@@ -759,7 +768,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
             explosions = 0;
         }
 
-        attacked.update();
+        attackedList.update();
         attackTimer = Math.max(attackTimer - d, 0);
         placeTimer = Math.max(placeTimer - d * getSpeed(), 0);
         placeLimitTimer += d;
@@ -1146,6 +1155,8 @@ public class AutoCrystalRewrite extends BlackOutModule {
     }
 
     private boolean delayCheck() {
+        if (!multitask.get() && attacked) {return false;}
+
         if (placeDelayMode.get() == DelayMode.Seconds) {
             return delayTimer >= placeDelay.get();
         } else {
@@ -1188,7 +1199,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     }
 
     private boolean isAttacked(int id) {
-        return attacked.contains(id);
+        return attackedList.contains(id);
     }
 
     private void explode(int id, Vec3d vec) {
@@ -1197,7 +1208,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
 
     private void attackEntity(int id, Box bb, Vec3d vec) {
         if (mc.player != null) {
-            attacked.add(id, 1 / expSpeed.get());
+            attackedList.add(id, 1 / expSpeed.get());
             attackTimer = expSpeedLimit.get() <= 0 ? 0 : 1 / expSpeedLimit.get();
 
             delayTimer = 0;
@@ -1212,6 +1223,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
             ((MixinInteractEntityC2SPacket) packet).setId(id);
 
             mc.player.networkHandler.sendPacket(packet);
+            attacked = true;
 
             if (surroundAttack.get()) {
                 SurroundPlus.attacked = 2;

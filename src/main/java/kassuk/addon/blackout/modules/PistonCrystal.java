@@ -251,6 +251,8 @@ public class PistonCrystal extends BlackOutModule {
 
         if (!available) {return true;}
 
+        if (SettingUtils.shouldRotate(RotationType.Placing) && !Managers.ROTATION.start(pistonData.pos(), priority, RotationType.Placing)) {return false;}
+
         boolean switched = false;
 
         if (hand == null) {
@@ -266,7 +268,6 @@ public class PistonCrystal extends BlackOutModule {
 
         if (hand == null && !switched) {return false;}
 
-        sendPacket(new PlayerMoveC2SPacket.LookAndOnGround((float) RotationUtils.getYaw(mc.player.getEyePos(), OLEPOSSUtils.getMiddle(pistonData.pos())), (float) RotationUtils.getPitch(mc.player.getEyePos(), OLEPOSSUtils.getMiddle(pistonData.pos())), Managers.ONGROUND.isOnGround()));
         sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(pistonDir.getOpposite().asRotation(), Managers.ROTATION.lastDir[1], Managers.ONGROUND.isOnGround()));
 
         hand = hand == null ? Hand.MAIN_HAND : hand;
