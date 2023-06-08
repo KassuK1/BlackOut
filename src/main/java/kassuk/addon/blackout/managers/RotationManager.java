@@ -63,6 +63,7 @@ public class RotationManager {
             if (rotated) {
                 mc.getNetworkHandler().sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(next[0], next[1], Managers.ONGROUND.isOnGround()));
             }
+            stoppedCheck();
         }
     }
 
@@ -100,9 +101,9 @@ public class RotationManager {
 
         if (rotated) {
             return new PlayerMoveC2SPacket.Full(packet.getX(0), packet.getY(0), packet.getZ(0), next[0], next[1], packet.isOnGround());
-        } else {
-            return new PlayerMoveC2SPacket.PositionAndOnGround(packet.getX(0), packet.getY(0), packet.getZ(0), packet.isOnGround());
         }
+        stoppedCheck();
+        return new PlayerMoveC2SPacket.PositionAndOnGround(packet.getX(0), packet.getY(0), packet.getZ(0), packet.isOnGround());
     }
 
     public PlayerMoveC2SPacket onPositionOnGround(PlayerMoveC2SPacket.PositionAndOnGround packet) {
@@ -114,9 +115,9 @@ public class RotationManager {
 
         if (rotated) {
             return new PlayerMoveC2SPacket.Full(packet.getX(0), packet.getY(0), packet.getZ(0), next[0], next[1], packet.isOnGround());
-        } else {
-            return new PlayerMoveC2SPacket.PositionAndOnGround(packet.getX(0), packet.getY(0), packet.getZ(0), packet.isOnGround());
         }
+        stoppedCheck();
+        return packet;
     }
 
     public PlayerMoveC2SPacket onLookAndOnGround(PlayerMoveC2SPacket.LookAndOnGround packet) {
@@ -128,12 +129,12 @@ public class RotationManager {
 
         if (rotated) {
             return new PlayerMoveC2SPacket.LookAndOnGround(next[0], next[1], packet.isOnGround());
-        } else {
-            if (packet.isOnGround() != Managers.ONGROUND.isOnGround()) {
-                return new PlayerMoveC2SPacket.OnGroundOnly(packet.isOnGround());
-            }
-            return null;
         }
+        if (packet.isOnGround() != Managers.ONGROUND.isOnGround()) {
+            return new PlayerMoveC2SPacket.OnGroundOnly(packet.isOnGround());
+        }
+        stoppedCheck();
+        return null;
     }
 
     public PlayerMoveC2SPacket onOnlyOnground(PlayerMoveC2SPacket.OnGroundOnly packet) {
@@ -145,8 +146,35 @@ public class RotationManager {
 
         if (rotated) {
             return new PlayerMoveC2SPacket.LookAndOnGround(next[0], next[1], packet.isOnGround());
-        } else {
-            return new PlayerMoveC2SPacket.OnGroundOnly(packet.isOnGround());
+        }
+        stoppedCheck();
+        return packet;
+    }
+
+    private boolean updateShouldRotate() {
+        shouldRotate = (target != null && timer > 0) || stopping;
+        return shouldRotate;
+    }
+
+    private void updateNextRotation() {
+        if (shouldRotate) {
+            if (stopping) {
+                ChatUtils.sendMsg(Text.of("susi"));
+                next = new float[]{RotationUtils.nextYaw(lastDir[0], mc.player.getYaw(), settings.yawStep.get()), RotationUtils.nextPitch(lastDir[1], mc.player.getPitch(), settings.pitchStep.get())};
+            } else if (target instanceof BoxTarget) {
+                ((BoxTarget) target).vec = getTargetPos();
+                next = new float[]{RotationUtils.nextYaw(lastDir[0], Rotations.getYaw(((BoxTarget) target).vec), settings.yawStep.get()), RotationUtils.nextPitch(lastDir[1], Rotations.getPitch(((BoxTarget) target).vec), settings.pitchStep.get())};
+            } else {
+                next = new float[]{RotationUtils.nextYaw(lastDir[0], ((AngleTarget) target).yaw, settings.yawStep.get()), RotationUtils.nextPitch(lastDir[1], ((AngleTarget) target).pitch, settings.pitchStep.get())};
+            }
+            rotated = Math.abs(RotationUtils.yawAngle(next[0], lastDir[0])) > 0 || Math.abs(next[1] - lastDir[1]) > 0;
+            return;
+        }
+    }
+
+    private void stoppedCheck() {
+        if (stopping && next[0] == mc.player.getYaw() && next[1] == mc.player.getPitch()) {
+            stopping = false;
         }
     }
 
@@ -159,27 +187,6 @@ public class RotationManager {
                 addHistory(lastDir[0], lastDir[1]);
             }
         }
-    }
-
-    boolean updateShouldRotate() {
-        shouldRotate = target != null && timer > 0;
-        return shouldRotate || stopping;
-    }
-
-    void updateNextRotation() {
-        if (shouldRotate) {
-            if (target instanceof BoxTarget) {
-                ((BoxTarget) target).vec = getTargetPos();
-                next = new float[]{RotationUtils.nextYaw(lastDir[0], Rotations.getYaw(((BoxTarget) target).vec), settings.yawStep.get()), RotationUtils.nextPitch(lastDir[1], Rotations.getPitch(((BoxTarget) target).vec), settings.pitchStep.get())};
-            } else {
-                next = new float[]{RotationUtils.nextYaw(lastDir[0], ((AngleTarget) target).yaw, settings.yawStep.get()), RotationUtils.nextPitch(lastDir[1], ((AngleTarget) target).pitch, settings.pitchStep.get())};
-            }
-            rotated = Math.abs(RotationUtils.yawAngle(next[0], lastDir[0])) > 0 || Math.abs(next[1] - lastDir[1]) > 0;
-
-            return;
-        }
-        // Stopping
-        next = new float[]{RotationUtils.nextYaw(lastDir[0], mc.player.getYaw(), settings.yawStep.get()), RotationUtils.nextPitch(lastDir[1], mc.player.getPitch(), settings.pitchStep.get())};
     }
 
     public boolean isTarget(Box box) {
@@ -264,7 +271,9 @@ public class RotationManager {
         boolean alreadyRotated = SettingUtils.rotationCheck(box);
 
         if (p < priority || (p == priority && (!(target instanceof BoxTarget) || SettingUtils.rotationCheck(((BoxTarget) target).box)))) {
-            priority = p;
+            if (!alreadyRotated) {
+                priority = p;
+            }
             lastTarget = target;
 
             target = pos != null ? new BoxTarget(pos, vec != null ? vec : OLEPOSSUtils.getMiddle(box), p, type) : new BoxTarget(box, vec != null ? vec : OLEPOSSUtils.getMiddle(box), p, type);
