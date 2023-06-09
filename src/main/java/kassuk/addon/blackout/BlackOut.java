@@ -113,6 +113,7 @@ public class BlackOut extends MeteorAddon {
         hud.register(TargetHud.INFO);
         hud.register(Welcomer.INFO);
         hud.register(OnTope.INFO);
+        hud.register(CatGirl.INFO);
     }
 
     @Override
