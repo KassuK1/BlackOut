@@ -428,6 +428,7 @@ public class PistonCrystal extends BlackOutModule {
                     if (pos.equals(crystalPos)) {continue;}
                     if (pos.equals(pistonPos)) {continue;}
                     if (pos.equals(redstonePos)) {continue;}
+                    if (pos.equals(pistonPos.offset(pistonDir.getOpposite()))) {continue;}
 
                     if (mc.world.getBlockState(pos).getBlock() instanceof FireBlock) {
                         found = true;
@@ -566,7 +567,8 @@ public class PistonCrystal extends BlackOutModule {
                 !(mc.world.getBlockState(b).getBlock() instanceof PistonBlock ||
                 mc.world.getBlockState(b).getBlock() instanceof PistonHeadBlock ||
                 mc.world.getBlockState(b).getBlock() instanceof PistonExtensionBlock ||
-                mc.world.getBlockState(b).getBlock() == Blocks.MOVING_PISTON));
+                mc.world.getBlockState(b).getBlock() == Blocks.MOVING_PISTON ||
+                mc.world.getBlockState(b).getBlock() instanceof FireBlock));
 
             if (!placeData.valid()) {continue;}
             if (!SettingUtils.inPlaceRange(placeData.pos())) {return;}
@@ -611,7 +613,8 @@ public class PistonCrystal extends BlackOutModule {
             if (EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(b), entity -> !entity.isSpectator() && entity instanceof PlayerEntity)) {return false;}
 
             if (mc.world.getBlockState(b).getBlock() instanceof PistonBlock ||
-                mc.world.getBlockState(b).getBlock() == Blocks.MOVING_PISTON) {return true;}
+                mc.world.getBlockState(b).getBlock() == Blocks.MOVING_PISTON ||
+                mc.world.getBlockState(b).getBlock() instanceof FireBlock) {return true;}
 
             return OLEPOSSUtils.replaceable(b);
         }).sorted(Comparator.comparingDouble(b -> OLEPOSSUtils.distance(b.toCenterPos(), mc.player.getEyePos()))).toList();
@@ -626,14 +629,23 @@ public class PistonCrystal extends BlackOutModule {
 
                 if (position.equals(cPos)) {continue;}
                 if (oldVer.get() && position.equals(cPos.up())) {continue;}
-                if (!OLEPOSSUtils.replaceable(position) && !(mc.world.getBlockState(position).getBlock() instanceof RedstoneTorchBlock)) {continue;}
+                if (!OLEPOSSUtils.replaceable(position) && !(mc.world.getBlockState(position).getBlock() instanceof RedstoneTorchBlock) && !(mc.world.getBlockState(position).getBlock()  instanceof FireBlock)) {continue;}
 
                 redstoneData = SettingUtils.getPlaceDataAND(position, d -> {
                     if (d == Direction.UP && !OLEPOSSUtils.solid(position.down())) {
                         return false;
                     }
                     return direction != d.getOpposite();
-                }, b -> true);
+                }, b -> {
+                    if (mc.world.getBlockState(b).getBlock() instanceof TorchBlock) {
+                        return false;
+                    }
+                    if (mc.world.getBlockState(b).getBlock() instanceof PistonBlock ||
+                        mc.world.getBlockState(b).getBlock() instanceof PistonHeadBlock) {
+
+                    }
+                    return true;
+                });
 
                 if (redstoneData.valid() && SettingUtils.inPlaceRange(redstoneData.pos()) && SettingUtils.inMineRange(position)) {
                     redstonePos = position;
@@ -692,6 +704,7 @@ public class PistonCrystal extends BlackOutModule {
         if (b == Blocks.MOVING_PISTON) {return false;}
         if (b == Blocks.PISTON_HEAD) {return false;}
         if (b == Blocks.REDSTONE_TORCH) {return false;}
+        if (b instanceof FireBlock) {return false;}
 
         return !(mc.world.getBlockState(pos).getBlock() instanceof AirBlock);
     }

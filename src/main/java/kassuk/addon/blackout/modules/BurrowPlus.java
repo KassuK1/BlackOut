@@ -178,7 +178,7 @@ public class BurrowPlus extends BlackOutModule {
             if (!Modules.get().isActive(ScaffoldPlus.class)) {
                 Modules.get().get(ScaffoldPlus.class).toggle();
                 Modules.get().get(ScaffoldPlus.class).sendToggledMsg("enabled by burrow+");
-                enabledPFly = true;
+                enabledScaffold = true;
             }
         }
     }
