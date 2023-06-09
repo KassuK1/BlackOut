@@ -7,6 +7,7 @@ import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.EnumSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
@@ -37,6 +38,8 @@ public class SprintPlus extends BlackOutModule {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onTick(TickEvent.Pre event) {
+        if (ScaffoldPlus.shouldStopSprinting && Modules.get().isActive(ScaffoldPlus.class)) {return;}
+
         if (mc.player != null && mc.world != null) {
             if (hungerCheck.get()) {
                 if (mc.player.getHungerManager().getFoodLevel() < 6) {

@@ -11,6 +11,7 @@ import meteordevelopment.meteorclient.mixininterface.IVec3d;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.utils.render.color.Color;
+import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 

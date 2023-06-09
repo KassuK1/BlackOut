@@ -56,20 +56,6 @@ public class ScaffoldPlus extends BlackOutModule {
         .defaultValue(ScaffoldMode.Normal)
         .build()
     );
-    private final Setting<Boolean> onlyConfirmed = sgGeneral.add(new BoolSetting.Builder()
-        .name("Only Confirmed")
-        .description("Only places on blocks the server has confirmed to exist.")
-        .defaultValue(true)
-        .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
-        .build()
-    );
-    private final Setting<Boolean> strict = sgGeneral.add(new BoolSetting.Builder()
-        .name("Strict")
-        .description("Doesn't set blocks client side before server has confirmed that they exist.")
-        .defaultValue(false)
-        .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
-        .build()
-    );
     private final Setting<Boolean> smart = sgGeneral.add(new BoolSetting.Builder()
         .name("Smart")
         .description("Only places on blocks that you can reach.")
@@ -164,12 +150,12 @@ public class ScaffoldPlus extends BlackOutModule {
     );
 
     private final BlockTimerList timers = new BlockTimerList();
-    private final BlockTimerList placed = new BlockTimerList();
     private Vec3d motion = null;
     private double placeTimer;
     private int placesLeft = 0;
     private double towerStart = 0;
     private boolean lastTower = false;
+    public static boolean shouldStopSprinting = false;
 
     @Override
     public void onDeactivate() {
@@ -206,6 +192,7 @@ public class ScaffoldPlus extends BlackOutModule {
 
     @EventHandler(priority = 10000)
     private void onMove(PlayerMoveEvent event) {
+        shouldStopSprinting = false;
         if (scaffoldMode.get() == ScaffoldMode.Legit) {
             return;
         }
@@ -225,7 +212,10 @@ public class ScaffoldPlus extends BlackOutModule {
 
             motion = event.movement;
 
-            if (sSprint.get()) mc.player.setSprinting(false);
+            if (sSprint.get()) {
+                shouldStopSprinting = true;
+                mc.player.setSprinting(false);
+            }
             if (useTimer.get()) Modules.get().get(Timer.class).setOverride(timer.get());
 
             List<BlockPos> placements = getBlocks();
@@ -277,7 +267,7 @@ public class ScaffoldPlus extends BlackOutModule {
                         }
 
                         for (int i = 0; i < Math.min(obsidian, toPlace.size()); i++) {
-                            PlaceData placeData = onlyConfirmed.get() ? SettingUtils.getPlaceData(toPlace.get(i)) : SettingUtils.getPlaceDataOR(toPlace.get(i), placed::contains);
+                            PlaceData placeData = SettingUtils.getPlaceData(toPlace.get(i));
                             if (placeData.valid()) {
                                 boolean rotated = !SettingUtils.shouldRotate(RotationType.Placing) || Managers.ROTATION.start(placeData.pos(), 1, RotationType.Placing);
 
@@ -310,7 +300,7 @@ public class ScaffoldPlus extends BlackOutModule {
     }
 
     private boolean canPlace(BlockPos pos) {
-        return onlyConfirmed.get() ? SettingUtils.getPlaceData(pos).valid() : SettingUtils.getPlaceDataOR(pos, placed::contains).valid();
+        return SettingUtils.getPlaceData(pos).valid();
     }
 
     private List<BlockPos> getBlocks() {
@@ -346,7 +336,6 @@ public class ScaffoldPlus extends BlackOutModule {
 
     private void place(PlaceData d, BlockPos ogPos, Hand hand, Block block) {
         timers.add(ogPos, delay.get());
-        placed.add(ogPos, 1);
         placesLeft--;
 
         SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand);
@@ -357,9 +346,7 @@ public class ScaffoldPlus extends BlackOutModule {
 
         SettingUtils.swing(SwingState.Post, SwingType.Placing, hand);
 
-        if (!strict.get()) {
-            mc.world.setBlockState(ogPos, block.getDefaultState());
-        }
+        mc.world.setBlockState(ogPos, block.getDefaultState());
 
         if (SettingUtils.shouldRotate(RotationType.Placing)) {
             Managers.ROTATION.end(d.pos());

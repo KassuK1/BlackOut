@@ -18,6 +18,8 @@ import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
@@ -47,7 +49,7 @@ public class BurrowPlus extends BlackOutModule {
     private final Setting<List<Block>> blocks = sgGeneral.add(new BlockListSetting.Builder()
         .name("Blocks")
         .description("Blocks to use.")
-        .defaultValue()
+        .defaultValue(Blocks.OBSIDIAN, Blocks.ENDER_CHEST)
         .build()
     );
     private final Setting<Boolean> instaRot = sgGeneral.add(new BoolSetting.Builder()
@@ -62,8 +64,17 @@ public class BurrowPlus extends BlackOutModule {
         .defaultValue(false)
         .build()
     );
+    private final Setting<Boolean> scaffold = sgGeneral.add(new BoolSetting.Builder()
+        .name("Scaffold")
+        .description("Enables scaffold+ after lagging back inside the block.")
+        .defaultValue(false)
+        .visible(pFly::get)
+        .build()
+    );
 
     private boolean success = false;
+    private boolean enabledPFly = false;
+    private boolean enabledScaffold = false;
 
     private final Predicate<ItemStack> predicate = itemStack -> {
         if (!(itemStack.getItem() instanceof BlockItem block)) {return false;}
@@ -74,6 +85,10 @@ public class BurrowPlus extends BlackOutModule {
     @Override
     public void onActivate() {
         success = false;
+
+        enabledPFly = false;
+        enabledScaffold = false;
+
         if (mc.player == null || mc.world == null) {return;}
 
         Hand hand = predicate.test(Managers.HOLDING.getStack()) ? Hand.MAIN_HAND :
@@ -133,19 +148,37 @@ public class BurrowPlus extends BlackOutModule {
             }
         }
 
-        if (pFly.get()) return;
-        toggle();
-        sendToggledMsg("success");
+        if (!pFly.get()) {
+            toggle();
+            sendToggledMsg("success");
+        }
+    }
+
+    @Override
+    public void onDeactivate() {
+        if (enabledPFly && Modules.get().isActive(PacketFly.class)) {
+            Modules.get().get(PacketFly.class).toggle();
+            Modules.get().get(PacketFly.class).sendToggledMsg("disabled by burrow+");
+        }
+        if (enabledScaffold && Modules.get().isActive(ScaffoldPlus.class)) {
+            Modules.get().get(ScaffoldPlus.class).toggle();
+            Modules.get().get(ScaffoldPlus.class).sendToggledMsg("disabled by burrow+");
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onPacket(PacketEvent.Receive event) {
         if (pFly.get() && success && event.packet instanceof PlayerPositionLookS2CPacket) {
-            toggle();
-            sendToggledMsg("success");
 
             if (!Modules.get().isActive(PacketFly.class)) {
                 Modules.get().get(PacketFly.class).toggle();
+                Modules.get().get(PacketFly.class).sendToggledMsg("enabled by burrow+");
+                enabledPFly = true;
+            }
+            if (!Modules.get().isActive(ScaffoldPlus.class)) {
+                Modules.get().get(ScaffoldPlus.class).toggle();
+                Modules.get().get(ScaffoldPlus.class).sendToggledMsg("enabled by burrow+");
+                enabledPFly = true;
             }
         }
     }
