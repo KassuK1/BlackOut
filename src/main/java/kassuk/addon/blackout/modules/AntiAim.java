@@ -51,7 +51,7 @@ public class AntiAim extends BlackOutModule {
         .name("Spin Speed")
         .description("How many degrees should be turned every tick.")
         .defaultValue(5)
-        .range(0, 100)
+        .min(0)
         .sliderMin(0)
         .visible(() -> mode.get().equals(Modes.Spin))
         .sliderMax(100)

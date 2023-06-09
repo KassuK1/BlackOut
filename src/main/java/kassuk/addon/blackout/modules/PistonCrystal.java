@@ -188,7 +188,8 @@ public class PistonCrystal extends BlackOutModule {
     private void mineUpdate() {
         if (redstonePos == null) {return;}
 
-        if (mc.world.getBlockState(redstonePos).getBlock() != redstone.get().b) {return;}
+        if (redstone.get() == Redstone.Torch && !(mc.world.getBlockState(redstonePos).getBlock() instanceof RedstoneTorchBlock)) {return;}
+        if (redstone.get() == Redstone.Block && mc.world.getBlockState(redstonePos).getBlock() != Blocks.REDSTONE_BLOCK) {return;}
 
         if (Modules.get().isActive(AutoMine.class) && redstonePos.equals(Modules.get().get(AutoMine.class).targetPos())) {return;}
 
@@ -230,7 +231,6 @@ public class PistonCrystal extends BlackOutModule {
         SettingUtils.swing(SwingState.Post, SwingType.Attacking, Hand.MAIN_HAND);
 
         lastAttack = System.currentTimeMillis();
-        return;
     }
 
     private void updatePiston() {
@@ -285,8 +285,6 @@ public class PistonCrystal extends BlackOutModule {
                 case InvSwitch -> BOInvUtils.swapBack();
             }
         }
-
-        return;
     }
 
     private void updateCrystal() {
@@ -341,8 +339,6 @@ public class PistonCrystal extends BlackOutModule {
                 case InvSwitch -> BOInvUtils.swapBack();
             }
         }
-
-        return;
     }
 
     private void updateRedstone() {
@@ -402,8 +398,6 @@ public class PistonCrystal extends BlackOutModule {
                 case InvSwitch -> BOInvUtils.swapBack();
             }
         }
-
-        return;
     }
 
     private void updateFire() {
@@ -592,8 +586,8 @@ public class PistonCrystal extends BlackOutModule {
     private List<BlockPos> pistonBlocks(BlockPos pos, Direction dir) {
         List<BlockPos> blocks = new ArrayList<>();
 
-        for (int x = dir.getOffsetX() == 0 ? -1 : 1 - dir.getOffsetX(); x <= (dir.getOffsetX() == 0 ? 1 : dir.getOffsetX()); x++) {
-            for (int z = dir.getOffsetZ() == 0 ? -1 : 1 - dir.getOffsetZ(); z <= (dir.getOffsetZ() == 0 ? 1 : dir.getOffsetZ()); z++) {
+        for (int x = dir.getOffsetX() == 0 ? -1 : dir.getOffsetX(); x <= (dir.getOffsetX() == 0 ? 1 : dir.getOffsetX()); x++) {
+            for (int z = dir.getOffsetZ() == 0 ? -1 : dir.getOffsetZ(); z <= (dir.getOffsetZ() == 0 ? 1 : dir.getOffsetZ()); z++) {
                 for (int y = 0; y <= 1; y++) {
                     if (x == 0 && y == 0 && z == 0 || (oldVer.get() && x == 0 && y == 1 && z == 0)) {
                         continue;
@@ -637,12 +631,15 @@ public class PistonCrystal extends BlackOutModule {
                     }
                     return direction != d.getOpposite();
                 }, b -> {
+                    if (pos.equals(b)) {
+                        return false;
+                    }
                     if (mc.world.getBlockState(b).getBlock() instanceof TorchBlock) {
                         return false;
                     }
                     if (mc.world.getBlockState(b).getBlock() instanceof PistonBlock ||
                         mc.world.getBlockState(b).getBlock() instanceof PistonHeadBlock) {
-
+                        return false;
                     }
                     return true;
                 });
