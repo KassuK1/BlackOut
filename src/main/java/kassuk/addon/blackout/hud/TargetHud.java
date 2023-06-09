@@ -6,14 +6,12 @@ import kassuk.addon.blackout.utils.RenderUtils;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
-import meteordevelopment.meteorclient.settings.ColorSetting;
-import meteordevelopment.meteorclient.settings.DoubleSetting;
-import meteordevelopment.meteorclient.settings.Setting;
-import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.hud.HudElement;
 import meteordevelopment.meteorclient.systems.hud.HudElementInfo;
 import meteordevelopment.meteorclient.systems.hud.HudRenderer;
+import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.gui.PlayerSkinDrawer;
@@ -40,6 +38,13 @@ public class TargetHud extends HudElement {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
+    private final Setting<Mode> mode = sgGeneral.add(new EnumSetting.Builder<Mode>()
+        .name("Kill Message Mode")
+        .description("What kind of messages to send.")
+        .defaultValue(Mode.Blackout)
+        .build()
+    );
+
     private final Setting<Double> scale = sgGeneral.add(new DoubleSetting.Builder()
         .name("Scale")
         .description("Scale to render at")
@@ -51,7 +56,7 @@ public class TargetHud extends HudElement {
     private final Setting<SettingColor> bgColor = sgGeneral.add(new ColorSetting.Builder()
         .name("Background Color")
         .description(BlackOut.COLOR)
-        .defaultValue(new SettingColor(0, 0, 0, 150))
+        .defaultValue(new SettingColor(0, 0, 0, 200))
         .build()
     );
     private final Setting<SettingColor> textColor = sgGeneral.add(new ColorSetting.Builder()
@@ -136,53 +141,94 @@ public class TargetHud extends HudElement {
 
     @Override
     public void render(HudRenderer renderer) {
-        int height = 100;
-        int width = 200;
+        if (mode.get() == Mode.Blackout) {
+            int height = 100;
+            int width = 200;
 
-        setSize(width * scale.get(), height * scale.get());
+            setSize(width * scale.get(), height * scale.get());
 
-        updateTarget();
-        MatrixStack stack = new MatrixStack();
+            updateTarget();
+            if (renderName == null) {
+                return;
+            }
 
-        if (renderName == null) {return;}
+            MatrixStack stack = new MatrixStack();
 
-        scaleProgress = MathHelper.clamp(scaleProgress + (target == null ? -renderer.delta : renderer.delta), 0, 1);
+            scaleProgress = MathHelper.clamp(scaleProgress + (target == null ? -renderer.delta : renderer.delta), 0, 1);
 
-        float scaleAnimation = (float) (scaleProgress * scaleProgress * scaleProgress);
+            float scaleAnimation = (float) (scaleProgress * scaleProgress * scaleProgress);
 
-        stack.translate(x + (1 - scaleAnimation) * getWidth() / 2f, y + (1 - scaleAnimation) * getHeight() / 2f, 0);
-        stack.scale((float) (scaleAnimation * scale.get()), (float) (scaleAnimation * scale.get()), 1);
+            stack.translate(x + (1 - scaleAnimation) * getWidth() / 2f, y + (1 - scaleAnimation) * getHeight() / 2f, 0);
+            stack.scale((float) (scaleAnimation * scale.get()), (float) (scaleAnimation * scale.get()), 1);
 
-        // Damage tilt
-        float tilt = (float) (Math.max(0, 500 - System.currentTimeMillis() + damageTime) / 500f * damageTilt.get());
-        stack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees((tilt)));
+            // Damage tilt
+            float tilt = (float) (Math.max(0, 500 - System.currentTimeMillis() + damageTime) / 500f * damageTilt.get());
+            stack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees((tilt)));
 
-        // Background
-        RenderUtils.rounded(stack, 15, 15, width - 30, height - 30, 15, 10, bgColor.get().getPacked());
-        // Face
-        RenderSystem.setShaderTexture(0, renderSkin);
-        PlayerSkinDrawer.draw(stack, 20, 18, 32, false, false);
+            // Background
+            RenderUtils.rounded(stack, 15, 15, width - 30, height - 30, 15, 10, bgColor.get().getPacked());
+            // Face
+            RenderSystem.setShaderTexture(0, renderSkin);
+            PlayerSkinDrawer.draw(stack, 20, 18, 32, false, false);
 
-        // Name
-        RenderUtils.text(renderName, stack, 60, 20, textColor.get().getPacked());
+            // Name
+            RenderUtils.text(renderName, stack, 60, 20, textColor.get().getPacked());
 
-        // Ping
-        RenderUtils.text(Math.round(renderPing) + "ms", stack, 60, 30, textColor.get().getPacked());
+            // Ping
+            RenderUtils.text(Math.round(renderPing) + "ms", stack, 60, 30, textColor.get().getPacked());
 
-        // Health
-        RenderUtils.text(String.valueOf(Math.round((renderHealth) * 10) / 10f), stack, 20, 81 - mc.textRenderer.fontHeight / 2f, textColor.get().getPacked());
+            // Health
+            RenderUtils.text(String.valueOf(Math.round((renderHealth) * 10) / 10f), stack, 20, 81 - mc.textRenderer.fontHeight / 2f, textColor.get().getPacked());
 
-        float barAnimation = MathHelper.lerp(mc.getTickDelta() / 10, lastHp, renderHealth);
+            float barAnimation = MathHelper.lerp(mc.getTickDelta() / 10, lastHp, renderHealth);
 
-        float barStart = Math.max(mc.textRenderer.getWidth(String.valueOf(Math.round((renderHealth) * 10) / 10f)),
-            mc.textRenderer.getWidth("36.0")) + 28;
+            float barStart = Math.max(mc.textRenderer.getWidth(String.valueOf(Math.round((renderHealth) * 10) / 10f)),
+                mc.textRenderer.getWidth("36.0")) + 28;
 
-        // Health Bar
-        if (barAnimation > 0) {
-            RenderUtils.rounded(stack, barStart, 80, MathHelper.clamp(barAnimation / 20, 0, 1) * (width - 30 - barStart), 2, 3, 10, healthColor.get().getPacked());
+            // Health Bar
+            if (barAnimation > 0) {
+                RenderUtils.rounded(stack, barStart, 80, MathHelper.clamp(barAnimation / 20, 0, 1) * (width - 30 - barStart), 2, 3, 10, healthColor.get().getPacked());
+            }
+            if (barAnimation > 20) {
+                RenderUtils.rounded(stack, barStart, 80, MathHelper.clamp((barAnimation - 20) / 16, 0, 1) * (width - 30 - barStart), 2, 3, 10, absorptionColor.get().getPacked());
+            }
         }
-        if (barAnimation > 20) {
-            RenderUtils.rounded(stack, barStart, 80, MathHelper.clamp((barAnimation - 20) / 16, 0, 1) * (width - 30 - barStart), 2, 3, 10, absorptionColor.get().getPacked());
+        if (mode.get() == Mode.ExhibitionOld) {
+            int height = 60;
+            int width = 240;
+            setSize(width * scale.get(), height * scale.get());
+
+            updateTarget();
+            MatrixStack stack = new MatrixStack();
+
+            if (renderName == null) {
+                return;
+            }
+
+            stack.translate(x, y, 0);
+            stack.scale((float) (scale.get() * 1f), (float) (scale.get() * 1f), 1);
+
+
+            // Background
+            RenderUtils.rounded(stack, 0, 0, width, height, 0, 10, bgColor.get().getPacked());
+
+            // Face
+            RenderUtils.rounded(stack, 1, 1, 58, 58, 0, 10, new Color(0, 102, 102, 255).getPacked());
+            RenderSystem.setShaderTexture(0, renderSkin);
+            PlayerSkinDrawer.draw(stack, 3, 3, 54, false, false);
+
+            // Name
+            stack.scale(2.0f,2.0f,1);
+            RenderUtils.text(renderName, stack, 30, 2, textColor.get().getPacked());
+
+            // Health
+            stack.scale(0.5f,0.5f,1f);
+            RenderUtils.text(Math.round((renderHealth + target.getAbsorptionAmount()) * 10) / 10f + " Dist: " + Math.round(target.distanceTo(mc.player) * 10) / 10f, stack, 60, 35 - mc.textRenderer.fontHeight / 2f, textColor.get().getPacked());
+            //RenderUtils.rounded(stack, barStart, 80, MathHelper.clamp(barAnimation / 20, 0, 1) * (width - 30 - barStart), 2, 0, 10,new Color(204, 204, 0, 255).getPacked() );
+
+            // Misc info
+            RenderUtils.text("Yaw: " + Math.round((target.getYaw()) * 10) / 10f + " Pitch: " + Math.round(target.getPitch() * 10) / 10f + " BodyYaw: " + Math.round((target.getBodyYaw()) * 10) / 10f , stack, 60, 45 - mc.textRenderer.fontHeight / 2f, textColor.get().getPacked());
+            RenderUtils.text("TOG: 420 " + "HURT: " + Math.round((target.hurtTime) * 10) / 10f + " TE: " + Math.round(target.age), stack, 60, 55 - mc.textRenderer.fontHeight / 2f, textColor.get().getPacked());
         }
     }
 
@@ -218,5 +264,9 @@ public class TargetHud extends HudElement {
             PlayerListEntry playerListEntry = mc.getNetworkHandler().getPlayerListEntry(target.getUuid());
             renderPing = playerListEntry == null ? -1 : playerListEntry.getLatency();
         }
+    }
+    public enum Mode {
+        Blackout,
+        ExhibitionOld
     }
 }
