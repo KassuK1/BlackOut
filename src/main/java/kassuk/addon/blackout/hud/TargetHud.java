@@ -25,7 +25,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
 
-import java.util.UUID;
+import java.util.*;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
@@ -106,8 +106,36 @@ public class TargetHud extends HudElement {
     private float lastHp = 0;
     private boolean popped = false;
 
+    private final Map<AbstractClientPlayerEntity, Integer> tog = new HashMap<>();
+
     @EventHandler(priority = 10000)
     private void onTick(TickEvent.Pre event) {
+        if (mc.world == null || mc.player == null) {
+            return;
+        }
+
+        List<AbstractClientPlayerEntity> toRemove = new ArrayList<>();
+
+        for (Map.Entry<AbstractClientPlayerEntity, Integer> entry : tog.entrySet()) {
+            if (mc.world.getPlayers().contains(entry.getKey()) && !entry.getKey().isSpectator() && entry.getKey().getHealth() > 0) {
+                return;
+            }
+
+            toRemove.add(entry.getKey());
+        }
+
+        toRemove.forEach(tog::remove);
+
+        mc.world.getPlayers().forEach(player -> {
+            if (player.isOnGround()) {
+                if (tog.containsKey(player)) {
+                    tog.replace(player, tog.get(player) + 1);
+                } else {
+                    tog.put(player, 1);
+                }
+            }
+        });
+
         if (target != null) {
             if (target.getUuid().equals(lastTarget)) {
                 float diff = Math.max(lastHp - target.getHealth() - target.getAbsorptionAmount(), 0);
