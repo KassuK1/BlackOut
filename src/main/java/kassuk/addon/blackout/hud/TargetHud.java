@@ -2,6 +2,7 @@ package kassuk.addon.blackout.hud;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import kassuk.addon.blackout.BlackOut;
+import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.RenderUtils;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
@@ -11,6 +12,7 @@ import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.hud.HudElement;
 import meteordevelopment.meteorclient.systems.hud.HudElementInfo;
 import meteordevelopment.meteorclient.systems.hud.HudRenderer;
+import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
@@ -21,6 +23,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.packet.s2c.play.EntityStatusS2CPacket;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
@@ -118,7 +121,7 @@ public class TargetHud extends HudElement {
 
         for (Map.Entry<AbstractClientPlayerEntity, Integer> entry : tog.entrySet()) {
             if (mc.world.getPlayers().contains(entry.getKey()) && !entry.getKey().isSpectator() && entry.getKey().getHealth() > 0) {
-                return;
+                continue;
             }
 
             toRemove.add(entry.getKey());
@@ -229,7 +232,7 @@ public class TargetHud extends HudElement {
             updateTarget();
             MatrixStack stack = new MatrixStack();
 
-            if (renderName == null) {
+            if (target == null || renderName == null) {
                 return;
             }
 
@@ -238,25 +241,39 @@ public class TargetHud extends HudElement {
 
 
             // Background
-            RenderUtils.rounded(stack, 0, 0, width, height, 0, 10, bgColor.get().getPacked());
+            RenderUtils.quad(stack, 0, 0, width, height, bgColor.get().getPacked());
 
             // Face
-            RenderUtils.rounded(stack, 1, 1, 58, 58, 0, 10, new Color(0, 102, 102, 255).getPacked());
+            RenderUtils.quad(stack, 1, 1, 58, 58, new Color(102, 102, 102, 255).getPacked());
             RenderSystem.setShaderTexture(0, renderSkin);
             PlayerSkinDrawer.draw(stack, 3, 3, 54, false, false);
 
             // Name
             stack.scale(2.0f,2.0f,1);
-            RenderUtils.text(renderName, stack, 30, 2, textColor.get().getPacked());
+            RenderUtils.text(renderName, stack, 33, 2, textColor.get().getPacked());
 
             // Health
-            stack.scale(0.5f,0.5f,1f);
-            RenderUtils.text(Math.round((renderHealth + target.getAbsorptionAmount()) * 10) / 10f + " Dist: " + Math.round(target.distanceTo(mc.player) * 10) / 10f, stack, 60, 35 - mc.textRenderer.fontHeight / 2f, textColor.get().getPacked());
-            //RenderUtils.rounded(stack, barStart, 80, MathHelper.clamp(barAnimation / 20, 0, 1) * (width - 30 - barStart), 2, 0, 10,new Color(204, 204, 0, 255).getPacked() );
+            stack.scale(0.5f,0.5f,1);
+            RenderUtils.text(Math.round((renderHealth) * 10) / 10f + " Dist: " + Math.round(mc.player.distanceTo(target) * 10) / 10f, stack, 66, 35 - mc.textRenderer.fontHeight / 2f, textColor.get().getPacked());
 
+            // Bar
+            stack.scale(2, 2, 1);
+
+            int progress = (int) (Math.ceil(MathHelper.clamp(renderHealth, 0, 20)));
+
+            for (int i = 0; i < 10; i++) {
+                RenderUtils.quad(stack, 33 + i * 8, 11, 3 * Math.min(progress, 2), 3, new Color(204, 204, 0, 255).getPacked());
+                progress -= 2;
+
+                if (progress <= 0) {
+                    break;
+                }
+            }
+
+            stack.scale(0.5f,0.5f,1);
             // Misc info
-            RenderUtils.text("Yaw: " + Math.round((target.getYaw()) * 10) / 10f + " Pitch: " + Math.round(target.getPitch() * 10) / 10f + " BodyYaw: " + Math.round((target.getBodyYaw()) * 10) / 10f , stack, 60, 45 - mc.textRenderer.fontHeight / 2f, textColor.get().getPacked());
-            RenderUtils.text("TOG: 420 " + "HURT: " + Math.round((target.hurtTime) * 10) / 10f + " TE: " + Math.round(target.age), stack, 60, 55 - mc.textRenderer.fontHeight / 2f, textColor.get().getPacked());
+            RenderUtils.text("Yaw: " + Math.round((target.getYaw()) * 10) / 10f + " Pitch: " + Math.round(target.getPitch() * 10) / 10f + " BodyYaw: " + Math.round((target.getBodyYaw()) * 10) / 10f , stack, 66, 45 - mc.textRenderer.fontHeight / 2f, textColor.get().getPacked());
+            RenderUtils.text("TOG: " + (tog.getOrDefault(target, 0)) + " HURT: " + Math.round((target.hurtTime) * 10) / 10f + " TE: " + Math.round(target.age), stack, 66, 55 - mc.textRenderer.fontHeight / 2f, textColor.get().getPacked());
         }
     }
 

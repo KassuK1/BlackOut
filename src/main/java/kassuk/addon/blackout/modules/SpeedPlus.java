@@ -63,7 +63,16 @@ public class SpeedPlus extends BlackOutModule {
         .description("Where should the y motion be set for jumping. 0.42 is vanilla.")
         .defaultValue(0.42)
         .min(0)
-        .sliderMax(10)
+        .sliderMax(1)
+        .visible(() -> mode.get() == SpeedMode.Strafe)
+        .build()
+    );
+    private final Setting<Double> jumpBoost = sgGeneral.add(new DoubleSetting.Builder()
+        .name("Jump Boost")
+        .description("Boosts velocity by x blocks per tick when jumping.")
+        .defaultValue(0.05)
+        .min(0)
+        .sliderMax(1)
         .visible(() -> mode.get() == SpeedMode.Strafe)
         .build()
     );
@@ -85,15 +94,6 @@ public class SpeedPlus extends BlackOutModule {
         .name("Damage Boost Factor")
         .description("Knockback multiplier")
         .defaultValue(1)
-        .min(0)
-        .sliderMax(10)
-        .visible(knockBack::get)
-        .build()
-    );
-    private final Setting<Double> decreaseSpeed = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Velocity Decrease Speed")
-        .description("How fast should the velocity end")
-        .defaultValue(2)
         .min(0)
         .sliderMax(10)
         .visible(knockBack::get)
@@ -222,10 +222,11 @@ public class SpeedPlus extends BlackOutModule {
             if (mode.get() == SpeedMode.Strafe) {
                 if (mc.player.isOnGround() && (Math.abs(mc.player.input.movementForward) > 0.01 || Math.abs(mc.player.input.movementSideways) > 0.01)) {
                     ((IVec3d) mc.player.getVelocity()).setY(mc.player.input.jumping ? 0.42 : jumpForce.get());
+                    velocity += jumpBoost.get();
                 }
             }
 
-            velocity = Math.max(speed.get(), velocity * (1 - decreaseSpeed.get() * 0.025));
+            velocity = Math.max(speed.get(), velocity * 0.98);
 
             double motion = velocity;
             if (velocity < 0.01) {
@@ -243,7 +244,7 @@ public class SpeedPlus extends BlackOutModule {
 
             double yaw = getYaw(forward, sideways);
             double x = Math.cos(Math.toRadians(yaw + 90.0f));
-            double y = mc.player.getVelocity().y;
+            double y = mc.player.getVelocity().getY();
             double z = Math.sin(Math.toRadians(yaw + 90.0f));
 
             switch (mode.get()) {
