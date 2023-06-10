@@ -42,8 +42,8 @@ public class TargetHud extends HudElement {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<Mode> mode = sgGeneral.add(new EnumSetting.Builder<Mode>()
-        .name("Kill Message Mode")
-        .description("What kind of messages to send.")
+        .name("Mode")
+        .description("What mode to use for the TargetHud.")
         .defaultValue(Mode.Blackout)
         .build()
     );
