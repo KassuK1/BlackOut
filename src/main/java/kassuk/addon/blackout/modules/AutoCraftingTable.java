@@ -5,7 +5,6 @@ import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.utils.BOInvUtils;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.PlaceData;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
@@ -29,6 +28,9 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
+
+import static kassuk.addon.blackout.utils.OLEPOSSUtils.replaceable;
 
 /**
  * @author OLEPOSSU
@@ -107,7 +109,9 @@ public class AutoCraftingTable extends BlackOutModule {
     }
 
     private void update() {
-        if (screenUpdate()) {return;}
+        if (screenUpdate()) {
+            return;
+        }
         placeUpdate();
         interactUpdate();
     }
@@ -125,7 +129,9 @@ public class AutoCraftingTable extends BlackOutModule {
 
     private void placeUpdate() {
         if (placePos != null && placeData != null && placeData.valid()) {
-            if (placeTimer < 1 / placeSpeed.get()) {return;}
+            if (placeTimer < 1 / placeSpeed.get()) {
+                return;
+            }
 
             if (place()) {
                 placeTimer = 0;
@@ -137,9 +143,13 @@ public class AutoCraftingTable extends BlackOutModule {
     private void interactUpdate() {
         if (tablePos != null) {
             tableDir = SettingUtils.getPlaceOnDirection(tablePos);
-            if (tableDir == null) {return;}
+            if (tableDir == null) {
+                return;
+            }
 
-            if (interactTimer < 1 / interactSpeed.get()) {return;}
+            if (interactTimer < 1 / interactSpeed.get()) {
+                return;
+            }
 
             if (interact()) {
                 interactTimer = 0;
@@ -149,9 +159,11 @@ public class AutoCraftingTable extends BlackOutModule {
 
     private boolean interact() {
         boolean rotated = !SettingUtils.shouldRotate(RotationType.Placing) || Managers.ROTATION.start(tablePos, priority - 0.1, RotationType.Interact);
-        if (!rotated) {return false;}
+        if (!rotated) {
+            return false;
+        }
 
-        sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, new BlockHitResult(OLEPOSSUtils.getMiddle(tablePos), tableDir, tablePos, false), 0));
+        sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(tablePos), tableDir, tablePos, false), 0));
 
         return true;
     }
@@ -167,10 +179,14 @@ public class AutoCraftingTable extends BlackOutModule {
         };
 
 
-        if (!canSwitch) {return false;}
+        if (!canSwitch) {
+            return false;
+        }
 
         boolean rotated = !SettingUtils.shouldRotate(RotationType.Placing) || Managers.ROTATION.start(placeData.pos(), priority, RotationType.Placing);
-        if (!rotated) {return false;}
+        if (!rotated) {
+            return false;
+        }
 
         boolean switched = false;
         if (hand == null) {
@@ -186,9 +202,11 @@ public class AutoCraftingTable extends BlackOutModule {
             switched = true;
         }
 
-        if (!switched) {return false;}
+        if (!switched) {
+            return false;
+        }
 
-        sendPacket(new PlayerInteractBlockC2SPacket(hand != null ? hand : Hand.MAIN_HAND, new BlockHitResult(OLEPOSSUtils.getMiddle(placeData.pos()), placeData.dir(), placeData.pos(), false), 0));
+        sendPacket(new PlayerInteractBlockC2SPacket(hand != null ? hand : Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(placeData.pos()), placeData.dir(), placeData.pos(), false), 0));
 
         if (hand == null) {
             switch (switchMode.get()) {
@@ -211,28 +229,34 @@ public class AutoCraftingTable extends BlackOutModule {
         for (int x = -i; x <= i; x++) {
             for (int y = -i; y <= i; y++) {
                 for (int z = -i; z <= i; z++) {
-                    BlockPos pos = OLEPOSSUtils.toPos(mc.player.getEyePos()).add(x, y, z);
+                    BlockPos pos = BlockPos.ofFloored(mc.player.getEyePos()).add(x, y, z);
 
-                    if (!OLEPOSSUtils.replaceable(pos)) {continue;}
+                    if (!replaceable(pos)) continue;
+
                     if (getBlock(pos) == Blocks.CRAFTING_TABLE) {
                         tablePos = pos;
                         return null;
                     }
 
                     PlaceData data = SettingUtils.getPlaceData(pos);
-                    if (!data.valid()) {continue;}
-                    if (SettingUtils.getPlaceOnDirection(pos) == null) {continue;}
+
+                    if (!data.valid() || SettingUtils.getPlaceOnDirection(pos) == null) continue;
 
                     double distance = SettingUtils.placeRangeTo(data.pos());
-                    if (distance > closestDist) {continue;}
+                    if (distance > closestDist) continue;
+
 
                     double val = value(pos);
-                    if (val < closestVal) {continue;}
+                    if (val < closestVal) continue;
+
 
                     double eDist = distToEnemySQ(pos);
-                    if (val == closestVal && eDist < closestEnemyDist) {continue;}
+                    if (val == closestVal && eDist < closestEnemyDist) continue;
 
-                    if (EntityUtils.intersectsWithEntity(new Box(pos), entity -> !(entity instanceof ItemEntity) && !entity.isSpectator())) {continue;}
+
+                    if (EntityUtils.intersectsWithEntity(new Box(pos), entity -> !(entity instanceof ItemEntity) && !entity.isSpectator()))
+                        continue;
+
 
                     closestData = data;
                     closestPos = pos;
@@ -261,10 +285,14 @@ public class AutoCraftingTable extends BlackOutModule {
     private double distToEnemySQ(BlockPos pos) {
         double closest = Double.MAX_VALUE;
         for (PlayerEntity player : mc.world.getPlayers()) {
-            if (player == mc.player) {continue;}
-            if (Friends.get().isFriend(player)) {continue;}
+            if (player == mc.player) {
+                continue;
+            }
+            if (Friends.get().isFriend(player)) {
+                continue;
+            }
 
-            double dist = OLEPOSSUtils.distance(player.getEyePos(), OLEPOSSUtils.getMiddle(pos));
+            double dist = player.getEyePos().distanceTo(Vec3d.ofCenter(pos));
 
             if (dist < closest) {
                 closest = dist;
@@ -286,4 +314,3 @@ public class AutoCraftingTable extends BlackOutModule {
         InvSwitch
     }
 }
-
