@@ -5,7 +5,6 @@ https://github.com/MeteorDevelopment/meteor-client/blob/master/src/main/java/met
 
 package kassuk.addon.blackout.utils.meteor;
 
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.game.GameJoinedEvent;
 import meteordevelopment.meteorclient.mixininterface.IExplosion;
@@ -15,24 +14,16 @@ import meteordevelopment.meteorclient.utils.PreInit;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.meteorclient.utils.entity.fakeplayer.FakePlayerEntity;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.advancement.criterion.Criteria;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
-import net.minecraft.enchantment.ProtectionEnchantment;
 import net.minecraft.entity.*;
 import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.registry.tag.DamageTypeTags;
-import net.minecraft.registry.tag.EntityTypeTags;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.stat.Stats;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.*;
@@ -168,7 +159,7 @@ public class BODamageUtils {
     // Anchor damage
 
     public static double anchorDamage(LivingEntity player, Vec3d anchor) {
-        BlockPos pos = OLEPOSSUtils.toPos(anchor);
+        BlockPos pos = BlockPos.ofFloored(anchor);
         BlockState state = mc.world.getBlockState(pos);
         if (state.getBlock().equals(Blocks.RESPAWN_ANCHOR)) {
             mc.world.removeBlock(pos, false);
@@ -224,9 +215,9 @@ public class BODamageUtils {
             int i = 0;
             int j = 0;
 
-            for(double k = 0.0; k <= 1.0; k += d) {
-                for(double l = 0.0; l <= 1.0; l += e) {
-                    for(double m = 0.0; m <= 1.0; m += f) {
+            for (double k = 0.0; k <= 1.0; k += d) {
+                for (double l = 0.0; l <= 1.0; l += e) {
+                    for (double m = 0.0; m <= 1.0; m += f) {
                         double n = MathHelper.lerp(k, box.minX, box.maxX);
                         double o = MathHelper.lerp(l, box.minY, box.maxY);
                         double p = MathHelper.lerp(m, box.minZ, box.maxZ);
@@ -240,7 +231,7 @@ public class BODamageUtils {
                 }
             }
 
-            return (float)i / (float)j;
+            return (float) i / (float) j;
         } else {
             return 0.0F;
         }
@@ -279,6 +270,7 @@ public class BODamageUtils {
 
         return 0;
     }
+
     public static BlockHitResult raycast(RaycastContext context) {
         return BlockView.raycast(context.getStart(), context.getEnd(), context, (raycastContext, blockPos) -> {
             BlockState blockState;
@@ -298,7 +290,7 @@ public class BODamageUtils {
             return d <= e ? blockHitResult : blockHitResult2;
         }, (raycastContext) -> {
             Vec3d vec3d = raycastContext.getStart().subtract(raycastContext.getEnd());
-            return BlockHitResult.createMissed(raycastContext.getEnd(), Direction.getFacing(vec3d.x, vec3d.y, vec3d.z), OLEPOSSUtils.toPos(raycastContext.getEnd()));
+            return BlockHitResult.createMissed(raycastContext.getEnd(), Direction.getFacing(vec3d.x, vec3d.y, vec3d.z), BlockPos.ofFloored(raycastContext.getEnd()));
         });
     }
 
@@ -308,7 +300,8 @@ public class BODamageUtils {
             if (blockPos.equals(obsidianPos)) blockState = Blocks.OBSIDIAN.getDefaultState();
             else {
                 blockState = mc.world.getBlockState(blockPos);
-                if (blockState.getBlock().getBlastResistance() < 600 && ignoreTerrain) blockState = Blocks.AIR.getDefaultState();
+                if (blockState.getBlock().getBlastResistance() < 600 && ignoreTerrain)
+                    blockState = Blocks.AIR.getDefaultState();
             }
 
             Vec3d vec3d = raycastContext.getStart();
@@ -325,7 +318,7 @@ public class BODamageUtils {
             return d <= e ? blockHitResult : blockHitResult2;
         }, (raycastContext) -> {
             Vec3d vec3d = raycastContext.getStart().subtract(raycastContext.getEnd());
-            return BlockHitResult.createMissed(raycastContext.getEnd(), Direction.getFacing(vec3d.x, vec3d.y, vec3d.z), OLEPOSSUtils.toPos(raycastContext.getEnd()));
+            return BlockHitResult.createMissed(raycastContext.getEnd(), Direction.getFacing(vec3d.x, vec3d.y, vec3d.z), BlockPos.ofFloored(raycastContext.getEnd()));
         });
     }
 }
