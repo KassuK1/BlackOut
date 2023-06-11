@@ -2,8 +2,6 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
-import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.DoubleSetting;
@@ -79,10 +77,10 @@ public class AnteroTaateli extends BlackOutModule {
         if (!mc.world.getPlayers().isEmpty()) {
             for (PlayerEntity player : mc.world.getPlayers()) {
                 if (player != mc.player && (!iFriends.get() || !Friends.get().isFriend(player))) {
-                    if (closest == null || OLEPOSSUtils.distance(mc.player.getPos(), player.getPos()) < distance) {
+                    if (closest == null || mc.player.getPos().distanceTo(player.getPos()) < distance) {
                         closest = player;
                         assert mc.player != null;
-                        distance = (float) OLEPOSSUtils.distance(mc.player.getPos(), player.getPos());
+                        distance = (float) mc.player.getPos().distanceTo(player.getPos());
                     }
                 }
             }
