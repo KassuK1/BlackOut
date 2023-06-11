@@ -7,7 +7,6 @@ import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.utils.BOInvUtils;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.RotationUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
@@ -79,21 +78,20 @@ public class AutoPearl extends BlackOutModule {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
-        if (mc.player == null || mc.world == null) {return;}
+        if (mc.player == null || mc.world == null) return;
 
         Hand hand = getHand();
 
         if (switch (switchMode.get()) {
             case Normal, Silent -> !InvUtils.findInHotbar(Items.ENDER_PEARL).found();
             case PickSilent, InvSwitch -> !InvUtils.find(Items.ENDER_PEARL).found();
-        }) {return;}
+        }) return;
 
-        if (ccBypass.get() && !cc() && !placed) {
-            return;
-        }
+        if (ccBypass.get() && !cc() && !placed) return;
 
         boolean rotated = instaRot.get() || Managers.ROTATION.start(getYaw(), pitch.get(), priority, RotationType.Other) || (RotationUtils.yawAngle(Managers.ROTATION.lastDir[0], getYaw()) < 0.1 && pitch.get() - Managers.ROTATION.lastDir[1] < 0.1);
-        if (!rotated) {return;}
+        if (!rotated) return;
+
 
         if (instaRot.get()) {
             sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(getYaw(), pitch.get(), Managers.ONGROUND.isOnGround()));
@@ -112,7 +110,9 @@ public class AutoPearl extends BlackOutModule {
             }
         }
 
-        if (!switched) {return;}
+        if (!switched) {
+            return;
+        }
 
         SettingUtils.swing(SwingState.Pre, SwingType.Using, Hand.MAIN_HAND);
         sendPacket(new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, 0));
@@ -143,11 +143,10 @@ public class AutoPearl extends BlackOutModule {
         BlockPos pos = mc.player.getBlockPos();
 
         boolean rotated = instaRot.get() || Managers.ROTATION.start(getYaw(), pitch.get(), priority, RotationType.Other) || (RotationUtils.yawAngle(Managers.ROTATION.lastDir[0], getYaw()) < 0.1 && pitch.get() - Managers.ROTATION.lastDir[1] < 0.1);
-        if (!rotated) {return false;}
+        if (!rotated) return false;
 
-        if (instaRot.get()) {
+        if (instaRot.get())
             sendPacket(new PlayerMoveC2SPacket.LookAndOnGround((float) RotationUtils.getYaw(mc.player.getEyePos(), pos.toCenterPos()), (float) RotationUtils.getPitch(mc.player.getEyePos(), pos.toCenterPos()), Managers.ONGROUND.isOnGround()));
-        }
 
         Hand hand = mc.player.getOffHandStack().getItem() instanceof BlockItem ? Hand.OFF_HAND :
             Managers.HOLDING.getStack().getItem() instanceof BlockItem ? Hand.MAIN_HAND : null;
@@ -160,14 +159,14 @@ public class AutoPearl extends BlackOutModule {
                     InvUtils.swap(InvUtils.findInHotbar(item -> item.getItem() instanceof BlockItem).slot(), true);
                     switched = true;
                 }
-                case PickSilent -> switched = BOInvUtils.pickSwitch(InvUtils.find(item -> item.getItem() instanceof BlockItem).slot());
-                case InvSwitch -> switched = BOInvUtils.invSwitch(InvUtils.find(item -> item.getItem() instanceof BlockItem).slot());
+                case PickSilent ->
+                    switched = BOInvUtils.pickSwitch(InvUtils.find(item -> item.getItem() instanceof BlockItem).slot());
+                case InvSwitch ->
+                    switched = BOInvUtils.invSwitch(InvUtils.find(item -> item.getItem() instanceof BlockItem).slot());
             }
         }
 
-        if (hand == null && !switched) {
-            return false;
-        }
+        if (hand == null && !switched) return false;
 
         sendPacket(new PlayerInteractBlockC2SPacket(hand == null ? Hand.MAIN_HAND : Hand.OFF_HAND, new BlockHitResult(pos.down().toCenterPos(), Direction.UP, pos.down(), false), 0));
         placed = true;
@@ -188,8 +187,12 @@ public class AutoPearl extends BlackOutModule {
     }
 
     private Hand getHand() {
-        if (Managers.HOLDING.isHolding(Items.ENDER_PEARL)) {return Hand.MAIN_HAND;}
-        if (mc.player.getOffHandStack().getItem() == Items.ENDER_PEARL) {return Hand.OFF_HAND;}
+        if (Managers.HOLDING.isHolding(Items.ENDER_PEARL)) {
+            return Hand.MAIN_HAND;
+        }
+        if (mc.player.getOffHandStack().getItem() == Items.ENDER_PEARL) {
+            return Hand.OFF_HAND;
+        }
         return null;
     }
 
