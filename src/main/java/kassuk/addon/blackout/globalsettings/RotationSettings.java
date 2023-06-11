@@ -237,7 +237,7 @@ public class RotationSettings extends BlackOutModule {
     }
 
     public boolean raytraceCheck(Vec3d pos, double y, double p, Box box) {
-        double range = OLEPOSSUtils.distance(pos, OLEPOSSUtils.getMiddle(box)) + 3;
+        double range = pos.distanceTo(OLEPOSSUtils.getMiddle(box)) + 3;
         Vec3d end = new Vec3d(range * Math.cos(Math.toRadians(y + 90)) * Math.abs(Math.cos(Math.toRadians(p))),
             range * -Math.sin(Math.toRadians(p)),
             range * Math.sin(Math.toRadians(y + 90)) * Math.abs(Math.cos(Math.toRadians(p)))).add(pos);
