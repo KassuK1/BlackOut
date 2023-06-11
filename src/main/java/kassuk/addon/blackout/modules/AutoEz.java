@@ -2,7 +2,6 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
@@ -300,20 +299,15 @@ public class AutoEz extends BlackOutModule {
                     lastState = true;
                     sendKillMessage();
                 }
-            } else {
-                lastState = false;
-            }
-            if (timer >= tickDelay.get() && !messageQueue.isEmpty()) {
+            } else lastState = false;
 
+            if (timer >= tickDelay.get() && !messageQueue.isEmpty()) {
                 Message msg = messageQueue.get(0);
                 ChatUtils.sendPlayerMsg(msg.message);
                 timer = 0;
 
-                if (msg.kill) {
-                    messageQueue.clear();
-                } else {
-                    messageQueue.remove(0);
-                }
+                if (msg.kill) messageQueue.clear();
+                else messageQueue.remove(0);
             }
         }
     }
@@ -326,7 +320,7 @@ public class AutoEz extends BlackOutModule {
                 Entity entity = packet.getEntity(mc.world);
                 if (pop.get() && mc.player != null && mc.world != null && entity instanceof PlayerEntity) {
                     if (entity != mc.player && !Friends.get().isFriend((PlayerEntity) entity) &&
-                        OLEPOSSUtils.distance(entity.getPos(), mc.player.getPos()) <= range.get()) {
+                        mc.player.getPos().distanceTo(entity.getPos()) <= range.get()) {
                         sendPopMessage(entity.getName().getString());
                     }
                 }
@@ -337,11 +331,10 @@ public class AutoEz extends BlackOutModule {
     @SuppressWarnings("DataFlowIssue")
     private boolean anyDead(double range) {
         for (PlayerEntity pl : mc.world.getPlayers()) {
-            if (pl != mc.player && !Friends.get().isFriend(pl) && OLEPOSSUtils.distance(pl.getPos(), mc.player.getPos()) <= range) {
-                if (pl.getHealth() <= 0) {
-                    name = pl.getName().getString();
-                    return true;
-                }
+            if (pl != mc.player && !Friends.get().isFriend(pl) && pl.getPos().distanceTo(mc.player.getPos()) <= range
+                && pl.getHealth() <= 0) {
+                name = pl.getName().getString();
+                return true;
             }
         }
         return false;
@@ -355,15 +348,14 @@ public class AutoEz extends BlackOutModule {
                     num = num < exhibobo.length - 1 ? num + 1 : 0;
                 }
                 lastNum = num;
-                messageQueue.add(0, new Message(exhibobo[num].replace("%s",name == null ? "You" : name), true));
+                messageQueue.add(0, new Message(exhibobo[num].replace("%s", name == null ? "You" : name), true));
             }
 
             case Blackout -> {
                 if (!killMessages.get().isEmpty()) {
                     int num = r.nextInt(0, killMessages.get().size() - 1);
-                    if (num == lastNum) {
-                        num = num < killMessages.get().size() - 1 ? num + 1 : 0;
-                    }
+                    if (num == lastNum) num = num < killMessages.get().size() - 1 ? num + 1 : 0;
+
                     lastNum = num;
                     messageQueue.add(0, new Message(killMessages.get().get(num), true));
                 }
@@ -374,7 +366,7 @@ public class AutoEz extends BlackOutModule {
                     num = num < noclue.length - 1 ? num + 1 : 0;
                 }
                 lastNum = num;
-                messageQueue.add(0, new Message(noclue[num].replace("%s",name == null ? "You" : name), true));
+                messageQueue.add(0, new Message(noclue[num].replace("%s", name == null ? "You" : name), true));
             }
         }
     }
@@ -390,7 +382,8 @@ public class AutoEz extends BlackOutModule {
         }
     }
 
-    private record Message(String message, boolean kill) { }
+    private record Message(String message, boolean kill) {
+    }
 
     public enum MessageMode {
         Blackout,
