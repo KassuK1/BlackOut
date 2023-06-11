@@ -293,17 +293,13 @@ public class AnchorAuraPlus extends BlackOutModule {
 
     private boolean inRangeToTargets(BlockPos pos) {
         for (PlayerEntity target : targets) {
-            if (OLEPOSSUtils.distance(target.getPos().add(0, 1, 0), new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5)) < 3.5) {
-                return true;
-            }
+            if (target.getPos().add(0, 1, 0).distanceTo(Vec3d.ofCenter(pos)) < 3.5) return true;
         }
         return false;
     }
 
     private void update() {
-        if (placePos == null || placeData == null || !placeData.valid()) {
-            return;
-        }
+        if (placePos == null || placeData == null || !placeData.valid()) return;
 
         Anchor anchor = getAnchor(placePos);
 
@@ -369,7 +365,7 @@ public class AnchorAuraPlus extends BlackOutModule {
     private void place(Hand hand) {
         SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand);
 
-        sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(OLEPOSSUtils.getMiddle(placeData.pos()), placeData.dir(), placeData.pos(), false), 0));
+        sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(Vec3d.ofCenter(placeData.pos()), placeData.dir(), placeData.pos(), false), 0));
 
         SettingUtils.swing(SwingState.Post, SwingType.Placing, hand);
     }
@@ -586,7 +582,7 @@ public class AnchorAuraPlus extends BlackOutModule {
     private void interact(BlockPos pos, Direction dir, Hand hand) {
         SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand);
 
-        sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(OLEPOSSUtils.getMiddle(pos), dir, pos, false), 0));
+        sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(Vec3d.ofCenter(pos), dir, pos, false), 0));
 
         SettingUtils.swing(SwingState.Post, SwingType.Interact, hand);
     }
