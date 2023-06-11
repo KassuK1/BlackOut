@@ -14,7 +14,6 @@ import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
-import meteordevelopment.meteorclient.mixininterface.IVec3d;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.movement.SafeWalk;
@@ -30,6 +29,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.math.BlockBox;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
@@ -313,10 +313,10 @@ public class ScaffoldPlus extends BlackOutModule {
             if (smart.get() && inside(getBox(vec))) {
                 break;
             } else {
-                BlockPos pos = OLEPOSSUtils.toPos(vec).down();
+                BlockPos pos = BlockPos.ofFloored(vec).down();
 
                 if (!timers.contains(pos) && OLEPOSSUtils.replaceable(pos) && !list.contains(pos) &&
-                    !mc.player.getBoundingBox().intersects(OLEPOSSUtils.getBox(pos))) {
+                    !mc.player.getBoundingBox().intersects(Box.from(new BlockBox(pos)))) {
                     list.add(pos);
                 }
             }
