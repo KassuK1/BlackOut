@@ -12,7 +12,6 @@ import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
-import meteordevelopment.meteorclient.mixininterface.IVec3d;
 import meteordevelopment.meteorclient.renderer.Renderer3D;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
@@ -21,6 +20,7 @@ import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
+import meteordevelopment.meteorclient.utils.world.CardinalDirection;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.*;
@@ -132,6 +132,7 @@ public class AutoMine extends BlackOutModule {
         .defaultValue(false)
         .build()
     );
+    /*
     private final Setting<Boolean> mineBeds = sgGeneral.add(new BoolSetting.Builder()
         .name("Mine Beds")
         .description("Allows the automine to mine beds.")
@@ -143,7 +144,7 @@ public class AutoMine extends BlackOutModule {
         .description("Allows the automine to mine respawn anchors.")
         .defaultValue(false)
         .build()
-    );
+    );*/
 
     //--------------------Speed--------------------//
     private final Setting<Double> speed = sgSpeed.add(new DoubleSetting.Builder()
@@ -351,7 +352,8 @@ public class AutoMine extends BlackOutModule {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onSend(PacketEvent.Send event) {
         if (event.packet instanceof PlayerActionC2SPacket packet) {
-            if (ignore) {return;}
+            if (ignore) return;
+
 
             switch (packet.getAction()) {
                 case START_DESTROY_BLOCK -> handleStart(event);
@@ -381,7 +383,9 @@ public class AutoMine extends BlackOutModule {
         List<BlockPos> toRemove = new ArrayList<>();
 
         for (Map.Entry<BlockPos, Long> entry : explodeAt.entrySet()) {
-            if (System.currentTimeMillis() - entry.getValue() > explodeTime.get() * 1000) {toRemove.add(entry.getKey());}
+            if (System.currentTimeMillis() - entry.getValue() > explodeTime.get() * 1000) {
+                toRemove.add(entry.getKey());
+            }
 
             EndCrystalEntity crystal = crystalAt(entry.getKey());
 
@@ -401,15 +405,14 @@ public class AutoMine extends BlackOutModule {
 
                 lastExplode = System.currentTimeMillis();
 
-                if (SettingUtils.shouldRotate(RotationType.Attacking)) {
+                if (SettingUtils.shouldRotate(RotationType.Attacking))
                     Managers.ROTATION.end(targetCrystal.getBoundingBox());
-                }
             }
         }
     }
 
     private void render(Renderer3D r) {
-        if (target == null) {return;}
+        if (target == null) return;
 
         int slot = fastestSlot();
 
@@ -431,7 +434,9 @@ public class AutoMine extends BlackOutModule {
     }
 
     private void update() {
-        if (mc.world == null) {return;}
+        if (mc.world == null) {
+            return;
+        }
 
         if (reset) {
             if (target != null && !target.manual) {
@@ -454,7 +459,9 @@ public class AutoMine extends BlackOutModule {
             target = getTarget();
         }
 
-        if (target == null) {return;}
+        if (target == null) {
+            return;
+        }
 
         if (target.pos != null && !target.pos.equals(lastPos)) {
             if (started) {
@@ -489,21 +496,33 @@ public class AutoMine extends BlackOutModule {
             }
         }
 
-        if (!started) {return;}
+        if (!started) {
+            return;
+        }
 
         minedFor += delta * 20;
 
-        if (isPaused()) {return;}
+        if (isPaused()) {
+            return;
+        }
 
-        if (!miningCheck(fastestSlot())) {return;}
+        if (!miningCheck(fastestSlot())) {
+            return;
+        }
 
-        if (!civCheck()) {return;}
+        if (!civCheck()) {
+            return;
+        }
 
-        if (!crystalCheck()) {return;}
+        if (!crystalCheck()) {
+            return;
+        }
 
         boolean rotated = !SettingUtils.endMineRot() || Managers.ROTATION.start(target.pos, priority, RotationType.Breaking);
 
-        if (!rotated) {return;}
+        if (!rotated) {
+            return;
+        }
 
         endMine();
     }
@@ -519,8 +538,12 @@ public class AutoMine extends BlackOutModule {
     }
 
     private boolean civCheck() {
-        if (civPos == null) {return true;}
-        if (System.currentTimeMillis() - lastCiv < instaDelay.get() * 1000) {return false;}
+        if (civPos == null) {
+            return true;
+        }
+        if (System.currentTimeMillis() - lastCiv < instaDelay.get() * 1000) {
+            return false;
+        }
         return OLEPOSSUtils.solid2(civPos);
     }
 
@@ -532,9 +555,13 @@ public class AutoMine extends BlackOutModule {
 
         Direction dir = SettingUtils.getPlaceOnDirection(target.pos);
 
-        if (dir == null) {return;}
+        if (dir == null) {
+            return;
+        }
 
-        if (SettingUtils.shouldRotate(RotationType.Breaking) && !Managers.ROTATION.start(target.pos, priority, RotationType.Breaking)) {return;}
+        if (SettingUtils.shouldRotate(RotationType.Breaking) && !Managers.ROTATION.start(target.pos, priority, RotationType.Breaking)) {
+            return;
+        }
 
         if (!switched) {
             switch (pickAxeSwitchMode.get()) {
@@ -551,7 +578,9 @@ public class AutoMine extends BlackOutModule {
             swapBack = switched;
         }
 
-        if (!switched) {return;}
+        if (!switched) {
+            return;
+        }
 
         send(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, target.pos, dir, 0));
         SettingUtils.mineSwing(SwingSettings.MiningSwingState.End);
@@ -584,15 +613,19 @@ public class AutoMine extends BlackOutModule {
     private boolean crystalCheck() {
         switch (target.type) {
             case Cev, TrapCev, SurroundCev -> {
-                if (crystalAt(target.crystalPos) != null) {return true;}
-                if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(target.crystalPos).withMaxY(target.crystalPos.getY() + 2), entity -> !entity.isSpectator())) {
+                if (crystalAt(target.crystalPos) != null) {
+                    return true;
+                }
+                if (!EntityUtils.intersectsWithEntity(Box.from(new BlockBox(target.crystalPos)).withMaxY(target.crystalPos.getY() + 2), entity -> !entity.isSpectator())) {
                     placeCrystal();
                     return false;
                 }
             }
             case AutoCity -> {
-                if (crystalAt(target.crystalPos) != null) {return true;}
-                if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(target.crystalPos).withMaxY(target.crystalPos.getY() + 2), entity -> !entity.isSpectator())) {
+                if (crystalAt(target.crystalPos) != null) {
+                    return true;
+                }
+                if (!EntityUtils.intersectsWithEntity(Box.from(new BlockBox(target.crystalPos)).withMaxY(target.crystalPos.getY() + 2), entity -> !entity.isSpectator())) {
                     return placeCrystal();
                 }
             }
@@ -613,20 +646,28 @@ public class AutoMine extends BlackOutModule {
     }
 
     private boolean placeCrystal() {
-        if (System.currentTimeMillis() - lastPlace < 250) {return false;}
+        if (System.currentTimeMillis() - lastPlace < 250) {
+            return false;
+        }
 
         Hand hand = getHand();
 
         int crystalSlot = InvUtils.find(Items.END_CRYSTAL).slot();
-        if (hand == null && crystalSlot < 0) {return false;}
+        if (hand == null && crystalSlot < 0) {
+            return false;
+        }
 
         Direction dir = SettingUtils.getPlaceOnDirection(target.crystalPos.down());
 
-        if (dir == null) {return false;}
+        if (dir == null) {
+            return false;
+        }
 
         boolean rotated = !SettingUtils.shouldRotate(RotationType.Placing) || Managers.ROTATION.start(target.crystalPos.down(), priority, RotationType.Placing);
 
-        if (!rotated) {return false;}
+        if (!rotated) {
+            return false;
+        }
 
         boolean switched = hand != null;
 
@@ -641,10 +682,12 @@ public class AutoMine extends BlackOutModule {
             }
         }
 
-        if (!switched) {return false;}
+        if (!switched) {
+            return false;
+        }
 
         SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand == null ? Hand.MAIN_HAND : hand);
-        sendPacket(new PlayerInteractBlockC2SPacket(hand == null ? Hand.MAIN_HAND : hand, new BlockHitResult(OLEPOSSUtils.getMiddle(target.crystalPos.down()), dir, target.crystalPos.down(), false), 0));
+        sendPacket(new PlayerInteractBlockC2SPacket(hand == null ? Hand.MAIN_HAND : hand, new BlockHitResult(Vec3d.ofCenter(target.crystalPos.down()), dir, target.crystalPos.down(), false), 0));
         SettingUtils.swing(SwingState.Post, SwingType.Placing, hand == null ? Hand.MAIN_HAND : hand);
 
         lastPlace = System.currentTimeMillis();
@@ -682,7 +725,9 @@ public class AutoMine extends BlackOutModule {
     private Target getTarget() {
         Target target = null;
 
-        if (!autoMine.get()) {return target;}
+        if (!autoMine.get()) {
+            return target;
+        }
 
         if (priorityCheck(target, cevPriority.get())) {
             Target t = getCev();
@@ -730,19 +775,35 @@ public class AutoMine extends BlackOutModule {
         for (AbstractClientPlayerEntity player : enemies) {
             BlockPos pos = new BlockPos(player.getBlockX(), (int) Math.floor(player.getBoundingBox().maxY) + 1, player.getBlockZ());
 
-            if (!(civ && pos.equals(civPos)) && getBlock(pos) != Blocks.OBSIDIAN) {continue;}
-            if ((civ && pos.equals(civPos)) && !(getBlock(pos) instanceof AirBlock) && getBlock(pos) != Blocks.OBSIDIAN) {continue;}
+            if (!(civ && pos.equals(civPos)) && getBlock(pos) != Blocks.OBSIDIAN) {
+                continue;
+            }
+            if ((civ && pos.equals(civPos)) && !(getBlock(pos) instanceof AirBlock) && getBlock(pos) != Blocks.OBSIDIAN) {
+                continue;
+            }
 
-            if (getBlock(pos.up()) != Blocks.AIR) {continue;}
-            if (newVer.get() && getBlock(pos.up(2)) != Blocks.AIR) {continue;}
+            if (getBlock(pos.up()) != Blocks.AIR) {
+                continue;
+            }
+            if (newVer.get() && getBlock(pos.up(2)) != Blocks.AIR) {
+                continue;
+            }
 
-            if (!SettingUtils.inMineRange(pos)) {continue;}
-            if (!SettingUtils.inPlaceRange(pos)) {continue;}
-            if (!SettingUtils.inAttackRange(OLEPOSSUtils.getCrystalBox(pos.up()))) {continue;}
+            if (!SettingUtils.inMineRange(pos)) {
+                continue;
+            }
+            if (!SettingUtils.inPlaceRange(pos)) {
+                continue;
+            }
+            if (!SettingUtils.inAttackRange(OLEPOSSUtils.getCrystalBox(pos.up()))) {
+                continue;
+            }
 
-            if (blocked(pos.up())) {continue;}
+            if (blocked(pos.up())) {
+                continue;
+            }
 
-            double d = OLEPOSSUtils.distance(mc.player.getEyePos(), OLEPOSSUtils.getMiddle(pos));
+            double d = mc.player.getEyePos().distanceTo(Vec3d.ofCenter(pos));
 
             if (distanceCheck(civ, pos, distance, d)) {
                 best = new Target(pos, pos.up(), MineType.Cev, cevPriority.get().priority + (civ && pos.equals(civPos) ? 0.1 : 0), civ, false);
@@ -754,25 +815,42 @@ public class AutoMine extends BlackOutModule {
 
     Target getTrapCev() {
         boolean civ = instaTrapCev.get();
-            Target best = null;
+        Target best = null;
         double distance = 1000;
         for (AbstractClientPlayerEntity player : enemies) {
-            for (Direction dir : OLEPOSSUtils.horizontals) {
+            for (CardinalDirection cd : CardinalDirection.values()) {
+                Direction dir = cd.toDirection();
                 BlockPos pos = new BlockPos(player.getBlockX(), (int) Math.floor(player.getBoundingBox().maxY), player.getBlockZ()).offset(dir);
 
-                if (!(civ && pos.equals(civPos)) && getBlock(pos) != Blocks.OBSIDIAN) {continue;}
-                if ((civ && pos.equals(civPos)) && !(getBlock(pos) instanceof AirBlock) && getBlock(pos) != Blocks.OBSIDIAN) {continue;}
+                if (!(civ && pos.equals(civPos)) && getBlock(pos) != Blocks.OBSIDIAN) {
+                    continue;
+                }
+                if ((civ && pos.equals(civPos)) && !(getBlock(pos) instanceof AirBlock) && getBlock(pos) != Blocks.OBSIDIAN) {
+                    continue;
+                }
 
-                if (getBlock(pos.up()) != Blocks.AIR) {continue;}
-                if (newVer.get() && getBlock(pos.up(2)) != Blocks.AIR) {continue;}
+                if (getBlock(pos.up()) != Blocks.AIR) {
+                    continue;
+                }
+                if (newVer.get() && getBlock(pos.up(2)) != Blocks.AIR) {
+                    continue;
+                }
 
-                if (!SettingUtils.inMineRange(pos)) {continue;}
-                if (!SettingUtils.inPlaceRange(pos)) {continue;}
-                if (!SettingUtils.inAttackRange(OLEPOSSUtils.getCrystalBox(pos.up()))) {continue;}
+                if (!SettingUtils.inMineRange(pos)) {
+                    continue;
+                }
+                if (!SettingUtils.inPlaceRange(pos)) {
+                    continue;
+                }
+                if (!SettingUtils.inAttackRange(OLEPOSSUtils.getCrystalBox(pos.up()))) {
+                    continue;
+                }
 
-                if (blocked(pos.up())) {continue;}
+                if (blocked(pos.up())) {
+                    continue;
+                }
 
-                double d = OLEPOSSUtils.distance(mc.player.getEyePos(), OLEPOSSUtils.getMiddle(pos));
+                double d = mc.player.getEyePos().distanceTo(Vec3d.ofCenter(pos));
 
                 if (distanceCheck(civ, pos, distance, d)) {
                     best = new Target(pos, pos.up(), MineType.TrapCev, trapCevPriority.get().priority + (civ && pos.equals(civPos) ? 0.1 : 0), civ, false);
@@ -788,22 +866,39 @@ public class AutoMine extends BlackOutModule {
         Target best = null;
         double distance = 1000;
         for (AbstractClientPlayerEntity player : enemies) {
-            for (Direction dir : OLEPOSSUtils.horizontals) {
+            for (CardinalDirection cd : CardinalDirection.values()) {
+                Direction dir = cd.toDirection();
                 BlockPos pos = player.getBlockPos().offset(dir);
 
-                if (!(civ && pos.equals(civPos)) && getBlock(pos) != Blocks.OBSIDIAN) {continue;}
-                if ((civ && pos.equals(civPos)) && !(getBlock(pos) instanceof AirBlock) && getBlock(pos) != Blocks.OBSIDIAN) {continue;}
+                if (!(civ && pos.equals(civPos)) && getBlock(pos) != Blocks.OBSIDIAN) {
+                    continue;
+                }
+                if ((civ && pos.equals(civPos)) && !(getBlock(pos) instanceof AirBlock) && getBlock(pos) != Blocks.OBSIDIAN) {
+                    continue;
+                }
 
-                if (getBlock(pos.up()) != Blocks.AIR) {continue;}
-                if (newVer.get() && getBlock(pos.up(2)) != Blocks.AIR) {continue;}
+                if (getBlock(pos.up()) != Blocks.AIR) {
+                    continue;
+                }
+                if (newVer.get() && getBlock(pos.up(2)) != Blocks.AIR) {
+                    continue;
+                }
 
-                if (!SettingUtils.inMineRange(pos)) {continue;}
-                if (!SettingUtils.inPlaceRange(pos)) {continue;}
-                if (!SettingUtils.inAttackRange(OLEPOSSUtils.getCrystalBox(pos.up()))) {continue;}
+                if (!SettingUtils.inMineRange(pos)) {
+                    continue;
+                }
+                if (!SettingUtils.inPlaceRange(pos)) {
+                    continue;
+                }
+                if (!SettingUtils.inAttackRange(OLEPOSSUtils.getCrystalBox(pos.up()))) {
+                    continue;
+                }
 
-                if (blocked(pos.up())) {continue;}
+                if (blocked(pos.up())) {
+                    continue;
+                }
 
-                double d = OLEPOSSUtils.distance(mc.player.getEyePos(), OLEPOSSUtils.getMiddle(pos));
+                double d = mc.player.getEyePos().distanceTo(Vec3d.ofCenter(pos));
 
                 if (distanceCheck(civ, pos, distance, d)) {
                     best = new Target(pos, pos.up(), MineType.SurroundCev, surroundCevPriority.get().priority + (civ && pos.equals(civPos) ? 0.1 : 0), civ, false);
@@ -819,14 +914,19 @@ public class AutoMine extends BlackOutModule {
         Target best = null;
         double distance = 1000;
         for (AbstractClientPlayerEntity player : enemies) {
-            for (Direction dir : OLEPOSSUtils.horizontals) {
+            for (CardinalDirection cd : CardinalDirection.values()) {
+                Direction dir = cd.toDirection();
                 BlockPos pos = player.getBlockPos().offset(dir);
 
-                if (((!civ || !pos.equals(civPos)) && !OLEPOSSUtils.solid2(pos)) || getBlock(pos) == Blocks.BEDROCK) {continue;}
+                if (((!civ || !pos.equals(civPos)) && !OLEPOSSUtils.solid2(pos)) || getBlock(pos) == Blocks.BEDROCK) {
+                    continue;
+                }
 
-                if (!SettingUtils.inMineRange(pos)) {continue;}
+                if (!SettingUtils.inMineRange(pos)) {
+                    continue;
+                }
 
-                double d = OLEPOSSUtils.distance(mc.player.getEyePos(), OLEPOSSUtils.getMiddle(pos));
+                double d = mc.player.getEyePos().distanceTo(Vec3d.ofCenter(pos));
 
                 if (distanceCheck(civ, pos, distance, d)) {
                     best = new Target(pos, null, MineType.SurroundMiner, surroundMinerPriority.get().priority + (civ && pos.equals(civPos) ? 0.1 : 0), civ, false);
@@ -842,21 +942,36 @@ public class AutoMine extends BlackOutModule {
         Target best = null;
         double distance = 1000;
         for (AbstractClientPlayerEntity player : enemies) {
-            for (Direction dir : OLEPOSSUtils.horizontals) {
+            for (CardinalDirection cd : CardinalDirection.values()) {
+                Direction dir = cd.toDirection();
                 BlockPos pos = player.getBlockPos().offset(dir);
 
-                if (((!civ || !pos.equals(civPos)) && !OLEPOSSUtils.solid2(pos)) || getBlock(pos) == Blocks.BEDROCK) {continue;}
+                if (((!civ || !pos.equals(civPos)) && !OLEPOSSUtils.solid2(pos)) || getBlock(pos) == Blocks.BEDROCK) {
+                    continue;
+                }
 
-                if (getBlock(pos.offset(dir)) != Blocks.AIR) {continue;}
-                if (newVer.get() && getBlock(pos.offset(dir).up()) != Blocks.AIR) {continue;}
-                if (!crystalBlock(pos.offset(dir).down())) {continue;}
+                if (getBlock(pos.offset(dir)) != Blocks.AIR) {
+                    continue;
+                }
+                if (newVer.get() && getBlock(pos.offset(dir).up()) != Blocks.AIR) {
+                    continue;
+                }
+                if (!crystalBlock(pos.offset(dir).down())) {
+                    continue;
+                }
 
-                if (!SettingUtils.inMineRange(pos)) {continue;}
-                if (!SettingUtils.inPlaceRange(pos.offset(dir).down())) {continue;}
+                if (!SettingUtils.inMineRange(pos)) {
+                    continue;
+                }
+                if (!SettingUtils.inPlaceRange(pos.offset(dir).down())) {
+                    continue;
+                }
 
-                if (blocked(pos.offset(dir))) {continue;}
+                if (blocked(pos.offset(dir))) {
+                    continue;
+                }
 
-                double d = OLEPOSSUtils.distance(mc.player.getEyePos(), OLEPOSSUtils.getMiddle(pos));
+                double d = mc.player.getEyePos().distanceTo(Vec3d.ofCenter(pos));
 
                 if (distanceCheck(civ, pos, distance, d)) {
                     best = new Target(pos, pos.offset(dir), MineType.AutoCity, autoCityPriority.get().priority + (civ && pos.equals(civPos) ? 0.1 : 0), civ, false);
@@ -873,11 +988,15 @@ public class AutoMine extends BlackOutModule {
         for (AbstractClientPlayerEntity player : enemies) {
             BlockPos pos = player.getBlockPos();
 
-            if (!OLEPOSSUtils.solid2(pos) || getBlock(pos) == Blocks.BEDROCK) {continue;}
+            if (!OLEPOSSUtils.solid2(pos) || getBlock(pos) == Blocks.BEDROCK) {
+                continue;
+            }
 
-            if (!SettingUtils.inMineRange(pos)) {continue;}
+            if (!SettingUtils.inMineRange(pos)) {
+                continue;
+            }
 
-            double d = OLEPOSSUtils.distance(mc.player.getEyePos(), OLEPOSSUtils.getMiddle(pos));
+            double d = mc.player.getEyePos().distanceTo(Vec3d.ofCenter(pos));
 
             if (d < distance) {
                 best = new Target(pos, null, MineType.AntiBurrow, antiBurrowPriority.get().priority, false, false);
@@ -888,15 +1007,23 @@ public class AutoMine extends BlackOutModule {
     }
 
     private boolean distanceCheck(boolean civ, BlockPos pos, double closest, double distance) {
-        if (civ && pos.equals(civPos)) {return true;}
-        if (target != null && pos.equals(target.pos)) {return true;}
+        if (civ && pos.equals(civPos)) {
+            return true;
+        }
+        if (target != null && pos.equals(target.pos)) {
+            return true;
+        }
 
         return distance < closest;
     }
 
     private boolean priorityCheck(Target current, Priority priority) {
-        if (priority.priority < 0) {return false;}
-        if (current == null) {return true;}
+        if (priority.priority < 0) {
+            return false;
+        }
+        if (current == null) {
+            return true;
+        }
 
         return priority.priority >= current.priority;
     }
@@ -944,7 +1071,9 @@ public class AutoMine extends BlackOutModule {
     }
 
     private boolean miningCheck(int slot) {
-        if (target == null || target.pos == null) {return false;}
+        if (target == null || target.pos == null) {
+            return false;
+        }
         return minedFor * speed.get() >= getMineTicks(slot, true);
     }
 
@@ -960,10 +1089,7 @@ public class AutoMine extends BlackOutModule {
     }
 
     private float getMineTicks(int slot, boolean speedMod) {
-        if (slot != -1) {
-            return (float) (1 / (getTime(target.pos, slot, speedMod) * speed.get()));
-        }
-        return -1;
+        return slot == -1 ? slot : (float) (1 / (getTime(target.pos, slot, speedMod) * speed.get()));
     }
 
     private float getSpeed(BlockState state, int slot, boolean speedMod) {
@@ -971,14 +1097,11 @@ public class AutoMine extends BlackOutModule {
         float f = mc.player.getInventory().getStack(slot).getMiningSpeedMultiplier(state);
         if (f > 1.0) {
             int i = EnchantmentHelper.getLevel(Enchantments.EFFICIENCY, stack);
-            if (i > 0 && !stack.isEmpty()) {
-                f += (float) (i * i + 1);
-            }
+            if (i > 0 && !stack.isEmpty()) f += (float) (i * i + 1);
         }
 
-        if (!speedMod) {
-            return f;
-        }
+        if (!speedMod) return f;
+
 
         if (effectCheck.get()) {
             if (StatusEffectUtil.hasHaste(mc.player)) {
@@ -1060,6 +1183,7 @@ public class AutoMine extends BlackOutModule {
         Disabled(-1);
 
         public final int priority;
+
         Priority(int priority) {
             this.priority = priority;
         }
@@ -1074,5 +1198,8 @@ public class AutoMine extends BlackOutModule {
         AntiBurrow,
         Manual
     }
-    private record Target(BlockPos pos, BlockPos crystalPos, MineType type,  double priority, boolean civ, boolean manual) {}
+
+    private record Target(BlockPos pos, BlockPos crystalPos, MineType type, double priority, boolean civ,
+                          boolean manual) {
+    }
 }

@@ -23,7 +23,6 @@ import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.decoration.EndCrystalEntity;
@@ -32,10 +31,7 @@ import net.minecraft.item.Item;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -240,7 +236,7 @@ public class SurroundPlus extends BlackOutModule {
             placesLeft = places.get();
             placeTimer = 0;
         }
-        render.forEach(item -> event.renderer.box(OLEPOSSUtils.getBox(item.pos),
+        render.forEach(item -> event.renderer.box(Box.from(new BlockBox(item.pos)),
             switch (item.type) {
                 case Normal -> sideColor.get();
                 case Support -> supportSideColor.get();
@@ -334,7 +330,9 @@ public class SurroundPlus extends BlackOutModule {
     }
 
     private boolean validItem(Item item, boolean secondary) {
-        if (!(item instanceof BlockItem block)) {return false;}
+        if (!(item instanceof BlockItem block)) {
+            return false;
+        }
 
         if (secondary) {
             return sBlocks.get().contains(block.getBlock());
@@ -445,11 +443,11 @@ public class SurroundPlus extends BlackOutModule {
 
                 if (data.valid()) {
                     if (!timers.contains(position)
-                        && !EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> isAlive() && !entity.isSpectator() && entity.getType() != EntityType.ITEM)
+                        && !EntityUtils.intersectsWithEntity(Box.from(new BlockBox(position)), entity -> isAlive() && !entity.isSpectator() && entity.getType() != EntityType.ITEM)
                         && OLEPOSSUtils.replaceable(position)) {
                         list.add(position);
                     }
-                    if (EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> isAlive() && entity instanceof EndCrystalEntity) && !EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position), entity -> !entity.isSpectator() && !(entity instanceof EndCrystalEntity || entity instanceof ItemEntity))) {
+                    if (EntityUtils.intersectsWithEntity(Box.from(new BlockBox(position)), entity -> isAlive() && entity instanceof EndCrystalEntity) && !EntityUtils.intersectsWithEntity(Box.from(new BlockBox(position)), entity -> !entity.isSpectator() && !(entity instanceof EndCrystalEntity || entity instanceof ItemEntity))) {
                         toAttack.add(position);
                     }
                 } else if (OLEPOSSUtils.replaceable(position)) {
@@ -462,7 +460,9 @@ public class SurroundPlus extends BlackOutModule {
                         addRender(renders, new Render(position.offset(support), RenderType.Support));
                     }
                 }
-                if (!renderPlaced.get() && !OLEPOSSUtils.replaceable(position) || mc.world.getBlockState(position).getBlock() == Blocks.BEDROCK) {return;}
+                if (!renderPlaced.get() && !OLEPOSSUtils.replaceable(position) || mc.world.getBlockState(position).getBlock() == Blocks.BEDROCK) {
+                    return;
+                }
 
                 addRender(renders, new Render(position, OLEPOSSUtils.replaceable(position) ? RenderType.Normal : RenderType.Placed));
             });
@@ -478,14 +478,14 @@ public class SurroundPlus extends BlackOutModule {
         int value = -1;
 
         for (Direction dir : Direction.values()) {
-            if (!OLEPOSSUtils.replaceable(position.offset(dir))) {continue;}
+            if (!OLEPOSSUtils.replaceable(position.offset(dir))) continue;
 
             PlaceData data = onlyConfirmed.get() ? SettingUtils.getPlaceData(position.offset(dir)) : SettingUtils.getPlaceDataOR(position.offset(dir), placed::contains);
 
-            if (!data.valid() || !SettingUtils.inPlaceRange(data.pos())) {continue;}
+            if (!data.valid() || !SettingUtils.inPlaceRange(data.pos())) continue;
 
-            if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> isAlive() && !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
-                double dist = OLEPOSSUtils.distance(mc.player.getEyePos(), OLEPOSSUtils.getMiddle(position.offset(dir)));
+            if (!EntityUtils.intersectsWithEntity(Box.from(new BlockBox(position.offset(dir))), entity -> isAlive() && !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
+                double dist = mc.player.getEyePos().distanceTo(Vec3d.ofCenter(position.offset(dir)));
 
                 if (dist < cDist || value < 2) {
                     value = 2;
@@ -494,8 +494,8 @@ public class SurroundPlus extends BlackOutModule {
                 }
             }
 
-            if (!EntityUtils.intersectsWithEntity(OLEPOSSUtils.getBox(position.offset(dir)), entity -> isAlive() && !entity.isSpectator() && entity.getType() != EntityType.ITEM && entity.getType() != EntityType.END_CRYSTAL)) {
-                double dist = OLEPOSSUtils.distance(mc.player.getEyePos(), OLEPOSSUtils.getMiddle(position.offset(dir)));
+            if (!EntityUtils.intersectsWithEntity(Box.from(new BlockBox(position.offset(dir))), entity -> isAlive() && !entity.isSpectator() && entity.getType() != EntityType.ITEM && entity.getType() != EntityType.END_CRYSTAL)) {
+                double dist = mc.player.getEyePos().distanceTo(Vec3d.ofCenter(position.offset(dir)));
 
                 if (dist < cDist || value < 1) {
                     value = 1;
@@ -510,9 +510,13 @@ public class SurroundPlus extends BlackOutModule {
 
     private void addRender(List<Render> renders, Render render) {
         for (Render r : renders) {
-            if (r.pos != render.pos) {continue;}
+            if (r.pos != render.pos) {
+                continue;
+            }
 
-            if (render.type.value < r.type.value) {return;}
+            if (render.type.value < r.type.value) {
+                return;
+            }
 
             if (r.type.value < render.type.value) {
                 renders.remove(r);
@@ -585,7 +589,8 @@ public class SurroundPlus extends BlackOutModule {
         return attacked < 0;
     }
 
-    private record Render(BlockPos pos, RenderType type) {}
+    private record Render(BlockPos pos, RenderType type) {
+    }
 
     public enum SwitchMode {
         Disabled,
@@ -601,12 +606,14 @@ public class SurroundPlus extends BlackOutModule {
         Down,
         Full
     }
+
     public enum RenderType {
         Normal(3),
         Support(1),
         Placed(2);
 
         private final int value;
+
         RenderType(int value) {
             this.value = value;
         }

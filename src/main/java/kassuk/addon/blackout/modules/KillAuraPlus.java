@@ -7,7 +7,6 @@ import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.utils.BOInvUtils;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.RotationUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
 import kassuk.addon.blackout.utils.meteor.BODamageUtils;
@@ -85,11 +84,14 @@ public class KillAuraPlus extends BlackOutModule {
 
         updateTarget();
 
-        if (target == null) {return;}
+        if (target == null) {
+            return;
+        }
 
         boolean switched = false;
         switch (switchMode.get()) {
-            case Disabled -> switched = !onlyWeapon.get() || mc.player.getMainHandStack().getItem() instanceof SwordItem || mc.player.getMainHandStack().getItem() instanceof AxeItem;
+            case Disabled ->
+                switched = !onlyWeapon.get() || mc.player.getMainHandStack().getItem() instanceof SwordItem || mc.player.getMainHandStack().getItem() instanceof AxeItem;
             case Normal -> {
                 int slot = bestSlot(false);
                 if (slot >= 0) {
@@ -102,15 +104,21 @@ public class KillAuraPlus extends BlackOutModule {
             }
         }
 
-        if (!switched) {return;}
+        if (!switched) {
+            return;
+        }
 
         boolean rotated = rotationMode.get() != RotationMode.Constant || !SettingUtils.shouldRotate(RotationType.Attacking) || Managers.ROTATION.start(target.getBoundingBox(), priority, RotationType.Attacking);
 
-        if (!rotated || timer < delay.get()) {return;}
+        if (!rotated || timer < delay.get()) {
+            return;
+        }
 
         rotated = rotationMode.get() != RotationMode.OnHit || !SettingUtils.shouldRotate(RotationType.Attacking) || Managers.ROTATION.start(target.getBoundingBox(), priority, RotationType.Attacking);
 
-        if (!rotated) {return;}
+        if (!rotated) {
+            return;
+        }
 
 
         switch (switchMode.get()) {
@@ -138,7 +146,9 @@ public class KillAuraPlus extends BlackOutModule {
             }
         }
 
-        if (!switched) {return;}
+        if (!switched) {
+            return;
+        }
 
         attackTarget();
 
@@ -175,7 +185,9 @@ public class KillAuraPlus extends BlackOutModule {
         double dmg;
         for (int i = 0; i < (inventory ? mc.player.getInventory().size() + 1 : 9); i++) {
             ItemStack stack = mc.player.getInventory().getStack(i);
-            if (onlyWeapon.get() && !(stack.getItem() instanceof SwordItem) && !(stack.getItem() instanceof AxeItem)) {continue;}
+            if (onlyWeapon.get() && !(stack.getItem() instanceof SwordItem) && !(stack.getItem() instanceof AxeItem)) {
+                continue;
+            }
 
             dmg = BODamageUtils.getSwordDamage(stack, mc.player, target, true);
             if (dmg > hDmg) {
@@ -191,16 +203,26 @@ public class KillAuraPlus extends BlackOutModule {
         target = null;
 
         mc.world.getPlayers().forEach(player -> {
-            if (player.getHealth() <= 0) {return;}
-            if (player.isSpectator()) {return;}
-            if (player.getHealth() + player.getAbsorptionAmount() > maxHp.get()) {return;}
-            if (!SettingUtils.inAttackRange(player.getBoundingBox())) {return;}
-            if (player == mc.player || Friends.get().isFriend(player)) {return;}
+            if (player.getHealth() <= 0) {
+                return;
+            }
+            if (player.isSpectator()) {
+                return;
+            }
+            if (player.getHealth() + player.getAbsorptionAmount() > maxHp.get()) {
+                return;
+            }
+            if (!SettingUtils.inAttackRange(player.getBoundingBox())) {
+                return;
+            }
+            if (player == mc.player || Friends.get().isFriend(player)) {
+                return;
+            }
 
             double val = switch (targetMode.get()) {
                 case Health -> 10000 - player.getHealth() - player.getAbsorptionAmount();
                 case Angle -> 10000 - Math.abs(RotationUtils.yawAngle(mc.player.getYaw(), Rotations.getYaw(player)));
-                case Distance -> 10000 - OLEPOSSUtils.distance(mc.player.getPos(), player.getPos());
+                case Distance -> 10000 - mc.player.getPos().distanceTo(player.getPos());
             };
             if (val > value) {
                 target = player;

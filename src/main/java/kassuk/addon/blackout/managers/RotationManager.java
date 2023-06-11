@@ -18,10 +18,7 @@ import meteordevelopment.orbit.EventPriority;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.text.Text;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.*;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 import java.util.ArrayList;
@@ -214,7 +211,7 @@ public class RotationManager {
     }
 
     public void end(BlockPos pos) {
-        end(OLEPOSSUtils.getBox(pos));
+        end(Box.from(new BlockBox(pos)));
     }
 
     public void endYaw(double yaw, boolean reset) {
@@ -293,7 +290,7 @@ public class RotationManager {
     }
 
     public boolean start(BlockPos pos, double p, RotationType type) {
-        return start(OLEPOSSUtils.getBox(pos), p, type);
+        return start(Box.from(new BlockBox(pos)), p, type);
     }
 
     public boolean start(BlockPos pos, Vec3d vec, double p, RotationType type) {
@@ -371,6 +368,3 @@ public class RotationManager {
         }
     }
 }
-
-
-

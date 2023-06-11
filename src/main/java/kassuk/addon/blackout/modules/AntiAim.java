@@ -4,7 +4,6 @@ import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.managers.Managers;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
@@ -189,13 +188,13 @@ public class AntiAim extends BlackOutModule {
 
             double p = item == Items.EXPERIENCE_BOTTLE && encMode.get() ? 90 :
                 item == Items.BOW && bowMode.get() ? -90 :
-                ignorePitch ? mc.player.getPitch() :
-                switch (mode.get()) {
-                    case Enemy -> closestPitch();
-                    case Spin -> 0.0;
-                    case CSGO -> csPitch;
-                    case Custom -> pitch.get();
-                };
+                    ignorePitch ? mc.player.getPitch() :
+                        switch (mode.get()) {
+                            case Enemy -> closestPitch();
+                            case Spin -> 0.0;
+                            case CSGO -> csPitch;
+                            case Custom -> pitch.get();
+                        };
 
             Managers.ROTATION.start(y, p,
                 priority, RotationType.Other);
@@ -234,16 +233,17 @@ public class AntiAim extends BlackOutModule {
     private PlayerEntity getClosest() {
         PlayerEntity closest = null;
         for (PlayerEntity pl : mc.world.getPlayers()) {
-            if (pl == mc.player) {continue;}
-            if (Friends.get().isFriend(pl)) {continue;}
+            if (pl == mc.player) continue;
 
-            if (closest == null) {closest = pl;}
+            if (Friends.get().isFriend(pl)) continue;
 
-            double distance = OLEPOSSUtils.distance(mc.player.getPos(), pl.getPos());
+            if (closest == null) closest = pl;
 
-            if (distance > enemyRange.get()) {continue;}
+            double distance = mc.player.getPos().distanceTo(pl.getPos());
 
-            if (distance < OLEPOSSUtils.distance(closest.getPos(), mc.player.getPos())) {
+            if (distance > enemyRange.get()) continue;
+
+            if (distance < closest.getPos().distanceTo(mc.player.getPos())) {
                 closest = pl;
             }
         }

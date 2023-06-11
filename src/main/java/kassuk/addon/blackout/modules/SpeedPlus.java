@@ -79,7 +79,7 @@ public class SpeedPlus extends BlackOutModule {
     private final Setting<Double> speed = sgGeneral.add(new DoubleSetting.Builder()
         .name("Speed")
         .description("How many blocks to move every movement tick")
-        .defaultValue(0.2873)
+        .defaultValue(0.287)
         .min(0)
         .sliderMax(10)
         .build()
@@ -258,7 +258,10 @@ public class SpeedPlus extends BlackOutModule {
                 case Accelerate -> {
                     acceleration = Math.min(1, (move ? acceleration + (mc.player.isOnGround() || airStrafe.get() ? accelerationAmount.get() / 10 : 0.02) : acceleration) * slipperiness(move));
 
-                    if ((move && mc.player.isOnGround()) || airStrafe.get()) {ax = x; az = z;}
+                    if ((move && mc.player.isOnGround()) || airStrafe.get()) {
+                        ax = x;
+                        az = z;
+                    }
 
                     ((IVec3d) event.movement).setXZ(speed.get() * ax * acceleration, speed.get() * az * acceleration);
                 }

@@ -146,9 +146,8 @@ public class OffHandPlus extends BlackOutModule {
                         return Items.GOLDEN_APPLE;
                     }
                     case Pressed -> {
-                        if (mc.options.useKey.isPressed()) {
+                        if (mc.options.useKey.isPressed())
                             return Items.GOLDEN_APPLE;
-                        }
                     }
                 }
             }
@@ -209,19 +208,19 @@ public class OffHandPlus extends BlackOutModule {
         for (int i = 9; i < mc.player.getInventory().size() + 1; i++) {
             s = mc.player.getInventory().getStack(i);
 
-            if (!predicate.test(s.getItem())) {continue;}
+            if (!predicate.test(s.getItem())) continue;
 
             if (s.getCount() > amount) {
                 slot = i;
                 amount = s.getCount();
             }
         }
-        if (slot >= 0) {return slot;}
+        if (slot >= 0) return slot;
 
         for (int i = 0; i < 9; i++) {
             s = mc.player.getInventory().getStack(i);
 
-            if (!predicate.test(s.getItem())) {continue;}
+            if (!predicate.test(s.getItem())) continue;
 
             if (s.getCount() > amount) {
                 slot = i;

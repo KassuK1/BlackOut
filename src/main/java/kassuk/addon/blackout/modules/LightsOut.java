@@ -3,7 +3,6 @@ package kassuk.addon.blackout.modules;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.globalsettings.SwingSettings;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -67,8 +66,8 @@ public class LightsOut extends BlackOutModule {
                 for (int z = -c; z <= c; z++) {
                     BlockPos pos = mc.player.getBlockPos().add(x, y, z);
                     //best code ever fr
-                    if (mc.world.getBlockState(pos).getBlock() instanceof TorchBlock){
-                        float dist = (float) OLEPOSSUtils.distance(vec, OLEPOSSUtils.getMiddle(pos));
+                    if (mc.world.getBlockState(pos).getBlock() instanceof TorchBlock) {
+                        float dist = (float) vec.distanceTo(pos.toCenterPos());
                         if (dist <= r && (closest == null || dist < closestDist)) {
                             closest = pos;
                             closestDist = dist;

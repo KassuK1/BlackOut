@@ -2,7 +2,6 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
@@ -20,7 +19,7 @@ import java.util.Random;
 public class AutoMoan extends BlackOutModule {
 
     public AutoMoan() {
-        super(BlackOut.BLACKOUT, "Auto Moan","Moans sexual things to the closest person.");
+        super(BlackOut.BLACKOUT, "Auto Moan", "Moans sexual things to the closest person.");
     }
 
     //Where the fuck did I go so wrong in life to end up coding fucking AutoMoan
@@ -121,28 +120,28 @@ public class AutoMoan extends BlackOutModule {
 
 
     @EventHandler
-    private void onRender(Render3DEvent event){
+    private void onRender(Render3DEvent event) {
         timer = Math.min(delay.get(), timer + event.frameTime);
     }
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
         timer++;
-        if (mc.player != null && mc.world != null) {
-            //I fucking got perm  banned on a really important server to test this out you all better fucking enjoy using this
-            if (timer >= delay.get()) {
-                MOAN();
-                timer = 0;
-            }
+        //I fucking got perm banned on a really important server to test this out you all better fucking enjoy using this
+        if (mc.player != null && mc.world != null && timer >= delay.get()) {
+            MOAN();
+            timer = 0;
         }
     }
 
     private void MOAN() {
         PlayerEntity target = getClosest();
-        if (target == null) {return;}
+        if (target == null) {
+            return;
+        }
 
         String name = target.getName().getString();
-        switch (moanmode.get()){
+        switch (moanmode.get()) {
             //Skidding AutoEz for this is harder than just making this fully myself but what I start I finish
             case Submissive -> {
                 //it took me way too long to understand what this did I have braindamage :(
@@ -167,15 +166,15 @@ public class AutoMoan extends BlackOutModule {
     }
 
     private PlayerEntity getClosest() {
+        assert mc.player != null && mc.world != null;
         PlayerEntity closest = null;
         float distance = -1;
         if (!mc.world.getPlayers().isEmpty()) {
             for (PlayerEntity player : mc.world.getPlayers()) {
                 if (player != mc.player && (!iFriends.get() || !Friends.get().isFriend(player))) {
-                    if (closest == null || OLEPOSSUtils.distance(mc.player.getPos(), player.getPos()) < distance) {
+                    if (closest == null || mc.player.getPos().distanceTo(player.getPos()) < distance) {
                         closest = player;
-                        assert mc.player != null;
-                        distance = (float) OLEPOSSUtils.distance(mc.player.getPos(), player.getPos());
+                        distance = (float) mc.player.getPos().distanceTo(player.getPos());
                     }
                 }
             }
@@ -183,4 +182,3 @@ public class AutoMoan extends BlackOutModule {
         return closest;
     }
 }
-

@@ -204,7 +204,7 @@ public class HoleSnap extends BlackOutModule {
                         this.toggle();
                         sendDisableMsg("in hole");
                         ((IVec3d) event.movement).setXZ(0, 0);
-                    } else if (OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox().offset(0, -0.05, 0))){
+                    } else if (OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox().offset(0, -0.05, 0))) {
                         this.toggle();
                         sendDisableMsg("hole unreachable");
                     } else {
@@ -242,7 +242,9 @@ public class HoleSnap extends BlackOutModule {
     }
 
     private boolean singleBlocked() {
-        if (!singleTarget.get()) {return false;}
+        if (!singleTarget.get()) {
+            return false;
+        }
 
         for (BlockPos pos : singleHole.positions) {
             if (OLEPOSSUtils.collidable(pos)) {
@@ -262,14 +264,16 @@ public class HoleSnap extends BlackOutModule {
 
                     Hole hole = HoleUtils.getHole(pos, singleHoles.get(), doubleHoles.get(), quadHoles.get(), depth.get());
 
-                    if (hole.type == HoleType.NotHole) {continue;}
+                    if (hole.type == HoleType.NotHole) {
+                        continue;
+                    }
 
                     if (y == 0 && inHole(hole)) {
                         return hole;
                     }
                     if (closest == null ||
-                        OLEPOSSUtils.distance(hole.middle, mc.player.getPos()) <
-                        OLEPOSSUtils.distance(closest.middle, mc.player.getPos())) {
+                        hole.middle.distanceTo(mc.player.getPos()) <
+                            closest.middle.distanceTo(mc.player.getPos())) {
                         closest = hole;
                     }
                 }
@@ -288,8 +292,7 @@ public class HoleSnap extends BlackOutModule {
         return false;
     }
 
-    private float getAngle(Vec3d pos)
-    {
+    private float getAngle(Vec3d pos) {
         return (float) Rotations.getYaw(pos);
     }
 

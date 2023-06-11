@@ -117,11 +117,8 @@ public class RaksuPath {
     private Movement getFall(BlockPos pos, Direction dir) {
         for (int i = 0; i < fallDist; i++) {
             if (is(pos.offset(dir).down(i + 1))) {
-                if (i < reverseStep) {
-                    return new Movement(true, pos.offset(dir).down(i), MovementType.Reverse);
-                } else {
-                    return new Movement(true, pos.offset(dir).down(i), MovementType.Fall);
-                }
+                if (i < reverseStep) return new Movement(true, pos.offset(dir).down(i), MovementType.Reverse);
+                else return new Movement(true, pos.offset(dir).down(i), MovementType.Fall);
             }
         }
         return new Movement(false, null, null);
@@ -133,10 +130,20 @@ public class RaksuPath {
 
     private void closestDir(BlockPos from, BlockPos target, boolean reversed) {
         if (reversed) {
-            Comparator<Direction> c = Comparator.comparingDouble(i -> OLEPOSSUtils.distance(from.offset(i).toCenterPos(), target.toCenterPos()));
-            dirs = Arrays.stream(OLEPOSSUtils.horizontals).sorted(c.reversed()).toList();
+            Comparator<Direction> c = Comparator.comparingDouble(i -> from.offset(i).toCenterPos().distanceTo(target.toCenterPos()));
+            dirs = Arrays.stream(new Direction[]{
+                Direction.EAST,
+                Direction.WEST,
+                Direction.NORTH,
+                Direction.SOUTH
+            }).sorted(c.reversed()).toList();
         } else {
-            dirs = Arrays.stream(OLEPOSSUtils.horizontals).sorted(Comparator.comparingDouble(i -> OLEPOSSUtils.distance(from.offset(i).toCenterPos(), target.toCenterPos()))).toList();
+            dirs = Arrays.stream(new Direction[]{
+                Direction.EAST,
+                Direction.WEST,
+                Direction.NORTH,
+                Direction.SOUTH
+            }).sorted(Comparator.comparingDouble(i -> from.offset(i).toCenterPos().distanceTo(target.toCenterPos()))).toList();
         }
     }
 
@@ -144,7 +151,8 @@ public class RaksuPath {
         return ((AbstractBlockAccessor) mc.world.getBlockState(pos).getBlock()).isCollidable();
     }
 
-    public record Movement(boolean valid, BlockPos pos, MovementType type) {}
+    public record Movement(boolean valid, BlockPos pos, MovementType type) {
+    }
 
     public enum MovementType {
         Step,

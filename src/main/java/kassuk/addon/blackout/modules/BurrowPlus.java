@@ -7,19 +7,15 @@ import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.utils.BOInvUtils;
-import kassuk.addon.blackout.utils.RotationUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
-import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
@@ -27,7 +23,6 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 
 import java.util.List;
@@ -64,20 +59,21 @@ public class BurrowPlus extends BlackOutModule {
         .defaultValue(false)
         .build()
     );
+    /*
     private final Setting<Boolean> scaffold = sgGeneral.add(new BoolSetting.Builder()
         .name("Scaffold")
         .description("Enables scaffold+ after lagging back inside the block.")
         .defaultValue(false)
         .visible(pFly::get)
         .build()
-    );
+    );*/
 
     private boolean success = false;
     private boolean enabledPFly = false;
     private boolean enabledScaffold = false;
 
     private final Predicate<ItemStack> predicate = itemStack -> {
-        if (!(itemStack.getItem() instanceof BlockItem block)) {return false;}
+        if (!(itemStack.getItem() instanceof BlockItem block)) return false;
 
         return blocks.get().contains(block.getBlock());
     };
@@ -111,9 +107,8 @@ public class BurrowPlus extends BlackOutModule {
         }
 
         boolean rotated = instaRot.get() || !SettingUtils.shouldRotate(RotationType.Placing) || Managers.ROTATION.startPitch(90, priority, RotationType.Placing);
-        if (!rotated) {
-            return;
-        }
+        if (!rotated) return;
+
 
         if (instaRot.get() && SettingUtils.shouldRotate(RotationType.Placing)) {
             sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(Managers.ROTATION.lastDir[0], 90, Managers.ONGROUND.isOnGround()));
