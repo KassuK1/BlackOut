@@ -15,15 +15,12 @@ import kassuk.addon.blackout.utils.RaksuTone.RaksuTone;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
-import meteordevelopment.meteorclient.mixininterface.IVec3d;
-import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
-import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.client.gui.screen.DeathScreen;
@@ -317,27 +314,22 @@ public class AutoPvp extends BlackOutModule {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onPacket(PacketEvent.Receive event) {
-        if (autoMessage.get() && event.packet instanceof PlayerRespawnS2CPacket) {
+        if (autoMessage.get() && event.packet instanceof PlayerRespawnS2CPacket)
             ChatUtils.sendPlayerMsg(onSpawn.get());
-        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onMove(PlayerMoveEvent event) {
         if (!inRange || shouldSuicide) {
-            if (lastPos == null) {
-                lastPos = mc.player.getBlockPos();
-            }
+            if (lastPos == null) lastPos = mc.player.getBlockPos();
 
-            if (mc.player.getBlockPos().equals(lastPos)) {
-                stuckTimer++;
-            } else {
-                stuckTimer = 0;
-            }
+            if (mc.player.getBlockPos().equals(lastPos)) stuckTimer++;
+            else stuckTimer = 0;
+
 
             lastPos = mc.player.getBlockPos();
 
-            if (path == null || path.path.isEmpty()) {return;}
+            if (path == null || path.path.isEmpty()) return;
 
             move(event.movement, path.path.get(0).pos().toCenterPos());
             return;
@@ -346,21 +338,20 @@ public class AutoPvp extends BlackOutModule {
         if (surroundMove.get()) {
             BlockPos walkPos = getSurroundWalk();
 
-            if (walkPos != null) {
-                move(event.movement, walkPos.toCenterPos());
-            }
+            if (walkPos != null) move(event.movement, walkPos.toCenterPos());
         }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
-        if (mc.player == null || mc.world == null) {return;}
+        if (mc.player == null || mc.world == null) return;
+
 
         mc.world.getPlayers().forEach(player -> {
             if (camps.containsKey(player)) {
                 Camp camp = camps.get(player);
 
-                if (player.getBlockPos().equals(camp.pos)) {return;}
+                if (player.getBlockPos().equals(camp.pos)) return;
 
                 camps.remove(player);
             }
@@ -377,9 +368,8 @@ public class AutoPvp extends BlackOutModule {
 
         if (target == null) {
             if (Math.abs(mc.player.getBlockX()) > spawnRadius.get() || Math.abs(mc.player.getBlockZ()) > spawnRadius.get()) {
-                if (baritone.get()) {
+                if (baritone.get())
                     BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalNear(new BlockPos(0, 2, 0), 5));
-                }
             }
             stuckTimer = 0;
             return;
@@ -388,13 +378,11 @@ public class AutoPvp extends BlackOutModule {
         shouldSuicide = updateSuicide();
 
         if (shouldSuicide) {
-            if (!Modules.get().isActive(Suicide.class)) {
+            if (!Modules.get().isActive(Suicide.class))
                 Modules.get().get(Suicide.class).toggle();
-            }
         } else {
-            if (Modules.get().isActive(Suicide.class)) {
+            if (Modules.get().isActive(Suicide.class))
                 Modules.get().get(Suicide.class).toggle();
-            }
         }
 
         eatUpdate();
@@ -407,21 +395,16 @@ public class AutoPvp extends BlackOutModule {
         }
 
         if (inRange && surround.get() && !shouldSuicide) {
-            if (!Modules.get().isActive(SurroundPlus.class)) {
+            if (!Modules.get().isActive(SurroundPlus.class))
                 Modules.get().get(SurroundPlus.class).toggle();
-            }
-        } else {
-            if (Modules.get().isActive(SurroundPlus.class)) {
-                Modules.get().get(SurroundPlus.class).toggle();
-            }
-        }
+        } else if (Modules.get().isActive(SurroundPlus.class))
+            Modules.get().get(SurroundPlus.class).toggle();
 
         if (shouldSuicide) {
-            if (baritone.get()) {
+            if (baritone.get())
                 BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(new GoalRunAway(50, target.getBlockPos()));
-            } else {
-                path = RaksuTone.runAway(3, target.getBlockPos());
-            }
+            else path = RaksuTone.runAway(3, target.getBlockPos());
+
             return;
         }
 
@@ -431,9 +414,8 @@ public class AutoPvp extends BlackOutModule {
         } else {
             BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().setGoalAndPath(null);
 
-            if (!baritone.get()) {
+            if (!baritone.get())
                 path = RaksuTone.getPath(3, target.getBlockPos());
-            }
         }
     }
 
@@ -442,26 +424,22 @@ public class AutoPvp extends BlackOutModule {
             System.currentTimeMillis() - lastStep > stepCooldown.get() * 1000 ? 2 : 0,
             System.currentTimeMillis() - lastReverse > rStepCooldown.get() * 1000 ? 3 : 0);
 
-        if (movement.y >= 0.6) {
-            lastStep = System.currentTimeMillis();
-        }
-        if (movement.y <= -0.6) {
-            lastReverse = System.currentTimeMillis();
-        }
+        if (movement.y >= 0.6) lastStep = System.currentTimeMillis();
+        if (movement.y <= -0.6) lastReverse = System.currentTimeMillis();
     }
 
     private BlockPos getSurroundWalk() {
         Hole hole = getHole(mc.player.getBlockPos());
 
-        if (hole == null) {return null;}
+        if (hole == null) return null;
 
         BlockPos closest = null;
 
         for (BlockPos pos : hole.positions) {
             if (closest == null ||
                 (target != null &&
-                    OLEPOSSUtils.distance(pos.toCenterPos(), target.getPos()) <
-                    OLEPOSSUtils.distance(closest.toCenterPos(), target.getPos()))) {
+                    pos.toCenterPos().distanceTo(target.getPos()) <
+                        closest.toCenterPos().distanceTo(target.getPos()))) {
                 closest = pos;
             }
         }
@@ -476,17 +454,13 @@ public class AutoPvp extends BlackOutModule {
         Predicate<ItemStack> food = getFood();
 
         if (food == null) {
-            if (eatingSlot > -1) {
-                mc.options.useKey.setPressed(false);
-            }
+            if (eatingSlot > -1) mc.options.useKey.setPressed(false);
             return;
         }
 
         int slot = InvUtils.findInHotbar(food).slot();
 
-        if (Managers.HOLDING.slot != slot) {
-            InvUtils.swap(slot, false);
-        }
+        if (Managers.HOLDING.slot != slot) InvUtils.swap(slot, false);
 
         if (eatingSlot != slot || (!mc.player.isUsingItem())) {
             eatingSlot = slot;
@@ -496,31 +470,26 @@ public class AutoPvp extends BlackOutModule {
     }
 
     private Predicate<ItemStack> getFood() {
-        if (shouldSuicide) {
-            return null;
-        }
+        if (shouldSuicide) return null;
 
         float hp = mc.player.getHealth() + mc.player.getAbsorptionAmount();
         if (speedPotion.get() &&
             hp >= speedHealth.get() &&
             available(this::isSpeed) &&
-            !mc.player.hasStatusEffect(StatusEffects.SPEED)) {
-
+            !mc.player.hasStatusEffect(StatusEffects.SPEED))
             return this::isSpeed;
-        }
+
         if (chorus.get() &&
             stuckTimer > stuckTicks.get() &&
             hp >= chorusHealth.get() &&
-            available(i -> i.getItem() == Items.CHORUS_FRUIT)) {
-
+            available(i -> i.getItem() == Items.CHORUS_FRUIT))
             return i -> i.getItem() == Items.CHORUS_FRUIT;
-        }
+
         if (goldenApple.get() &&
             hp <= gappleHealth.get() &&
-            available(OLEPOSSUtils::isGapple)) {
-
+            available(OLEPOSSUtils::isGapple))
             return OLEPOSSUtils::isGapple;
-        }
+
         return null;
     }
 
@@ -541,14 +510,11 @@ public class AutoPvp extends BlackOutModule {
 
     private boolean inRange() {
         Goal goal = BaritoneAPI.getProvider().getPrimaryBaritone().getCustomGoalProcess().getGoal();
-        if (goal != null) {
-            return goal.isInGoal(mc.player.getBlockPos());
-        }
 
-        return
-            Math.abs(mc.player.getBlockX() - target.getBlockX()) < 5 &&
+        return goal == null ? Math.abs(mc.player.getBlockX() - target.getBlockX()) < 5 &&
             Math.abs(mc.player.getBlockZ() - target.getBlockZ()) < 5 &&
-            Math.abs(mc.player.getBlockY() - target.getBlockY()) < 5;
+            Math.abs(mc.player.getBlockY() - target.getBlockY()) < 5 :
+            goal.isInGoal(mc.player.getBlockPos());
     }
 
     private void command(String command) {
@@ -556,14 +522,23 @@ public class AutoPvp extends BlackOutModule {
     }
 
     private boolean updateSuicide() {
-        if (!suicide.get()) {return false;}
-        if (amountOf(i -> i.getItem() == Items.END_CRYSTAL) <= 0) {return false;}
+        if (!suicide.get()) return false;
 
-        if (amountOf(OLEPOSSUtils::isGapple) <= gappleAmount.get()) {return true;}
-        if (amountOf(i -> i.getItem() == Items.OBSIDIAN) + (eChests.get() ? amountOf(i -> i.getItem() == Items.ENDER_CHEST) * 8 : 0) <= obsidianAmount.get()) {return true;}
-        if (amountOf(i -> i.getItem() == Items.END_CRYSTAL) <= crystalAmount.get()) {return true;}
-        if (amountOf(i -> i.getItem() == Items.EXPERIENCE_BOTTLE) <= expAmount.get()) {return true;}
-        if (amountOf(i -> i.getItem() == Items.TOTEM_OF_UNDYING) <= totemAmount.get()) {return true;}
+        if (amountOf(i -> i.getItem() == Items.END_CRYSTAL) <= 0) return false;
+
+        if (amountOf(OLEPOSSUtils::isGapple) <= gappleAmount.get()) return true;
+
+        if (amountOf(i -> i.getItem() == Items.OBSIDIAN) + (eChests.get() ? amountOf(i -> i.getItem() == Items.ENDER_CHEST) * 8 : 0) <= obsidianAmount.get())
+            return true;
+
+        if (amountOf(i -> i.getItem() == Items.END_CRYSTAL) <= crystalAmount.get()) return true;
+
+        if (amountOf(i -> i.getItem() == Items.EXPERIENCE_BOTTLE) <= expAmount.get())
+            return true;
+
+        if (amountOf(i -> i.getItem() == Items.TOTEM_OF_UNDYING) <= totemAmount.get())
+            return true;
+
         return false;
     }
 
@@ -572,7 +547,8 @@ public class AutoPvp extends BlackOutModule {
         for (int i = 0; i < mc.player.getInventory().size(); i++) {
             ItemStack stack = mc.player.getInventory().getStack(i);
 
-            if (!predicate.test(stack)) {continue;}
+            if (!predicate.test(stack)) continue;
+
             a += stack.getCount();
         }
         return a;
@@ -582,20 +558,23 @@ public class AutoPvp extends BlackOutModule {
         PlayerEntity closest = null;
 
         for (PlayerEntity pl : mc.world.getPlayers()) {
-            if (pl == mc.player) {continue;}
-            if (pl.isSpectator()) {continue;}
-            if (Friends.get().isFriend(pl)) {continue;}
-            if (pl.getHealth() <= 0) {continue;}
+            if (pl == mc.player) continue;
 
-            if (antiBurrow.get() && OLEPOSSUtils.collidable(pl.getBlockPos())) {continue;}
-            if (isCamper(pl)) {continue;}
+            if (pl.isSpectator()) continue;
 
-            if (pl.getBlockY() > underY.get()) {continue;}
-            if (pl.getBlockY() - mc.player.getBlockY() > yDiff.get()) {continue;}
+            if (Friends.get().isFriend(pl)) continue;
 
-            if (closest == null || mc.player.distanceTo(closest) > mc.player.distanceTo(pl)) {
-                closest = pl;
-            }
+            if (pl.getHealth() <= 0) continue;
+
+            if (antiBurrow.get() && OLEPOSSUtils.collidable(pl.getBlockPos())) continue;
+
+            if (isCamper(pl)) continue;
+
+            if (pl.getBlockY() > underY.get()) continue;
+
+            if (pl.getBlockY() - mc.player.getBlockY() > yDiff.get()) continue;
+
+            if (closest == null || mc.player.distanceTo(closest) > mc.player.distanceTo(pl)) closest = pl;
         }
         target = closest;
 
@@ -610,44 +589,40 @@ public class AutoPvp extends BlackOutModule {
         BaritoneAPI.getSettings().allowPlace.value = false;
         BaritoneAPI.getSettings().allowParkourPlace.value = false;
 
-        BaritoneAPI.getSettings().logger.value = text -> {};
+        BaritoneAPI.getSettings().logger.value = text -> {
+        };
     }
 
     private Hole getHole(BlockPos pos) {
-        if (HoleUtils.getHole(pos, 1).type == HoleType.Single) {
-            return null;
-        }
+        if (HoleUtils.getHole(pos, 1).type == HoleType.Single) return null;
+
         // DoubleX
-        if (HoleUtils.getHole(pos, 1).type == HoleType.DoubleX) {
-            return HoleUtils.getHole(pos, 1);
-        }
-        if (HoleUtils.getHole(pos.add(-1, 0, 0), 1).type == HoleType.DoubleX) {
+        if (HoleUtils.getHole(pos, 1).type == HoleType.DoubleX) return HoleUtils.getHole(pos, 1);
+
+        if (HoleUtils.getHole(pos.add(-1, 0, 0), 1).type == HoleType.DoubleX)
             return HoleUtils.getHole(pos.add(-1, 0, 0), 1);
-        }
 
         // DoubleZ
-        if (HoleUtils.getHole(pos, 1).type == HoleType.DoubleZ) {
-            return HoleUtils.getHole(pos, 1);
-        }
-        if (HoleUtils.getHole(pos.add(0, 0, -1), 1).type == HoleType.DoubleZ) {
+        if (HoleUtils.getHole(pos, 1).type == HoleType.DoubleZ) return HoleUtils.getHole(pos, 1);
+
+        if (HoleUtils.getHole(pos.add(0, 0, -1), 1).type == HoleType.DoubleZ)
             return HoleUtils.getHole(pos.add(0, 0, -1), 1);
-        }
 
         // Quad
-        if (HoleUtils.getHole(pos, 1).type == HoleType.Quad) {
-            return HoleUtils.getHole(pos, 1);
-        }
-        if (HoleUtils.getHole(pos.add(-1, 0, -1), 1).type == HoleType.Quad) {
+        if (HoleUtils.getHole(pos, 1).type == HoleType.Quad) return HoleUtils.getHole(pos, 1);
+
+        if (HoleUtils.getHole(pos.add(-1, 0, -1), 1).type == HoleType.Quad)
             return HoleUtils.getHole(pos.add(-1, 0, -1), 1);
-        }
-        if (HoleUtils.getHole(pos.add(-1, 0, 0), 1).type == HoleType.Quad) {
+
+        if (HoleUtils.getHole(pos.add(-1, 0, 0), 1).type == HoleType.Quad)
             return HoleUtils.getHole(pos.add(-1, 0, 0), 1);
-        }
-        if (HoleUtils.getHole(pos.add(0, 0, -1), 1).type == HoleType.Quad) {
+
+        if (HoleUtils.getHole(pos.add(0, 0, -1), 1).type == HoleType.Quad)
             return HoleUtils.getHole(pos.add(0, 0, -1), 1);
-        }
+
         return null;
     }
 
-    private record Camp(BlockPos pos, long time) {}
+    private record Camp(BlockPos pos, long time) {
+    }
 }
