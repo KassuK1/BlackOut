@@ -7,8 +7,6 @@ import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.utils.BOInvUtils;
-import kassuk.addon.blackout.utils.RaksuTone.RaksuPath;
-import kassuk.addon.blackout.utils.RaksuTone.RaksuTone;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -182,34 +180,26 @@ public class AutoMend extends BlackOutModule {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
-        if (mc.player == null || mc.world == null) {
-            return;
-        }
+        if (mc.player == null || mc.world == null) return;
 
-        if (AutoCrystalRewrite.placing) {
-            acTimer = autoCrystalTicks.get();
-        }
-        if (SurroundPlus.placing) {
-            surroundTimer = surroundTicks.get();
-        }
-        if (SelfTrapPlus.placing) {
-            selfTrapTimer = selfTrapTicks.get();
-        }
+        if (AutoCrystalRewrite.placing) acTimer = autoCrystalTicks.get();
+
+        if (SurroundPlus.placing) surroundTimer = surroundTicks.get();
+
+        if (SelfTrapPlus.placing) selfTrapTimer = selfTrapTicks.get();
+
         if (!mc.player.getBlockPos().equals(lastPos)) {
             lastPos = mc.player.getBlockPos();
             moveTimer = moveTicks.get();
         }
-        if (!mc.player.isOnGround()) {
-            offGroundTimer = offGroundTicks.get();
-        }
+
+        if (!mc.player.isOnGround()) offGroundTimer = offGroundTicks.get();
     }
 
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onTick(TickEvent.Pre event) {
-        if (mc.player == null || mc.world == null || Modules.get().isActive(Suicide.class)) {
-            return;
-        }
+        if (mc.player == null || mc.world == null || Modules.get().isActive(Suicide.class)) return;
 
         timer += speed.get() / 20D;
 
@@ -279,23 +269,13 @@ public class AutoMend extends BlackOutModule {
     }
 
     private boolean shouldThrow() {
-        if (autoCrystal.get() && acTimer > 0) {
-            return false;
-        }
-        if (surroundPause.get() && surroundTimer > 0) {
-            return false;
-        }
-        if (selfTrapPause.get() && selfTrapTimer > 0) {
-            return false;
-        }
-        if (movePause.get() && moveTimer > 0) {
-            return false;
-        }
-        if (offGroundPause.get() && offGroundTimer > 0) {
-            return false;
-        }
-
-        return shouldMend();
+        return shouldMend() && !(
+            autoCrystal.get() && acTimer > 0 ||
+                surroundPause.get() && surroundTimer > 0 ||
+                selfTrapPause.get() && selfTrapTimer > 0 ||
+                movePause.get() && moveTimer > 0 ||
+                offGroundPause.get() && offGroundTimer > 0
+        );
     }
 
     private void updateTimers() {
@@ -309,10 +289,9 @@ public class AutoMend extends BlackOutModule {
     private boolean shouldMend() {
         List<ItemStack> armors = new ArrayList<>();
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 4; i++)
             //noinspection DataFlowIssue
             armors.add(mc.player.getInventory().getArmorStack(i));
-        }
 
         float max = -1;
         float lowest = 500;
