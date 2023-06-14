@@ -113,9 +113,7 @@ public class KillAuraPlus extends BlackOutModule {
                     switched = true;
                 }
             }
-            case InvSwitch, PickSwitch, Silent -> {
-                switched = true;
-            }
+            case InvSwitch, PickSwitch, Silent -> switched = true;
         }
 
         if (!switched) {
@@ -212,19 +210,7 @@ public class KillAuraPlus extends BlackOutModule {
         target = null;
 
         mc.world.getPlayers().forEach(player -> {
-            if (player.getHealth() <= 0) {
-                return;
-            }
-            if (player.isSpectator()) {
-                return;
-            }
-            if (player.getHealth() + player.getAbsorptionAmount() > maxHp.get()) {
-                return;
-            }
-            if (!SettingUtils.inAttackRange(player.getBoundingBox())) {
-                return;
-            }
-            if (player == mc.player || Friends.get().isFriend(player)) {
+            if (player.getHealth() <= 0 || player.isSpectator() || player.getHealth() + player.getAbsorptionAmount() > maxHp.get() || !SettingUtils.inAttackRange(player.getBoundingBox()) || player == mc.player || Friends.get().isFriend(player)) {
                 return;
             }
 
