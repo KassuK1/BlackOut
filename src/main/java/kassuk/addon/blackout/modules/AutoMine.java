@@ -3,6 +3,7 @@ package kassuk.addon.blackout.modules;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
+import kassuk.addon.blackout.enums.SwingHand;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.globalsettings.SwingSettings;
@@ -279,6 +280,51 @@ public class AutoMine extends BlackOutModule {
     );
 
     //--------------------Render--------------------//
+    private final Setting<Boolean> mineStartSwing = sgRender.add(new BoolSetting.Builder()
+        .name("Mine Start Swing")
+        .description("Renders swing animation when starting mining.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> mineEndSwing = sgRender.add(new BoolSetting.Builder()
+        .name("Mine End Swing")
+        .description("Renders swing animation when ending mining.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<SwingHand> mineHand = sgRender.add(new EnumSetting.Builder<SwingHand>()
+        .name("Mine Hand")
+        .description("Which hand should be swung.")
+        .defaultValue(SwingHand.RealHand)
+        .visible(() -> mineStartSwing.get() || mineEndSwing.get())
+        .build()
+    );
+    private final Setting<Boolean> placeSwing = sgRender.add(new BoolSetting.Builder()
+        .name("Place Swing")
+        .description("Renders swing animation when placing a crystal.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<SwingHand> placeHand = sgRender.add(new EnumSetting.Builder<SwingHand>()
+        .name("Place Hand")
+        .description("Which hand should be swung.")
+        .defaultValue(SwingHand.RealHand)
+        .visible(placeSwing::get)
+        .build()
+    );
+    private final Setting<Boolean> attackSwing = sgRender.add(new BoolSetting.Builder()
+        .name("Attack Swing")
+        .description("Renders swing animation when attacking a crystal.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<SwingHand> attackHand = sgRender.add(new EnumSetting.Builder<SwingHand>()
+        .name("Attack Hand")
+        .description("Which hand should be swung.")
+        .defaultValue(SwingHand.RealHand)
+        .visible(attackSwing::get)
+        .build()
+    );
     private final Setting<Double> animationExp = sgRender.add(new DoubleSetting.Builder()
         .name("Animation Exponent")
         .description("3 - 4 look cool.")
@@ -338,6 +384,7 @@ public class AutoMine extends BlackOutModule {
     private final Map<BlockPos, Long> explodeAt = new HashMap<>();
 
     private boolean reset = false;
+    private boolean mined = false;
 
     @Override
     public void onActivate() {
@@ -396,12 +443,13 @@ public class AutoMine extends BlackOutModule {
         }
         toRemove.forEach(explodeAt::remove);
 
-        if (targetCrystal != null && !isPaused() && System.currentTimeMillis() - lastExplode > (1000 / explodeSpeed.get())) {
+        if (targetCrystal != null && !isPaused() && mined && System.currentTimeMillis() - lastExplode > (1000 / explodeSpeed.get())) {
             if (!SettingUtils.shouldRotate(RotationType.Attacking) || Managers.ROTATION.start(targetCrystal.getBoundingBox(), priority, RotationType.Breaking)) {
 
                 SettingUtils.swing(SwingState.Pre, SwingType.Attacking, Hand.MAIN_HAND);
                 sendPacket(PlayerInteractEntityC2SPacket.attack(targetCrystal, mc.player.isSneaking()));
                 SettingUtils.swing(SwingState.Post, SwingType.Attacking, Hand.MAIN_HAND);
+                if (attackSwing.get()) clientSwing(attackHand.get(), Hand.MAIN_HAND);
 
                 lastExplode = System.currentTimeMillis();
 
@@ -488,7 +536,11 @@ public class AutoMine extends BlackOutModule {
                 Direction dir = SettingUtils.getPlaceOnDirection(target.pos);
 
                 send(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, target.pos, dir == null ? Direction.UP : dir, 0));
+
                 SettingUtils.mineSwing(SwingSettings.MiningSwingState.Start);
+
+                mined = false;
+                if (mineStartSwing.get()) clientSwing(mineHand.get(), Hand.MAIN_HAND);
 
                 if (SettingUtils.startMineRot()) {
                     Managers.ROTATION.end(target.pos);
@@ -583,7 +635,9 @@ public class AutoMine extends BlackOutModule {
         }
 
         send(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, target.pos, dir, 0));
+        mined = true;
         SettingUtils.mineSwing(SwingSettings.MiningSwingState.End);
+        if (mineEndSwing.get()) clientSwing(mineHand.get(), Hand.MAIN_HAND);
 
         if (target.civ) {
             civPos = target.pos;
@@ -616,7 +670,7 @@ public class AutoMine extends BlackOutModule {
                 if (crystalAt(target.crystalPos) != null) {
                     return true;
                 }
-                if (!EntityUtils.intersectsWithEntity(Box.from(new BlockBox(target.crystalPos)).withMaxY(target.crystalPos.getY() + 2), entity -> !entity.isSpectator())) {
+                if (!EntityUtils.intersectsWithEntity(Box.from(new BlockBox(target.crystalPos)).withMaxY(target.crystalPos.getY() + (cc.get() ? 1 : 2)), entity -> !entity.isSpectator())) {
                     placeCrystal();
                     return false;
                 }
@@ -625,7 +679,7 @@ public class AutoMine extends BlackOutModule {
                 if (crystalAt(target.crystalPos) != null) {
                     return true;
                 }
-                if (!EntityUtils.intersectsWithEntity(Box.from(new BlockBox(target.crystalPos)).withMaxY(target.crystalPos.getY() + 2), entity -> !entity.isSpectator())) {
+                if (!EntityUtils.intersectsWithEntity(Box.from(new BlockBox(target.crystalPos)).withMaxY(target.crystalPos.getY() + (cc.get() ? 1 : 2)), entity -> !entity.isSpectator())) {
                     return placeCrystal();
                 }
             }
@@ -686,9 +740,10 @@ public class AutoMine extends BlackOutModule {
             return false;
         }
 
-        SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand == null ? Hand.MAIN_HAND : hand);
+        SettingUtils.swing(SwingState.Pre, SwingType.Interact, hand == null ? Hand.MAIN_HAND : hand);
         sendPacket(new PlayerInteractBlockC2SPacket(hand == null ? Hand.MAIN_HAND : hand, new BlockHitResult(Vec3d.ofCenter(target.crystalPos.down()), dir, target.crystalPos.down(), false), 0));
-        SettingUtils.swing(SwingState.Post, SwingType.Placing, hand == null ? Hand.MAIN_HAND : hand);
+        SettingUtils.swing(SwingState.Post, SwingType.Interact, hand == null ? Hand.MAIN_HAND : hand);
+        if (placeSwing.get()) clientSwing(placeHand.get(), hand == null ? Hand.MAIN_HAND : hand);
 
         lastPlace = System.currentTimeMillis();
 

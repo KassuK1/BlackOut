@@ -3,6 +3,7 @@ package kassuk.addon.blackout.modules;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
+import kassuk.addon.blackout.enums.SwingHand;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
@@ -13,14 +14,19 @@ import kassuk.addon.blackout.utils.PlaceData;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
+import meteordevelopment.meteorclient.events.world.BlockUpdateEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.movement.SafeWalk;
 import meteordevelopment.meteorclient.systems.modules.world.Timer;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
+import meteordevelopment.meteorclient.utils.render.color.Color;
+import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
+import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.AirBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
@@ -49,6 +55,7 @@ public class ScaffoldPlus extends BlackOutModule {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgPlacing = settings.createGroup("Placing");
+    private final SettingGroup sgRender = settings.createGroup("Render");
 
     private final Setting<ScaffoldMode> scaffoldMode = sgGeneral.add(new EnumSetting.Builder<ScaffoldMode>()
         .name("Scaffold Mode")
@@ -149,13 +156,45 @@ public class ScaffoldPlus extends BlackOutModule {
         .build()
     );
 
+    //--------------------Render--------------------//
+    private final Setting<Boolean> placeSwing = sgRender.add(new BoolSetting.Builder()
+        .name("Swing")
+        .description("Renders swing animation when placing a block.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<SwingHand> placeHand = sgRender.add(new EnumSetting.Builder<SwingHand>()
+        .name("Swing Hand")
+        .description("Which hand should be swung.")
+        .defaultValue(SwingHand.RealHand)
+        .visible(placeSwing::get)
+        .build()
+    );
+    private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
+        .name("Shape Mode")
+        .description("Which parts of boxes should be rendered.")
+        .defaultValue(ShapeMode.Both)
+        .build()
+    );
+    private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder()
+        .name("Line Color")
+        .description(BlackOut.COLOR)
+        .defaultValue(new SettingColor(255, 0, 0, 255))
+        .build()
+    );
+    private final Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder()
+        .name("Side Color")
+        .description(BlackOut.COLOR)
+        .defaultValue(new SettingColor(255, 0, 0, 50))
+        .build()
+    );
+
     private final BlockTimerList timers = new BlockTimerList();
     private Vec3d motion = null;
     private double placeTimer;
     private int placesLeft = 0;
-    private double towerStart = 0;
-    private boolean lastTower = false;
     public static boolean shouldStopSprinting = false;
+    private final List<Render> render = new ArrayList<>();
 
     @Override
     public void onDeactivate() {
@@ -181,6 +220,14 @@ public class ScaffoldPlus extends BlackOutModule {
             placesLeft = places.get();
             placeTimer = 0;
         }
+
+        render.removeIf(r -> System.currentTimeMillis() - r.time > 1000);
+
+        render.forEach(r -> {
+            double progress = 1 - Math.min(System.currentTimeMillis() - r.time, 500) / 500d;
+
+            event.renderer.box(r.pos, new Color(sideColor.get().r, sideColor.get().g, sideColor.get().b, (int) Math.round(sideColor.get().a * progress)), new Color(lineColor.get().r, lineColor.get().g, lineColor.get().b, (int) Math.round(lineColor.get().a * progress)), shapeMode.get(), 0);
+        });
     }
 
     @EventHandler(priority = 10000)
@@ -336,6 +383,7 @@ public class ScaffoldPlus extends BlackOutModule {
 
     private void place(PlaceData d, BlockPos ogPos, Hand hand, Block block) {
         timers.add(ogPos, delay.get());
+        render.add(new Render(ogPos, System.currentTimeMillis()));
         placesLeft--;
 
         SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand);
@@ -345,6 +393,7 @@ public class ScaffoldPlus extends BlackOutModule {
                 d.dir(), d.pos(), false), 0));
 
         SettingUtils.swing(SwingState.Post, SwingType.Placing, hand);
+        if (placeSwing.get()) clientSwing(placeHand.get(), hand);
 
         mc.world.setBlockState(ogPos, block.getDefaultState());
 
@@ -352,6 +401,8 @@ public class ScaffoldPlus extends BlackOutModule {
             Managers.ROTATION.end(d.pos());
         }
     }
+
+    public record Render(BlockPos pos, long time) {}
 
     public enum ScaffoldMode {
         Normal,

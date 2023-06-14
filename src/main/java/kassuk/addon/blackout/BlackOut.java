@@ -21,7 +21,6 @@ import org.slf4j.Logger;
 /**
  * @author OLEPOSSU
  * @author KassuK
- * @author YourMom
  */
 
 public class BlackOut extends MeteorAddon {
@@ -38,65 +37,65 @@ public class BlackOut extends MeteorAddon {
     public void onInitialize() {
         LOG.info("Initializing Blackout");
 
-        initializeSettings(Modules.get());
-
         initializeModules(Modules.get());
 
-        initializeHud(Hud.get());
+        initializeSettings(Modules.get());
 
         initializeCommands();
+
+        initializeHud(Hud.get());
     }
 
     private void initializeModules(Modules modules) {
-        modules.add(new AutoCrystalRewrite());
-        modules.add(new AutoCraftingTable());
-        modules.add(new HoleFillRewrite());
         modules.add(new AnchorAuraPlus());
         modules.add(new AnteroTaateli());
-        modules.add(new PistonCrystal());
-        modules.add(new SoundModifier());
-        modules.add(new ElytraFlyPlus());
-        modules.add(new SwingModifier());
-        modules.add(new SurroundPlus());
-        modules.add(new StrictNoSlow());
-        modules.add(new ScaffoldPlus());
-        modules.add(new SelfTrapPlus());
-        modules.add(new KillAuraPlus());
-        modules.add(new AutoTrapPlus());
-        modules.add(new OffHandPlus());
-        modules.add(new BedAuraPlus());
-        modules.add(new FlightPlus());
-        modules.add(new SprintPlus());
-        modules.add(new ForceSneak());
-        modules.add(new Automation());
-        modules.add(new BurrowPlus());
-        modules.add(new CustomFOV());
-        modules.add(new TickShift());
-        modules.add(new WeakAlert());
-        modules.add(new LightsOut());
-        modules.add(new AutoPearl());
-        modules.add(new PacketFly());
-        modules.add(new SpeedPlus());
+        modules.add(new AntiAim());
         modules.add(new AntiCrawl());
+        modules.add(new AutoCraftingTable());
+        modules.add(new AutoCrystalRewrite());
+        modules.add(new AutoEz());
+        modules.add(new Automation());
         modules.add(new AutoMend());
         modules.add(new AutoMine());
         modules.add(new AutoMoan());
-        modules.add(new HoleSnap());
-        modules.add(new AntiAim());
+        modules.add(new AutoPearl());
         modules.add(new AutoPvp());
-        modules.add(new FeetESP());
-        modules.add(new Suicide());
+        modules.add(new AutoTrapPlus());
+        modules.add(new BedAuraPlus());
+        modules.add(new BurrowPlus());
+        modules.add(new CustomFOV());
+        modules.add(new ElytraFlyPlus());
         modules.add(new FastXP());
-        modules.add(new AutoEz());
-        modules.add(new RPC());
+        modules.add(new FeetESP());
+        modules.add(new FlightPlus());
         modules.add(new Fog());
+        modules.add(new HoleFillRewrite());
+        modules.add(new HoleSnap());
+        modules.add(new KillAuraPlus());
+        modules.add(new LightsOut());
+        modules.add(new OffHandPlus());
+        modules.add(new PacketFly());
+        modules.add(new ForceSneak());
+        modules.add(new PistonCrystal());
+        modules.add(new RPC());
+        modules.add(new ScaffoldPlus());
+        modules.add(new SelfTrapPlus());
+        modules.add(new SoundModifier());
+        modules.add(new SpeedPlus());
+        modules.add(new SprintPlus());
+        modules.add(new StrictNoSlow());
+        modules.add(new Suicide());
+        modules.add(new SurroundPlus());
+        modules.add(new SwingModifier());
+        modules.add(new TickShift());
+        modules.add(new WeakAlert());
     }
 
     private void initializeSettings(Modules modules) {
-        modules.add(new RaytraceSettings());
-        modules.add(new RotationSettings());
         modules.add(new FacingSettings());
         modules.add(new RangeSettings());
+        modules.add(new RaytraceSettings());
+        modules.add(new RotationSettings());
         modules.add(new SwingSettings());
     }
 
@@ -106,15 +105,15 @@ public class BlackOut extends MeteorAddon {
     }
 
     private void initializeHud(Hud hud) {
-        hud.register(BlackoutArray.INFO);
-        hud.register(HudWaterMark.INFO);
         hud.register(ArmorHudPlus.INFO);
+        hud.register(BlackoutArray.INFO);
+        hud.register(GearHud.INFO);
+        hud.register(HudWaterMark.INFO);
+        hud.register(Keys.INFO);
         hud.register(TargetHud.INFO);
         hud.register(Welcomer.INFO);
-        hud.register(GearHud.INFO);
-        hud.register(CatGirl.INFO);
         hud.register(OnTope.INFO);
-        hud.register(Keys.INFO);
+        hud.register(CatGirl.INFO);
     }
 
     @Override

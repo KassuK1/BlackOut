@@ -3,6 +3,7 @@ package kassuk.addon.blackout.modules;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
+import kassuk.addon.blackout.enums.SwingHand;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
@@ -113,10 +114,10 @@ public class SelfTrapPlus extends BlackOutModule {
         .defaultValue(true)
         .build()
     );
-    private final Setting<SurroundPlus.ToggleYMode> toggleY = sgToggle.add(new EnumSetting.Builder<SurroundPlus.ToggleYMode>()
+    private final Setting<ToggleYMode> toggleY = sgToggle.add(new EnumSetting.Builder<ToggleYMode>()
         .name("Toggle Y")
         .description("Toggles when you move vertically.")
-        .defaultValue(SurroundPlus.ToggleYMode.Full)
+        .defaultValue(ToggleYMode.Full)
         .build()
     );
     private final Setting<Boolean> toggleSneak = sgToggle.add(new BoolSetting.Builder()
@@ -127,6 +128,19 @@ public class SelfTrapPlus extends BlackOutModule {
     );
 
     //--------------------Render--------------------//
+    private final Setting<Boolean> placeSwing = sgRender.add(new BoolSetting.Builder()
+        .name("Swing")
+        .description("Renders swing animation when placing a block.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<SwingHand> placeHand = sgRender.add(new EnumSetting.Builder<SwingHand>()
+        .name("Swing Hand")
+        .description("Which hand should be swung.")
+        .defaultValue(SwingHand.RealHand)
+        .visible(placeSwing::get)
+        .build()
+    );
     private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
         .name("Shape Mode")
         .description("Which parts of the boxes should be rendered.")
@@ -343,6 +357,7 @@ public class SelfTrapPlus extends BlackOutModule {
                 d.dir(), d.pos(), false), 0));
 
         SettingUtils.swing(SwingState.Post, SwingType.Placing, hand);
+        if (placeSwing.get()) clientSwing(placeHand.get(), hand);
 
         if (SettingUtils.shouldRotate(RotationType.Placing)) {
             Managers.ROTATION.end(d.pos());
@@ -508,6 +523,13 @@ public class SelfTrapPlus extends BlackOutModule {
         Top,
         Eyes,
         Both
+    }
+
+    public enum ToggleYMode {
+        Disabled,
+        Up,
+        Down,
+        Full
     }
 
     private record Render(BlockPos pos, boolean support) {

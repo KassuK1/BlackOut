@@ -3,6 +3,7 @@ package kassuk.addon.blackout.modules;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
+import kassuk.addon.blackout.enums.SwingHand;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
@@ -109,6 +110,32 @@ public class AnchorAuraPlus extends BlackOutModule {
     );
 
     //--------------------Render--------------------//
+    private final Setting<Boolean> placeSwing = sgRender.add(new BoolSetting.Builder()
+        .name("Place Swing")
+        .description("Renders swing animation when placing a block.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<SwingHand> placeHand = sgRender.add(new EnumSetting.Builder<SwingHand>()
+        .name("Place Hand")
+        .description("Which hand should be swung.")
+        .defaultValue(SwingHand.RealHand)
+        .visible(placeSwing::get)
+        .build()
+    );
+    private final Setting<Boolean> interactSwing = sgRender.add(new BoolSetting.Builder()
+        .name("Interact Swing")
+        .description("Renders swing animation when interacting with a block.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<SwingHand> interactHand = sgRender.add(new EnumSetting.Builder<SwingHand>()
+        .name("Interact Hand")
+        .description("Which hand should be swung.")
+        .defaultValue(SwingHand.RealHand)
+        .visible(interactSwing::get)
+        .build()
+    );
     public final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
         .name("Shape Mode")
         .description("Which parts should be renderer.")
@@ -368,6 +395,7 @@ public class AnchorAuraPlus extends BlackOutModule {
         sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(Vec3d.ofCenter(placeData.pos()), placeData.dir(), placeData.pos(), false), 0));
 
         SettingUtils.swing(SwingState.Post, SwingType.Placing, hand);
+        if (placeSwing.get()) clientSwing(placeHand.get(), hand);
     }
 
     private Anchor getAnchor(BlockPos pos) {
@@ -580,11 +608,12 @@ public class AnchorAuraPlus extends BlackOutModule {
     }
 
     private void interact(BlockPos pos, Direction dir, Hand hand) {
-        SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand);
+        SettingUtils.swing(SwingState.Pre, SwingType.Interact, hand);
 
         sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(Vec3d.ofCenter(pos), dir, pos, false), 0));
 
         SettingUtils.swing(SwingState.Post, SwingType.Interact, hand);
+        if (interactSwing.get()) clientSwing(interactHand.get(), hand);
     }
 
     private boolean dmgCheck(double dmg, double self) {

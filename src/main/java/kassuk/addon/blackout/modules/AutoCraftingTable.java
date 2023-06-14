@@ -3,6 +3,9 @@ package kassuk.addon.blackout.modules;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
+import kassuk.addon.blackout.enums.SwingHand;
+import kassuk.addon.blackout.enums.SwingState;
+import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.utils.BOInvUtils;
 import kassuk.addon.blackout.utils.PlaceData;
@@ -42,6 +45,7 @@ public class AutoCraftingTable extends BlackOutModule {
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final SettingGroup sgRender = settings.createGroup("Render");
 
     private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
         .name("Switch Mode")
@@ -65,13 +69,41 @@ public class AutoCraftingTable extends BlackOutModule {
         .sliderMin(0)
         .build()
     );
-    public final Setting<SettingColor> color = sgGeneral.add(new ColorSetting.Builder()
+
+    //--------------------Render--------------------//
+    private final Setting<Boolean> placeSwing = sgRender.add(new BoolSetting.Builder()
+        .name("Place Swing")
+        .description("Renders swing animation when placing the crafting table.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<SwingHand> placeHand = sgRender.add(new EnumSetting.Builder<SwingHand>()
+        .name("Place Hand")
+        .description("Which hand should be swung.")
+        .defaultValue(SwingHand.RealHand)
+        .visible(placeSwing::get)
+        .build()
+    );
+    private final Setting<Boolean> interactSwing = sgRender.add(new BoolSetting.Builder()
+        .name("Interact Swing")
+        .description("Renders swing animation when interacting with a block.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<SwingHand> interactHand = sgRender.add(new EnumSetting.Builder<SwingHand>()
+        .name("Interact Hand")
+        .description("Which hand should be swung.")
+        .defaultValue(SwingHand.RealHand)
+        .visible(interactSwing::get)
+        .build()
+    );
+    public final Setting<SettingColor> color = sgRender.add(new ColorSetting.Builder()
         .name("Side Color")
         .description("Side color of rendered stuff")
         .defaultValue(new SettingColor(255, 0, 0, 50))
         .build()
     );
-    public final Setting<SettingColor> lineColor = sgGeneral.add(new ColorSetting.Builder()
+    public final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder()
         .name("Line Color")
         .description("Line color of rendered stuff")
         .defaultValue(new SettingColor(255, 0, 0, 255))
@@ -163,7 +195,12 @@ public class AutoCraftingTable extends BlackOutModule {
             return false;
         }
 
+        SettingUtils.swing(SwingState.Pre, SwingType.Interact, Hand.MAIN_HAND);
+
         sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(tablePos), tableDir, tablePos, false), 0));
+
+        SettingUtils.swing(SwingState.Post, SwingType.Interact, Hand.MAIN_HAND);
+        if (interactSwing.get()) clientSwing(interactHand.get(), Hand.MAIN_HAND);
 
         return true;
     }
@@ -206,7 +243,14 @@ public class AutoCraftingTable extends BlackOutModule {
             return false;
         }
 
-        sendPacket(new PlayerInteractBlockC2SPacket(hand != null ? hand : Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(placeData.pos()), placeData.dir(), placeData.pos(), false), 0));
+        Hand rHand = hand != null ? hand : Hand.MAIN_HAND;
+
+        SettingUtils.swing(SwingState.Pre, SwingType.Placing, rHand);
+
+        sendPacket(new PlayerInteractBlockC2SPacket(rHand, new BlockHitResult(Vec3d.ofCenter(placeData.pos()), placeData.dir(), placeData.pos(), false), 0));
+
+        SettingUtils.swing(SwingState.Post, SwingType.Placing, rHand);
+        if (placeSwing.get()) clientSwing(placeHand.get(), rHand);
 
         if (hand == null) {
             switch (switchMode.get()) {

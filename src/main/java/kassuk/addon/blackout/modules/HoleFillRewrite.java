@@ -2,10 +2,7 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
-import kassuk.addon.blackout.enums.HoleType;
-import kassuk.addon.blackout.enums.RotationType;
-import kassuk.addon.blackout.enums.SwingState;
-import kassuk.addon.blackout.enums.SwingType;
+import kassuk.addon.blackout.enums.*;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.timers.BlockTimerList;
 import kassuk.addon.blackout.utils.*;
@@ -144,6 +141,19 @@ public class HoleFillRewrite extends BlackOutModule {
     );
 
     //--------------------Render--------------------//
+    private final Setting<Boolean> placeSwing = sgRender.add(new BoolSetting.Builder()
+        .name("Swing")
+        .description("Renders swing animation when placing a block.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<SwingHand> placeHand = sgRender.add(new EnumSetting.Builder<SwingHand>()
+        .name("Swing Hand")
+        .description("Which hand should be swung.")
+        .defaultValue(SwingHand.RealHand)
+        .visible(placeSwing::get)
+        .build()
+    );
     private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
         .name("Shape Mode")
         .description(".")
@@ -369,6 +379,7 @@ public class HoleFillRewrite extends BlackOutModule {
                 d.dir(), d.pos(), false), 0));
 
         SettingUtils.swing(SwingState.Post, SwingType.Placing, hand);
+        if (placeSwing.get()) clientSwing(placeHand.get(), hand);
 
         if (SettingUtils.shouldRotate(RotationType.Placing)) {
             Managers.ROTATION.end(d.pos());

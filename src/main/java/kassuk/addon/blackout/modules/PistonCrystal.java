@@ -3,6 +3,7 @@ package kassuk.addon.blackout.modules;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
+import kassuk.addon.blackout.enums.SwingHand;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
@@ -16,6 +17,7 @@ import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
+import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.utils.world.CardinalDirection;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
@@ -49,6 +51,8 @@ public class PistonCrystal extends BlackOutModule {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgSwitch = settings.createGroup("Switch");
+    private final SettingGroup sgSwing = settings.createGroup("Swing");
+    private final SettingGroup sgRender = settings.createGroup("Render");
 
     //--------------------General--------------------//
     private final Setting<Boolean> pauseEat = addPauseEat(sgGeneral);
@@ -127,6 +131,150 @@ public class PistonCrystal extends BlackOutModule {
         .build()
     );
 
+    //--------------------Swing--------------------//
+    private final Setting<Boolean> crystalSwing = sgRender.add(new BoolSetting.Builder()
+        .name("Crystal Swing")
+        .description("Renders swing animation when placing a crystal.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<SwingHand> crystalHand = sgRender.add(new EnumSetting.Builder<SwingHand>()
+        .name("Crystal Swing Hand")
+        .description("Which hand should be swung.")
+        .defaultValue(SwingHand.RealHand)
+        .visible(crystalSwing::get)
+        .build()
+    );
+    private final Setting<Boolean> attackSwing = sgRender.add(new BoolSetting.Builder()
+        .name("Attack Swing")
+        .description("Renders swing animation when attacking a crystal.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<SwingHand> attackHand = sgRender.add(new EnumSetting.Builder<SwingHand>()
+        .name("Attack Swing Hand")
+        .description("Which hand should be swung.")
+        .defaultValue(SwingHand.RealHand)
+        .visible(attackSwing::get)
+        .build()
+    );
+    private final Setting<Boolean> pistonSwing = sgRender.add(new BoolSetting.Builder()
+        .name("Piston Swing")
+        .description("Renders swing animation when placing a piston.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<SwingHand> pistonHand = sgRender.add(new EnumSetting.Builder<SwingHand>()
+        .name("Piston Swing Hand")
+        .description("Which hand should be swung.")
+        .defaultValue(SwingHand.RealHand)
+        .visible(pistonSwing::get)
+        .build()
+    );
+    private final Setting<Boolean> redstoneSwing = sgRender.add(new BoolSetting.Builder()
+        .name("Piston Swing")
+        .description("Renders swing animation when placing redstone.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<SwingHand> redstoneHand = sgRender.add(new EnumSetting.Builder<SwingHand>()
+        .name("Redstone Swing Hand")
+        .description("Which hand should be swung.")
+        .defaultValue(SwingHand.RealHand)
+        .visible(redstoneSwing::get)
+        .build()
+    );
+    private final Setting<Boolean> fireSwing = sgRender.add(new BoolSetting.Builder()
+        .name("Fire Swing")
+        .description("Renders swing animation when placing fire.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<SwingHand> fireHand = sgRender.add(new EnumSetting.Builder<SwingHand>()
+        .name("Fire Swing Hand")
+        .description("Which hand should be swung.")
+        .defaultValue(SwingHand.RealHand)
+        .visible(fireSwing::get)
+        .build()
+    );
+
+    //--------------------Swing--------------------//
+    private final Setting<Double> crystalHeight = sgGeneral.add(new DoubleSetting.Builder()
+        .name("Crystal Height")
+        .description(".")
+        .defaultValue(0.25)
+        .sliderRange(-1, 1)
+        .build()
+    );
+    private final Setting<ShapeMode> crystalShapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
+        .name("Crystal Shape Mode")
+        .description(".")
+        .defaultValue(ShapeMode.Both)
+        .build()
+    );
+    private final Setting<SettingColor> crystalLineColor = sgRender.add(new ColorSetting.Builder()
+        .name("Crystal Line Color")
+        .description(BlackOut.COLOR)
+        .defaultValue(new SettingColor(255, 0, 255, 255))
+        .build()
+    );
+    public final Setting<SettingColor> crystalColor = sgRender.add(new ColorSetting.Builder()
+        .name("Crystal Side Color")
+        .description(BlackOut.COLOR)
+        .defaultValue(new SettingColor(255, 0, 255, 50))
+        .build()
+    );
+    private final Setting<Double> pistonHeight = sgGeneral.add(new DoubleSetting.Builder()
+        .name("Piston Height")
+        .description(".")
+        .defaultValue(1)
+        .sliderRange(-1, 1)
+        .build()
+    );
+    private final Setting<ShapeMode> pistonShapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
+        .name("Piston Shape Mode")
+        .description(".")
+        .defaultValue(ShapeMode.Both)
+        .build()
+    );
+    private final Setting<SettingColor> pistonLineColor = sgRender.add(new ColorSetting.Builder()
+        .name("Piston Line Color")
+        .description(BlackOut.COLOR)
+        .defaultValue(new SettingColor(255, 255, 0, 255))
+        .build()
+    );
+    public final Setting<SettingColor> pistonColor = sgRender.add(new ColorSetting.Builder()
+        .name("Piston Side Color")
+        .description(BlackOut.COLOR)
+        .defaultValue(new SettingColor(255, 255, 0, 50))
+        .build()
+    );
+    private final Setting<Double> redstoneHeight = sgGeneral.add(new DoubleSetting.Builder()
+        .name("Redstone Height")
+        .description(".")
+        .defaultValue(1)
+        .sliderRange(-1, 1)
+        .build()
+    );
+    private final Setting<ShapeMode> redstoneShapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
+        .name("Redstone Shape Mode")
+        .description(".")
+        .defaultValue(ShapeMode.Both)
+        .build()
+    );
+    private final Setting<SettingColor> redstoneLineColor = sgRender.add(new ColorSetting.Builder()
+        .name("Redstone Line Color")
+        .description(BlackOut.COLOR)
+        .defaultValue(new SettingColor(255, 0, 0, 255))
+        .build()
+    );
+    public final Setting<SettingColor> redstoneColor = sgRender.add(new ColorSetting.Builder()
+        .name("Redstone Side Color")
+        .description(BlackOut.COLOR)
+        .defaultValue(new SettingColor(255, 0, 0, 50))
+        .build()
+    );
+
     private long lastAttack = 0;
     private long lastCrystal = 0;
     private long lastPiston = 0;
@@ -172,9 +320,9 @@ public class PistonCrystal extends BlackOutModule {
         updatePos();
 
         if (crystalPos != null) {
-            event.renderer.box(crystalPos, new Color(255, 0, 255, 50), null, ShapeMode.Sides, 0);
-            event.renderer.box(pistonPos, new Color(255, 255, 0, 50), null, ShapeMode.Sides, 0);
-            event.renderer.box(redstonePos, new Color(255, 0, 0, 50), null, ShapeMode.Sides, 0);
+            event.renderer.box(getBox(crystalPos, crystalHeight.get()), crystalColor.get(), crystalLineColor.get(), crystalShapeMode.get(), 0);
+            event.renderer.box(getBox(pistonPos, pistonHeight.get()), pistonColor.get(), pistonLineColor.get(), pistonShapeMode.get(), 0);
+            event.renderer.box(getBox(redstonePos, redstoneHeight.get()), redstoneColor.get(), redstoneLineColor.get(), redstoneShapeMode.get(), 0);
         }
 
         if (crystalPos == null) {
@@ -187,6 +335,10 @@ public class PistonCrystal extends BlackOutModule {
         updateCrystal();
 
         updateRedstone();
+    }
+
+    private Box getBox(BlockPos pos, double height) {
+        return new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + height, pos.getZ() + 1);
     }
 
     private void mineUpdate() {
@@ -257,6 +409,7 @@ public class PistonCrystal extends BlackOutModule {
         SettingUtils.swing(SwingState.Pre, SwingType.Attacking, Hand.MAIN_HAND);
         sendPacket(PlayerInteractEntityC2SPacket.attack(crystal, mc.player.isSneaking()));
         SettingUtils.swing(SwingState.Post, SwingType.Attacking, Hand.MAIN_HAND);
+        if (attackSwing.get()) clientSwing(attackHand.get(), Hand.MAIN_HAND);
 
         lastAttack = System.currentTimeMillis();
     }
@@ -312,9 +465,10 @@ public class PistonCrystal extends BlackOutModule {
 
         hand = hand == null ? Hand.MAIN_HAND : hand;
 
-        SettingUtils.swing(SwingState.Pre, SwingType.Placing, Hand.MAIN_HAND);
+        SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand);
         sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(Vec3d.ofCenter(pistonData.pos()), pistonData.dir(), pistonData.pos(), false), 0));
-        SettingUtils.swing(SwingState.Post, SwingType.Placing, Hand.MAIN_HAND);
+        SettingUtils.swing(SwingState.Post, SwingType.Placing, hand);
+        if (pistonSwing.get()) clientSwing(pistonHand.get(), hand);
 
         lastPiston = System.currentTimeMillis();
 
@@ -379,9 +533,10 @@ public class PistonCrystal extends BlackOutModule {
 
         hand = hand == null ? Hand.MAIN_HAND : hand;
 
-        SettingUtils.swing(SwingState.Pre, SwingType.Crystal, Hand.MAIN_HAND);
+        SettingUtils.swing(SwingState.Pre, SwingType.Interact, hand);
         sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(Vec3d.ofCenter(crystalPos.down()), crystalPlaceDir, crystalPos.down(), false), 0));
-        SettingUtils.swing(SwingState.Post, SwingType.Crystal, Hand.MAIN_HAND);
+        SettingUtils.swing(SwingState.Post, SwingType.Interact, hand);
+        if (crystalSwing.get()) clientSwing(crystalHand.get(), hand);
 
         ticksleft = 2;
         lastCrystal = System.currentTimeMillis();
@@ -458,6 +613,7 @@ public class PistonCrystal extends BlackOutModule {
         SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand);
         sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(Vec3d.ofCenter(redstoneData.pos()), redstoneData.dir(), redstoneData.pos(), false), 0));
         SettingUtils.swing(SwingState.Post, SwingType.Placing, hand);
+        if (redstoneSwing.get()) clientSwing(redstoneHand.get(), hand);
 
         redstoneTime = System.currentTimeMillis();
 
@@ -595,6 +751,7 @@ public class PistonCrystal extends BlackOutModule {
         SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand);
         sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(Vec3d.ofCenter(data.pos()), data.dir(), data.pos(), false), 0));
         SettingUtils.swing(SwingState.Post, SwingType.Placing, hand);
+        if (fireSwing.get()) clientSwing(fireHand.get(), hand);
 
         lastFire = System.currentTimeMillis();
 

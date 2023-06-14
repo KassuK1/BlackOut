@@ -7,6 +7,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.math.*;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;

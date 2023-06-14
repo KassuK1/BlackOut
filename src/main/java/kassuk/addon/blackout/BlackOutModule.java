@@ -1,15 +1,19 @@
 package kassuk.addon.blackout;
 
+import kassuk.addon.blackout.enums.SwingHand;
+import kassuk.addon.blackout.modules.SwingModifier;
 import kassuk.addon.blackout.utils.PriorityUtils;
 import meteordevelopment.meteorclient.mixininterface.IChatHud;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.config.Config;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Hand;
 
 import java.util.Objects;
 
@@ -70,13 +74,22 @@ public class BlackOutModule extends Module {
         ((IChatHud) mc.inGameHud.getChatHud()).add(text, id);
     }
 
-    //  Packets
     public void sendPacket(Packet<?> packet) {
         if (mc.getNetworkHandler() == null) {return;}
         mc.getNetworkHandler().sendPacket(packet);
     }
 
-    //  Settings
+    public void clientSwing(SwingHand swingHand, Hand realHand) {
+        Hand hand = switch (swingHand) {
+            case MainHand -> Hand.MAIN_HAND;
+            case OffHand -> Hand.OFF_HAND;
+            case RealHand -> realHand;
+        };
+
+        mc.player.swingHand(hand, true);
+        Modules.get().get(SwingModifier.class).startSwing(hand);
+    }
+
     public Setting<Boolean> addPauseEat(SettingGroup group) {
         return group.add(new BoolSetting.Builder()
             .name("Pause Eat")

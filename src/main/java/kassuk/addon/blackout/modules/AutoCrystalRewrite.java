@@ -3,6 +3,7 @@ package kassuk.addon.blackout.modules;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
+import kassuk.addon.blackout.enums.SwingHand;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
@@ -25,12 +26,14 @@ import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
+import meteordevelopment.meteorclient.utils.world.CardinalDirection;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.AirBlock;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.EndCrystalEntity;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -47,8 +50,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
-
-import static net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket.attack;
 
 /**
  * @author OLEPOSSU
@@ -186,12 +187,6 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .defaultValue(2)
         .min(0)
         .sliderRange(0, 20)
-        .build()
-    );
-    private final Setting<Boolean> hitboxExpand = sgPlace.add(new BoolSetting.Builder()
-        .name("Hitbox Expand")
-        .description("Expands enemy hitboxes to counter funny exploits")
-        .defaultValue(false)
         .build()
     );
 
@@ -483,6 +478,32 @@ public class AutoCrystalRewrite extends BlackOutModule {
     );
 
     //--------------------Render--------------------//
+    private final Setting<Boolean> placeSwing = sgRender.add(new BoolSetting.Builder()
+        .name("Place Swing")
+        .description("Renders swing animation when placing a crystal.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<SwingHand> placeHand = sgRender.add(new EnumSetting.Builder<SwingHand>()
+        .name("Place Hand")
+        .description("Which hand should be swung.")
+        .defaultValue(SwingHand.RealHand)
+        .visible(placeSwing::get)
+        .build()
+    );
+    private final Setting<Boolean> attackSwing = sgRender.add(new BoolSetting.Builder()
+        .name("Attack Swing")
+        .description("Renders swing animation when placing a crystal.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<SwingHand> attackHand = sgRender.add(new EnumSetting.Builder<SwingHand>()
+        .name("Attack Hand")
+        .description("Which hand should be swung.")
+        .defaultValue(SwingHand.RealHand)
+        .visible(attackSwing::get)
+        .build()
+    );
     private final Setting<Boolean> render = sgRender.add(new BoolSetting.Builder()
         .name("Render")
         .description("Renders box on placement.")
@@ -493,12 +514,6 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .name("Render Mode")
         .description("What should the render look like.")
         .defaultValue(RenderMode.BlackOut)
-        .build()
-    );
-    private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
-        .name("Shape Mode")
-        .description("Which parts of render should be rendered.")
-        .defaultValue(ShapeMode.Both)
         .build()
     );
     private final Setting<Double> renderTime = sgRender.add(new DoubleSetting.Builder()
@@ -558,6 +573,12 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .min(0)
         .sliderRange(0, 10)
         .visible(() -> renderMode.get().equals(RenderMode.BlackOut))
+        .build()
+    );
+    private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
+        .name("Shape Mode")
+        .description("Which parts of render should be rendered.")
+        .defaultValue(ShapeMode.Both)
         .build()
     );
     private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder()
@@ -942,7 +963,6 @@ public class AutoCrystalRewrite extends BlackOutModule {
         placing = false;
         expEntity = null;
 
-        boolean shouldProtectSurround = surroundProt();
         double[] value = null;
         Hand hand = getHand(stack -> stack.getItem() == Items.END_CRYSTAL);
 
@@ -957,7 +977,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
 
                 double[] dmg = getDmg(en.getPos())[0];
 
-                if (!canExplode(en.getPos(), shouldProtectSurround)) {
+                if (!canExplode(en.getPos())) {
                     continue;
                 }
 
@@ -1073,20 +1093,6 @@ public class AutoCrystalRewrite extends BlackOutModule {
         return placeTimer <= 0;
     }
 
-    private boolean surroundProt() {
-        if (!surroundAttack.get() || !Modules.get().isActive(SurroundPlus.class)) {
-            return false;
-        }
-
-        for (BlockPos attack : SurroundPlus.attack) {
-            if ((alwaysAttack.get() || OLEPOSSUtils.replaceable(attack)) &&
-                EntityUtils.intersectsWithEntity(Box.from(new BlockBox(attack)), entity -> entity instanceof EndCrystalEntity)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     private boolean holdingCheck() {
         switch (switchMode.get()) {
             case Silent -> {
@@ -1131,7 +1137,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
                 }
             }
 
-            SettingUtils.swing(SwingState.Pre, SwingType.Crystal, switched ? Hand.MAIN_HAND : handToUse);
+
 
             addExisted(pos.up());
 
@@ -1144,10 +1150,13 @@ public class AutoCrystalRewrite extends BlackOutModule {
             placeLimitTimer = 0;
             placeTimer = 1;
 
-            mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(switched ? Hand.MAIN_HAND : handToUse,
+            SettingUtils.swing(SwingState.Pre, SwingType.Interact, switched ? Hand.MAIN_HAND : handToUse);
+
+            sendPacket(new PlayerInteractBlockC2SPacket(switched ? Hand.MAIN_HAND : handToUse,
                 new BlockHitResult(new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), dir, pos, false), 0));
 
-            SettingUtils.swing(SwingState.Post, SwingType.Crystal, switched ? Hand.MAIN_HAND : handToUse);
+            SettingUtils.swing(SwingState.Post, SwingType.Interact, switched ? Hand.MAIN_HAND : handToUse);
+            if (placeSwing.get()) clientSwing(placeHand.get(), switched ? Hand.MAIN_HAND : handToUse);
 
             if (SettingUtils.shouldRotate(RotationType.Crystal)) {
                 Managers.ROTATION.end(Box.from(new BlockBox(pos)));
@@ -1233,22 +1242,22 @@ public class AutoCrystalRewrite extends BlackOutModule {
             delayTimer = 0;
             delayTicks = 0;
 
-            SettingUtils.swing(SwingState.Pre, SwingType.Attacking, Hand.MAIN_HAND);
+
 
             removeExisted(BlockPos.ofFloored(vec));
 
             SettingUtils.registerAttack(bb);
-            PlayerInteractEntityC2SPacket packet = attack(mc.player, mc.player.isSneaking());
+            PlayerInteractEntityC2SPacket packet = PlayerInteractEntityC2SPacket.attack(mc.player, mc.player.isSneaking());
             ((MixinInteractEntityC2SPacket) packet).setId(id);
 
-            mc.player.networkHandler.sendPacket(packet);
-            attacked = true;
+            SettingUtils.swing(SwingState.Pre, SwingType.Attacking, Hand.MAIN_HAND);
 
-            if (surroundAttack.get()) {
-                SurroundPlus.attacked = 2;
-            }
+            sendPacket(packet);
 
             SettingUtils.swing(SwingState.Post, SwingType.Attacking, Hand.MAIN_HAND);
+            if (attackSwing.get()) clientSwing(attackHand.get(), Hand.MAIN_HAND);
+
+            attacked = true;
 
             blocked.clear();
             if (setDead.get()) {
@@ -1294,7 +1303,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         }
     }
 
-    private boolean canExplode(Vec3d vec, boolean sProt) {
+    private boolean canExplode(Vec3d vec) {
         if (onlyOwn.get() && !isOwn(vec)) {
             return false;
         }
@@ -1303,7 +1312,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         }
 
         double[][] result = getDmg(vec);
-        return explodeDamageCheck(result[0], result[1], isOwn(vec), sProt);
+        return explodeDamageCheck(result[0], result[1], isOwn(vec));
     }
 
     private boolean canExplodePlacing(Vec3d vec) {
@@ -1315,7 +1324,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         }
 
         double[][] result = getDmg(vec);
-        return explodeDamageCheck(result[0], result[1], isOwn(vec), false);
+        return explodeDamageCheck(result[0], result[1], isOwn(vec));
     }
 
     private Hand getHand(Predicate<ItemStack> predicate) {
@@ -1436,7 +1445,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         return true;
     }
 
-    private boolean explodeDamageCheck(double[] dmg, double[] health, boolean own, boolean sProt) {
+    private boolean explodeDamageCheck(double[] dmg, double[] health, boolean own) {
         boolean checkOwn = expMode.get() == ExplodeMode.FullCheck
             || expMode.get() == ExplodeMode.SelfDmgCheck
             || expMode.get() == ExplodeMode.SelfDmgOwn
@@ -1459,14 +1468,14 @@ public class AutoCrystalRewrite extends BlackOutModule {
             }
 
         }
-        if (checkDmg && !sProt) {
+        if (checkDmg) {
             if (health[0] >= 0 && dmg[0] * forcePop.get() >= health[0]) {
                 return true;
             }
 
         }
 
-        if (checkDmg && !sProt) {
+        if (checkDmg) {
             if (dmg[0] < minExplode.get()) {
                 return false;
             }
@@ -1480,7 +1489,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         }
 
 
-        if (checkOwn && !sProt) {
+        if (checkOwn) {
             if (dmg[1] > maxFriendExp.get()) {
                 return false;
             }
@@ -1575,7 +1584,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
 
     private Vec3d smoothMove(Vec3d current, Vec3d target, double delta) {
         if (current == null) return target;
-        
+
         double absX = Math.abs(current.x - target.x);
         double absY = Math.abs(current.y - target.y);
         double absZ = Math.abs(current.z - target.z);
@@ -1710,7 +1719,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
                         }
                     }
 
-                    map.put(en, hitboxExpand.get() ? box.expand(0.00001, 0, 0.00001) : box);
+                    map.put(en, box);
                 }
             }
         }

@@ -2,16 +2,16 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
-import kassuk.addon.blackout.enums.RotationType;
-import kassuk.addon.blackout.enums.SwingState;
-import kassuk.addon.blackout.enums.SwingType;
+import kassuk.addon.blackout.enums.*;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.timers.BlockTimerList;
 import kassuk.addon.blackout.utils.BOInvUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.PlaceData;
 import kassuk.addon.blackout.utils.SettingUtils;
+import kassuk.addon.blackout.utils.meteor.BODamageUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
+import meteordevelopment.meteorclient.events.world.BlockUpdateEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
@@ -19,577 +19,738 @@ import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
+import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
+import meteordevelopment.meteorclient.utils.world.CardinalDirection;
 import meteordevelopment.orbit.EventHandler;
+import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
-import net.minecraft.entity.EntityType;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.decoration.EndCrystalEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
- * @author KassuK
  * @author OLEPOSSU
- * @author ccetl
  */
 
 public class SurroundPlus extends BlackOutModule {
     public SurroundPlus() {
-        super(BlackOut.BLACKOUT, "Surround+", "Places blocks around your legs to protect from explosions.");
+        super(BlackOut.BLACKOUT, "Surround+", "Places blocks around your legs to protect from explosions. Dont use yet");
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private final SettingGroup sgPlacing = settings.createGroup("Placing");
     private final SettingGroup sgToggle = settings.createGroup("Toggle");
+    private final SettingGroup sgSpeed = settings.createGroup("Speed");
+    private final SettingGroup sgBlocks = settings.createGroup("Blocks");
+    private final SettingGroup sgAttack = settings.createGroup("Attack");
     private final SettingGroup sgRender = settings.createGroup("Render");
 
     //--------------------General--------------------//
-    private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
-        .name("Pause Eat")
-        .description("Pauses when you are eating.")
+    private final Setting<Boolean> center = sgGeneral.add(new BoolSetting.Builder()
+        .name("Center")
+        .description("Moves to block center before surrounding.")
         .defaultValue(false)
         .build()
     );
-    private final Setting<Boolean> onlyConfirmed = sgGeneral.add(new BoolSetting.Builder()
-        .name("Only Confirmed")
-        .description("Only places on blocks the server has confirmed to exist.")
+    private final Setting<Boolean> smartCenter = sgGeneral.add(new BoolSetting.Builder()
+        .name("Smart Center")
+        .description("Only moves until whole hitbox is inside target block.")
+        .defaultValue(true)
+        .visible(center::get)
+        .build()
+    );
+    private final Setting<Boolean> phaseCenter = sgGeneral.add(new BoolSetting.Builder()
+        .name("Phase Friendly")
+        .description("Doesn't center if clipped inside a block.")
+        .defaultValue(true)
+        .visible(center::get)
+        .build()
+    );
+    private final Setting<Boolean> pauseEat = addPauseEat(sgGeneral);
+    private final Setting<Boolean> packet = sgGeneral.add(new BoolSetting.Builder()
+        .name("Packet")
+        .description(".")
         .defaultValue(false)
         .build()
     );
-    private final Setting<List<Block>> blocks = sgGeneral.add(new BlockListSetting.Builder()
-        .name("Blocks")
-        .description("Blocks to use.")
-        .defaultValue(Blocks.OBSIDIAN, Blocks.CRYING_OBSIDIAN, Blocks.NETHERITE_BLOCK)
+    private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
+        .name("Switch Mode")
+        .description("Method of switching. Silent is the most reliable but delays crystals on some servers.")
+        .defaultValue(SwitchMode.Silent)
         .build()
     );
-    private final Setting<List<Block>> sBlocks = sgGeneral.add(new BlockListSetting.Builder()
-        .name("Secondary Blocks")
-        .description("Blocks to use.")
-        .defaultValue()
-        .build()
-    );
-    private final Setting<Boolean> floor = sgGeneral.add(new BoolSetting.Builder()
-        .name("Floor")
-        .description("Places blocks under your feet.")
+    private final Setting<Boolean> extend = sgGeneral.add(new BoolSetting.Builder()
+        .name("Extend")
+        .description(".")
         .defaultValue(true)
         .build()
     );
 
-    //--------------------Placing--------------------//
-    private final Setting<SwitchMode> switchMode = sgPlacing.add(new EnumSetting.Builder<SwitchMode>()
-        .name("Switch Mode")
-        .description("Method of switching. Silent is the most reliable.")
-        .defaultValue(SwitchMode.Silent)
-        .build()
-    );
-    private final Setting<Double> placeDelay = sgPlacing.add(new DoubleSetting.Builder()
-        .name("Place Delay")
-        .description("Delay between places.")
-        .defaultValue(0).range(0, 10)
-        .sliderRange(0, 10)
-        .build()
-    );
-    private final Setting<Integer> places = sgPlacing.add(new IntSetting.Builder()
-        .name("Places")
-        .description("Blocks placed per place.")
-        .defaultValue(1).range(1, 10)
-        .sliderRange(1, 10)
-        .build()
-    );
-    private final Setting<Double> delay = sgPlacing.add(new DoubleSetting.Builder()
-        .name("Delay")
-        .description("Delay between placing at each spot.")
-        .defaultValue(0.3)
-        .range(0, 10)
-        .sliderRange(0, 10)
-        .build()
-    );
-
-    //--------------------Toggle--------------------//
+    //--------------------General--------------------//
     private final Setting<Boolean> toggleMove = sgToggle.add(new BoolSetting.Builder()
         .name("Toggle Move")
-        .description("Toggles when you move horizontally.")
+        .description(".")
         .defaultValue(false)
         .build()
     );
-    private final Setting<ToggleYMode> toggleY = sgToggle.add(new EnumSetting.Builder<ToggleYMode>()
-        .name("Toggle Y")
-        .description("Toggles when you move vertically.")
-        .defaultValue(ToggleYMode.Full)
+    private final Setting<VerticalToggleMode> toggleVertical = sgToggle.add(new EnumSetting.Builder<VerticalToggleMode>()
+        .name("Toggle Vertical")
+        .description(".")
+        .defaultValue(VerticalToggleMode.Up)
         .build()
     );
-    private final Setting<Boolean> toggleSneak = sgToggle.add(new BoolSetting.Builder()
-        .name("Toggle Sneak")
-        .description("Toggles when you sneak.")
+
+    //--------------------Speed--------------------//
+    private final Setting<PlaceDelayMode> placeDelayMode = sgSpeed.add(new EnumSetting.Builder<PlaceDelayMode>()
+        .name("Place Delay Mode")
+        .description(".")
+        .defaultValue(PlaceDelayMode.Ticks)
+        .build()
+    );
+    private final Setting<Integer> placeDelayT = sgSpeed.add(new IntSetting.Builder()
+        .name("Place Tick Delay")
+        .description("Tick delay between places.")
+        .defaultValue(1)
+        .min(1)
+        .sliderRange(0, 20)
+        .visible(() -> placeDelayMode.get() == PlaceDelayMode.Ticks)
+        .build()
+    );
+    private final Setting<Double> placeDelayS = sgSpeed.add(new DoubleSetting.Builder()
+        .name("Place Delay")
+        .description("Delay between places.")
+        .defaultValue(0.1)
+        .min(0)
+        .sliderRange(0, 1)
+        .visible(() -> placeDelayMode.get() == PlaceDelayMode.Seconds)
+        .build()
+    );
+    private final Setting<Integer> places = sgSpeed.add(new IntSetting.Builder()
+        .name("Places")
+        .description("How many blocks to place each time.")
+        .defaultValue(1)
+        .min(1)
+        .sliderRange(0, 20)
+        .build()
+    );
+    private final Setting<Double> delay = sgSpeed.add(new DoubleSetting.Builder()
+        .name("Multi Delay")
+        .description("Waits x seconds before tryign to place at the same position if there is more than 1 missing block.")
+        .defaultValue(0.3)
+        .min(0)
+        .sliderRange(0, 1)
+        .build()
+    );
+    private final Setting<Double> singleDelay = sgSpeed.add(new DoubleSetting.Builder()
+        .name("Single Delay")
+        .description("Waits x seconds before tryign to place at the same position if there is only 1 missing block.")
+        .defaultValue(0.02)
+        .min(0)
+        .sliderRange(0, 1)
+        .build()
+    );
+
+    //--------------------Blocks--------------------//
+    private final Setting<List<Block>> blocks = sgBlocks.add(new BlockListSetting.Builder()
+        .name("Blocks")
+        .description("Blocks to use.")
+        .defaultValue(Blocks.OBSIDIAN)
+        .build()
+    );
+    private final Setting<List<Block>> supportBlocks = sgBlocks.add(new BlockListSetting.Builder()
+        .name("Support Blocks")
+        .description("Blocks to use for support.")
+        .defaultValue(Blocks.OBSIDIAN)
+        .build()
+    );
+
+    //--------------------Attack--------------------//
+    private final Setting<Boolean> attack = sgAttack.add(new BoolSetting.Builder()
+        .name("Attack")
+        .description("Attacks crystals blocking surround.")
+        .defaultValue(false)
+        .build()
+    );
+    private final Setting<Double> attackSpeed = sgAttack.add(new DoubleSetting.Builder()
+        .name("Attack Speed")
+        .description("How many times to attack every second.")
+        .defaultValue(4)
+        .min(0)
+        .sliderRange(0, 20)
+        .build()
+    );
+    private final Setting<Boolean> alwaysAttack = sgAttack.add(new BoolSetting.Builder()
+        .name("Always Attack")
+        .description("Attacks crystals even when surround block isn't broken.")
+        .defaultValue(false)
+        .build()
+    );
+    private final Setting<Boolean> antiCev = sgAttack.add(new BoolSetting.Builder()
+        .name("Anti CEV")
+        .description("Attacks crystals placed on surround blocks.")
         .defaultValue(false)
         .build()
     );
 
     //--------------------Render--------------------//
+    private final Setting<Boolean> placeSwing = sgRender.add(new BoolSetting.Builder()
+        .name("Place Swing")
+        .description("Renders swing animation when placing a block.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<SwingHand> placeHand = sgRender.add(new EnumSetting.Builder<SwingHand>()
+        .name("Place Swing Hand")
+        .description("Which hand should be swung.")
+        .defaultValue(SwingHand.RealHand)
+        .visible(placeSwing::get)
+        .build()
+    );
+    private final Setting<Boolean> attackSwing = sgRender.add(new BoolSetting.Builder()
+        .name("Attack Swing")
+        .description("Renders swing animation when placing a crystal.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<SwingHand> attackHand = sgRender.add(new EnumSetting.Builder<SwingHand>()
+        .name("Attack Swing Hand")
+        .description("Which hand should be swung.")
+        .defaultValue(SwingHand.RealHand)
+        .visible(attackSwing::get)
+        .build()
+    );
     private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
         .name("Shape Mode")
-        .description("Which parts of render boxes should be rendered.")
+        .description("Which parts of boxes should be rendered.")
         .defaultValue(ShapeMode.Both)
         .build()
     );
     private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder()
         .name("Line Color")
-        .description("Color of the outlines")
+        .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(255, 0, 0, 255))
         .build()
     );
     private final Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder()
         .name("Side Color")
-        .description("Color of the sides.")
+        .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(255, 0, 0, 50))
-        .build()
-    );
-    private final Setting<Boolean> renderPlaced = sgRender.add(new BoolSetting.Builder()
-        .name("Render Placed")
-        .description("Renders blocks after they have been placed.")
-        .defaultValue(false)
-        .build()
-    );
-    private final Setting<ShapeMode> placedShapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
-        .name("Placed Shape Mode")
-        .description("Which parts of render boxes should be rendered.")
-        .defaultValue(ShapeMode.Both)
-        .visible(renderPlaced::get)
-        .build()
-    );
-    private final Setting<SettingColor> placedLineColor = sgRender.add(new ColorSetting.Builder()
-        .name("Placed Line Color")
-        .description("Color of the outlines")
-        .defaultValue(new SettingColor(255, 0, 0, 255))
-        .visible(renderPlaced::get)
-        .build()
-    );
-    private final Setting<SettingColor> placedSideColor = sgRender.add(new ColorSetting.Builder()
-        .name("Placed Side Color")
-        .description("Color of the sides.")
-        .defaultValue(new SettingColor(255, 0, 0, 50))
-        .visible(renderPlaced::get)
         .build()
     );
     private final Setting<ShapeMode> supportShapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
         .name("Support Shape Mode")
-        .description("Which parts of render boxes should be rendered for support blocks.")
+        .description("Which parts of boxes should be rendered.")
         .defaultValue(ShapeMode.Both)
         .build()
     );
     private final Setting<SettingColor> supportLineColor = sgRender.add(new ColorSetting.Builder()
         .name("Support Line Color")
-        .description("Color of support block outlines")
-        .defaultValue(new SettingColor(255, 0, 0, 255))
+        .description(BlackOut.COLOR)
+        .defaultValue(new SettingColor(255, 0, 0, 150))
         .build()
     );
     private final Setting<SettingColor> supportSideColor = sgRender.add(new ColorSetting.Builder()
         .name("Support Side Color")
-        .description("Color of support block sides.")
+        .description(BlackOut.COLOR)
         .defaultValue(new SettingColor(255, 0, 0, 50))
         .build()
     );
 
-    private final BlockTimerList timers = new BlockTimerList();
-    private BlockPos startPos = null;
-    private double placeTimer = 0;
-    private int placesLeft = 0;
-    private List<Render> render = new ArrayList<>();
-    public static List<BlockPos> attack = new ArrayList<>();
+    private int tickTimer = 0;
+    private double timer = 0;
+    private final List<BlockPos> insideBlocks = new ArrayList<>();
+    private final List<BlockPos> surroundBlocks = new ArrayList<>();
+    private final List<BlockPos> supportPositions = new ArrayList<>();
+    private final List<BlockPos> valids = new ArrayList<>();
     private final BlockTimerList placed = new BlockTimerList();
-    private boolean lastSneak = false;
+    private final List<Render> render = new ArrayList<>();
+    private boolean support = false;
+    private Hand hand = null;
+    private int blocksLeft = 0;
+    private int placesLeft = 0;
+    private FindItemResult result = null;
+    private boolean switched = false;
+    private BlockPos lastPos = null;
+    private boolean centered = false;
+    private long lastAttack = 0;
+
     public static boolean placing = false;
-    public static long attacked = 0;
 
     @Override
     public void onActivate() {
-        super.onActivate();
-        if (mc.player == null || mc.world == null) {
-            toggle();
-        }
-        startPos = mc.player.getBlockPos();
+        tickTimer = placeDelayT.get();
+        timer = placeDelayS.get();
         placesLeft = places.get();
-        placeTimer = 0;
-        render = new ArrayList<>();
+        centered = false;
+        lastPos = mc.player.getBlockPos();
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
+    private void onBlock(BlockUpdateEvent event) {
+        if (event.oldState.getBlock() != event.newState.getBlock() && !OLEPOSSUtils.replaceable(event.pos) && surroundBlocks.contains(event.pos)) {
+            render.add(new Render(event.pos, System.currentTimeMillis()));
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
     private void onTick(TickEvent.Pre event) {
-        attacked--;
+        tickTimer++;
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
-        placeTimer = Math.min(placeDelay.get(), placeTimer + event.frameTime);
-        if (placeTimer >= placeDelay.get()) {
-            placesLeft = places.get();
-            placeTimer = 0;
-        }
-        render.forEach(item -> event.renderer.box(Box.from(new BlockBox(item.pos)),
-            switch (item.type) {
-                case Normal -> sideColor.get();
-                case Support -> supportSideColor.get();
-                case Placed -> placedSideColor.get();
-            }, switch (item.type) {
-                case Normal -> lineColor.get();
-                case Support -> supportLineColor.get();
-                case Placed -> placedLineColor.get();
-            }, switch (item.type) {
-                case Normal -> shapeMode.get();
-                case Support -> supportShapeMode.get();
-                case Placed -> placedShapeMode.get();
-            }, 0));
-        update();
-    }
-
-    private void update() {
-        if (mc.player == null && mc.world == null) {
-            return;
-        }
-
         placing = false;
+        timer += event.frameTime;
 
-        // Move Check
-        if (toggleMove.get() && (mc.player.getBlockPos().getX() != startPos.getX() || mc.player.getBlockPos().getZ() != startPos.getZ())) {
-            sendDisableMsg("moved");
-            toggle();
-            return;
+        setBB();
+
+        if (checkToggle()) return;
+
+        updateBlocks();
+        updateSupport();
+
+        surroundBlocks.stream().filter(OLEPOSSUtils::replaceable).forEach(block -> event.renderer.box(block, sideColor.get(), lineColor.get(), shapeMode.get(), 0));
+        supportPositions.forEach(block -> event.renderer.box(block, supportSideColor.get(), supportLineColor.get(), supportShapeMode.get(), 0));
+        render.removeIf(r -> System.currentTimeMillis() - r.time > 1000);
+
+        render.forEach(r -> {
+            double progress = 1 - Math.min(System.currentTimeMillis() - r.time, 500) / 500d;
+
+            event.renderer.box(r.pos, new Color(sideColor.get().r, sideColor.get().g, sideColor.get().b, (int) Math.round(sideColor.get().a * progress)), new Color(lineColor.get().r, lineColor.get().g, lineColor.get().b, (int) Math.round(lineColor.get().a * progress)), shapeMode.get(), 0);
+        });
+
+        if (pauseEat.get() && mc.player.isUsingItem()) {return;}
+
+        placeBlocks();
+    }
+
+    private void updateAttack() {
+        if (!attack.get()) return;
+        if (System.currentTimeMillis() - lastAttack < 1000 / attackSpeed.get()) return;
+
+        Entity blocking = getBlocking();
+
+        if (blocking == null) return;
+
+        if (SettingUtils.shouldRotate(RotationType.Attacking) && !Managers.ROTATION.start(blocking.getBoundingBox(), priority - 0.1, RotationType.Attacking)) return;
+
+        SettingUtils.swing(SwingState.Pre, SwingType.Attacking, Hand.MAIN_HAND);
+        sendPacket(PlayerInteractEntityC2SPacket.attack(blocking, mc.player.isSneaking()));
+        SettingUtils.swing(SwingState.Post, SwingType.Attacking, Hand.MAIN_HAND);
+
+        if (attackSwing.get()) clientSwing(attackHand.get(), Hand.MAIN_HAND);
+
+        lastAttack = System.currentTimeMillis();
+    }
+
+    private Entity getBlocking() {
+        Entity crystal = null;
+        double lowest = 1000;
+
+        for (Entity entity : mc.world.getEntities()) {
+            if (!(entity instanceof EndCrystalEntity)) continue;
+            if (mc.player.distanceTo(entity) > 5) continue;
+            if (!SettingUtils.inAttackRange(entity.getBoundingBox())) continue;
+
+            if (antiCev.get()) {
+                for (BlockPos pos : surroundBlocks) {
+                    if (entity.getBlockPos().equals(pos.up())) {
+                        double dmg = Math.max(10, BODamageUtils.crystalDamage(mc.player, mc.player.getBoundingBox(), entity.getPos(), null, false));
+
+                        if (dmg < lowest) {
+                            lowest = dmg;
+                            crystal = entity;
+                        }
+                    }
+                }
+            }
+
+            for (BlockPos pos : alwaysAttack.get() ? surroundBlocks : valids) {
+                if (!Box.from(new BlockBox(pos)).intersects(entity.getBoundingBox())) continue;
+
+                double dmg = BODamageUtils.crystalDamage(mc.player, mc.player.getBoundingBox(), entity.getPos(), null, false);
+                if (dmg < lowest) {
+                    crystal = entity;
+                    lowest = dmg;
+                }
+            }
         }
+        return crystal;
+    }
 
-        // Y Check
-        switch (toggleY.get()) {
-            case Full -> {
-                if (mc.player.getBlockPos().getY() != startPos.getY()) {
-                    sendDisableMsg("moved vertically");
-                    toggle();
-                    return;
-                }
+    private void setBB() {
+        if (!centered && center.get() && mc.player.isOnGround() && (!phaseCenter.get() || !OLEPOSSUtils.inside(mc.player, mc.player.getBoundingBox().shrink(0.01, 0.01, 0.01)))) {
+            double targetX, targetZ;
+
+            if (smartCenter.get()) {
+                targetX = MathHelper.clamp(mc.player.getX(), mc.player.getBlockX() + 0.31, mc.player.getBlockX() + 0.69);
+                targetZ = MathHelper.clamp(mc.player.getZ(), mc.player.getBlockZ() + 0.31, mc.player.getBlockZ() + 0.69);
+            } else {
+                targetX = mc.player.getBlockX() + 0.5;
+                targetZ = mc.player.getBlockZ() + 0.5;
             }
-            case Up -> {
-                if (mc.player.getBlockPos().getY() > startPos.getY()) {
-                    sendDisableMsg("moved up");
-                    toggle();
-                    return;
-                }
+
+            double dist = new Vec3d(targetX, 0, targetZ).distanceTo(new Vec3d(mc.player.getX(), 0, mc.player.getZ()));
+
+            if (dist < 0.2873) {
+                sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(targetX, mc.player.getY(), targetZ, Managers.ONGROUND.isOnGround()));
             }
-            case Down -> {
-                if (mc.player.getBlockPos().getY() < startPos.getY()) {
-                    sendDisableMsg("moved down");
-                    toggle();
-                    return;
-                }
+
+            double x = mc.player.getX(), z = mc.player.getZ();
+
+            for (int i = 0; i < Math.ceil(dist / 0.2873); i++) {
+                double yaw = Rotations.getYaw(new Vec3d(targetX, 0, targetZ)) + 90;
+
+                x += Math.cos(Math.toRadians(yaw)) * 0.2873;
+                z += Math.sin(Math.toRadians(yaw)) * 0.2873;
+
+                sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(x, mc.player.getY(), z, Managers.ONGROUND.isOnGround()));
             }
+
+            mc.player.setPos(targetX, mc.player.getY(), targetZ);
+            mc.player.setBoundingBox(new Box(targetX - 0.3, mc.player.getY(), targetZ - 0.3, targetX + 0.3, mc.player.getY() + (mc.player.getBoundingBox().maxY - mc.player.getBoundingBox().minY), targetZ + 0.3));
+
+            centered = true;
         }
+    }
 
-        // Sneak Check
-        if (toggleSneak.get()) {
-            boolean isClicked = mc.options.sneakKey.isPressed();
-            if (isClicked && !lastSneak) {
-                sendDisableMsg("sneaked");
+    private boolean checkToggle() {
+        if (lastPos != null) {
+            if (toggleMove.get() && (mc.player.getBlockX() != lastPos.getX() || mc.player.getBlockZ() != lastPos.getZ())) {
                 toggle();
-                return;
+                sendToggledMsg("moved horizontally");
+                return true;
             }
-            lastSneak = isClicked;
-        }
 
-        List<BlockPos> placements = check();
-        if (placements == null) return;
-
-        FindItemResult hotbar = InvUtils.findInHotbar(item -> validItem(item.getItem(), shouldSecondary(false)));
-        FindItemResult inventory = InvUtils.find(item -> validItem(item.getItem(), shouldSecondary(true)));
-
-        Hand hand = validItem(Managers.HOLDING.getStack().getItem(), shouldSecondary(false)) ? Hand.MAIN_HAND : validItem(mc.player.getOffHandStack().getItem(), false) ? Hand.OFF_HAND : null;
-
-        if ((hand != null || ((switchMode.get() == SwitchMode.PickSilent || switchMode.get() == SwitchMode.InvSwitch) && inventory.slot() >= 0) || ((switchMode.get() == SwitchMode.Silent || switchMode.get() == SwitchMode.Normal) && hotbar.slot() >= 0)) && (!pauseEat.get() || !mc.player.isUsingItem()) && placesLeft > 0 && !placements.isEmpty()) {
-
-            Map<PlaceData, BlockPos> toPlace = new HashMap<>();
-            for (BlockPos placement : placements) {
-                PlaceData data = onlyConfirmed.get() ? SettingUtils.getPlaceData(placement) : SettingUtils.getPlaceDataOR(placement, placed::contains);
-                if (toPlace.size() < placesLeft && data.valid()) {
-                    toPlace.put(data, placement);
+            if (toggleVertical.get() == VerticalToggleMode.Up || toggleVertical.get() == VerticalToggleMode.Any) {
+                if (mc.player.getBlockY() > lastPos.getY()) {
+                    toggle();
+                    sendToggledMsg("moved up");
+                    return true;
                 }
             }
-            toPlace = sort(toPlace);
-
-            if (!toPlace.isEmpty()) {
-                placeBlocks(hand, hotbar, inventory, toPlace);
-            }
-        }
-
-    }
-
-    private boolean validItem(Item item, boolean secondary) {
-        if (!(item instanceof BlockItem block)) {
-            return false;
-        }
-
-        if (secondary) {
-            return sBlocks.get().contains(block.getBlock());
-        }
-        return blocks.get().contains(block.getBlock());
-    }
-
-    private boolean shouldSecondary(boolean inv) {
-        for (Block b : blocks.get()) {
-            if (inv) {
-                if (InvUtils.find(b.asItem()).found()) {
-                    return false;
+            if (toggleVertical.get() == VerticalToggleMode.Down || toggleVertical.get() == VerticalToggleMode.Any) {
+                if (mc.player.getBlockY() < lastPos.getY()) {
+                    toggle();
+                    sendToggledMsg("moved down");
+                    return true;
                 }
-                continue;
-            }
-            if (InvUtils.findInHotbar(b.asItem()).found()) {
-                return false;
             }
         }
+
+        lastPos = mc.player.getBlockPos();
+        return false;
+    }
+
+    private void placeBlocks() {
+        List<BlockPos> positions = new ArrayList<>();
+        setSupport();
+
+        if (support) positions.addAll(supportPositions);
+        else positions.addAll(surroundBlocks);
+
+        valids.clear();
+        valids.addAll(positions.stream().filter(this::validBlock).toList());
+
+        updateAttack();
+
+        updateResult();
+
+        updatePlaces();
+
+        blocksLeft = Math.min(placesLeft, result.count());
+
+        hand = getHand();
+        switched = false;
+
+        valids.stream().filter(pos -> !EntityUtils.intersectsWithEntity(Box.from(new BlockBox(pos)), this::validEntity)).sorted(Comparator.comparingDouble(Rotations::getYaw)).forEach(this::place);
+
+        if (switched && hand == null) {
+            switch (switchMode.get()) {
+                case Silent -> InvUtils.swapBack();
+                case PickSilent -> BOInvUtils.pickSwapBack();
+                case InvSwitch -> BOInvUtils.swapBack();
+            }
+        }
+    }
+
+    private void updatePlaces() {
+        switch (placeDelayMode.get()) {
+            case Ticks -> {
+                if (placesLeft >= places.get() || tickTimer >= placeDelayT.get()) {
+                    placesLeft = places.get();
+                    tickTimer = 0;
+                }
+            }
+            case Seconds -> {
+                if (placesLeft >= places.get() || timer >= placeDelayS.get()) {
+                    placesLeft = places.get();
+                    timer = 0;
+                }
+            }
+        }
+    }
+
+    private boolean validBlock(BlockPos pos) {
+        if (!OLEPOSSUtils.replaceable(pos)) return false;
+
+        PlaceData data = SettingUtils.getPlaceDataOR(pos, placed::contains);
+        if (!data.valid()) return false;
+
+        if (!SettingUtils.inPlaceRange(data.pos())) return false;
+
         return true;
     }
 
-    private void placeBlocks(Hand hand, FindItemResult hotbar, FindItemResult inventory, Map<PlaceData, BlockPos> toPlace) {
-        @SuppressWarnings("DataFlowIssue")
-        int obsidian = hand == Hand.MAIN_HAND ? Managers.HOLDING.getStack().getCount() : hand == Hand.OFF_HAND ? mc.player.getOffHandStack().getCount() : -1;
-
-        switch (switchMode.get()) {
-            case Silent, Normal -> obsidian = hotbar.count();
-            case PickSilent, InvSwitch -> obsidian = inventory.slot() >= 0 ? inventory.count() : -1;
+    private void place(BlockPos pos) {
+        if (blocksLeft <= 0) {
+            return;
         }
 
-        if (obsidian >= 0) {
-            boolean switched = false;
-            int i = 0;
-            placing = true;
-            for (Map.Entry<PlaceData, BlockPos> entry : toPlace.entrySet()) {
-                if (i == Math.min(obsidian, toPlace.size())) {
-                    continue;
-                }
+        PlaceData data = SettingUtils.getPlaceDataOR(pos, placed::contains);
 
-                PlaceData placeData = entry.getKey();
-                BlockPos pos = entry.getValue();
-                if (placeData.valid()) {
-                    boolean rotated = !SettingUtils.shouldRotate(RotationType.Placing) || Managers.ROTATION.start(placeData.pos(), 1, RotationType.Placing);
+        if (data == null || !data.valid()) {
+            return;
+        }
 
-                    if (!rotated) {
-                        break;
-                    }
-                    if (!switched) {
-                        if (hand == null) {
-                            switch (switchMode.get()) {
-                                case Silent, Normal -> {
-                                    InvUtils.swap(hotbar.slot(), true);
-                                    switched = true;
-                                }
-                                case PickSilent -> switched = BOInvUtils.pickSwitch(inventory.slot());
-                                case InvSwitch -> switched = BOInvUtils.invSwitch(inventory.slot());
-                            }
-                        }
-                    }
-                    place(placeData, pos, hand == null ? Hand.MAIN_HAND : hand);
-                }
-            }
+        placing = true;
 
-            if (switched) {
-                switch (switchMode.get()) {
-                    case Silent -> InvUtils.swapBack();
-                    case PickSilent -> BOInvUtils.pickSwapBack();
-                    case InvSwitch -> BOInvUtils.swapBack();
+        if (SettingUtils.shouldRotate(RotationType.Placing) && !Managers.ROTATION.start(data.pos(), priority, RotationType.Placing)) {return;}
+
+        if (!switched && hand == null) {
+            switch (switchMode.get()) {
+                case Normal, Silent -> {
+                    InvUtils.swap(result.slot(), true);
+                    switched = true;
                 }
+                case PickSilent -> switched = BOInvUtils.pickSwitch(result.slot());
+                case InvSwitch -> switched = BOInvUtils.invSwitch(result.slot());
             }
         }
-    }
 
-    private void place(PlaceData d, BlockPos ogPos, Hand hand) {
-        timers.add(ogPos, delay.get());
-        if (onlyConfirmed.get()) {
-            placed.add(ogPos, 1);
+        if (!switched && hand == null) {
+            return;
         }
 
-        placeTimer = 0;
+        SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand == null ? Hand.MAIN_HAND : hand);
+        sendPacket(new PlayerInteractBlockC2SPacket(hand == null ? Hand.MAIN_HAND : hand, new BlockHitResult(data.pos().toCenterPos(), data.dir(), data.pos(), false), 0));
+        SettingUtils.swing(SwingState.Post, SwingType.Placing, hand == null ? Hand.MAIN_HAND : hand);
+        if (placeSwing.get()) clientSwing(placeHand.get(), hand == null ? Hand.MAIN_HAND : hand);
+
+        if (!packet.get()) {
+            setBlock(pos);
+        }
+
+        placed.add(pos, 0.5);
+        blocksLeft--;
         placesLeft--;
 
-        SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand);
-
-        assert mc.player != null;
-        mc.player.networkHandler.sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(new Vec3d(d.pos().getX() + 0.5, d.pos().getY() + 0.5, d.pos().getZ() + 0.5), d.dir(), d.pos(), false), 0));
-
-        SettingUtils.swing(SwingState.Post, SwingType.Placing, hand);
-
         if (SettingUtils.shouldRotate(RotationType.Placing)) {
-            Managers.ROTATION.end(d.pos());
+            Managers.ROTATION.end(data.pos());
         }
     }
 
-    private List<BlockPos> check() {
-        if (mc.player == null && mc.world == null) {
-            return null;
-        }
+    private void setBlock(BlockPos pos) {
+        Item item = mc.player.getInventory().getStack(result.slot()).getItem();
 
-        List<BlockPos> list = new ArrayList<>();
-        List<Render> renders = new ArrayList<>();
-        List<BlockPos> toAttack = new ArrayList<>();
+        if (!(item instanceof BlockItem block)) {return;}
 
-        getBlocks(getSize())
-            .forEach(position -> {
-                PlaceData data = onlyConfirmed.get() ? SettingUtils.getPlaceData(position) : SettingUtils.getPlaceDataOR(position, placed::contains);
-
-                if (data.valid()) {
-                    if (!timers.contains(position)
-                        && !EntityUtils.intersectsWithEntity(Box.from(new BlockBox(position)), entity -> isAlive() && !entity.isSpectator() && entity.getType() != EntityType.ITEM)
-                        && OLEPOSSUtils.replaceable(position)) {
-                        list.add(position);
-                    }
-                    if (EntityUtils.intersectsWithEntity(Box.from(new BlockBox(position)), entity -> isAlive() && entity instanceof EndCrystalEntity) && !EntityUtils.intersectsWithEntity(Box.from(new BlockBox(position)), entity -> !entity.isSpectator() && !(entity instanceof EndCrystalEntity || entity instanceof ItemEntity))) {
-                        toAttack.add(position);
-                    }
-                } else if (OLEPOSSUtils.replaceable(position)) {
-                    Direction support = getSupport(position);
-
-                    if (support != null) {
-                        if (!timers.contains(position.offset(support))) {
-                            list.add(position.offset(support));
-                        }
-                        addRender(renders, new Render(position.offset(support), RenderType.Support));
-                    }
-                }
-                if (!renderPlaced.get() && !OLEPOSSUtils.replaceable(position) || mc.world.getBlockState(position).getBlock() == Blocks.BEDROCK) {
-                    return;
-                }
-
-                addRender(renders, new Render(position, OLEPOSSUtils.replaceable(position) ? RenderType.Normal : RenderType.Placed));
-            });
-
-        attack = toAttack;
-        render = renders;
-        return list;
+        mc.world.setBlockState(pos, block.getBlock().getDefaultState());
+        mc.world.playSound(pos.getX(), pos.getY(), pos.getZ(), SoundEvents.BLOCK_STONE_PLACE, SoundCategory.BLOCKS, 1, 1, false);
     }
 
-    private Direction getSupport(BlockPos position) {
-        Direction cDir = null;
-        double cDist = 1000;
-        int value = -1;
+    private void setSupport() {
+        support = false;
+        double min = 10000;
+
+        for (BlockPos pos : surroundBlocks) {
+            if (!validBlock(pos)) {continue;}
+
+            double y = Rotations.getYaw(pos.toCenterPos());
+
+            if (y < min) {
+                support = false;
+                min = y;
+            }
+        }
+
+        for (BlockPos pos : supportPositions) {
+            if (!validBlock(pos)) {continue;}
+
+            double y = Rotations.getYaw(pos.toCenterPos());
+
+            if (y < min) {
+                support = true;
+                min = y;
+            }
+        }
+    }
+
+    private boolean valid(ItemStack stack) {
+        return stack.getItem() instanceof BlockItem block && (support ? supportBlocks : blocks).get().contains(block.getBlock());
+    }
+
+    private void updateResult() {
+        result = switch (switchMode.get()) {
+            case Disabled -> null;
+            case Normal, Silent -> InvUtils.findInHotbar(this::valid);
+            case PickSilent, InvSwitch -> InvUtils.find(this::valid);
+        };
+    }
+
+    private Hand getHand() {
+        if (valid(Managers.HOLDING.getStack())) {
+            return Hand.MAIN_HAND;
+        }
+        if (valid(mc.player.getOffHandStack())) {
+            return Hand.OFF_HAND;
+        }
+        return null;
+    }
+
+    private void updateSupport() {
+        supportPositions.clear();
+
+        surroundBlocks.forEach(this::addSupport);
+    }
+
+    private void addSupport(BlockPos pos) {
+        if (!OLEPOSSUtils.replaceable(pos)) {return;}
+        if (hasSupport(pos, true)) {return;}
+
+        PlaceData data = SettingUtils.getPlaceData(pos);
+        if (data.valid()) return;
 
         for (Direction dir : Direction.values()) {
-            if (!OLEPOSSUtils.replaceable(position.offset(dir))) continue;
-
-            PlaceData data = onlyConfirmed.get() ? SettingUtils.getPlaceData(position.offset(dir)) : SettingUtils.getPlaceDataOR(position.offset(dir), placed::contains);
-
-            if (!data.valid() || !SettingUtils.inPlaceRange(data.pos())) continue;
-
-            if (!EntityUtils.intersectsWithEntity(Box.from(new BlockBox(position.offset(dir))), entity -> isAlive() && !entity.isSpectator() && entity.getType() != EntityType.ITEM)) {
-                double dist = mc.player.getEyePos().distanceTo(Vec3d.ofCenter(position.offset(dir)));
-
-                if (dist < cDist || value < 2) {
-                    value = 2;
-                    cDir = dir;
-                    cDist = dist;
-                }
-            }
-
-            if (!EntityUtils.intersectsWithEntity(Box.from(new BlockBox(position.offset(dir))), entity -> isAlive() && !entity.isSpectator() && entity.getType() != EntityType.ITEM && entity.getType() != EntityType.END_CRYSTAL)) {
-                double dist = mc.player.getEyePos().distanceTo(Vec3d.ofCenter(position.offset(dir)));
-
-                if (dist < cDist || value < 1) {
-                    value = 1;
-                    cDir = dir;
-                    cDist = dist;
-                }
-            }
-
-        }
-        return cDir;
-    }
-
-    private void addRender(List<Render> renders, Render render) {
-        for (Render r : renders) {
-            if (r.pos != render.pos) {
+            if (dir == Direction.UP) {
                 continue;
             }
 
-            if (render.type.value < r.type.value) {
-                return;
-            }
+            if (surroundBlocks.contains(pos.offset(dir)) || insideBlocks.contains(pos.offset(dir))) {continue;}
 
-            if (r.type.value < render.type.value) {
-                renders.remove(r);
-                break;
-            }
+            if (!SettingUtils.getPlaceData(pos.offset(dir)).valid()) continue;
+            if (!SettingUtils.inPlaceRange(pos.offset(dir))) continue;
+
+            supportPositions.add(pos.offset(dir));
+            return;
         }
-        renders.add(render);
     }
 
-    private int[] getSize() {
-        if (mc.player == null || mc.world == null) {
-            return new int[]{0, 0, 0, 0};
+    private boolean hasSupport(BlockPos pos, boolean checkNext) {
+        for (Direction dir : Direction.values()) {
+            if (supportPositions.contains(pos.offset(dir)) || (checkNext && hasSupport(pos.offset(dir), false))) {
+                return true;
+            }
         }
-
-        Vec3d offset = mc.player.getPos().add(-mc.player.getBlockX(), -mc.player.getBlockY(), -mc.player.getBlockZ());
-        return new int[]{offset.x < 0.3 ? -1 : 0, offset.x > 0.7 ? 1 : 0, offset.z < 0.3 ? -1 : 0, offset.z > 0.7 ? 1 : 0};
+        return false;
     }
 
-    private List<BlockPos> getBlocks(int[] size) {
-        List<BlockPos> list = new ArrayList<>();
-        if (mc.player != null && mc.world != null) {
-            BlockPos pPos = mc.player.getBlockPos();
-            for (int x = size[0] - 1; x <= size[1] + 1; x++) {
-                for (int z = size[2] - 1; z <= size[3] + 1; z++) {
-                    boolean isX = x == size[0] - 1 || x == size[1] + 1;
-                    boolean isZ = z == size[2] - 1 || z == size[3] + 1;
+    private void updateBlocks() {
+        updateInsideBlocks();
+        getSurroundBlocks();
 
-                    boolean ignore = (isX && !isZ ? (!OLEPOSSUtils.replaceable(pPos.add(OLEPOSSUtils.closerToZero(x), 0, z)) || placed.contains(pPos.add(OLEPOSSUtils.closerToZero(x), 0, z))) : !isX && isZ && (!OLEPOSSUtils.replaceable(pPos.add(x, 0, OLEPOSSUtils.closerToZero(z)))) && !(x == 0 && z == 0) || placed.contains(pPos.add(x, 0, OLEPOSSUtils.closerToZero(z))));
+        insideBlocks.forEach(pos -> surroundBlocks.add(pos.down()));
+    }
 
-                    if (isX != isZ && !ignore) {
-                        list.add(pPos.add(x, 0, z));
-                    } else if (!isX && !isZ && floor.get() && OLEPOSSUtils.replaceable(pPos.add(x, 0, z)) && !placed.contains(pPos.add(x, 0, z))) {
-                        list.add(pPos.add(x, -1, z));
-                    }
+    private void updateInsideBlocks() {
+        insideBlocks.clear();
+
+        addBlocks(mc.player.getBlockPos(), getSize(mc.player));
+
+        if (extend.get()) {
+            mc.world.getPlayers().stream().filter(player -> mc.player.distanceTo(player) < 5 && player != mc.player).sorted(Comparator.comparingDouble(player -> mc.player.distanceTo(player))).forEach(player -> {
+                if (!intersects(player)) {
+                    return;
+                }
+
+                addBlocks(player.getBlockPos().withY(mc.player.getBlockY()), getSize(player));
+            });
+        }
+    }
+
+    private boolean intersects(PlayerEntity player) {
+        getSurroundBlocks();
+
+        for (BlockPos pos : surroundBlocks) {
+            if (player.getBoundingBox().intersects(Box.from(new BlockBox(pos)))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void getSurroundBlocks() {
+        surroundBlocks.clear();
+
+        insideBlocks.forEach(pos -> {
+            for (CardinalDirection cd : CardinalDirection.values()) {
+                Direction dir = cd.toDirection();
+
+                if (!surroundBlocks.contains(pos.offset(dir)) && !insideBlocks.contains(pos.offset(dir))) {
+                    surroundBlocks.add(pos.offset(dir));
+                }
+            }
+        });
+    }
+
+    private void addBlocks(BlockPos pos, int[] size) {
+        for (int x = size[0]; x <= size[1]; x++) {
+            for (int z = size[2]; z <= size[3]; z++) {
+                if (!insideBlocks.contains(pos.add(x, 0, z))) {
+                    insideBlocks.add(pos.add(x, 0, z));
                 }
             }
         }
-        return list;
     }
 
-    // Very shitty sorting
-    private Map<PlaceData, BlockPos> sort(Map<PlaceData, BlockPos> original) {
-        Map<PlaceData, BlockPos> map = new HashMap<>();
-        double lowest;
-        PlaceData lData;
-        BlockPos lPos;
-        for (int i = 0; i < original.size(); i++) {
-            lowest = Double.MAX_VALUE;
-            lData = null;
-            lPos = null;
+    private boolean validEntity(Entity entity) {
+        if (entity instanceof EndCrystalEntity && System.currentTimeMillis() - lastAttack < 0.15) {return false;}
+        return !(entity instanceof ItemEntity);
+    }
 
-            for (Map.Entry<PlaceData, BlockPos> entry : original.entrySet()) {
-                if (map.containsKey(entry.getKey())) {
-                    continue;
-                }
-                double yaw = MathHelper.wrapDegrees(Rotations.getYaw(entry.getValue()));
-                if (yaw < lowest) {
-                    lowest = yaw;
-                    lData = entry.getKey();
-                    lPos = entry.getValue();
-                }
-            }
-            map.put(lData, lPos);
+    private int[] getSize(PlayerEntity player) {
+        int[] size = new int[4];
+
+        double x = mc.player.getX() - player.getBlockX();
+        double z = mc.player.getZ() - player.getBlockZ();
+
+        if (x < 0.3) {
+            size[0] = -1;
+        }
+        if (x > 0.7) {
+            size[1] = 1;
+        }
+        if (z < 0.3) {
+            size[2] = -1;
+        }
+        if (z > 0.7) {
+            size[3] = 1;
         }
 
-        return map;
+        return size;
     }
 
-    private boolean isAlive() {
-        return attacked < 0;
-    }
+    public record Render(BlockPos pos, long time) {}
 
-    private record Render(BlockPos pos, RenderType type) {
+    public enum Mode {
+        Center,
+        Fat
     }
 
     public enum SwitchMode {
@@ -600,22 +761,15 @@ public class SurroundPlus extends BlackOutModule {
         InvSwitch
     }
 
-    public enum ToggleYMode {
+    public enum VerticalToggleMode {
         Disabled,
         Up,
         Down,
-        Full
+        Any
     }
 
-    public enum RenderType {
-        Normal(3),
-        Support(1),
-        Placed(2);
-
-        private final int value;
-
-        RenderType(int value) {
-            this.value = value;
-        }
+    public enum PlaceDelayMode {
+        Ticks,
+        Seconds
     }
 }

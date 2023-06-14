@@ -3,6 +3,7 @@ package kassuk.addon.blackout.modules;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
+import kassuk.addon.blackout.enums.SwingHand;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
@@ -34,6 +35,7 @@ public class BurrowPlus extends BlackOutModule {
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final SettingGroup sgRender = settings.createGroup("Render");
 
     private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
         .name("Switch Mode")
@@ -59,14 +61,28 @@ public class BurrowPlus extends BlackOutModule {
         .defaultValue(false)
         .build()
     );
-    /*
     private final Setting<Boolean> scaffold = sgGeneral.add(new BoolSetting.Builder()
         .name("Scaffold")
         .description("Enables scaffold+ after lagging back inside the block.")
         .defaultValue(false)
         .visible(pFly::get)
         .build()
-    );*/
+    );
+
+    //--------------------Render--------------------//
+    private final Setting<Boolean> placeSwing = sgRender.add(new BoolSetting.Builder()
+        .name("Swing")
+        .description("Renders swing animation when placing a block.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<SwingHand> placeHand = sgRender.add(new EnumSetting.Builder<SwingHand>()
+        .name("Swing Hand")
+        .description("Which hand should be swung.")
+        .defaultValue(SwingHand.RealHand)
+        .visible(placeSwing::get)
+        .build()
+    );
 
     private boolean success = false;
     private boolean enabledPFly = false;
@@ -127,6 +143,7 @@ public class BurrowPlus extends BlackOutModule {
         SettingUtils.swing(SwingState.Pre, SwingType.Placing, Hand.MAIN_HAND);
         sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, new BlockHitResult(mc.player.getBlockPos().down().toCenterPos(), Direction.UP, mc.player.getBlockPos().down(), false), 0));
         SettingUtils.swing(SwingState.Post, SwingType.Placing, Hand.MAIN_HAND);
+        if (placeSwing.get()) clientSwing(placeHand.get(), Hand.MAIN_HAND);
 
         while (y < 5) {
             y += 0.5;
@@ -170,7 +187,7 @@ public class BurrowPlus extends BlackOutModule {
                 Modules.get().get(PacketFly.class).sendToggledMsg("enabled by burrow+");
                 enabledPFly = true;
             }
-            if (!Modules.get().isActive(ScaffoldPlus.class)) {
+            if (scaffold.get() && !Modules.get().isActive(ScaffoldPlus.class)) {
                 Modules.get().get(ScaffoldPlus.class).toggle();
                 Modules.get().get(ScaffoldPlus.class).sendToggledMsg("enabled by burrow+");
                 enabledScaffold = true;

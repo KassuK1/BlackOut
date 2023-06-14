@@ -3,6 +3,7 @@ package kassuk.addon.blackout.modules;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
+import kassuk.addon.blackout.enums.SwingHand;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
@@ -72,6 +73,19 @@ public class KillAuraPlus extends BlackOutModule {
         .name("Only Weapon")
         .description("Only attacks with a weapon.")
         .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> swing = sgGeneral.add(new BoolSetting.Builder()
+        .name("Swing")
+        .description("Renders swing animation when attacking an entity.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<SwingHand> swingHand = sgGeneral.add(new EnumSetting.Builder<SwingHand>()
+        .name("Swing Hand")
+        .description("Which hand should be swung.")
+        .defaultValue(SwingHand.RealHand)
+        .visible(swing::get)
         .build()
     );
 
@@ -153,15 +167,9 @@ public class KillAuraPlus extends BlackOutModule {
         attackTarget();
 
         switch (switchMode.get()) {
-            case Silent -> {
-                InvUtils.swapBack();
-            }
-            case InvSwitch -> {
-                BOInvUtils.swapBack();
-            }
-            case PickSwitch -> {
-                BOInvUtils.pickSwapBack();
-            }
+            case Silent -> InvUtils.swapBack();
+            case InvSwitch -> BOInvUtils.swapBack();
+            case PickSwitch -> BOInvUtils.pickSwapBack();
         }
 
         if (rotationMode.get() == RotationMode.OnHit) {
@@ -177,6 +185,7 @@ public class KillAuraPlus extends BlackOutModule {
         sendPacket(PlayerInteractEntityC2SPacket.attack(target, mc.player.isSneaking()));
 
         SettingUtils.swing(SwingState.Post, SwingType.Attacking, Hand.MAIN_HAND);
+        if (swing.get()) clientSwing(swingHand.get(), Hand.MAIN_HAND);
     }
 
     private int bestSlot(boolean inventory) {

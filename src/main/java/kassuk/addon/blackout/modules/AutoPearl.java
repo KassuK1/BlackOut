@@ -3,6 +3,7 @@ package kassuk.addon.blackout.modules;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
+import kassuk.addon.blackout.enums.SwingHand;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
@@ -36,6 +37,7 @@ public class AutoPearl extends BlackOutModule {
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final SettingGroup sgRender = settings.createGroup("Render");
 
     private final Setting<Boolean> ccBypass = sgGeneral.add(new BoolSetting.Builder()
         .name("CC Bypass")
@@ -67,6 +69,21 @@ public class AutoPearl extends BlackOutModule {
         .name("Instant Rotation")
         .description("Instantly rotates.")
         .defaultValue(false)
+        .build()
+    );
+
+    //--------------------Render--------------------//
+    private final Setting<Boolean> swing = sgRender.add(new BoolSetting.Builder()
+        .name("Swing")
+        .description("Renders swing animation when throwing an ender pearl.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<SwingHand> swingHand = sgRender.add(new EnumSetting.Builder<SwingHand>()
+        .name("Swing Hand")
+        .description("Which hand should be swung.")
+        .defaultValue(SwingHand.RealHand)
+        .visible(swing::get)
         .build()
     );
 
@@ -117,6 +134,7 @@ public class AutoPearl extends BlackOutModule {
         SettingUtils.swing(SwingState.Pre, SwingType.Using, Hand.MAIN_HAND);
         sendPacket(new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, 0));
         SettingUtils.swing(SwingState.Post, SwingType.Using, Hand.MAIN_HAND);
+        if (swing.get()) clientSwing(swingHand.get(), Hand.MAIN_HAND);
 
         toggle();
         sendToggledMsg("success");
