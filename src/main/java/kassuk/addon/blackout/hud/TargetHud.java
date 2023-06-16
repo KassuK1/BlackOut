@@ -2,7 +2,6 @@ package kassuk.addon.blackout.hud;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import kassuk.addon.blackout.BlackOut;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.RenderUtils;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
@@ -12,18 +11,18 @@ import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.hud.HudElement;
 import meteordevelopment.meteorclient.systems.hud.HudElementInfo;
 import meteordevelopment.meteorclient.systems.hud.HudRenderer;
-import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.gui.PlayerSkinDrawer;
+import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.s2c.play.EntityStatusS2CPacket;
-import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
@@ -275,6 +274,60 @@ public class TargetHud extends HudElement {
             RenderUtils.text("Yaw: " + Math.round((target.getYaw()) * 10) / 10f + " Pitch: " + Math.round(target.getPitch() * 10) / 10f + " BodyYaw: " + Math.round((target.getBodyYaw()) * 10) / 10f , stack, 66, 45 - mc.textRenderer.fontHeight / 2f, textColor.get().getPacked());
             RenderUtils.text("TOG: " + (tog.getOrDefault(target, 0)) + " HURT: " + Math.round((target.hurtTime) * 10) / 10f + " TE: " + Math.round(target.age), stack, 66, 55 - mc.textRenderer.fontHeight / 2f, textColor.get().getPacked());
         }
+        if (mode.get() == Mode.Exhibition){
+            int height = 60;
+            int width = 190;
+            setSize(width * scale.get(), height * scale.get());
+
+            updateTarget();
+            MatrixStack stack = new MatrixStack();
+
+            if (target == null || renderName == null) {
+                return;
+            }
+
+            stack.translate(x, y, 0);
+            stack.scale((float) (scale.get() * 1f), (float) (scale.get() * 1f), 1);
+
+            // Background
+            RenderUtils.quad(stack, -2, -2, width + 4, height + 4, new Color(52, 52, 52, 255).getPacked());
+            RenderUtils.quad(stack, -1, -1, width + 2, height + 2, new Color(32, 32, 32, 255).getPacked());
+            RenderUtils.quad(stack, 0, 0, width, height, new Color(52, 52, 52, 255).getPacked());
+
+            //PlayerModel
+
+            // Name
+            stack.scale(1.5f,1.5f,1);
+            RenderUtils.text(renderName, stack, 41, 2, textColor.get().getPacked());
+
+            // Health and Distance
+            stack.scale(0.5f,0.5f,1);
+            RenderUtils.text(Math.round((renderHealth) * 10) / 10f + " Dist: " + Math.round(mc.player.distanceTo(target) * 10) / 10f, stack, 83, 40 - mc.textRenderer.fontHeight / 2f, textColor.get().getPacked());
+
+            // Bar
+            stack.scale(2, 2, 1);
+
+            int progress = (int) (Math.ceil(MathHelper.clamp(renderHealth, 0, 20)));
+
+            for (int i = 0; i < 10; i++) {
+                RenderUtils.quad(stack, 41 + i * 8, 12, 3 * Math.min(progress, 2), 3, new Color(204, 204, 0, 255).getPacked());
+                progress -= 2;
+
+                if (progress <= 0) {
+                    break;
+                }
+            }
+            //Armor
+            stack.scale(0.9f,0.9f,1);
+            for (int i = 0; i < 4; i++) {
+                ItemStack itemStack = target.getInventory().armor.get(i);
+                mc.getItemRenderer().renderInGui(stack, itemStack, (3 - i) * 20 + 42,25);
+            }
+            //Item
+            ItemStack itemStack = target.getMainHandStack();
+            mc.getItemRenderer().renderInGui(stack, itemStack, 122,25);
+            // gayer model
+        }
     }
 
     private void updateTarget() {
@@ -312,6 +365,7 @@ public class TargetHud extends HudElement {
     }
     public enum Mode {
         Blackout,
-        ExhibitionOld
+        ExhibitionOld,
+        Exhibition
     }
 }

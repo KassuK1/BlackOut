@@ -16,7 +16,6 @@ import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
-import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.utils.world.CardinalDirection;
 import meteordevelopment.orbit.EventHandler;
@@ -132,65 +131,65 @@ public class PistonCrystal extends BlackOutModule {
     );
 
     //--------------------Swing--------------------//
-    private final Setting<Boolean> crystalSwing = sgRender.add(new BoolSetting.Builder()
+    private final Setting<Boolean> crystalSwing = sgSwing.add(new BoolSetting.Builder()
         .name("Crystal Swing")
         .description("Renders swing animation when placing a crystal.")
         .defaultValue(true)
         .build()
     );
-    private final Setting<SwingHand> crystalHand = sgRender.add(new EnumSetting.Builder<SwingHand>()
+    private final Setting<SwingHand> crystalHand = sgSwing.add(new EnumSetting.Builder<SwingHand>()
         .name("Crystal Swing Hand")
         .description("Which hand should be swung.")
         .defaultValue(SwingHand.RealHand)
         .visible(crystalSwing::get)
         .build()
     );
-    private final Setting<Boolean> attackSwing = sgRender.add(new BoolSetting.Builder()
+    private final Setting<Boolean> attackSwing = sgSwing.add(new BoolSetting.Builder()
         .name("Attack Swing")
         .description("Renders swing animation when attacking a crystal.")
         .defaultValue(true)
         .build()
     );
-    private final Setting<SwingHand> attackHand = sgRender.add(new EnumSetting.Builder<SwingHand>()
+    private final Setting<SwingHand> attackHand = sgSwing.add(new EnumSetting.Builder<SwingHand>()
         .name("Attack Swing Hand")
         .description("Which hand should be swung.")
         .defaultValue(SwingHand.RealHand)
         .visible(attackSwing::get)
         .build()
     );
-    private final Setting<Boolean> pistonSwing = sgRender.add(new BoolSetting.Builder()
+    private final Setting<Boolean> pistonSwing = sgSwing.add(new BoolSetting.Builder()
         .name("Piston Swing")
         .description("Renders swing animation when placing a piston.")
         .defaultValue(true)
         .build()
     );
-    private final Setting<SwingHand> pistonHand = sgRender.add(new EnumSetting.Builder<SwingHand>()
+    private final Setting<SwingHand> pistonHand = sgSwing.add(new EnumSetting.Builder<SwingHand>()
         .name("Piston Swing Hand")
         .description("Which hand should be swung.")
         .defaultValue(SwingHand.RealHand)
         .visible(pistonSwing::get)
         .build()
     );
-    private final Setting<Boolean> redstoneSwing = sgRender.add(new BoolSetting.Builder()
+    private final Setting<Boolean> redstoneSwing = sgSwing.add(new BoolSetting.Builder()
         .name("Piston Swing")
         .description("Renders swing animation when placing redstone.")
         .defaultValue(true)
         .build()
     );
-    private final Setting<SwingHand> redstoneHand = sgRender.add(new EnumSetting.Builder<SwingHand>()
+    private final Setting<SwingHand> redstoneHand = sgSwing.add(new EnumSetting.Builder<SwingHand>()
         .name("Redstone Swing Hand")
         .description("Which hand should be swung.")
         .defaultValue(SwingHand.RealHand)
         .visible(redstoneSwing::get)
         .build()
     );
-    private final Setting<Boolean> fireSwing = sgRender.add(new BoolSetting.Builder()
+    private final Setting<Boolean> fireSwing = sgSwing.add(new BoolSetting.Builder()
         .name("Fire Swing")
         .description("Renders swing animation when placing fire.")
         .defaultValue(true)
         .build()
     );
-    private final Setting<SwingHand> fireHand = sgRender.add(new EnumSetting.Builder<SwingHand>()
+    private final Setting<SwingHand> fireHand = sgSwing.add(new EnumSetting.Builder<SwingHand>()
         .name("Fire Swing Hand")
         .description("Which hand should be swung.")
         .defaultValue(SwingHand.RealHand)

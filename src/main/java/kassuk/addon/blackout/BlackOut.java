@@ -30,7 +30,7 @@ public class BlackOut extends MeteorAddon {
     public static final Category SETTINGS = new Category("Settings", Items.OBSIDIAN.getDefaultStack());
     public static final HudGroup HUD_BLACKOUT = new HudGroup("BlackOut");
     public static final String BLACKOUT_NAME = "BlackOut";
-    public static final String BLACKOUT_VERSION = "1.0.0";
+    public static final String BLACKOUT_VERSION = "1.0.1";
     public static final String COLOR = "Color is the visual perception of different wavelengths of light as hue, saturation, and brightness";
 
     @Override
