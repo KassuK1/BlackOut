@@ -373,7 +373,7 @@ public class SurroundPlus extends BlackOutModule {
 
             if (antiCev.get()) {
                 for (BlockPos pos : surroundBlocks) {
-                    if (getPos().equals(pos.up())) {
+                    if (entity.getBlockPos().equals(pos.up())) {
                         double dmg = Math.max(10, BODamageUtils.crystalDamage(mc.player, mc.player.getBoundingBox(), entity.getPos(), null, false));
 
                         if (dmg < lowest) {
