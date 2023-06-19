@@ -193,7 +193,7 @@ public class OffHandPlus extends BlackOutModule {
     }
 
     private boolean inDanger() {
-        double health = mc.player.getHealth();
+        double health = mc.player.getHealth() + mc.player.getAbsorptionAmount();
 
         return
             health <= hp.get() ||

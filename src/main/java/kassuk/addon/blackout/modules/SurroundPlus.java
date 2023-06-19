@@ -517,7 +517,7 @@ public class SurroundPlus extends BlackOutModule {
 
         if (!SettingUtils.inPlaceRange(data.pos())) return false;
 
-        return true;
+        return !placed.contains(pos);
     }
 
     private void place(BlockPos pos) {
@@ -559,13 +559,25 @@ public class SurroundPlus extends BlackOutModule {
             setBlock(pos);
         }
 
-        placed.add(pos, 0.5);
+        placed.add(pos, oneMissing() ? singleDelay.get() : delay.get());
         blocksLeft--;
         placesLeft--;
 
         if (SettingUtils.shouldRotate(RotationType.Placing)) {
             Managers.ROTATION.end(data.pos());
         }
+    }
+
+    private boolean oneMissing() {
+        boolean alreadyFound = false;
+
+        for (BlockPos pos : surroundBlocks) {
+            if (!OLEPOSSUtils.replaceable(pos)) continue;
+
+            if (alreadyFound) return false;
+            alreadyFound = true;
+        }
+        return true;
     }
 
     private void setBlock(BlockPos pos) {

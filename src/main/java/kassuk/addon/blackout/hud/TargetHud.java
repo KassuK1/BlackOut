@@ -199,7 +199,7 @@ public class TargetHud extends HudElement {
             RenderUtils.rounded(stack, 15, 15, width - 30, height - 30, 15, 10, bgColor.get().getPacked());
 
             // Face
-            drawFace(renderer, scaleAnimation * scale.get().floatValue(), x + (1 - scaleAnimation) * getWidth() / 2f, y + (1 - scaleAnimation) * getHeight() / 2f);
+            drawFace(renderer, scaleAnimation * scale.get().floatValue(), x + (1 - scaleAnimation) * getWidth() / 2f, y + (1 - scaleAnimation) * getHeight() / 2f, tilt);
 
             // Name
             RenderUtils.text(renderName, stack, 60, 20, textColor.get().getPacked());
@@ -245,7 +245,7 @@ public class TargetHud extends HudElement {
             // Face
             RenderUtils.quad(stack, 1, 1, 58, 58, new Color(102, 102, 102, 255).getPacked());
 
-            drawFace(renderer, scale.get().floatValue(), x, y);
+            drawFace(renderer, scale.get().floatValue(), x, y, 0);
 
             // Name
             stack.scale(2.0f,2.0f,1);
@@ -342,13 +342,14 @@ public class TargetHud extends HudElement {
         }
     }
 
-    private void drawFace(HudRenderer renderer, float scale, double x, double y) {
+    private void drawFace(HudRenderer renderer, float scale, double x, double y, float tilt) {
         MatrixStack drawStack = renderer.drawContext.getMatrices();
 
         drawStack.push();
 
         drawStack.translate(x, y, 0);
         drawStack.scale(scale, scale, 1);
+        drawStack.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(tilt));
 
         PlayerSkinDrawer.draw(renderer.drawContext, renderSkin,20, 18, 32, false, false);
 

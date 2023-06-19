@@ -119,12 +119,6 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .defaultValue(false)
         .build()
     );
-    private final Setting<Boolean> multitask = sgGeneral.add(new BoolSetting.Builder()
-        .name("Multitask")
-        .description("Allows attacking and placing during the same tick.")
-        .defaultValue(true)
-        .build()
-    );
     private final Setting<Boolean> instantPlace = sgPlace.add(new BoolSetting.Builder()
         .name("Instant Place")
         .description("Ignores delay after crystal has disappeared.")
@@ -148,6 +142,12 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .sliderRange(0, 20)
         .build()
     );
+    private final Setting<SequentialMode> sequential = sgPlace.add(new EnumSetting.Builder<SequentialMode>()
+        .name("Sequential")
+        .description("Doesn't place and attack during the same tick.")
+        .defaultValue(SequentialMode.Weak)
+        .build()
+    );
     private final Setting<DelayMode> placeDelayMode = sgPlace.add(new EnumSetting.Builder<DelayMode>()
         .name("Place Delay Mode")
         .description("Should we count the delay in seconds or ticks.")
@@ -163,11 +163,13 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .visible(() -> placeDelayMode.get() == DelayMode.Seconds)
         .build()
     );
-    private final Setting<SequentialMode> sequentialMode = sgPlace.add(new EnumSetting.Builder<SequentialMode>()
-        .name("Sequential Mode")
-        .description("How strict should sequential delay be.")
-        .defaultValue(SequentialMode.Weak)
-        .visible(() -> placeDelayMode.get() == DelayMode.Sequential)
+    private final Setting<Integer> placeDelayTicks = sgPlace.add(new IntSetting.Builder()
+        .name("Place Delay Ticks")
+        .description("How many ticks should the crystal exist before attacking.")
+        .defaultValue(0)
+        .min(0)
+        .sliderRange(0, 20)
+        .visible(() -> placeDelayMode.get() == DelayMode.Ticks)
         .build()
     );
     private final Setting<Double> slowDamage = sgPlace.add(new DoubleSetting.Builder()
@@ -194,10 +196,10 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .defaultValue(false)
         .build()
     );
-    private final Setting<ExistedMode> existedMode = sgExplode.add(new EnumSetting.Builder<ExistedMode>()
+    private final Setting<DelayMode> existedMode = sgExplode.add(new EnumSetting.Builder<DelayMode>()
         .name("Existed Mode")
         .description("Should crystal existed times be counted in seconds or ticks.")
-        .defaultValue(ExistedMode.Seconds)
+        .defaultValue(DelayMode.Seconds)
         .build()
     );
     private final Setting<Double> existed = sgExplode.add(new DoubleSetting.Builder()
@@ -206,7 +208,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .defaultValue(0)
         .min(0)
         .sliderRange(0, 1)
-        .visible(() -> existedMode.get() == ExistedMode.Seconds)
+        .visible(() -> existedMode.get() == DelayMode.Seconds)
         .build()
     );
     private final Setting<Integer> existedTicks = sgExplode.add(new IntSetting.Builder()
@@ -215,7 +217,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         .defaultValue(0)
         .min(0)
         .sliderRange(0, 20)
-        .visible(() -> existedMode.get() == ExistedMode.Ticks)
+        .visible(() -> existedMode.get() == DelayMode.Ticks)
         .build()
     );
     private final Setting<Double> expSpeed = sgExplode.add(new DoubleSetting.Builder()
@@ -652,7 +654,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
 
     private AutoMine autoMine = null;
 
-    private boolean attacked = false;
+    private int attacked = 0;
 
     private final List<Predict> predicts = new ArrayList<>();
     private final List<SetDead> setDeads = new ArrayList<>();
@@ -691,7 +693,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     private void onTickPre(TickEvent.Pre event) {
         delayTicks++;
         ticksEnabled++;
-        attacked = false;
+        attacked++;
 
         if (mc.player == null || mc.world == null) {
             return;
@@ -1122,8 +1124,6 @@ public class AutoCrystalRewrite extends BlackOutModule {
                 }
             }
 
-
-
             addExisted(pos.up());
 
             if (!isOwn(pos.up())) own.put(pos.up(), System.currentTimeMillis());
@@ -1166,26 +1166,18 @@ public class AutoCrystalRewrite extends BlackOutModule {
     }
 
     private boolean delayCheck() {
-        if (!multitask.get() && attacked) {
+        if (multiTaskCheck()) {
             return false;
         }
 
         if (placeDelayMode.get() == DelayMode.Seconds) {
             return delayTimer >= placeDelay.get();
-        } else {
-            switch (sequentialMode.get()) {
-                case Weak -> {
-                    return delayTicks >= 1;
-                }
-                case Strong -> {
-                    return delayTicks >= 2;
-                }
-                case Strict -> {
-                    return delayTicks >= 3;
-                }
-            }
         }
-        return false;
+        return delayTicks >= placeDelayTicks.get();
+    }
+
+    private boolean multiTaskCheck() {
+        return attacked < sequential.get().ticks;
     }
 
     private int getHighest() {
@@ -1242,7 +1234,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
             SettingUtils.swing(SwingState.Post, SwingType.Attacking, Hand.MAIN_HAND);
             if (attackSwing.get()) clientSwing(attackHand.get(), Hand.MAIN_HAND);
 
-            attacked = true;
+            attacked = 0;
 
             blocked.clear();
             if (setDead.get()) {
@@ -1257,7 +1249,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     }
 
     private boolean existedCheck(BlockPos pos) {
-        if (existedMode.get() == ExistedMode.Seconds) {
+        if (existedMode.get() == DelayMode.Seconds) {
             return !existedList.containsKey(pos) || System.currentTimeMillis() > existedList.get(pos) + existed.get() * 1000;
         } else {
             return !existedTicksList.containsKey(pos) || ticksEnabled >= existedTicksList.get(pos) + existedTicks.get();
@@ -1265,7 +1257,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     }
 
     private void addExisted(BlockPos pos) {
-        if (existedMode.get() == ExistedMode.Seconds) {
+        if (existedMode.get() == DelayMode.Seconds) {
             if (!existedList.containsKey(pos)) {
                 existedList.put(pos, System.currentTimeMillis());
             }
@@ -1277,7 +1269,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     }
 
     private void removeExisted(BlockPos pos) {
-        if (existedMode.get() == ExistedMode.Seconds) {
+        if (existedMode.get() == DelayMode.Seconds) {
             if (existedList.containsKey(pos)) {
                 existedList.remove(pos);
             }
@@ -1836,15 +1828,16 @@ public class AutoCrystalRewrite extends BlackOutModule {
         PickSilent
     }
 
-    public enum DelayMode {
-        Seconds,
-        Sequential
-    }
-
     public enum SequentialMode {
-        Weak,
-        Strong,
-        Strict
+        Weak(1),
+        Strong(2),
+        Strict(3);
+
+        public final int ticks;
+
+        SequentialMode(int ticks) {
+            this.ticks = ticks;
+        }
     }
 
     public enum ExplodeMode {
@@ -1855,7 +1848,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
         Always
     }
 
-    public enum ExistedMode {
+    public enum DelayMode {
         Seconds,
         Ticks
     }
