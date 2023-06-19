@@ -592,18 +592,6 @@ public class AutoCrystalRewrite extends BlackOutModule {
     );
 
     //--------------------Compatibility--------------------//
-    private final Setting<Boolean> surroundAttack = sgCompatibility.add(new BoolSetting.Builder()
-        .name("Surround Attack")
-        .description("Attacks any crystal blocking surround placement.")
-        .defaultValue(true)
-        .build()
-    );
-    private final Setting<Boolean> alwaysAttack = sgCompatibility.add(new BoolSetting.Builder()
-        .name("Always Attack")
-        .description("Attacks any crystal even when the block is already placed.")
-        .defaultValue(true)
-        .build()
-    );
     private final Setting<Double> autoMineDamage = sgCompatibility.add(new DoubleSetting.Builder()
         .name("Auto Mine Damage")
         .description("Prioritizes placing on automine target block.")
