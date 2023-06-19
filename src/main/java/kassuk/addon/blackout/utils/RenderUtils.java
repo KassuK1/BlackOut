@@ -1,6 +1,8 @@
 package kassuk.addon.blackout.utils;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.ColorHelper;
@@ -13,6 +15,8 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
  */
 
 public class RenderUtils {
+    private static final VertexConsumerProvider.Immediate vertex = VertexConsumerProvider.immediate(new BufferBuilder(2048));
+
     public static void rounded(MatrixStack stack, float x, float y, float w, float h, float radius, int p, int color) {
 
         Matrix4f matrix4f = stack.peek().getPositionMatrix();
@@ -44,7 +48,8 @@ public class RenderUtils {
     }
 
     public static void text(String text, MatrixStack stack, float x, float y, int color) {
-        mc.textRenderer.draw(stack, text, x, y, color);
+        mc.textRenderer.draw(text, x, y, color, false, stack.peek().getPositionMatrix(), vertex, TextRenderer.TextLayerType.NORMAL, 0, 15728880);
+        vertex.draw();
     }
 
     public static void quad(MatrixStack stack, float x, float y, float w, float h, int color) {

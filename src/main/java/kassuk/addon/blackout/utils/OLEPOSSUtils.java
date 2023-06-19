@@ -57,11 +57,11 @@ public class OLEPOSSUtils {
 
     @SuppressWarnings("DataFlowIssue")
     public static boolean replaceable(BlockPos block) {
-        return ((MixinBlockSettings) AbstractBlock.Settings.copy(mc.world.getBlockState(block).getBlock())).getMaterial().isReplaceable();
+        return ((MixinBlockSettings) AbstractBlock.Settings.copy(mc.world.getBlockState(block).getBlock())).replaceable();
     }
 
     public static boolean solid2(BlockPos block) {
-        return ((MixinBlockSettings) AbstractBlock.Settings.copy(mc.world.getBlockState(block).getBlock())).getMaterial().isSolid();
+        return !mc.world.getBlockState(block).getRaycastShape(mc.world, block).isEmpty();
     }
 
     @SuppressWarnings({"BooleanMethodIsAlwaysInverted", "DataFlowIssue"})

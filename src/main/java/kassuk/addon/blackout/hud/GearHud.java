@@ -8,6 +8,7 @@ import meteordevelopment.meteorclient.systems.hud.HudRenderer;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.RenderUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 
@@ -65,9 +66,20 @@ public class GearHud extends HudElement {
     @Override
     public void render(HudRenderer renderer) {
         setSize(55 * scale.get() * scale.get(), 20 * scale.get() * scale.get() * items.get().size());
+
         for (int i = 0; i < items.get().size(); i++) {
             int posY = (int) Math.round(y + i * 20 * scale.get() * scale.get());
-            RenderUtils.drawItem(items.get().get(i).getDefaultStack(), x, posY, (float) (scale.get() * scale.get()), true);
+
+            MatrixStack drawStack = renderer.drawContext.getMatrices();
+            drawStack.push();
+
+            drawStack.translate(x, y, 0);
+            drawStack.scale((float)(scale.get() * scale.get()), (float)(scale.get() * scale.get()), 1);
+
+            renderer.drawContext.drawItem(items.get().get(i).getDefaultStack(), x, posY);
+
+            drawStack.pop();
+
             renderer.text(getText(items.get().get(i).asItem()), x + 25 * scale.get() * scale.get(), posY, color.get(), shadow.get(), scale.get());
         }
     }

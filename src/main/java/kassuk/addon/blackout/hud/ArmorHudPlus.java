@@ -7,6 +7,7 @@ import meteordevelopment.meteorclient.systems.hud.HudElement;
 import meteordevelopment.meteorclient.systems.hud.HudElementInfo;
 import meteordevelopment.meteorclient.systems.hud.HudRenderer;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
+import net.minecraft.client.render.model.json.ModelTransformationMode;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
 
@@ -81,10 +82,16 @@ public class ArmorHudPlus extends HudElement {
             RenderUtils.rounded(stack, rounding.get() * 0.14f, rounding.get() * 0.14f, 100 - rounding.get() * 0.28f, 28 - rounding.get() * 0.28f, rounding.get() * 0.14f, 10, bgColor.get().getPacked());
         }
 
+        MatrixStack drawStack = renderer.drawContext.getMatrices();
+        drawStack.push();
+
+        drawStack.translate(x, y, 0);
+        drawStack.scale((float)(scale.get() * 2), (float)(scale.get() * 2), 1);
+
         for (int i = 3; i >= 0; i--) {
             ItemStack itemStack = mc.player.getInventory().armor.get(i);
 
-            mc.getItemRenderer().renderInGui(stack, itemStack, i * 20 + 12, durMode.get() == DurMode.Top ? 10 : 0);
+            renderer.drawContext.drawItem(itemStack, i * 20 + 12, durMode.get() == DurMode.Top ? 10 : 0);
 
             if (itemStack.isEmpty()) {continue;}
 
@@ -92,6 +99,7 @@ public class ArmorHudPlus extends HudElement {
                 String.valueOf(Math.round(100 - (float) itemStack.getDamage() / itemStack.getMaxDamage() * 100f)),
                 i * 20 + 20, durMode.get() == DurMode.Top ? 3 : 17, durColor.get().getPacked());
         }
+        drawStack.pop();
     }
 
     private void centeredText(MatrixStack stack, String text, int x, int y, int color) {

@@ -197,9 +197,9 @@ public class TargetHud extends HudElement {
 
             // Background
             RenderUtils.rounded(stack, 15, 15, width - 30, height - 30, 15, 10, bgColor.get().getPacked());
+
             // Face
-            RenderSystem.setShaderTexture(0, renderSkin);
-            PlayerSkinDrawer.draw(stack, 20, 18, 32, false, false);
+            drawFace(renderer, scaleAnimation * scale.get().floatValue(), x + (1 - scaleAnimation) * getWidth() / 2f, y + (1 - scaleAnimation) * getHeight() / 2f);
 
             // Name
             RenderUtils.text(renderName, stack, 60, 20, textColor.get().getPacked());
@@ -244,8 +244,8 @@ public class TargetHud extends HudElement {
 
             // Face
             RenderUtils.quad(stack, 1, 1, 58, 58, new Color(102, 102, 102, 255).getPacked());
-            RenderSystem.setShaderTexture(0, renderSkin);
-            PlayerSkinDrawer.draw(stack, 3, 3, 54, false, false);
+
+            drawFace(renderer, scale.get().floatValue(), x, y);
 
             // Name
             stack.scale(2.0f,2.0f,1);
@@ -317,17 +317,42 @@ public class TargetHud extends HudElement {
                     break;
                 }
             }
+
             //Armor
             stack.scale(0.9f,0.9f,1);
+            MatrixStack drawStack = renderer.drawContext.getMatrices();
+            drawStack.push();
+
+            drawStack.translate(x, y, 0);
+            drawStack.scale(scale.get().floatValue() * 1.35f, scale.get().floatValue() * 1.35f, 1);
+
             for (int i = 0; i < 4; i++) {
                 ItemStack itemStack = target.getInventory().armor.get(i);
-                mc.getItemRenderer().renderInGui(stack, itemStack, (3 - i) * 20 + 42,25);
+
+                renderer.drawContext.drawItem(itemStack, (3 - i) * 20 + 42, 25);
             }
+
             //Item
             ItemStack itemStack = target.getMainHandStack();
-            mc.getItemRenderer().renderInGui(stack, itemStack, 122,25);
+
+            renderer.drawContext.drawItem(itemStack, 122, 25);
+
+            drawStack.pop();
             // gayer model
         }
+    }
+
+    private void drawFace(HudRenderer renderer, float scale, double x, double y) {
+        MatrixStack drawStack = renderer.drawContext.getMatrices();
+
+        drawStack.push();
+
+        drawStack.translate(x, y, 0);
+        drawStack.scale(scale, scale, 1);
+
+        PlayerSkinDrawer.draw(renderer.drawContext, renderSkin,20, 18, 32, false, false);
+
+        drawStack.pop();
     }
 
     private void updateTarget() {
