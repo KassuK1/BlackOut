@@ -288,6 +288,7 @@ public class SurroundPlus extends BlackOutModule {
     private BlockPos lastPos = null;
     private boolean centered = false;
     private long lastAttack = 0;
+    private BlockPos currentPos = null;
 
     public static boolean placing = false;
 
@@ -297,7 +298,7 @@ public class SurroundPlus extends BlackOutModule {
         timer = placeDelayS.get();
         placesLeft = places.get();
         centered = false;
-        lastPos = mc.player.getBlockPos();
+        lastPos = getPos();
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -316,6 +317,9 @@ public class SurroundPlus extends BlackOutModule {
     private void onRender(Render3DEvent event) {
         placing = false;
         timer += event.frameTime;
+
+        lastPos = currentPos;
+        currentPos = getPos();
 
         setBB();
 
@@ -369,7 +373,7 @@ public class SurroundPlus extends BlackOutModule {
 
             if (antiCev.get()) {
                 for (BlockPos pos : surroundBlocks) {
-                    if (entity.getBlockPos().equals(pos.up())) {
+                    if (getPos().equals(pos.up())) {
                         double dmg = Math.max(10, BODamageUtils.crystalDamage(mc.player, mc.player.getBoundingBox(), entity.getPos(), null, false));
 
                         if (dmg < lowest) {
@@ -398,11 +402,11 @@ public class SurroundPlus extends BlackOutModule {
             double targetX, targetZ;
 
             if (smartCenter.get()) {
-                targetX = MathHelper.clamp(mc.player.getX(), mc.player.getBlockX() + 0.31, mc.player.getBlockX() + 0.69);
-                targetZ = MathHelper.clamp(mc.player.getZ(), mc.player.getBlockZ() + 0.31, mc.player.getBlockZ() + 0.69);
+                targetX = MathHelper.clamp(mc.player.getX(), currentPos.getX() + 0.31, currentPos.getX() + 0.69);
+                targetZ = MathHelper.clamp(mc.player.getZ(), currentPos.getZ() + 0.31, currentPos.getZ() + 0.69);
             } else {
-                targetX = mc.player.getBlockX() + 0.5;
-                targetZ = mc.player.getBlockZ() + 0.5;
+                targetX = currentPos.getX() + 0.5;
+                targetZ = currentPos.getZ() + 0.5;
             }
 
             double dist = new Vec3d(targetX, 0, targetZ).distanceTo(new Vec3d(mc.player.getX(), 0, mc.player.getZ()));
@@ -431,21 +435,21 @@ public class SurroundPlus extends BlackOutModule {
 
     private boolean checkToggle() {
         if (lastPos != null) {
-            if (toggleMove.get() && (mc.player.getBlockX() != lastPos.getX() || mc.player.getBlockZ() != lastPos.getZ())) {
+            if (toggleMove.get() && (currentPos.getX() != lastPos.getX() || currentPos.getZ() != lastPos.getZ())) {
                 toggle();
                 sendToggledMsg("moved horizontally");
                 return true;
             }
 
             if (toggleVertical.get() == VerticalToggleMode.Up || toggleVertical.get() == VerticalToggleMode.Any) {
-                if (mc.player.getBlockY() > lastPos.getY()) {
+                if (currentPos.getY() > lastPos.getY()) {
                     toggle();
                     sendToggledMsg("moved up");
                     return true;
                 }
             }
             if (toggleVertical.get() == VerticalToggleMode.Down || toggleVertical.get() == VerticalToggleMode.Any) {
-                if (mc.player.getBlockY() < lastPos.getY()) {
+                if (currentPos.getY() < lastPos.getY()) {
                     toggle();
                     sendToggledMsg("moved down");
                     return true;
@@ -453,7 +457,6 @@ public class SurroundPlus extends BlackOutModule {
             }
         }
 
-        lastPos = mc.player.getBlockPos();
         return false;
     }
 
@@ -670,7 +673,7 @@ public class SurroundPlus extends BlackOutModule {
     private void updateInsideBlocks() {
         insideBlocks.clear();
 
-        addBlocks(mc.player.getBlockPos(), getSize(mc.player));
+        addBlocks(getSize(mc.player));
 
         if (extend.get()) {
             mc.world.getPlayers().stream().filter(player -> mc.player.distanceTo(player) < 5 && player != mc.player).sorted(Comparator.comparingDouble(player -> mc.player.distanceTo(player))).forEach(player -> {
@@ -678,7 +681,7 @@ public class SurroundPlus extends BlackOutModule {
                     return;
                 }
 
-                addBlocks(player.getBlockPos().withY(mc.player.getBlockY()), getSize(player));
+                addBlocks(getSize(player));
             });
         }
     }
@@ -709,11 +712,11 @@ public class SurroundPlus extends BlackOutModule {
         });
     }
 
-    private void addBlocks(BlockPos pos, int[] size) {
+    private void addBlocks(int[] size) {
         for (int x = size[0]; x <= size[1]; x++) {
             for (int z = size[2]; z <= size[3]; z++) {
-                if (!insideBlocks.contains(pos.add(x, 0, z))) {
-                    insideBlocks.add(pos.add(x, 0, z));
+                if (!insideBlocks.contains(currentPos.add(x, 0, z))) {
+                    insideBlocks.add(currentPos.add(x, 0, z));
                 }
             }
         }
@@ -727,8 +730,8 @@ public class SurroundPlus extends BlackOutModule {
     private int[] getSize(PlayerEntity player) {
         int[] size = new int[4];
 
-        double x = mc.player.getX() - player.getBlockX();
-        double z = mc.player.getZ() - player.getBlockZ();
+        double x = mc.player.getX() - currentPos.getX();
+        double z = mc.player.getZ() - currentPos.getZ();
 
         if (x < 0.3) {
             size[0] = -1;
@@ -744,6 +747,10 @@ public class SurroundPlus extends BlackOutModule {
         }
 
         return size;
+    }
+
+    public BlockPos getPos() {
+        return new BlockPos(mc.player.getBlockX(), (int) Math.round(mc.player.getY()), mc.player.getBlockZ());
     }
 
     public record Render(BlockPos pos, long time) {}
