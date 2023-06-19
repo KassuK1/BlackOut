@@ -31,7 +31,7 @@ public class SwingSettings extends BlackOutModule {
     public final Setting<Boolean> interact = sgInteract.add(new BoolSetting.Builder()
         .name("Interact Swing")
         .description("Swings your hand when you interact with a block.")
-        .defaultValue(false)
+        .defaultValue(true)
         .build()
     );
     public final Setting<SwingState> interactState = sgInteract.add(new EnumSetting.Builder<SwingState>()
@@ -44,7 +44,7 @@ public class SwingSettings extends BlackOutModule {
     public final Setting<Boolean> blockPlace = sgBlockPlace.add(new BoolSetting.Builder()
         .name("Block Place Swing")
         .description("Swings your hand when you interact with a block.")
-        .defaultValue(false)
+        .defaultValue(true)
         .build()
     );
     public final Setting<SwingState> blockPlaceState = sgBlockPlace.add(new EnumSetting.Builder<SwingState>()
@@ -63,7 +63,7 @@ public class SwingSettings extends BlackOutModule {
     public final Setting<Boolean> attack = sgAttack.add(new BoolSetting.Builder()
         .name("Attack Swing")
         .description("Swings your hand when you attack any entity.")
-        .defaultValue(false)
+        .defaultValue(true)
         .build()
     );
     public final Setting<SwingState> attackState = sgAttack.add(new EnumSetting.Builder<SwingState>()
@@ -76,7 +76,7 @@ public class SwingSettings extends BlackOutModule {
     public final Setting<Boolean> use = sgUse.add(new BoolSetting.Builder()
         .name("Use Swing")
         .description("Swings your hand when using an item. NCP doesn't check this.")
-        .defaultValue(false)
+        .defaultValue(true)
         .build()
     );
     public final Setting<SwingState> useState = sgUse.add(new EnumSetting.Builder<SwingState>()
