@@ -401,7 +401,6 @@ public class AutoMine extends BlackOutModule {
         if (event.packet instanceof PlayerActionC2SPacket packet) {
             if (ignore) return;
 
-
             switch (packet.getAction()) {
                 case START_DESTROY_BLOCK -> handleStart(event);
                 case ABORT_DESTROY_BLOCK -> handleAbort(event);
@@ -969,8 +968,7 @@ public class AutoMine extends BlackOutModule {
         Target best = null;
         double distance = 1000;
         for (AbstractClientPlayerEntity player : enemies) {
-            for (CardinalDirection cd : CardinalDirection.values()) {
-                Direction dir = cd.toDirection();
+            for (Direction dir : OLEPOSSUtils.horizontal) {
                 BlockPos pos = player.getBlockPos().offset(dir);
 
                 if (((!civ || !pos.equals(civPos)) && !OLEPOSSUtils.solid2(pos)) || getBlock(pos) == Blocks.BEDROCK) {

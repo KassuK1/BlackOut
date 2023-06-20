@@ -17,6 +17,8 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
  */
 
 public class OLEPOSSUtils {
+    public static final Direction[] horizontal = new Direction[]{Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST};
+
     public static Vec3d getMiddle(Box box) {
         return new Vec3d((box.minX + box.maxX) / 2, (box.minY + box.maxY) / 2, (box.minZ + box.maxZ) / 2);
     }
@@ -61,7 +63,7 @@ public class OLEPOSSUtils {
     }
 
     public static boolean solid2(BlockPos block) {
-        return !mc.world.getBlockState(block).getRaycastShape(mc.world, block).isEmpty();
+        return mc.world.getBlockState(block).isSolid();
     }
 
     @SuppressWarnings({"BooleanMethodIsAlwaysInverted", "DataFlowIssue"})

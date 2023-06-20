@@ -23,6 +23,7 @@ The development of the addon might not be super active due to us having our own 
 
 #### Credits
 Doogie13 for helping with the block mining calculations.
+
 RickyTheRaccoon for his InvSwitch.
 
 #### Official youtube channel https://www.youtube.com/channel/UCq_NxTxgS-Xk0TsSmhqXoyg

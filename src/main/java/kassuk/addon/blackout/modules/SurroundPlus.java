@@ -299,6 +299,7 @@ public class SurroundPlus extends BlackOutModule {
         placesLeft = places.get();
         centered = false;
         lastPos = getPos();
+        currentPos = getPos();
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -658,6 +659,7 @@ public class SurroundPlus extends BlackOutModule {
 
             if (surroundBlocks.contains(pos.offset(dir)) || insideBlocks.contains(pos.offset(dir))) {continue;}
 
+            if (EntityUtils.intersectsWithEntity(Box.from(new BlockBox(pos.offset(dir))), entity -> entity instanceof PlayerEntity && !entity.isSpectator())) continue;
             if (!SettingUtils.getPlaceData(pos.offset(dir)).valid()) continue;
             if (!SettingUtils.inPlaceRange(pos.offset(dir))) continue;
 
@@ -685,7 +687,7 @@ public class SurroundPlus extends BlackOutModule {
     private void updateInsideBlocks() {
         insideBlocks.clear();
 
-        addBlocks(getSize(mc.player));
+        addBlocks(getPos(), getSize(mc.player));
 
         if (extend.get()) {
             mc.world.getPlayers().stream().filter(player -> mc.player.distanceTo(player) < 5 && player != mc.player).sorted(Comparator.comparingDouble(player -> mc.player.distanceTo(player))).forEach(player -> {
@@ -693,7 +695,7 @@ public class SurroundPlus extends BlackOutModule {
                     return;
                 }
 
-                addBlocks(getSize(player));
+                addBlocks(player.getBlockPos(), getSize(player));
             });
         }
     }
@@ -724,11 +726,11 @@ public class SurroundPlus extends BlackOutModule {
         });
     }
 
-    private void addBlocks(int[] size) {
+    private void addBlocks(BlockPos pos, int[] size) {
         for (int x = size[0]; x <= size[1]; x++) {
             for (int z = size[2]; z <= size[3]; z++) {
-                if (!insideBlocks.contains(currentPos.add(x, 0, z))) {
-                    insideBlocks.add(currentPos.add(x, 0, z));
+                if (!insideBlocks.contains(pos.add(x, 0, z).withY(currentPos.getY()))) {
+                    insideBlocks.add(pos.add(x, 0, z).withY(currentPos.getY()));
                 }
             }
         }
