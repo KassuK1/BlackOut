@@ -18,6 +18,7 @@ import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.utils.world.CardinalDirection;
+import meteordevelopment.meteorclient.utils.world.Dir;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.*;
@@ -197,7 +198,7 @@ public class PistonCrystal extends BlackOutModule {
         .build()
     );
 
-    //--------------------Swing--------------------//
+    //--------------------Render--------------------//
     private final Setting<Double> crystalHeight = sgGeneral.add(new DoubleSetting.Builder()
         .name("Crystal Height")
         .description(".")
@@ -285,22 +286,39 @@ public class PistonCrystal extends BlackOutModule {
     private BlockPos firePos = null;
     private BlockPos redstonePos = null;
 
+    private BlockPos lastCrystalPos = null;
+    private BlockPos lastPistonPos = null;
+    private BlockPos lastRedstonePos = null;
+
     private Direction pistonDir = null;
     private PlaceData pistonData = null;
     private Direction crystalPlaceDir = null;
     private Direction crystalDir = null;
     private PlaceData redstoneData = null;
 
-    private PlayerEntity targetPlayer = null;
+    private BlockPos closestCrystalPos = null;
+    private BlockPos closestPistonPos = null;
+    private BlockPos closestRedstonePos = null;
+    private Direction closestPistonDir = null;
+    private PlaceData closestPistonData = null;
+    private Direction closestCrystalPlaceDir = null;
+    private Direction closestCrystalDir = null;
+    private PlaceData closestRedstoneData = null;
 
     private int ticksleft = 0;
     private int ticksBroken = 0;
 
     private long redstoneTime = 0;
 
+    private double cd;
+    private double d;
+
     @Override
     public void onActivate() {
-        super.onActivate();
+        resetPos();
+        lastCrystalPos = null;
+        lastPistonPos = null;
+        lastRedstonePos = null;
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -764,6 +782,19 @@ public class PistonCrystal extends BlackOutModule {
     }
 
     private void updatePos() {
+        lastCrystalPos = crystalPos;
+        lastPistonPos = pistonPos;
+        lastRedstonePos = redstonePos;
+
+        closestCrystalPos = null;
+        closestPistonPos = null;
+        closestRedstonePos = null;
+        closestPistonDir = null;
+        closestPistonData = null;
+        closestCrystalPlaceDir = null;
+        closestCrystalDir = null;
+        closestRedstoneData = null;
+
         resetPos();
 
         mc.world.getPlayers().stream()
@@ -783,12 +814,15 @@ public class PistonCrystal extends BlackOutModule {
     }
 
     private void update(PlayerEntity player, boolean top) {
-        for (CardinalDirection cd : Arrays.stream(CardinalDirection.values()).sorted(Comparator.comparingDouble(i -> player.getBlockPos().offset(i.toDirection()).toCenterPos().distanceTo(mc.player.getPos()))).toList()) {
-            if (crystalPos != null) continue;
+        cd = 10000;
 
-            Direction dir = cd.toDirection();
 
+        for (Direction dir : OLEPOSSUtils.horizontal) {
+            resetPos();
             BlockPos cPos = top ? BlockPos.ofFloored(player.getEyePos()).offset(dir).up() : BlockPos.ofFloored(player.getEyePos()).offset(dir);
+
+            d = cPos.toCenterPos().distanceTo(mc.player.getPos());
+            if (!cPos.equals(lastCrystalPos) && d > cd) continue;
 
             Block b = mc.world.getBlockState(cPos).getBlock();
             if (!(b instanceof AirBlock) && b != Blocks.PISTON_HEAD && b != Blocks.MOVING_PISTON) {
@@ -818,18 +852,48 @@ public class PistonCrystal extends BlackOutModule {
                 continue;
             }
 
+            cd = d;
             crystalPos = cPos;
             crystalPlaceDir = cDir;
             crystalDir = dir;
 
-            targetPlayer = player;
+            closestCrystalPos = crystalPos;
+            closestPistonPos = pistonPos;
+            closestRedstonePos = redstonePos;
+            closestPistonDir = pistonDir;
+            closestPistonData = pistonData;
+            closestCrystalPlaceDir = crystalPlaceDir;
+            closestCrystalDir = crystalDir;
+            closestRedstoneData = redstoneData;
+
+            if (crystalPos.equals(lastCrystalPos)) break;
         }
+
+        crystalPos = closestCrystalPos;
+        pistonPos = closestPistonPos;
+        redstonePos = closestRedstonePos;
+        pistonDir = closestPistonDir;
+        pistonData = closestPistonData;
+        crystalPlaceDir = closestCrystalPlaceDir;
+        crystalDir = closestCrystalDir;
+        redstoneData = closestRedstoneData;
     }
 
     private void getPistonPos(BlockPos pos, Direction dir) {
         List<BlockPos> pistonBlocks = pistonBlocks(pos, dir);
 
+        cd = 10000;
+
+        BlockPos cPos = null;
+        PlaceData cData = null;
+        Direction cDir = null;
+        BlockPos cRedstonePos = null;
+        PlaceData cRedstoneData = null;
+
         for (BlockPos position : pistonBlocks) {
+
+            d = mc.player.getEyePos().distanceTo(position.toCenterPos());
+            if (!position.equals(lastPistonPos) && cd < d) continue;
 
             PlaceData placeData = SettingUtils.getPlaceDataAND(position, d -> true, b -> !isRedstone(b) &&
                 !(mc.world.getBlockState(b).getBlock() instanceof PistonBlock ||
@@ -842,7 +906,7 @@ public class PistonCrystal extends BlackOutModule {
                 continue;
             }
             if (!SettingUtils.inPlaceRange(placeData.pos())) {
-                return;
+                continue;
             }
 
             redstonePos(position, dir.getOpposite(), pos);
@@ -851,16 +915,21 @@ public class PistonCrystal extends BlackOutModule {
                 continue;
             }
 
-            pistonPos = position;
-            pistonDir = dir.getOpposite();
-            pistonData = placeData;
+            cd = d;
+            cRedstonePos = redstonePos;
+            cRedstoneData = redstoneData;
+            cPos = position;
+            cDir = dir.getOpposite();
+            cData = placeData;
 
-            return;
+            if (position.equals(lastPistonPos)) break;
         }
 
-        pistonPos = null;
-        pistonData = null;
-        pistonDir = null;
+        pistonPos = cPos;
+        pistonDir = cDir;
+        pistonData = cData;
+        redstonePos = cRedstonePos;
+        redstoneData = cRedstoneData;
     }
 
     private List<BlockPos> pistonBlocks(BlockPos pos, Direction dir) {
@@ -897,15 +966,24 @@ public class PistonCrystal extends BlackOutModule {
             }
 
             return OLEPOSSUtils.replaceable(b);
-        }).sorted(Comparator.comparingDouble(b -> b.toCenterPos().distanceTo(mc.player.getEyePos()))).toList();
+        }).toList();
     }
 
     private void redstonePos(BlockPos pos, Direction pDir, BlockPos cPos) {
+        cd = 10000;
+        redstonePos = null;
+
+        BlockPos cRedstonePos = null;
+        PlaceData cRedstoneData = null;
+
         if (redstone.get() == Redstone.Torch) {
-            for (Direction direction : Arrays.stream(Direction.values()).sorted(Comparator.comparingDouble(i -> pos.offset(i).toCenterPos().distanceTo(mc.player.getEyePos()))).toList()) {
+            for (Direction direction : Direction.values()) {
                 if (direction == pDir || direction == Direction.DOWN) continue;
 
                 BlockPos position = pos.offset(direction);
+
+                d = position.toCenterPos().distanceTo(mc.player.getEyePos());
+                if (!position.equals(lastPistonPos) && cd < d) continue;
 
                 if (position.equals(cPos)) {
                     continue;
@@ -936,21 +1014,28 @@ public class PistonCrystal extends BlackOutModule {
                     return true;
                 });
 
-                if (redstoneData.valid() && SettingUtils.inPlaceRange(redstoneData.pos()) && SettingUtils.inMineRange(position)) {
-                    redstonePos = position;
-                    return;
-                }
+                if (!redstoneData.valid() || !SettingUtils.inPlaceRange(redstoneData.pos()) || !SettingUtils.inMineRange(position)) continue;
+
+                cd = d;
+                cRedstonePos = position;
+                cRedstoneData = redstoneData;
+
+                if (position.equals(lastRedstonePos)) break;
             }
-            redstonePos = null;
+            redstonePos = cRedstonePos;
+            redstoneData = cRedstoneData;
             return;
         }
 
-        for (Direction direction : Arrays.stream(Direction.values()).sorted(Comparator.comparingDouble(i -> pos.offset(i).toCenterPos().distanceTo(mc.player.getEyePos()))).toList()) {
+        for (Direction direction : Direction.values()) {
             if (direction == pDir) {
                 continue;
             }
 
             BlockPos position = pos.offset(direction);
+
+            d = position.toCenterPos().distanceTo(mc.player.getEyePos());
+            if (!position.equals(lastPistonPos) && cd < d) continue;
 
             if (position.equals(cPos)) {
                 continue;
@@ -967,12 +1052,17 @@ public class PistonCrystal extends BlackOutModule {
 
             redstoneData = SettingUtils.getPlaceDataOR(position, pos::equals);
 
-            if (redstoneData.valid()) {
-                redstonePos = position;
-                return;
-            }
+            if (!redstoneData.valid()) continue;
+
+            cd = d;
+            cRedstonePos = position;
+            cRedstoneData = redstoneData;
+
+            if (position.equals(lastRedstonePos)) break;
         }
-        redstonePos = null;
+
+        redstonePos = cRedstonePos;
+        redstoneData = cRedstoneData;
     }
 
 

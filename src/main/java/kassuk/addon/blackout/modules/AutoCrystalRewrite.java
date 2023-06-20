@@ -1829,6 +1829,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     }
 
     public enum SequentialMode {
+        Disabled(0),
         Weak(1),
         Strong(2),
         Strict(3);
