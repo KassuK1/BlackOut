@@ -43,14 +43,28 @@ public class AnteroTaateli extends BlackOutModule {
 
     private double timer = 0;
     private final Random r = new Random();
+    private int lastIndex = 0;
 
     private final String[] messages = new String[]{
-        "Hey brokies top G here",
-        "Top G drinks sparkling water and breathes air",
-        "I hate dead people all you do is fucking laying down like pussies",
-        "Get up and do some push-ups",
-        "Top G is never late time is just running ahead of schedule",
-        "<NAME>, what color is your Bugatti?"
+        "Hey brokies top G here.",
+        "Top G drinks sparkling water and breathes air.",
+        "I hate dead people all you do is fucking laying down like pussies.",
+        "Get up and do some push-ups.",
+        "Top G is never late time is just running ahead of schedule.",
+        "<NAME>, what color is your Bugatti?",
+        "Hello i am Andrew Tate and you are a brokie.",
+        "Instead of playing a block game how bout you pick up some women.",
+        "We are living inside of The Matrix, and I’m Morpheus.",
+        "The Matrix has attacked me.",
+        "Fucking vape! Vape comes out of the motherfucker. Fucking vape!",
+        "You don't need vape breathe air!",
+        "Are you good enough on your worst day to defeat your opponents on their best day?",
+        "Being poor, weak and broke is your fault. The only person who can make you rich and strong is you. Build yourself.",
+        "The biggest difference between success and failure is getting started.",
+        "There was a guy who looked at me obviously trying to hurt my dignity so i pulled out my RPG and obliterated that fucker",
+        "Being rich is even better than you imagine it to be.",
+        "Your a fucking brokie!",
+
     };
 
     @EventHandler
@@ -68,6 +82,13 @@ public class AnteroTaateli extends BlackOutModule {
     private String getMessage(PlayerEntity pl) {
         int index = r.nextInt(0, messages.length);
         String msg = messages[index];
+        if (index == lastIndex) {
+            if (index >= messages.length - 1) {
+                index = 0;
+            }  else
+                index ++;
+        }
+        lastIndex = index;
         return msg.replace("<NAME>", pl.getName().getString());
     }
 
