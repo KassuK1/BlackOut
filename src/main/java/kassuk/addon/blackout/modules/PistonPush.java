@@ -364,6 +364,7 @@ public class PistonPush extends BlackOutModule {
             BlockPos pos = eyePos.offset(dir);
             if (!upCheck(pos)) continue;
             if (!OLEPOSSUtils.replaceable(pos) && !(mc.world.getBlockState(pos).getBlock() instanceof PistonBlock) && mc.world.getBlockState(pos).getBlock() != Blocks.MOVING_PISTON) continue;
+            if (OLEPOSSUtils.solid2(eyePos.offset(dir.getOpposite()))) continue;
 
             PlaceData data = SettingUtils.getPlaceData(pos);
             if (data == null || !data.valid()) continue;

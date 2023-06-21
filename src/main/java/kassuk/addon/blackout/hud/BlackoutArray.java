@@ -109,7 +109,7 @@ public class BlackoutArray extends HudElement {
     private final Setting<Double> length = sgWave.add(new DoubleSetting.Builder()
         .name("Wave Length")
         .description("How long color waves are.")
-        .defaultValue(1)
+        .defaultValue(5)
         .min(0)
         .sliderRange(1, 10)
         .build()

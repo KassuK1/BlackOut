@@ -729,6 +729,10 @@ public class SurroundPlus extends BlackOutModule {
     private void addBlocks(BlockPos pos, int[] size) {
         for (int x = size[0]; x <= size[1]; x++) {
             for (int z = size[2]; z <= size[3]; z++) {
+                BlockPos p = pos.add(x, 0, z);
+
+                if (mc.world.getBlockState(p).getBlock().getBlastResistance() < 600) continue;
+
                 if (!insideBlocks.contains(pos.add(x, 0, z).withY(currentPos.getY()))) {
                     insideBlocks.add(pos.add(x, 0, z).withY(currentPos.getY()));
                 }
