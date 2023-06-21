@@ -920,7 +920,7 @@ public class AutoMine extends BlackOutModule {
         double distance = 1000;
         for (AbstractClientPlayerEntity player : enemies) {
             for (Direction dir : Direction.Type.HORIZONTAL) {
-                BlockPos pos = player.getBlockPos().offset(dir);
+                BlockPos pos = getPos(player.getPos()).offset(dir);
 
                 if (!(civ && pos.equals(civPos)) && getBlock(pos) != Blocks.OBSIDIAN) {
                     continue;
@@ -967,7 +967,7 @@ public class AutoMine extends BlackOutModule {
         double distance = 1000;
         for (AbstractClientPlayerEntity player : enemies) {
             for (Direction dir : Direction.Type.HORIZONTAL) {
-                BlockPos pos = player.getBlockPos().offset(dir);
+                BlockPos pos = getPos(player.getPos()).offset(dir);
 
                 if (((!civ || !pos.equals(civPos)) && !OLEPOSSUtils.solid2(pos)) || getBlock(pos) == Blocks.BEDROCK) {
                     continue;
@@ -994,7 +994,7 @@ public class AutoMine extends BlackOutModule {
         double distance = 1000;
         for (AbstractClientPlayerEntity player : enemies) {
             for (Direction dir : Direction.Type.HORIZONTAL) {
-                BlockPos pos = player.getBlockPos().offset(dir);
+                BlockPos pos = getPos(player.getPos()).offset(dir);
 
                 if (((!civ || !pos.equals(civPos)) && !OLEPOSSUtils.solid2(pos)) || getBlock(pos) == Blocks.BEDROCK) {
                     continue;
@@ -1036,7 +1036,7 @@ public class AutoMine extends BlackOutModule {
         Target best = null;
         double distance = 1000;
         for (AbstractClientPlayerEntity player : enemies) {
-            BlockPos pos = player.getBlockPos();
+            BlockPos pos = getPos(player.getPos());
 
             if (!OLEPOSSUtils.solid2(pos) || getBlock(pos) == Blocks.BEDROCK) {
                 continue;
@@ -1214,6 +1214,10 @@ public class AutoMine extends BlackOutModule {
 
     public BlockPos targetPos() {
         return target == null ? null : target.pos;
+    }
+
+    private BlockPos getPos(Vec3d vec) {
+        return new BlockPos((int) Math.floor(vec.x), (int) Math.round(vec.y), (int) Math.floor(vec.z));
     }
 
     public enum SwitchMode {
