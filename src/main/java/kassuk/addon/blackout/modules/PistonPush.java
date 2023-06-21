@@ -148,6 +148,10 @@ public class PistonPush extends BlackOutModule {
         lastRedstone = null;
         lastDirection = null;
         startPos = null;
+        redstonePlaced = false;
+        pistonPlaced = false;
+        mined = false;
+        lastPlace = System.currentTimeMillis();
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

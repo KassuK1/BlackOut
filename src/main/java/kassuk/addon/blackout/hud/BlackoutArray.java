@@ -164,7 +164,7 @@ public class BlackoutArray extends HudElement {
     }
 
     private int colorVal(int original, int wave, double f) {
-        return MathHelper.clamp((int) Math.round(wave + (original - wave) * f), 0, 255);
+        return MathHelper.clamp((int) Math.floor(wave + (original - wave) * f), 0, 255);
     }
 
     private record Line(String name, String info) {
