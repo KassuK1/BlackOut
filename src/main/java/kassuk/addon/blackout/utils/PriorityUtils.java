@@ -15,7 +15,7 @@ public class PriorityUtils {
         if (module instanceof AnchorAuraPlus) return 9;
         if (module instanceof AntiAim) return 12;
         if (module instanceof AutoCraftingTable) return 4;
-        if (module instanceof AutoCrystalRewrite) return 10;
+        if (module instanceof AutoCrystalPlus) return 10;
         if (module instanceof AutoMend) return 4;
         if (module instanceof PistonCrystal) return 10;
         if (module instanceof AutoMine) return 9;

@@ -36,8 +36,8 @@ public class Suicide extends BlackOutModule {
 
     @Override
     public void onActivate() {
-        if (enableCA.get() && !Modules.get().isActive(AutoCrystalRewrite.class)) {
-            Modules.get().get(AutoCrystalRewrite.class).toggle();
+        if (enableCA.get() && !Modules.get().isActive(AutoCrystalPlus.class)) {
+            Modules.get().get(AutoCrystalPlus.class).toggle();
         }
     }
 

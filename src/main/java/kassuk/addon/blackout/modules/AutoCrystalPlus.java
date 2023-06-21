@@ -52,9 +52,9 @@ import java.util.function.Predicate;
  * @author OLEPOSSU
  */
 
-public class AutoCrystalRewrite extends BlackOutModule {
-    public AutoCrystalRewrite() {
-        super(BlackOut.BLACKOUT, "Auto Crystal Rewrite", "Breaks and places crystals automatically (but better).");
+public class AutoCrystalPlus extends BlackOutModule {
+    public AutoCrystalPlus() {
+        super(BlackOut.BLACKOUT, "Auto Crystal+", "Breaks and places crystals automatically (but better).");
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -145,7 +145,7 @@ public class AutoCrystalRewrite extends BlackOutModule {
     private final Setting<SequentialMode> sequential = sgPlace.add(new EnumSetting.Builder<SequentialMode>()
         .name("Sequential")
         .description("Doesn't place and attack during the same tick.")
-        .defaultValue(SequentialMode.Weak)
+        .defaultValue(SequentialMode.Disabled)
         .build()
     );
     private final Setting<DelayMode> placeDelayMode = sgPlace.add(new EnumSetting.Builder<DelayMode>()

@@ -98,7 +98,7 @@ public class OffHandPlus extends BlackOutModule {
     private double timer = 0;
     private Item item = null;
     private Suicide suicide = null;
-    private AutoCrystalRewrite autoCrystalRewrite = null;
+    private AutoCrystalPlus autoCrystalRewrite = null;
     private CrystalAura crystalAura = null;
     private AutoMine autoMine = null;
     private long lastTime = 0;
@@ -110,7 +110,7 @@ public class OffHandPlus extends BlackOutModule {
         lastTime = System.currentTimeMillis();
 
         if (suicide == null) {suicide = Modules.get().get(Suicide.class);}
-        if (autoCrystalRewrite == null) {autoCrystalRewrite = Modules.get().get(AutoCrystalRewrite.class);}
+        if (autoCrystalRewrite == null) {autoCrystalRewrite = Modules.get().get(AutoCrystalPlus.class);}
         if (crystalAura == null) {crystalAura = Modules.get().get(CrystalAura.class);}
         if (autoMine == null) {autoMine = Modules.get().get(AutoMine.class);}
 

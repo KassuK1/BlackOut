@@ -106,6 +106,14 @@ public class BlackoutArray extends HudElement {
         .sliderRange(1, 10)
         .build()
     );
+    private final Setting<Double> length = sgWave.add(new DoubleSetting.Builder()
+        .name("Wave Length")
+        .description("How long color waves are.")
+        .defaultValue(1)
+        .min(0)
+        .sliderRange(1, 10)
+        .build()
+    );
 
     public static final HudElementInfo<BlackoutArray> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "BlackoutArray", "An ArrayList for blackout features.", BlackoutArray::new);
 
@@ -133,7 +141,7 @@ public class BlackoutArray extends HudElement {
             Line line = lines.get(i);
             double f = 0;
             if (wave.get()) {
-                f = (Math.sin(i * 6 + System.currentTimeMillis() / 1000D * speed.get()) + 1) / 2D;
+                f = Math.sin(System.currentTimeMillis() / 1000d * speed.get() - i / length.get()) + 1;
             }
             renderer.text(line.name, side.get() == Side.Left ? x : x + getWidth() - width(renderer, line.name + (line.info.isEmpty() ? "" : " " + line.info)), y + i * height, getColor(color.get(), waveColor.get(), f), shadow.get(), scale.get());
             renderer.text(line.info, side.get() == Side.Left ? x + width(renderer, line.name + " ") : x + getWidth() - width(renderer, line.info), y + i * height, getColor(infoColor.get(), infoWaveColor.get(), f), shadow.get(), scale.get());
@@ -156,7 +164,7 @@ public class BlackoutArray extends HudElement {
     }
 
     private int colorVal(int original, int wave, double f) {
-        return MathHelper.clamp((int) Math.round(original + (wave - original) * f), 0, 255);
+        return MathHelper.clamp((int) Math.round(wave + (original - wave) * f), 0, 255);
     }
 
     private record Line(String name, String info) {
