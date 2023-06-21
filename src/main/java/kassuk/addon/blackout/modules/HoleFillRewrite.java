@@ -358,8 +358,8 @@ public class HoleFillRewrite extends BlackOutModule {
     }
 
     private boolean inHole(PlayerEntity pl) {
-        for (CardinalDirection cd : CardinalDirection.values()) {
-            if (mc.world.getBlockState(pl.getBlockPos().offset(cd.toDirection())).getBlock() == Blocks.AIR)
+        for (Direction dir : Direction.Type.HORIZONTAL) {
+            if (mc.world.getBlockState(pl.getBlockPos().offset(dir)).getBlock() == Blocks.AIR)
                 return false;
         }
         return true;

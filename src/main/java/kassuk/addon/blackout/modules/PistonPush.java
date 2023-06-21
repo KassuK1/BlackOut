@@ -358,7 +358,8 @@ public class PistonPush extends BlackOutModule {
     private void updatePos(PlayerEntity player) {
         BlockPos eyePos = BlockPos.ofFloored(player.getEyePos());
 
-        for (Direction dir : Arrays.stream(OLEPOSSUtils.horizontal).sorted(Comparator.comparingDouble(d -> eyePos.offset(d).toCenterPos().distanceTo(mc.player.getEyePos()))).toList()) {
+
+        for (Direction dir : Direction.Type.HORIZONTAL.stream().sorted(Comparator.comparingDouble(d -> eyePos.offset(d).toCenterPos().distanceTo(mc.player.getEyePos()))).toList()) {
             resetPos();
 
             BlockPos pos = eyePos.offset(dir);

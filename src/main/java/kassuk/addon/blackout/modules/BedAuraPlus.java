@@ -351,8 +351,7 @@ public class BedAuraPlus extends BlackOutModule {
 
             if (!dmgCheck()) continue;
 
-            for (CardinalDirection cd : CardinalDirection.values()) {
-                Direction dir = cd.toDirection();
+            for (Direction dir : Direction.Type.HORIZONTAL) {
                 PlaceData data = getData(pos, dir);
 
                 if (!data.valid()) continue;

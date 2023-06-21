@@ -817,7 +817,7 @@ public class PistonCrystal extends BlackOutModule {
         cd = 10000;
 
 
-        for (Direction dir : OLEPOSSUtils.horizontal) {
+        for (Direction dir : Direction.Type.HORIZONTAL) {
             resetPos();
             BlockPos cPos = top ? BlockPos.ofFloored(player.getEyePos()).offset(dir).up() : BlockPos.ofFloored(player.getEyePos()).offset(dir);
 

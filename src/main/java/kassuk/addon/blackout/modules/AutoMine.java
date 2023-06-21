@@ -872,8 +872,7 @@ public class AutoMine extends BlackOutModule {
         Target best = null;
         double distance = 1000;
         for (AbstractClientPlayerEntity player : enemies) {
-            for (CardinalDirection cd : CardinalDirection.values()) {
-                Direction dir = cd.toDirection();
+            for (Direction dir : Direction.Type.HORIZONTAL) {
                 BlockPos pos = new BlockPos(player.getBlockX(), (int) Math.floor(player.getBoundingBox().maxY), player.getBlockZ()).offset(dir);
 
                 if (!(civ && pos.equals(civPos)) && getBlock(pos) != Blocks.OBSIDIAN) {
@@ -920,8 +919,7 @@ public class AutoMine extends BlackOutModule {
         Target best = null;
         double distance = 1000;
         for (AbstractClientPlayerEntity player : enemies) {
-            for (CardinalDirection cd : CardinalDirection.values()) {
-                Direction dir = cd.toDirection();
+            for (Direction dir : Direction.Type.HORIZONTAL) {
                 BlockPos pos = player.getBlockPos().offset(dir);
 
                 if (!(civ && pos.equals(civPos)) && getBlock(pos) != Blocks.OBSIDIAN) {
@@ -968,7 +966,7 @@ public class AutoMine extends BlackOutModule {
         Target best = null;
         double distance = 1000;
         for (AbstractClientPlayerEntity player : enemies) {
-            for (Direction dir : OLEPOSSUtils.horizontal) {
+            for (Direction dir : Direction.Type.HORIZONTAL) {
                 BlockPos pos = player.getBlockPos().offset(dir);
 
                 if (((!civ || !pos.equals(civPos)) && !OLEPOSSUtils.solid2(pos)) || getBlock(pos) == Blocks.BEDROCK) {
@@ -995,8 +993,7 @@ public class AutoMine extends BlackOutModule {
         Target best = null;
         double distance = 1000;
         for (AbstractClientPlayerEntity player : enemies) {
-            for (CardinalDirection cd : CardinalDirection.values()) {
-                Direction dir = cd.toDirection();
+            for (Direction dir : Direction.Type.HORIZONTAL) {
                 BlockPos pos = player.getBlockPos().offset(dir);
 
                 if (((!civ || !pos.equals(civPos)) && !OLEPOSSUtils.solid2(pos)) || getBlock(pos) == Blocks.BEDROCK) {

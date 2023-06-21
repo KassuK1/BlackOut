@@ -716,8 +716,7 @@ public class SurroundPlus extends BlackOutModule {
         surroundBlocks.clear();
 
         insideBlocks.forEach(pos -> {
-            for (CardinalDirection cd : CardinalDirection.values()) {
-                Direction dir = cd.toDirection();
+            for (Direction dir : Direction.Type.HORIZONTAL) {
 
                 if (!surroundBlocks.contains(pos.offset(dir)) && !insideBlocks.contains(pos.offset(dir))) {
                     surroundBlocks.add(pos.offset(dir));
@@ -731,7 +730,7 @@ public class SurroundPlus extends BlackOutModule {
             for (int z = size[2]; z <= size[3]; z++) {
                 BlockPos p = pos.add(x, 0, z);
 
-                if (mc.world.getBlockState(p).getBlock().getBlastResistance() < 600) continue;
+                if (mc.world.getBlockState(p).getBlock().getBlastResistance() > 600 && !p.equals(currentPos)) continue;
 
                 if (!insideBlocks.contains(pos.add(x, 0, z).withY(currentPos.getY()))) {
                     insideBlocks.add(pos.add(x, 0, z).withY(currentPos.getY()));
