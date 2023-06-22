@@ -54,7 +54,6 @@ public class PistonPush extends BlackOutModule {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgDelay = settings.createGroup("Delay");
     private final SettingGroup sgSwing = settings.createGroup("Swing");
-    private final SettingGroup sgRender = settings.createGroup("Render");
 
     //--------------------General--------------------//
     private final Setting<Boolean> pauseEat = addPauseEat(sgGeneral);
