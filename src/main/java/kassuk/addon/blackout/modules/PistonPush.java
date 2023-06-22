@@ -52,7 +52,7 @@ public class PistonPush extends BlackOutModule {
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private final SettingGroup sgSwitch = settings.createGroup("Switch");
+    private final SettingGroup sgDelay = settings.createGroup("Delay");
     private final SettingGroup sgSwing = settings.createGroup("Swing");
     private final SettingGroup sgRender = settings.createGroup("Render");
 
@@ -64,32 +64,48 @@ public class PistonPush extends BlackOutModule {
         .defaultValue(Redstone.Torch)
         .build()
     );
-    private final Setting<Double> speed = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Speed")
-        .description("How many times to try every second.")
-        .defaultValue(2)
-        .min(0)
-        .sliderRange(0, 20)
-        .build()
-    );
     private final Setting<Boolean> toggleMove = sgSwing.add(new BoolSetting.Builder()
         .name("Toggle Move")
         .description("Toggles when enemy moves.")
         .defaultValue(true)
         .build()
     );
-
-    //--------------------Switch--------------------//
-    private final Setting<SwitchMode> pistonSwitch = sgSwitch.add(new EnumSetting.Builder<SwitchMode>()
+    private final Setting<SwitchMode> pistonSwitch = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
         .name("Piston Switch")
         .description("Method of switching. Silent is the most reliable.")
         .defaultValue(SwitchMode.Silent)
         .build()
     );
-    private final Setting<SwitchMode> redstoneSwitch = sgSwitch.add(new EnumSetting.Builder<SwitchMode>()
+    private final Setting<SwitchMode> redstoneSwitch = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
         .name("Redstone Switch")
         .description("Method of switching. Silent is the most reliable.")
         .defaultValue(SwitchMode.Silent)
+        .build()
+    );
+
+    //--------------------Delay--------------------//
+    private final Setting<Double> prDelay = sgDelay.add(new DoubleSetting.Builder()
+        .name("Piston > Redstone")
+        .description("How many seconds to wait between placing piston and redstone.")
+        .defaultValue(0)
+        .min(0)
+        .sliderRange(0, 20)
+        .build()
+    );
+    private final Setting<Double> rmDelay = sgDelay.add(new DoubleSetting.Builder()
+        .name("Redstone > Mine")
+        .description("How many seconds to wait between placing redstone and starting to mine it.")
+        .defaultValue(0.2)
+        .min(0)
+        .sliderRange(0, 20)
+        .build()
+    );
+    private final Setting<Double> mpDelay = sgDelay.add(new DoubleSetting.Builder()
+        .name("Mine > Piston")
+        .description("How many seconds to wait after mining the redstone before starting a new cycle.")
+        .defaultValue(0.2)
+        .min(0)
+        .sliderRange(0, 20)
         .build()
     );
 
@@ -121,13 +137,14 @@ public class PistonPush extends BlackOutModule {
         .build()
     );
 
-    private long lastPlace = 0;
+    private long pistonTime = 0;
+    private long redstoneTime = 0;
+    private long mineTime = 0;
+    private boolean minedThisTick = false;
 
     private boolean pistonPlaced = false;
     private boolean redstonePlaced = false;
     private boolean mined = false;
-
-    private int redstoneTicks = 0;
 
     private BlockPos pistonPos = null;
     private BlockPos redstonePos = null;
@@ -151,13 +168,11 @@ public class PistonPush extends BlackOutModule {
         redstonePlaced = false;
         pistonPlaced = false;
         mined = false;
-        lastPlace = System.currentTimeMillis();
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onTick(TickEvent.Pre event) {
-        mineUpdate();
-        if (redstoneTicks > 0) redstoneTicks--;
+        minedThisTick = false;
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -183,11 +198,10 @@ public class PistonPush extends BlackOutModule {
         event.renderer.box(getBox(pistonPos), new Color(255, 255, 0, 50), new Color(255, 255, 0, 255), ShapeMode.Both, 0);
         event.renderer.box(getBox(redstonePos), new Color(255, 0, 0, 50), new Color(255, 0, 0, 255), ShapeMode.Both, 0);
 
-        if (System.currentTimeMillis() - lastPlace > 1000 / speed.get() && ((redstonePlaced && pistonPlaced && mined) || !pistonPos.equals(lastPiston) || !redstonePos.equals(lastRedstone) || !pistonDir.equals(lastDirection))) {
+        if ((System.currentTimeMillis() - mineTime > mpDelay.get() * 1000 && redstonePlaced && pistonPlaced && mined) || !pistonPos.equals(lastPiston) || !redstonePos.equals(lastRedstone) || !pistonDir.equals(lastDirection)) {
             redstonePlaced = false;
             pistonPlaced = false;
             mined = false;
-            lastPlace = System.currentTimeMillis();
         }
 
         if (pauseEat.get() && mc.player.isUsingItem()) return;
@@ -241,6 +255,7 @@ public class PistonPush extends BlackOutModule {
         sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(Vec3d.ofCenter(pistonData.pos()), pistonData.dir(), pistonData.pos(), false), 0));
         SettingUtils.swing(SwingState.Post, SwingType.Placing, hand);
 
+        pistonTime = System.currentTimeMillis();
         pistonPlaced = true;
 
         if (pistonSwing.get()) clientSwing(pistonHand.get(), hand);
@@ -256,6 +271,7 @@ public class PistonPush extends BlackOutModule {
 
     private void placeRedstone() {
         if (!pistonPlaced || redstonePlaced) return;
+        if (System.currentTimeMillis() - pistonTime < prDelay.get() * 1000) return;
 
         Hand hand = getHand(redstone.get().i);
         boolean available = hand != null;
@@ -297,7 +313,7 @@ public class PistonPush extends BlackOutModule {
         SettingUtils.swing(SwingState.Post, SwingType.Placing, hand);
 
         redstonePlaced = true;
-        redstoneTicks = 2;
+        redstoneTime = System.currentTimeMillis();
 
         if (redstoneSwing.get()) clientSwing(redstoneHand.get(), hand);
 
@@ -316,7 +332,9 @@ public class PistonPush extends BlackOutModule {
 
     private void mineUpdate() {
         if (!pistonPlaced || !redstonePlaced) return;
-        if (redstoneTicks != 0) return;
+        if (minedThisTick) return;
+        if (System.currentTimeMillis() - redstoneTime < rmDelay.get() * 1000) return;
+
         if (redstonePos == null) {
             return;
         }
@@ -334,8 +352,11 @@ public class PistonPush extends BlackOutModule {
 
         Direction mineDir = SettingUtils.getPlaceOnDirection(redstonePos);
         if (mineDir != null) {
-            redstoneTicks = -1;
+            if (!mined) mineTime = System.currentTimeMillis();
+
             mined = true;
+            minedThisTick = true;
+
             sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, redstonePos, mineDir));
             sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, redstonePos, mineDir));
         }
