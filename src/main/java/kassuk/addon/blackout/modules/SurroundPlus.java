@@ -21,7 +21,6 @@ import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
-import meteordevelopment.meteorclient.utils.world.CardinalDirection;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Block;
@@ -534,7 +533,7 @@ public class SurroundPlus extends BlackOutModule {
 
         placing = true;
 
-        if (SettingUtils.shouldRotate(RotationType.Placing) && !Managers.ROTATION.start(data.pos(), priority, RotationType.Placing)) {return;}
+        if (SettingUtils.shouldRotate(RotationType.BlockPlace) && !Managers.ROTATION.start(data.pos(), priority, RotationType.BlockPlace)) {return;}
 
         if (!switched && hand == null) {
             switch (switchMode.get()) {
@@ -564,7 +563,7 @@ public class SurroundPlus extends BlackOutModule {
         blocksLeft--;
         placesLeft--;
 
-        if (SettingUtils.shouldRotate(RotationType.Placing)) {
+        if (SettingUtils.shouldRotate(RotationType.BlockPlace)) {
             Managers.ROTATION.end(data.pos());
         }
     }

@@ -1,5 +1,7 @@
 package kassuk.addon.blackout.globalsettings;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
@@ -11,11 +13,15 @@ import meteordevelopment.meteorclient.mixininterface.IVec3d;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.utils.render.color.Color;
+import net.minecraft.block.*;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author OLEPOSSU
@@ -27,158 +33,65 @@ public class RotationSettings extends BlackOutModule {
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private final SettingGroup sgCrystal = settings.createGroup("Crystal");
-    private final SettingGroup sgAttack = settings.createGroup("Attack");
-    private final SettingGroup sgPlace = settings.createGroup("Place");
-    private final SettingGroup sgMine = settings.createGroup("Mine");
     private final SettingGroup sgInteract = settings.createGroup("Interact");
+    private final SettingGroup sgBlockPlace = settings.createGroup("Block Place");
+    private final SettingGroup sgMining = settings.createGroup("Mining");
+    private final SettingGroup sgAttack = settings.createGroup("Attack");
     private final SettingGroup sgUse = settings.createGroup("Use");
 
-    //  General Settings
-    public final Setting<RotationCheckMode> rotationCheckMode = sgGeneral.add(new EnumSetting.Builder<RotationCheckMode>()
-        .name("Rotation Check Mode")
-        .description(".")
-        .defaultValue(RotationCheckMode.Raytrace)
-        .build()
-    );
-    public final Setting<Double> yawAngle = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Yaw Angle")
-        .description("Accepts rotation of yaw angle to target is under this.")
-        .defaultValue(90)
-        .range(0, 180)
-        .sliderRange(0, 180)
-        .visible(() -> rotationCheckMode.get() == RotationCheckMode.Angle)
-        .build()
-    );
-    public final Setting<Double> pitchAngle = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Pitch Angle")
-        .description("Accepts rotation of pitch angle to target is under this.")
-        .defaultValue(45)
-        .range(0, 180)
-        .sliderRange(0, 180)
-        .visible(() -> rotationCheckMode.get() == RotationCheckMode.Angle)
-        .build()
-    );
+    //--------------------General--------------------//
     public final Setting<Boolean> vanillaRotation = sgGeneral.add(new BoolSetting.Builder()
         .name("Vanilla Rotation")
         .description("Turns your head.")
         .defaultValue(false)
         .build()
     );
-    public final Setting<Double> yawStep = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Yaw Step")
-        .description("How many yaw degrees should be rotated each packet.")
-        .defaultValue(180)
-        .range(0, 180)
-        .sliderRange(0, 180)
-        .build()
-    );
-    public final Setting<Double> pitchStep = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Pitch Step")
-        .description("How many pitch degrees should be rotated each packet.")
-        .defaultValue(180)
-        .range(0, 180)
-        .sliderRange(0, 180)
-        .build()
-    );
-    public final Setting<Integer> NCPPackets = sgGeneral.add(new IntSetting.Builder()
-        .name("Rotation Memory")
-        .description("Accepts rotation if looked at it x packets earlier.")
-        .defaultValue(5)
-        .range(0, 20)
-        .sliderRange(0, 20)
-        .build()
-    );
 
-    //  Crystal Page
-    private final Setting<Boolean> crystalRotate = sgCrystal.add(new BoolSetting.Builder()
-        .name("Crystal Rotate")
-        .description("Rotates when placing crystals.")
-        .defaultValue(false)
-        .build()
-    );
-    public final Setting<Double> crystalTime = sgCrystal.add(new DoubleSetting.Builder()
-        .name("Crystal Rotation Time")
-        .description("Keeps the rotation for x seconds after ending.")
-        .defaultValue(1)
-        .min(0)
-        .sliderRange(0, 1)
-        .build()
-    );
+    //--------------------Interact--------------------//
+    private final Setting<Boolean> interactRotate = rotateSetting("Interact", "interacting with a block", sgInteract);
+    public final Setting<Double> interactTime = timeSetting("Interact", sgInteract);
+    public final Setting<RotationCheckMode> interactMode = modeSetting("Interact", sgInteract);
+    public final Setting<Double> interactYawAngle = yawAngleSetting("Interact", sgInteract, () -> interactMode.get() == RotationCheckMode.Angle);
+    public final Setting<Double> interactPitchAngle = pitchAngleSetting("Interact", sgInteract, () -> interactMode.get() == RotationCheckMode.Angle);
+    public final Setting<Double> interactYawStep = yawStepSetting("Interact", sgInteract);
+    public final Setting<Double> interactPitchStep = pitchStepSetting("Interact", sgInteract);
+    public final Setting<Integer> interactMemory = memorySetting("Interact", sgInteract);
 
-    // Attack Page
-    private final Setting<Boolean> attackRotate = sgAttack.add(new BoolSetting.Builder()
-        .name("Attack Rotate")
-        .description("Rotates when attacking entities.")
-        .defaultValue(false)
-        .build()
-    );
-    public final Setting<Double> attackTime = sgAttack.add(new DoubleSetting.Builder()
-        .name("Attack Rotation Time")
-        .description("Keeps the rotation for x seconds after ending.")
-        .defaultValue(1)
-        .min(0)
-        .sliderRange(0, 1)
-        .build()
-    );
+    //--------------------Block-Place--------------------//
+    private final Setting<Boolean> blockRotate = rotateSetting("Block Place", "placing a block", sgBlockPlace);
+    public final Setting<Double> blockTime = timeSetting("Block Place", sgBlockPlace);
+    public final Setting<RotationCheckMode> blockMode = modeSetting("Block Place", sgBlockPlace);
+    public final Setting<Double> blockYawAngle = yawAngleSetting("Block Place", sgBlockPlace, () -> blockMode.get() == RotationCheckMode.Angle);
+    public final Setting<Double> blockPitchAngle = pitchAngleSetting("Block Place", sgBlockPlace, () -> blockMode.get() == RotationCheckMode.Angle);
+    public final Setting<Double> blockYawStep = yawStepSetting("Block Place", sgBlockPlace);
+    public final Setting<Double> blockPitchStep = pitchStepSetting("Block Place", sgBlockPlace);
+    public final Setting<Integer> blockMemory = memorySetting("Block Place", sgBlockPlace);
 
-    // Place Page
-    private final Setting<Boolean> placeRotate = sgPlace.add(new BoolSetting.Builder()
-        .name("Placing Rotate")
-        .description("Rotates when placing blocks.")
-        .defaultValue(false)
-        .build()
-    );
-    public final Setting<Double> placeTime = sgPlace.add(new DoubleSetting.Builder()
-        .name("Place Rotation Time")
-        .description("Keeps the rotation for x seconds after ending.")
-        .defaultValue(1)
-        .min(0)
-        .sliderRange(0, 1)
-        .build()
-    );
+    //--------------------Mining--------------------//
+    private final Setting<Boolean> mineRotate = rotateSetting("Mining", "mining a block", sgMining);
+    public final Setting<Double> mineTime = timeSetting("Mining", sgMining);
+    public final Setting<RotationCheckMode> mineMode = modeSetting("Mining", sgMining);
+    public final Setting<MiningRotMode> mineTiming = sgMining.add(new EnumSetting.Builder<MiningRotMode>().name("Mining Rotate Timing").description(".").defaultValue(MiningRotMode.Disabled).build());
+    public final Setting<Double> mineYawAngle = yawAngleSetting("Mining", sgMining, () -> mineMode.get() == RotationCheckMode.Angle);
+    public final Setting<Double> minePitchAngle = pitchAngleSetting("Mining", sgMining, () -> mineMode.get() == RotationCheckMode.Angle);
+    public final Setting<Double> mineYawStep = yawStepSetting("Mining", sgMining);
+    public final Setting<Double> minePitchStep = pitchStepSetting("Mining", sgMining);
+    public final Setting<Integer> mineMemory = memorySetting("Mining", sgMining);
 
-    // Mine Page
-    public final Setting<MiningRotMode> mineRotate = sgMine.add(new EnumSetting.Builder<MiningRotMode>()
-        .name("Mine Rotate")
-        .description("Rotates when mining.")
-        .defaultValue(MiningRotMode.Disabled)
-        .build()
-    );
-    public final Setting<Double> mineTime = sgMine.add(new DoubleSetting.Builder()
-        .name("Mine Rotation Time")
-        .description("Keeps the rotation for x seconds after ending.")
-        .defaultValue(1)
-        .min(0)
-        .sliderRange(0, 1)
-        .build()
-    );
+    //--------------------Attack--------------------//
+    private final Setting<Boolean> attackRotate = rotateSetting("Attack", "attacking an entity", sgAttack);
+    public final Setting<Double> attackTime = timeSetting("Attack", sgAttack);
+    public final Setting<RotationCheckMode> attackMode = modeSetting("Attack", sgAttack);
+    public final Setting<Double> attackYawAngle = yawAngleSetting("Attack", sgAttack, () -> attackMode.get() == RotationCheckMode.Angle);
+    public final Setting<Double> attackPitchAngle = pitchAngleSetting("Attack", sgAttack, () -> attackMode.get() == RotationCheckMode.Angle);
+    public final Setting<Double> attackYawStep = yawStepSetting("Attack", sgAttack);
+    public final Setting<Double> attackPitchStep = pitchStepSetting("Attack", sgAttack);
+    public final Setting<Integer> attackMemory = memorySetting("Attack", sgAttack);
 
-    // Interact Page
-    private final Setting<Boolean> interactRotate = sgInteract.add(new BoolSetting.Builder()
-        .name("Interact Rotate")
-        .description("Rotates when interacting with blocks. Crafting tables, chests...")
-        .defaultValue(false)
-        .build()
-    );
-    public final Setting<Double> interactTime = sgInteract.add(new DoubleSetting.Builder()
-        .name("Interact Rotation Time")
-        .description("Keeps the rotation for x seconds after ending.")
-        .defaultValue(1)
-        .min(0)
-        .sliderRange(0, 1)
-        .build()
-    );
-
-    // Use Page
-    public final Setting<Double> useTime = sgUse.add(new DoubleSetting.Builder()
-        .name("Use Rotation Time")
-        .description("Keeps the rotation for x seconds after ending.")
-        .defaultValue(1)
-        .min(0)
-        .sliderRange(0, 1)
-        .build()
-    );
+    //--------------------Use--------------------//
+    public final Setting<Double> useTime = timeSetting("Use", sgUse);
+    public final Setting<Double> useYawStep = yawStepSetting("Use", sgUse);
+    public final Setting<Double> usePitchStep = pitchStepSetting("Use", sgUse);
 
     public enum MiningRotMode {
         Disabled,
@@ -189,88 +102,262 @@ public class RotationSettings extends BlackOutModule {
 
     public enum RotationCheckMode {
         Raytrace,
+        StrictRaytrace,
         Angle
     }
 
-    public Vec3d vec = new Vec3d(0, 0, 0);
-
-    public boolean shouldRotate(RotationType type) {
-        switch (type) {
-            case Crystal -> {return crystalRotate.get();}
-            case Attacking -> {return attackRotate.get();}
-            case Placing -> {return placeRotate.get();}
-            case Interact -> {return interactRotate.get();}
-        }
-        return false;
+    private Setting<Boolean> rotateSetting(String type, String verb, SettingGroup sg) {
+        return sg.add(new BoolSetting.Builder().name(type + " Rotate").description("Rotates when + " + verb).defaultValue(false).build());
     }
 
-    public boolean rotationCheck(Box box) {
-        List<RotationManager.Rotation> history = RotationManager.history;
-        if (box == null) {return false;}
+    private Setting<Double> timeSetting(String type, SettingGroup sg) {
+        return sg.add(new DoubleSetting.Builder().name(type + " Rotation Time").description("Keeps the rotation for x seconds after ending.").defaultValue(0.5).min(0).sliderRange(0, 1).build());
+    }
 
-        switch (rotationCheckMode.get()) {
+    private Setting<RotationCheckMode> modeSetting(String type, SettingGroup sg) {
+        return sg.add(new EnumSetting.Builder<RotationCheckMode>().name(type + " Rotation Mode").description(".").defaultValue(RotationCheckMode.Raytrace).build());
+    }
+
+    private Setting<Double> yawAngleSetting(String type, SettingGroup sg, IVisible visible) {
+        return sg.add(new DoubleSetting.Builder().name(type + " Yaw Angle").description("Accepts rotation if yaw angle to target is under this.").defaultValue(90).range(0, 180).sliderRange(0, 180).visible(visible).build());
+    }
+
+    private Setting<Double> pitchAngleSetting(String type, SettingGroup sg, IVisible visible) {
+        return sg.add(new DoubleSetting.Builder().name(type + " Pitch Angle").description("Accepts rotation if pitch angle to target is under this.").defaultValue(45).range(0, 180).sliderRange(0, 180).visible(visible).build());
+    }
+
+    private Setting<Double> yawStepSetting(String type, SettingGroup sg) {
+        return sg.add(new DoubleSetting.Builder().name(type + " Yaw Step").description("How many yaw degrees should be rotated each packet.").defaultValue(90).range(0, 180).sliderRange(0, 180).build());
+    }
+
+    private Setting<Double> pitchStepSetting(String type, SettingGroup sg) {
+        return sg.add(new DoubleSetting.Builder().name(type + " Pitch Step").description("How many pitch degrees should be rotated each packet.").defaultValue(45).range(0, 180).sliderRange(0, 180).build());
+    }
+
+    private Setting<Integer> memorySetting(String type, SettingGroup sg) {
+        return sg.add(new IntSetting.Builder().name(type + " Memory").description("Accepts rotation if looked at it x packets earlier.").defaultValue(1).range(1, 20).sliderRange(1, 20).build());
+    }
+
+    public final Vec3d vec = new Vec3d(0, 0, 0);
+
+    public boolean rotationCheck(Box box, RotationType type) {
+        List<RotationManager.Rotation> history = RotationManager.history;
+        if (box == null) return false;
+
+        switch (mode(type)) {
             case Raytrace -> {
-                for (int r = 0; r < NCPPackets.get(); r++) {
+                for (int r = 0; r < memory(type); r++) {
                     if (history.size() <= r) {break;}
                     RotationManager.Rotation rot = history.get(r);
 
-                    if (raytraceCheck(rot.vec(), rot.yaw(), rot.pitch(), box)) {
-                        return true;
-                    }
+                    if (raytraceCheck(rot.vec(), rot.yaw(), rot.pitch(), box)) return true;
+                }
+            }
+            case StrictRaytrace -> {
+                for (int r = 0; r < memory(type); r++) {
+                    if (history.size() <= r) {break;}
+                    RotationManager.Rotation rot = history.get(r);
+
+                    double range = mc.player.getEyePos().distanceTo(box.getCenter()) + 3;
+
+                    Vec3d end = new Vec3d(
+                        range * Math.cos(Math.toRadians(rot.yaw() + 90)) * Math.abs(Math.cos(Math.toRadians(rot.pitch()))),
+                        range * -Math.sin(Math.toRadians(rot.pitch())),
+                        range * Math.sin(Math.toRadians(rot.yaw() + 90)) * Math.abs(Math.cos(Math.toRadians(rot.pitch()))))
+                        .add(mc.player.getEyePos());
+
+                    if (constRotCheck(rot.vec(), end, box)) return true;
                 }
             }
             case Angle -> {
-                for (int r = 0; r < NCPPackets.get(); r++) {
-                    if (history.size() <= r) {break;}
+                for (int r = 0; r < memory(type); r++) {
+                    if (history.size() <= r) break;
                     RotationManager.Rotation rot = history.get(r);
 
-                    if (angleCheck(rot.vec(), rot.yaw(), rot.pitch(), box)) {
-                        return true;
-                    }
+                    if (angleCheck(rot.vec(), rot.yaw(), rot.pitch(), box, type)) return true;
                 }
             }
         }
+
         return false;
     }
-    public boolean angleCheck(Vec3d pos, double y, double p, Box box) {
-        return RotationUtils.yawAngle(y, RotationUtils.getYaw(pos, box.getCenter())) <= yawAngle.get() && Math.abs(p - RotationUtils.getPitch(pos, box.getCenter())) <= pitchAngle.get();
+
+    public boolean shouldRotate(RotationType type) {
+        return switch (type) {
+            case Interact -> interactRotate.get();
+            case BlockPlace -> blockRotate.get();
+            case Attacking -> attackRotate.get();
+            case Mining -> mineRotate.get();
+            default -> true;
+        };
+    }
+
+    public RotationCheckMode mode(RotationType type) {
+        return switch (type) {
+            case Interact -> interactMode.get();
+            case BlockPlace -> blockMode.get();
+            case Attacking -> attackMode.get();
+            case Mining -> mineMode.get();
+            default -> null;
+        };
+    }
+
+    public double time(RotationType type) {
+        return switch (type) {
+            case Interact -> interactTime.get();
+            case BlockPlace -> blockTime.get();
+            case Attacking -> attackTime.get();
+            case Mining -> mineTime.get();
+            case Use -> useTime.get();
+            case Other -> 1.0;
+        };
+    }
+
+    public int memory(RotationType type) {
+        return switch (type) {
+            case Interact -> interactMemory.get();
+            case BlockPlace -> blockMemory.get();
+            case Attacking -> attackMemory.get();
+            case Mining -> mineMemory.get();
+            default -> 1;
+        };
+    }
+
+    public double yawStep(RotationType type) {
+        return switch (type) {
+            case Interact -> interactYawStep.get();
+            case BlockPlace -> blockYawStep.get();
+            case Attacking -> attackYawStep.get();
+            case Mining -> mineYawStep.get();
+            case Use -> useYawStep.get();
+            case Other -> 42069;
+        };
+    }
+
+    public double pitchStep(RotationType type) {
+        return switch (type) {
+            case Interact -> interactPitchStep.get();
+            case BlockPlace -> blockPitchStep.get();
+            case Attacking -> attackPitchStep.get();
+            case Mining -> minePitchStep.get();
+            case Use -> usePitchStep.get();
+            case Other -> 42069;
+        };
+    }
+
+    public double yawAngle(RotationType type) {
+        return switch (type) {
+            case Interact -> interactYawAngle.get();
+            case BlockPlace -> blockYawAngle.get();
+            case Attacking -> attackYawAngle.get();
+            case Mining -> mineYawAngle.get();
+            default -> 0.0;
+        };
+    }
+
+    public double pitchAngle(RotationType type) {
+        return switch (type) {
+            case Interact -> interactPitchAngle.get();
+            case BlockPlace -> blockPitchAngle.get();
+            case Attacking -> attackPitchAngle.get();
+            case Mining -> minePitchAngle.get();
+            default -> 0.0;
+        };
+    }
+
+    public boolean angleCheck(Vec3d pos, double y, double p, Box box, RotationType type) {
+        return RotationUtils.yawAngle(y, RotationUtils.getYaw(pos, box.getCenter())) <= yawAngle(type) && Math.abs(p - RotationUtils.getPitch(pos, box.getCenter())) <= pitchAngle(type);
     }
 
     public boolean raytraceCheck(Vec3d pos, double y, double p, Box box) {
         double range = pos.distanceTo(OLEPOSSUtils.getMiddle(box)) + 3;
+
         Vec3d end = new Vec3d(range * Math.cos(Math.toRadians(y + 90)) * Math.abs(Math.cos(Math.toRadians(p))),
             range * -Math.sin(Math.toRadians(p)),
             range * Math.sin(Math.toRadians(y + 90)) * Math.abs(Math.cos(Math.toRadians(p)))).add(pos);
 
         for (float i = 0; i < 1; i += 0.01) {
-            ((IVec3d) vec).set(pos.x + (end.x - pos.x) * i, pos.y + (end.y - pos.y) * i, pos.z + (end.z - pos.z) * i);
-
-            if (vec.x >= box.minX && vec.x <= box.maxX &&
-                vec.y >= box.minY && vec.y <= box.maxY &&
-                vec.z >= box.minZ && vec.z <= box.maxZ) {
-                return true;
-            }
+            if (box.contains(pos.x + (end.x - pos.x) * i, pos.y + (end.y - pos.y) * i, pos.z + (end.z - pos.z) * i)) return true;
         }
         return false;
     }
 
+    public boolean constCheck(Vec3d from, Vec3d to, Box box) {
+        int lx = 0, ly = 0, lz = 0;
+
+        for (float i = 0; i < 1; i += 0.01) {
+            double x = lerp(from.x, to.x, i);
+            double y = lerp(from.y, to.y, i);
+            double z = lerp(from.z, to.z, i);
+
+            if (box.contains(x, y, z)) return true;
+
+            int ix = (int) Math.floor(x);
+            int iy = (int) Math.floor(y);
+            int iz = (int) Math.floor(z);
+
+            if (lx != ix ||
+                ly != iy ||
+                lz != iz) {
+
+                BlockPos pos = new BlockPos(ix, iy, iz);
+                if (validForCheck(pos, mc.world.getBlockState(pos))) return false;
+            }
+
+            lx = ix;
+            ly = iy;
+            lz = iz;
+        }
+        return true;
+    }
+
+    public boolean constRotCheck(Vec3d from, Vec3d to, Box box) {
+        int lx = 0, ly = 0, lz = 0;
+
+        for (float i = 0; i < 1; i += 0.01) {
+            double x = lerp(from.x, to.x, i);
+            double y = lerp(from.y, to.y, i);
+            double z = lerp(from.z, to.z, i);
+
+            if (box.contains(x, y, z)) break;
+
+            int ix = (int) Math.floor(x);
+            int iy = (int) Math.floor(y);
+            int iz = (int) Math.floor(z);
+
+            if (lx != ix &&
+                ly != iy &&
+                lz != iz) {
+
+                BlockPos pos = new BlockPos(ix, iy, iz);
+                if (validForCheck(pos, mc.world.getBlockState(pos))) return false;
+            }
+
+            lx = ix;
+            ly = iy;
+            lz = iz;
+        }
+        return true;
+    }
+
+    private double lerp(double from, double to, double delta) {
+        return from + (to - from) * delta;
+    }
+
+    private boolean validForCheck(BlockPos pos, BlockState state) {
+        if (state.isSolid()) return true;
+        if (state.getBlock() instanceof FluidBlock) return false;
+        if (state.getBlock() instanceof StairsBlock) return false;
+        if (state.hasBlockEntity()) return false;
+
+        return state.isFullCube(mc.world, pos);
+    }
+
     public boolean endMineRot() {
-        return mineRotate.get() == MiningRotMode.End || mineRotate.get() == MiningRotMode.Double;
+        return mineTiming.get() == MiningRotMode.End || mineTiming.get() == MiningRotMode.Double;
     }
 
     public boolean startMineRot() {
-        return mineRotate.get() == MiningRotMode.Start || mineRotate.get() == MiningRotMode.Double;
-    }
-
-    public double getTime(RotationType type) {
-        return switch (type) {
-            case Crystal -> crystalTime.get();
-            case Attacking -> attackTime.get();
-            case Placing -> placeTime.get();
-            case Breaking -> mineTime.get();
-            case Interact -> interactTime.get();
-            case Use -> useTime.get();
-            case Other -> 1;
-        };
+        return mineTiming.get() == MiningRotMode.Start || mineTiming.get() == MiningRotMode.Double;
     }
 }

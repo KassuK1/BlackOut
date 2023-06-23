@@ -18,7 +18,6 @@ import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
-import meteordevelopment.meteorclient.utils.world.CardinalDirection;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.BedBlock;
@@ -619,7 +618,7 @@ public class BedAuraPlus extends BlackOutModule {
             return false;
         }
 
-        if (SettingUtils.shouldRotate(RotationType.Placing) && !Managers.ROTATION.start(placeData.pos(), priority, RotationType.Placing)) {
+        if (SettingUtils.shouldRotate(RotationType.BlockPlace) && !Managers.ROTATION.start(placeData.pos(), priority, RotationType.BlockPlace)) {
             return false;
         }
 
@@ -658,7 +657,7 @@ public class BedAuraPlus extends BlackOutModule {
 
         place(hand == null ? Hand.MAIN_HAND : hand);
 
-        if (SettingUtils.shouldRotate(RotationType.Placing)) {
+        if (SettingUtils.shouldRotate(RotationType.BlockPlace)) {
             Managers.ROTATION.end(placeData.pos());
         }
 

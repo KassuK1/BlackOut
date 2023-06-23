@@ -313,7 +313,7 @@ public class AutoTrapPlus extends BlackOutModule {
                         for (int i = 0; i < Math.min(obsidian, toPlace.size()); i++) {
                             PlaceData placeData = onlyConfirmed.get() ? SettingUtils.getPlaceData(toPlace.get(i)) : SettingUtils.getPlaceDataOR(toPlace.get(i), placed::contains);
                             if (placeData.valid()) {
-                                boolean rotated = !SettingUtils.shouldRotate(RotationType.Placing) || Managers.ROTATION.start(placeData.pos().offset(placeData.dir()), 1, RotationType.Placing);
+                                boolean rotated = !SettingUtils.shouldRotate(RotationType.BlockPlace) || Managers.ROTATION.start(placeData.pos().offset(placeData.dir()), 1, RotationType.BlockPlace);
 
                                 if (!rotated) break;
 
@@ -375,7 +375,7 @@ public class AutoTrapPlus extends BlackOutModule {
         SettingUtils.swing(SwingState.Post, SwingType.Placing, hand);
         if (placeSwing.get()) clientSwing(placeHand.get(), hand);
 
-        if (SettingUtils.shouldRotate(RotationType.Placing)) Managers.ROTATION.end(d.pos());
+        if (SettingUtils.shouldRotate(RotationType.BlockPlace)) Managers.ROTATION.end(d.pos());
     }
 
     private List<BlockPos> getValid(List<BlockPos> blocks) {

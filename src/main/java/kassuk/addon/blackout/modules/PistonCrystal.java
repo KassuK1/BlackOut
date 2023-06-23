@@ -17,8 +17,6 @@ import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
-import meteordevelopment.meteorclient.utils.world.CardinalDirection;
-import meteordevelopment.meteorclient.utils.world.Dir;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.*;
@@ -36,7 +34,6 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.*;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -457,7 +454,7 @@ public class PistonCrystal extends BlackOutModule {
             return;
         }
 
-        if (SettingUtils.shouldRotate(RotationType.Placing) && !Managers.ROTATION.start(pistonData.pos(), priority, RotationType.Placing)) {
+        if (SettingUtils.shouldRotate(RotationType.BlockPlace) && !Managers.ROTATION.start(pistonData.pos(), priority, RotationType.BlockPlace)) {
             return;
         }
 
@@ -527,7 +524,7 @@ public class PistonCrystal extends BlackOutModule {
             return;
         }
 
-        if (SettingUtils.shouldRotate(RotationType.Crystal) && !Managers.ROTATION.start(crystalPos.down(), priority, RotationType.Crystal)) {
+        if (SettingUtils.shouldRotate(RotationType.Interact) && !Managers.ROTATION.start(crystalPos.down(), priority, RotationType.Interact)) {
             return;
         }
 
@@ -604,7 +601,7 @@ public class PistonCrystal extends BlackOutModule {
             return;
         }
 
-        if (SettingUtils.shouldRotate(RotationType.Placing) && !Managers.ROTATION.start(redstoneData.pos(), priority, RotationType.Placing)) {
+        if (SettingUtils.shouldRotate(RotationType.BlockPlace) && !Managers.ROTATION.start(redstoneData.pos(), priority, RotationType.BlockPlace)) {
             return;
         }
 
@@ -742,7 +739,7 @@ public class PistonCrystal extends BlackOutModule {
             return;
         }
 
-        if (SettingUtils.shouldRotate(RotationType.Placing) && !Managers.ROTATION.start(data.pos(), priority, RotationType.Placing)) {
+        if (SettingUtils.shouldRotate(RotationType.BlockPlace) && !Managers.ROTATION.start(data.pos(), priority, RotationType.BlockPlace)) {
             return;
         }
 

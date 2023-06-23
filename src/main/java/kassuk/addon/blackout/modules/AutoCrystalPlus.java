@@ -1027,7 +1027,7 @@ public class AutoCrystalPlus extends BlackOutModule {
                 if (handToUse != null || (switchMode.get() == SwitchMode.Silent && hotbar >= 0) || ((switchMode.get() == SwitchMode.PickSilent || switchMode.get() == SwitchMode.InvSilent) && silentSlot >= 0)) {
                     placing = true;
                     if (speedCheck() && delayCheck()) {
-                        if (!SettingUtils.shouldRotate(RotationType.Crystal) || Managers.ROTATION.start(placePos.down(), smartRot.get() ? new Vec3d(placePos.getX() + 0.5, placePos.getY(), placePos.getZ() + 0.5) : null, priority - 0.1, RotationType.Crystal)) {
+                        if (!SettingUtils.shouldRotate(RotationType.Interact) || Managers.ROTATION.start(placePos.down(), smartRot.get() ? new Vec3d(placePos.getX() + 0.5, placePos.getY(), placePos.getZ() + 0.5) : null, priority - 0.1, RotationType.Interact)) {
                             placeCrystal(placePos.down(), placeDir, handToUse, silentSlot, hotbar);
                         }
                     }
@@ -1143,7 +1143,7 @@ public class AutoCrystalPlus extends BlackOutModule {
             SettingUtils.swing(SwingState.Post, SwingType.Interact, switched ? Hand.MAIN_HAND : handToUse);
             if (placeSwing.get()) clientSwing(placeHand.get(), switched ? Hand.MAIN_HAND : handToUse);
 
-            if (SettingUtils.shouldRotate(RotationType.Crystal)) {
+            if (SettingUtils.shouldRotate(RotationType.Interact)) {
                 Managers.ROTATION.end(Box.from(new BlockBox(pos)));
             }
 

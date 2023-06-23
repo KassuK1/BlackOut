@@ -169,9 +169,9 @@ public class RotationManager {
         if (shouldRotate) {
             if (target instanceof BoxTarget) {
                 ((BoxTarget) target).vec = getTargetPos();
-                next = new float[]{RotationUtils.nextYaw(lastDir[0], Rotations.getYaw(((BoxTarget) target).vec), settings.yawStep.get()), RotationUtils.nextPitch(lastDir[1], Rotations.getPitch(((BoxTarget) target).vec), settings.pitchStep.get())};
+                next = new float[]{RotationUtils.nextYaw(lastDir[0], Rotations.getYaw(((BoxTarget) target).vec), settings.yawStep(((BoxTarget) target).type)), RotationUtils.nextPitch(lastDir[1], Rotations.getPitch(((BoxTarget) target).vec), settings.pitchStep(((BoxTarget) target).type))};
             } else {
-                next = new float[]{RotationUtils.nextYaw(lastDir[0], ((AngleTarget) target).yaw, settings.yawStep.get()), RotationUtils.nextPitch(lastDir[1], ((AngleTarget) target).pitch, settings.pitchStep.get())};
+                next = new float[]{RotationUtils.nextYaw(lastDir[0], ((AngleTarget) target).yaw, settings.yawStep(((AngleTarget) target).type)), RotationUtils.nextPitch(lastDir[1], ((AngleTarget) target).pitch, settings.pitchStep(((AngleTarget) target).type))};
             }
 
             rotated = Math.abs(RotationUtils.yawAngle(next[0], lastDir[0])) > 0 || Math.abs(next[1] - lastDir[1]) > 0;
@@ -252,32 +252,35 @@ public class RotationManager {
         if (settings == null) {
             return false;
         }
-        boolean alreadyRotated = lastDir[0] == yaw && lastDir[1] == pitch;
+
         if (p <= priority) {
             priority = p;
             lastTarget = target;
 
-            target = new AngleTarget(yaw, pitch);
-            timer = settings.getTime(type);
+            target = new AngleTarget(yaw, pitch, type);
+            timer = settings.time(type);
         }
-        return alreadyRotated;
+
+        return lastDir[0] == yaw && lastDir[1] == pitch;
     }
 
     public boolean start(BlockPos pos, Box box, Vec3d vec, double p, RotationType type) {
         if (settings == null) {
             return false;
         }
-        boolean alreadyRotated = SettingUtils.rotationCheck(box);
 
-        if (p < priority || (p == priority && (!(target instanceof BoxTarget) || SettingUtils.rotationCheck(((BoxTarget) target).box)))) {
+        boolean alreadyRotated = SettingUtils.rotationCheck(box, type);
+
+        if (p < priority || (p == priority && (!(target instanceof BoxTarget) || SettingUtils.rotationCheck(((BoxTarget) target).box, type)))) {
             if (!alreadyRotated) {
                 priority = p;
             }
             lastTarget = target;
 
             target = pos != null ? new BoxTarget(pos, vec != null ? vec : OLEPOSSUtils.getMiddle(box), p, type) : new BoxTarget(box, vec != null ? vec : OLEPOSSUtils.getMiddle(box), p, type);
-            timer = settings.getTime(type);
+            timer = settings.time(type);
         }
+
         return alreadyRotated;
     }
 
@@ -305,7 +308,38 @@ public class RotationManager {
     public record Rotation(double yaw, double pitch, Vec3d vec) { }
 
     public Vec3d getTargetPos() {
-        return ((BoxTarget) target).vec;
+        BoxTarget t = (BoxTarget) target;
+
+        if (settings.mode(t.type) != RotationSettings.RotationCheckMode.StrictRaytrace ||
+            settings.constCheck(mc.player.getEyePos(), t.targetVec, t.box)) {
+            return t.targetVec;
+        }
+
+        Vec3d eye = mc.player.getEyePos();
+        double cd = 1000000;
+        Vec3d closest = null;
+
+        for (double x = 0.05; x < 0.95; x += 0.18) {
+            for (double y = 0.05; y < 0.95; y += 0.18) {
+                for (double z = 0.05; z < 0.95; z += 0.18) {
+                    Vec3d vec = new Vec3d(lerp(t.box.minX, t.box.maxX, x), lerp(t.box.minY, t.box.maxY, y), lerp(t.box.minZ, t.box.maxZ, z));
+
+                    double d = eye.distanceTo(vec);
+                    if (d > cd) continue;
+
+                    if (!settings.constCheck(eye, vec, t.box)) continue;
+
+                    cd = d;
+                    closest = vec;
+                }
+            }
+        }
+
+        return closest == null ? t.targetVec : closest;
+    }
+
+    private double lerp(double from, double to, double delta) {
+        return from + (to - from) * delta;
     }
 
     public void setHeadYaw(Args args) {
@@ -360,11 +394,13 @@ public class RotationManager {
         public final double yaw;
         public final double pitch;
         public boolean ended;
+        public final RotationType type;
 
-        public AngleTarget(double yaw, double pitch) {
+        public AngleTarget(double yaw, double pitch, RotationType type) {
             this.yaw = yaw;
             this.pitch = pitch;
             this.ended = false;
+            this.type = type;
         }
     }
 }

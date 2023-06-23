@@ -190,7 +190,7 @@ public class AutoCraftingTable extends BlackOutModule {
     }
 
     private boolean interact() {
-        boolean rotated = !SettingUtils.shouldRotate(RotationType.Placing) || Managers.ROTATION.start(tablePos, priority - 0.1, RotationType.Interact);
+        boolean rotated = !SettingUtils.shouldRotate(RotationType.BlockPlace) || Managers.ROTATION.start(tablePos, priority - 0.1, RotationType.Interact);
         if (!rotated) {
             return false;
         }
@@ -220,7 +220,7 @@ public class AutoCraftingTable extends BlackOutModule {
             return false;
         }
 
-        boolean rotated = !SettingUtils.shouldRotate(RotationType.Placing) || Managers.ROTATION.start(placeData.pos(), priority, RotationType.Placing);
+        boolean rotated = !SettingUtils.shouldRotate(RotationType.BlockPlace) || Managers.ROTATION.start(placeData.pos(), priority, RotationType.BlockPlace);
         if (!rotated) {
             return false;
         }

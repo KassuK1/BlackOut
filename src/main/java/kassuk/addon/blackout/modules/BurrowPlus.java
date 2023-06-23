@@ -122,11 +122,11 @@ public class BurrowPlus extends BlackOutModule {
             return;
         }
 
-        boolean rotated = instaRot.get() || !SettingUtils.shouldRotate(RotationType.Placing) || Managers.ROTATION.startPitch(90, priority, RotationType.Placing);
+        boolean rotated = instaRot.get() || !SettingUtils.shouldRotate(RotationType.BlockPlace) || Managers.ROTATION.startPitch(90, priority, RotationType.BlockPlace);
         if (!rotated) return;
 
 
-        if (instaRot.get() && SettingUtils.shouldRotate(RotationType.Placing)) {
+        if (instaRot.get() && SettingUtils.shouldRotate(RotationType.BlockPlace)) {
             sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(Managers.ROTATION.lastDir[0], 90, Managers.ONGROUND.isOnGround()));
         }
 

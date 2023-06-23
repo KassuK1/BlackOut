@@ -428,7 +428,7 @@ public class AnchorAuraPlus extends BlackOutModule {
             return false;
         }
 
-        if (SettingUtils.shouldRotate(RotationType.Placing) && !Managers.ROTATION.start(placeData.pos(), priority, RotationType.Placing)) {
+        if (SettingUtils.shouldRotate(RotationType.BlockPlace) && !Managers.ROTATION.start(placeData.pos(), priority, RotationType.BlockPlace)) {
             return false;
         }
 
@@ -456,7 +456,7 @@ public class AnchorAuraPlus extends BlackOutModule {
 
         place(hand == null ? Hand.MAIN_HAND : hand);
 
-        if (SettingUtils.shouldRotate(RotationType.Placing)) {
+        if (SettingUtils.shouldRotate(RotationType.BlockPlace)) {
             Managers.ROTATION.end(placeData.pos());
         }
 

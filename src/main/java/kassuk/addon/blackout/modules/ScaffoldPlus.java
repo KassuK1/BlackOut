@@ -14,7 +14,6 @@ import kassuk.addon.blackout.utils.PlaceData;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
-import meteordevelopment.meteorclient.events.world.BlockUpdateEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
@@ -26,7 +25,6 @@ import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
-import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.AirBlock;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
@@ -316,7 +314,7 @@ public class ScaffoldPlus extends BlackOutModule {
                         for (int i = 0; i < Math.min(obsidian, toPlace.size()); i++) {
                             PlaceData placeData = SettingUtils.getPlaceData(toPlace.get(i));
                             if (placeData.valid()) {
-                                boolean rotated = !SettingUtils.shouldRotate(RotationType.Placing) || Managers.ROTATION.start(placeData.pos(), 1, RotationType.Placing);
+                                boolean rotated = !SettingUtils.shouldRotate(RotationType.BlockPlace) || Managers.ROTATION.start(placeData.pos(), 1, RotationType.BlockPlace);
 
                                 if (!rotated) {
                                     break;
@@ -397,7 +395,7 @@ public class ScaffoldPlus extends BlackOutModule {
 
         mc.world.setBlockState(ogPos, block.getDefaultState());
 
-        if (SettingUtils.shouldRotate(RotationType.Placing)) {
+        if (SettingUtils.shouldRotate(RotationType.BlockPlace)) {
             Managers.ROTATION.end(d.pos());
         }
     }

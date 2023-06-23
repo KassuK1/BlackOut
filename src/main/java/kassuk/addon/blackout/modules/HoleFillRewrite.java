@@ -15,7 +15,6 @@ import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
-import meteordevelopment.meteorclient.utils.world.CardinalDirection;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Block;
@@ -271,7 +270,7 @@ public class HoleFillRewrite extends BlackOutModule {
                         for (int i = 0; i < Math.min(obsidian, toPlace.size()); i++) {
                             PlaceData placeData = SettingUtils.getPlaceData(toPlace.get(i));
                             if (placeData.valid()) {
-                                boolean rotated = !SettingUtils.shouldRotate(RotationType.Placing) || Managers.ROTATION.start(placeData.pos(), priority, RotationType.Placing);
+                                boolean rotated = !SettingUtils.shouldRotate(RotationType.BlockPlace) || Managers.ROTATION.start(placeData.pos(), priority, RotationType.BlockPlace);
 
                                 if (!rotated) {
                                     break;
@@ -381,7 +380,7 @@ public class HoleFillRewrite extends BlackOutModule {
         SettingUtils.swing(SwingState.Post, SwingType.Placing, hand);
         if (placeSwing.get()) clientSwing(placeHand.get(), hand);
 
-        if (SettingUtils.shouldRotate(RotationType.Placing)) {
+        if (SettingUtils.shouldRotate(RotationType.BlockPlace)) {
             Managers.ROTATION.end(d.pos());
         }
 

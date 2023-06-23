@@ -21,7 +21,6 @@ import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
-import meteordevelopment.meteorclient.utils.world.CardinalDirection;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.*;
@@ -44,8 +43,6 @@ import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.*;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.world.RaycastContext;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -443,7 +440,7 @@ public class AutoMine extends BlackOutModule {
         toRemove.forEach(explodeAt::remove);
 
         if (targetCrystal != null && !isPaused() && mined && System.currentTimeMillis() - lastExplode > (1000 / explodeSpeed.get())) {
-            if (!SettingUtils.shouldRotate(RotationType.Attacking) || Managers.ROTATION.start(targetCrystal.getBoundingBox(), priority, RotationType.Breaking)) {
+            if (!SettingUtils.shouldRotate(RotationType.Attacking) || Managers.ROTATION.start(targetCrystal.getBoundingBox(), priority, RotationType.Mining)) {
 
                 SettingUtils.swing(SwingState.Pre, SwingType.Attacking, Hand.MAIN_HAND);
                 sendPacket(PlayerInteractEntityC2SPacket.attack(targetCrystal, mc.player.isSneaking()));
@@ -519,7 +516,7 @@ public class AutoMine extends BlackOutModule {
         }
 
         if (!started) {
-            boolean rotated = !SettingUtils.startMineRot() || Managers.ROTATION.start(target.pos, priority, RotationType.Breaking);
+            boolean rotated = !SettingUtils.startMineRot() || Managers.ROTATION.start(target.pos, priority, RotationType.Mining);
 
             if (rotated) {
                 started = true;
@@ -569,7 +566,7 @@ public class AutoMine extends BlackOutModule {
             return;
         }
 
-        boolean rotated = !SettingUtils.endMineRot() || Managers.ROTATION.start(target.pos, priority, RotationType.Breaking);
+        boolean rotated = !SettingUtils.endMineRot() || Managers.ROTATION.start(target.pos, priority, RotationType.Mining);
 
         if (!rotated) {
             return;
@@ -610,7 +607,7 @@ public class AutoMine extends BlackOutModule {
             return;
         }
 
-        if (SettingUtils.shouldRotate(RotationType.Breaking) && !Managers.ROTATION.start(target.pos, priority, RotationType.Breaking)) {
+        if (SettingUtils.shouldRotate(RotationType.Mining) && !Managers.ROTATION.start(target.pos, priority, RotationType.Mining)) {
             return;
         }
 
@@ -716,7 +713,7 @@ public class AutoMine extends BlackOutModule {
             return false;
         }
 
-        boolean rotated = !SettingUtils.shouldRotate(RotationType.Placing) || Managers.ROTATION.start(target.crystalPos.down(), priority, RotationType.Placing);
+        boolean rotated = !SettingUtils.shouldRotate(RotationType.BlockPlace) || Managers.ROTATION.start(target.crystalPos.down(), priority, RotationType.BlockPlace);
 
         if (!rotated) {
             return false;
