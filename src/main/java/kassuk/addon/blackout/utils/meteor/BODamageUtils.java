@@ -205,38 +205,6 @@ public class BODamageUtils {
         return damage < 0 ? 0 : damage;
     }
 
-    public static float getExposure(Vec3d source, Entity entity, Box box) {
-        double d = 1.0 / ((box.maxX - box.minX) * 2.0 + 1.0);
-        double e = 1.0 / ((box.maxY - box.minY) * 2.0 + 1.0);
-        double f = 1.0 / ((box.maxZ - box.minZ) * 2.0 + 1.0);
-        double g = (1.0 - Math.floor(1.0 / d) * d) / 2.0;
-        double h = (1.0 - Math.floor(1.0 / f) * f) / 2.0;
-        if (!(d < 0.0) && !(e < 0.0) && !(f < 0.0)) {
-            int i = 0;
-            int j = 0;
-
-            for (double k = 0.0; k <= 1.0; k += d) {
-                for (double l = 0.0; l <= 1.0; l += e) {
-                    for (double m = 0.0; m <= 1.0; m += f) {
-                        double n = MathHelper.lerp(k, box.minX, box.maxX);
-                        double o = MathHelper.lerp(l, box.minY, box.maxY);
-                        double p = MathHelper.lerp(m, box.minZ, box.maxZ);
-                        Vec3d vec3d = new Vec3d(n + g, o, p + h);
-                        if (entity.getWorld().raycast(new RaycastContext(vec3d, source, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, entity)).getType() == HitResult.Type.MISS) {
-                            ++i;
-                        }
-
-                        ++j;
-                    }
-                }
-            }
-
-            return (float) i / (float) j;
-        } else {
-            return 0.0F;
-        }
-    }
-
     public static double getExposure(Vec3d source, Entity entity, Box box, RaycastContext raycastContext, BlockPos obsidianPos, boolean ignoreTerrain) {
         double d = 1 / ((box.maxX - box.minX) * 2 + 1);
         double e = 1 / ((box.maxY - box.minY) * 2 + 1);

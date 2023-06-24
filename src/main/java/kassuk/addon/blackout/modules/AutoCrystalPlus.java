@@ -602,6 +602,18 @@ public class AutoCrystalPlus extends BlackOutModule {
         .sliderRange(1, 5)
         .build()
     );
+    private final Setting<Boolean> paAttack = sgCompatibility.add(new BoolSetting.Builder()
+        .name("Piston Crystal Attack")
+        .description("Doesn't attack the crystal placed by piston crystal.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> paPlace = sgCompatibility.add(new BoolSetting.Builder()
+        .name("Piston Crystal Placing")
+        .description("Doesn't place crystals when piston crystal is enabled.")
+        .defaultValue(true)
+        .build()
+    );
 
     //--------------------Debug--------------------//
     private final Setting<Boolean> renderExt = sgDebug.add(new BoolSetting.Builder()
@@ -950,23 +962,21 @@ public class AutoCrystalPlus extends BlackOutModule {
         placing = false;
         expEntity = null;
 
+        PistonCrystal pa = Modules.get().get(PistonCrystal.class);
+
         double[] value = null;
         Hand hand = getHand(stack -> stack.getItem() == Items.END_CRYSTAL);
 
         if (!isPaused() && (hand != null || switchMode.get() == SwitchMode.Silent || switchMode.get() == SwitchMode.PickSilent || switchMode.get() == SwitchMode.InvSilent) && explode.get()) {
             for (Entity en : mc.world.getEntities()) {
-                if (!(en instanceof EndCrystalEntity)) {
-                    continue;
-                }
-                if (switchTimer > 0) {
-                    continue;
-                }
+
+                if (paAttack.get() && pa.isActive() && en.getBlockPos().equals(pa.crystalPos)) continue;
+                if (!(en instanceof EndCrystalEntity)) continue;
+                if (switchTimer > 0) continue;
 
                 double[] dmg = getDmg(en.getPos())[0];
 
-                if (!canExplode(en.getPos())) {
-                    continue;
-                }
+                if (!canExplode(en.getPos())) continue;
 
                 if ((expEntity == null || value == null) || ((dmgCheckMode.get().equals(DmgCheckMode.Normal) && dmg[0] > value[0]) || (dmgCheckMode.get().equals(DmgCheckMode.Safe) && dmg[2] / dmg[0] < value[2] / dmg[0]))) {
                     expEntity = en;
@@ -1021,13 +1031,13 @@ public class AutoCrystalPlus extends BlackOutModule {
         }
 
         if (placePos != null && placeDir != null) {
-            if (!isPaused()) {
+            if (!isPaused() && (!paPlace.get() || !Modules.get().isActive(PistonCrystal.class))) {
                 int silentSlot = InvUtils.find(itemStack -> itemStack.getItem() == Items.END_CRYSTAL).slot();
                 int hotbar = InvUtils.findInHotbar(Items.END_CRYSTAL).slot();
                 if (handToUse != null || (switchMode.get() == SwitchMode.Silent && hotbar >= 0) || ((switchMode.get() == SwitchMode.PickSilent || switchMode.get() == SwitchMode.InvSilent) && silentSlot >= 0)) {
                     placing = true;
                     if (speedCheck() && delayCheck()) {
-                        if (!SettingUtils.shouldRotate(RotationType.Interact) || Managers.ROTATION.start(placePos.down(), smartRot.get() ? new Vec3d(placePos.getX() + 0.5, placePos.getY(), placePos.getZ() + 0.5) : null, priority - 0.1, RotationType.Interact)) {
+                        if (!SettingUtils.shouldRotate(RotationType.Interact) || Managers.ROTATION.start(placePos.down(), smartRot.get() ? new Vec3d(placePos.getX() + 0.5, placePos.getY(), placePos.getZ() + 0.5) : null, priority, RotationType.Interact)) {
                             placeCrystal(placePos.down(), placeDir, handToUse, silentSlot, hotbar);
                         }
                     }
@@ -1038,7 +1048,11 @@ public class AutoCrystalPlus extends BlackOutModule {
 
     private boolean startAttackRot() {
         expEntityBB = expEntity.getBoundingBox();
-        return (Managers.ROTATION.start(expEntity.getBoundingBox(), smartRot.get() ? expEntity.getPos() : null, priority, RotationType.Attacking));
+        return (Managers.ROTATION.start(expEntity.getBoundingBox(), smartRot.get() ? expEntity.getPos() : null, priority + (!isAttacked(expEntity.getId()) && blocksPlacePos(expEntity) ? -0.1 : 0.1), RotationType.Attacking));
+    }
+
+    private boolean blocksPlacePos(Entity entity) {
+        return placePos != null && entity.getBoundingBox().intersects(new Box(placePos.getX(), placePos.getY(), placePos.getZ(), placePos.getX() + 1, placePos.getY() + (ccPlacements.get() ? 1 : 2), placePos.getZ() + 1));
     }
 
     private boolean isAlive(Box box) {

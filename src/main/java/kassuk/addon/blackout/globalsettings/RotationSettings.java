@@ -1,27 +1,22 @@
 package kassuk.addon.blackout.globalsettings;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.managers.RotationManager;
-import kassuk.addon.blackout.modules.AutoMine;
+import kassuk.addon.blackout.utils.NCPRaytracer;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.RotationUtils;
-import meteordevelopment.meteorclient.mixininterface.IVec3d;
-import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.utils.render.color.Color;
-import net.minecraft.block.*;
-import net.minecraft.client.render.entity.PlayerEntityRenderer;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.FluidBlock;
+import net.minecraft.block.StairsBlock;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.function.Predicate;
 
 /**
  * @author OLEPOSSU
@@ -140,14 +135,15 @@ public class RotationSettings extends BlackOutModule {
 
     public final Vec3d vec = new Vec3d(0, 0, 0);
 
-    public boolean rotationCheck(Box box, RotationType type) {
+    public boolean rotationCheck(Box box, BlockPos pos, RotationType type) {
         List<RotationManager.Rotation> history = RotationManager.history;
         if (box == null) return false;
 
         switch (mode(type)) {
             case Raytrace -> {
                 for (int r = 0; r < memory(type); r++) {
-                    if (history.size() <= r) {break;}
+                    if (history.size() <= r) break;
+
                     RotationManager.Rotation rot = history.get(r);
 
                     if (raytraceCheck(rot.vec(), rot.yaw(), rot.pitch(), box)) return true;
@@ -155,18 +151,19 @@ public class RotationSettings extends BlackOutModule {
             }
             case StrictRaytrace -> {
                 for (int r = 0; r < memory(type); r++) {
-                    if (history.size() <= r) {break;}
+                    if (history.size() <= r) break;
+
                     RotationManager.Rotation rot = history.get(r);
 
-                    double range = mc.player.getEyePos().distanceTo(box.getCenter()) + 3;
+                    double range = 7;
 
                     Vec3d end = new Vec3d(
                         range * Math.cos(Math.toRadians(rot.yaw() + 90)) * Math.abs(Math.cos(Math.toRadians(rot.pitch()))),
                         range * -Math.sin(Math.toRadians(rot.pitch())),
                         range * Math.sin(Math.toRadians(rot.yaw() + 90)) * Math.abs(Math.cos(Math.toRadians(rot.pitch()))))
-                        .add(mc.player.getEyePos());
+                        .add(rot.vec());
 
-                    if (constRotCheck(rot.vec(), end, box)) return true;
+                    if (NCPRaytracer.raytrace(rot.vec(), end, box)) return true;
                 }
             }
             case Angle -> {
@@ -282,69 +279,11 @@ public class RotationSettings extends BlackOutModule {
         return false;
     }
 
-    public boolean constCheck(Vec3d from, Vec3d to, Box box) {
-        int lx = 0, ly = 0, lz = 0;
-
-        for (float i = 0; i < 1; i += 0.01) {
-            double x = lerp(from.x, to.x, i);
-            double y = lerp(from.y, to.y, i);
-            double z = lerp(from.z, to.z, i);
-
-            if (box.contains(x, y, z)) return true;
-
-            int ix = (int) Math.floor(x);
-            int iy = (int) Math.floor(y);
-            int iz = (int) Math.floor(z);
-
-            if (lx != ix ||
-                ly != iy ||
-                lz != iz) {
-
-                BlockPos pos = new BlockPos(ix, iy, iz);
-                if (validForCheck(pos, mc.world.getBlockState(pos))) return false;
-            }
-
-            lx = ix;
-            ly = iy;
-            lz = iz;
-        }
-        return true;
-    }
-
-    public boolean constRotCheck(Vec3d from, Vec3d to, Box box) {
-        int lx = 0, ly = 0, lz = 0;
-
-        for (float i = 0; i < 1; i += 0.01) {
-            double x = lerp(from.x, to.x, i);
-            double y = lerp(from.y, to.y, i);
-            double z = lerp(from.z, to.z, i);
-
-            if (box.contains(x, y, z)) break;
-
-            int ix = (int) Math.floor(x);
-            int iy = (int) Math.floor(y);
-            int iz = (int) Math.floor(z);
-
-            if (lx != ix &&
-                ly != iy &&
-                lz != iz) {
-
-                BlockPos pos = new BlockPos(ix, iy, iz);
-                if (validForCheck(pos, mc.world.getBlockState(pos))) return false;
-            }
-
-            lx = ix;
-            ly = iy;
-            lz = iz;
-        }
-        return true;
-    }
-
     private double lerp(double from, double to, double delta) {
         return from + (to - from) * delta;
     }
 
-    private boolean validForCheck(BlockPos pos, BlockState state) {
+    public boolean validForCheck(BlockPos pos, BlockState state) {
         if (state.isSolid()) return true;
         if (state.getBlock() instanceof FluidBlock) return false;
         if (state.getBlock() instanceof StairsBlock) return false;

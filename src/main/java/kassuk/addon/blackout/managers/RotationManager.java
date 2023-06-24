@@ -2,6 +2,7 @@ package kassuk.addon.blackout.managers;
 
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.globalsettings.RotationSettings;
+import kassuk.addon.blackout.utils.NCPRaytracer;
 import kassuk.addon.blackout.utils.RotationUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
@@ -269,9 +270,9 @@ public class RotationManager {
             return false;
         }
 
-        boolean alreadyRotated = SettingUtils.rotationCheck(box, type);
+        boolean alreadyRotated = SettingUtils.rotationCheck(box, pos, type);
 
-        if (p < priority || (p == priority && (!(target instanceof BoxTarget) || SettingUtils.rotationCheck(((BoxTarget) target).box, type)))) {
+        if (p < priority || (p == priority && (!(target instanceof BoxTarget) || SettingUtils.rotationCheck(((BoxTarget) target).box, pos, type)))) {
             if (!alreadyRotated) {
                 priority = p;
             }
@@ -293,7 +294,7 @@ public class RotationManager {
     }
 
     public boolean start(BlockPos pos, double p, RotationType type) {
-        return start(Box.from(new BlockBox(pos)), p, type);
+        return start(pos, Box.from(new BlockBox(pos)), pos.toCenterPos(), p, type);
     }
 
     public boolean start(BlockPos pos, Vec3d vec, double p, RotationType type) {
@@ -311,7 +312,7 @@ public class RotationManager {
         BoxTarget t = (BoxTarget) target;
 
         if (settings.mode(t.type) != RotationSettings.RotationCheckMode.StrictRaytrace ||
-            settings.constCheck(mc.player.getEyePos(), t.targetVec, t.box)) {
+            NCPRaytracer.raytrace(mc.player.getEyePos(), t.targetVec, t.box)) {
             return t.targetVec;
         }
 
@@ -319,15 +320,15 @@ public class RotationManager {
         double cd = 1000000;
         Vec3d closest = null;
 
-        for (double x = 0.05; x < 0.95; x += 0.18) {
-            for (double y = 0.05; y < 0.95; y += 0.18) {
-                for (double z = 0.05; z < 0.95; z += 0.18) {
+        for (double x = 0; x <= 1; x += 0.1) {
+            for (double y = 0; y <= 1; y += 0.1) {
+                for (double z = 0; z <= 1; z += 0.1) {
                     Vec3d vec = new Vec3d(lerp(t.box.minX, t.box.maxX, x), lerp(t.box.minY, t.box.maxY, y), lerp(t.box.minZ, t.box.maxZ, z));
 
-                    double d = eye.distanceTo(vec);
+                    double d = t.targetVec.distanceTo(vec);
                     if (d > cd) continue;
 
-                    if (!settings.constCheck(eye, vec, t.box)) continue;
+                    if (!NCPRaytracer.raytrace(eye, vec, ((BoxTarget) target).box)) continue;
 
                     cd = d;
                     closest = vec;

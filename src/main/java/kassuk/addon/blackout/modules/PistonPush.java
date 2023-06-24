@@ -2,10 +2,7 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
-import kassuk.addon.blackout.enums.RotationType;
-import kassuk.addon.blackout.enums.SwingHand;
-import kassuk.addon.blackout.enums.SwingState;
-import kassuk.addon.blackout.enums.SwingType;
+import kassuk.addon.blackout.enums.*;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.utils.*;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
@@ -21,6 +18,7 @@ import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.*;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
@@ -53,6 +51,12 @@ public class PistonPush extends BlackOutModule {
         .name("Redstone")
         .description("What kind of redstone to use.")
         .defaultValue(Redstone.Torch)
+        .build()
+    );
+    private final Setting<Boolean> onlyHole = sgSwing.add(new BoolSetting.Builder()
+        .name("Only Hole")
+        .description("Toggles when enemy moves.")
+        .defaultValue(true)
         .build()
     );
     private final Setting<Boolean> toggleMove = sgSwing.add(new BoolSetting.Builder()
@@ -180,11 +184,12 @@ public class PistonPush extends BlackOutModule {
 
         update();
 
-        lastPiston = pistonPos;
-        lastRedstone = redstonePos;
-        lastDirection = pistonDir;
-
-        if (pistonPos == null) return;
+        if (pistonPos == null) {
+            lastPiston = pistonPos;
+            lastRedstone = redstonePos;
+            lastDirection = pistonDir;
+            return;
+        }
 
         event.renderer.box(getBox(pistonPos), new Color(255, 255, 0, 50), new Color(255, 255, 0, 255), ShapeMode.Both, 0);
         event.renderer.box(getBox(redstonePos), new Color(255, 0, 0, 50), new Color(255, 0, 0, 255), ShapeMode.Both, 0);
@@ -194,6 +199,10 @@ public class PistonPush extends BlackOutModule {
             pistonPlaced = false;
             mined = false;
         }
+
+        lastPiston = pistonPos;
+        lastRedstone = redstonePos;
+        lastDirection = pistonDir;
 
         if (pauseEat.get() && mc.player.isUsingItem()) return;
 
@@ -220,6 +229,7 @@ public class PistonPush extends BlackOutModule {
         }
 
         if (!mc.player.isOnGround()) return;
+        if (EntityUtils.intersectsWithEntity(Box.from(new BlockBox(pistonPos)), entity -> !entity.isSpectator() && !(entity instanceof ItemEntity))) return;
         if (SettingUtils.shouldRotate(RotationType.BlockPlace) && !Managers.ROTATION.start(pistonData.pos(), priority, RotationType.BlockPlace)) return;
         sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(pistonDir.asRotation(), Managers.ROTATION.lastDir[1], Managers.ONGROUND.isOnGround()));
 
@@ -354,6 +364,8 @@ public class PistonPush extends BlackOutModule {
     }
 
     private void update() {
+        pistonPos = null;
+
         for (AbstractClientPlayerEntity player : mc.world.getPlayers()) {
 
             if (Friends.get().isFriend(player)) continue;
@@ -361,6 +373,7 @@ public class PistonPush extends BlackOutModule {
             if (mc.player.distanceTo(player) > 10) continue;
             if (player.getHealth() <= 0) continue;
             if (player.isSpectator()) continue;
+            if (onlyHole.get() && HoleUtils.getHole(player.getBlockPos(), true, true, false, 1).type == HoleType.NotHole) return;
 
             updatePos(player);
             if (pistonPos != null) return;
@@ -370,14 +383,18 @@ public class PistonPush extends BlackOutModule {
     private void updatePos(PlayerEntity player) {
         BlockPos eyePos = BlockPos.ofFloored(player.getEyePos());
 
+        if (OLEPOSSUtils.solid2(eyePos.up())) return;
 
         for (Direction dir : Direction.Type.HORIZONTAL.stream().sorted(Comparator.comparingDouble(d -> eyePos.offset(d).toCenterPos().distanceTo(mc.player.getEyePos()))).toList()) {
             resetPos();
 
             BlockPos pos = eyePos.offset(dir);
             if (!upCheck(pos)) continue;
+
             if (!OLEPOSSUtils.replaceable(pos) && !(mc.world.getBlockState(pos).getBlock() instanceof PistonBlock) && mc.world.getBlockState(pos).getBlock() != Blocks.MOVING_PISTON) continue;
             if (OLEPOSSUtils.solid2(eyePos.offset(dir.getOpposite()))) continue;
+            if (OLEPOSSUtils.solid2(eyePos.offset(dir.getOpposite()).up())) continue;
+            if (!OLEPOSSUtils.solid2(eyePos.offset(dir.getOpposite()).down())) continue;
 
             PlaceData data = SettingUtils.getPlaceData(pos);
             if (data == null || !data.valid()) continue;

@@ -2,13 +2,16 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
+import kassuk.addon.blackout.globalsettings.RotationSettings;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
+import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
 /**
@@ -66,6 +69,16 @@ public class FeetESP extends BlackOutModule {
         .sliderRange(0, 25)
         .build()
     );
+
+    @Override
+    public void onActivate() {
+        RotationSettings s = Modules.get().get(RotationSettings.class);
+
+        BlockPos pos = mc.player.getBlockPos();
+        debug(s.validForCheck(pos, mc.world.getBlockState(pos)) ? "tru" : "falsur");
+
+
+    }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
