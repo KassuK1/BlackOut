@@ -42,14 +42,30 @@ public class RotationSettings extends BlackOutModule {
         .build()
     );
 
+    public final Setting<Double> yawStep = sgGeneral.add(new DoubleSetting.Builder()
+        .name("Yaw Step")
+        .description("How many yaw degrees should be rotated each packet.")
+        .defaultValue(90)
+        .range(0, 180)
+        .sliderRange(0, 180)
+        .build()
+    );
+
+    public final Setting<Double> pitchStep = sgGeneral.add(new DoubleSetting.Builder()
+        .name("Pitch Step")
+        .description("How many pitch degrees should be rotated each packet.")
+        .defaultValue(45)
+        .range(0, 180)
+        .sliderRange(0, 180)
+        .build()
+    );
+
     //--------------------Interact--------------------//
     private final Setting<Boolean> interactRotate = rotateSetting("Interact", "interacting with a block", sgInteract);
     public final Setting<Double> interactTime = timeSetting("Interact", sgInteract);
     public final Setting<RotationCheckMode> interactMode = modeSetting("Interact", sgInteract);
     public final Setting<Double> interactYawAngle = yawAngleSetting("Interact", sgInteract, () -> interactMode.get() == RotationCheckMode.Angle);
     public final Setting<Double> interactPitchAngle = pitchAngleSetting("Interact", sgInteract, () -> interactMode.get() == RotationCheckMode.Angle);
-    public final Setting<Double> interactYawStep = yawStepSetting("Interact", sgInteract);
-    public final Setting<Double> interactPitchStep = pitchStepSetting("Interact", sgInteract);
     public final Setting<Integer> interactMemory = memorySetting("Interact", sgInteract);
 
     //--------------------Block-Place--------------------//
@@ -58,8 +74,6 @@ public class RotationSettings extends BlackOutModule {
     public final Setting<RotationCheckMode> blockMode = modeSetting("Block Place", sgBlockPlace);
     public final Setting<Double> blockYawAngle = yawAngleSetting("Block Place", sgBlockPlace, () -> blockMode.get() == RotationCheckMode.Angle);
     public final Setting<Double> blockPitchAngle = pitchAngleSetting("Block Place", sgBlockPlace, () -> blockMode.get() == RotationCheckMode.Angle);
-    public final Setting<Double> blockYawStep = yawStepSetting("Block Place", sgBlockPlace);
-    public final Setting<Double> blockPitchStep = pitchStepSetting("Block Place", sgBlockPlace);
     public final Setting<Integer> blockMemory = memorySetting("Block Place", sgBlockPlace);
 
     //--------------------Mining--------------------//
@@ -69,8 +83,6 @@ public class RotationSettings extends BlackOutModule {
     public final Setting<MiningRotMode> mineTiming = sgMining.add(new EnumSetting.Builder<MiningRotMode>().name("Mining Rotate Timing").description(".").defaultValue(MiningRotMode.Disabled).build());
     public final Setting<Double> mineYawAngle = yawAngleSetting("Mining", sgMining, () -> mineMode.get() == RotationCheckMode.Angle);
     public final Setting<Double> minePitchAngle = pitchAngleSetting("Mining", sgMining, () -> mineMode.get() == RotationCheckMode.Angle);
-    public final Setting<Double> mineYawStep = yawStepSetting("Mining", sgMining);
-    public final Setting<Double> minePitchStep = pitchStepSetting("Mining", sgMining);
     public final Setting<Integer> mineMemory = memorySetting("Mining", sgMining);
 
     //--------------------Attack--------------------//
@@ -79,14 +91,10 @@ public class RotationSettings extends BlackOutModule {
     public final Setting<RotationCheckMode> attackMode = modeSetting("Attack", sgAttack);
     public final Setting<Double> attackYawAngle = yawAngleSetting("Attack", sgAttack, () -> attackMode.get() == RotationCheckMode.Angle);
     public final Setting<Double> attackPitchAngle = pitchAngleSetting("Attack", sgAttack, () -> attackMode.get() == RotationCheckMode.Angle);
-    public final Setting<Double> attackYawStep = yawStepSetting("Attack", sgAttack);
-    public final Setting<Double> attackPitchStep = pitchStepSetting("Attack", sgAttack);
     public final Setting<Integer> attackMemory = memorySetting("Attack", sgAttack);
 
     //--------------------Use--------------------//
     public final Setting<Double> useTime = timeSetting("Use", sgUse);
-    public final Setting<Double> useYawStep = yawStepSetting("Use", sgUse);
-    public final Setting<Double> usePitchStep = pitchStepSetting("Use", sgUse);
 
     public enum MiningRotMode {
         Disabled,
@@ -119,14 +127,6 @@ public class RotationSettings extends BlackOutModule {
 
     private Setting<Double> pitchAngleSetting(String type, SettingGroup sg, IVisible visible) {
         return sg.add(new DoubleSetting.Builder().name(type + " Pitch Angle").description("Accepts rotation if pitch angle to target is under this.").defaultValue(45).range(0, 180).sliderRange(0, 180).visible(visible).build());
-    }
-
-    private Setting<Double> yawStepSetting(String type, SettingGroup sg) {
-        return sg.add(new DoubleSetting.Builder().name(type + " Yaw Step").description("How many yaw degrees should be rotated each packet.").defaultValue(90).range(0, 180).sliderRange(0, 180).build());
-    }
-
-    private Setting<Double> pitchStepSetting(String type, SettingGroup sg) {
-        return sg.add(new DoubleSetting.Builder().name(type + " Pitch Step").description("How many pitch degrees should be rotated each packet.").defaultValue(45).range(0, 180).sliderRange(0, 180).build());
     }
 
     private Setting<Integer> memorySetting(String type, SettingGroup sg) {
@@ -222,23 +222,15 @@ public class RotationSettings extends BlackOutModule {
 
     public double yawStep(RotationType type) {
         return switch (type) {
-            case Interact -> interactYawStep.get();
-            case BlockPlace -> blockYawStep.get();
-            case Attacking -> attackYawStep.get();
-            case Mining -> mineYawStep.get();
-            case Use -> useYawStep.get();
-            case Other -> 42069;
+            case Other, Use -> 42069;
+            default -> yawStep.get();
         };
     }
 
     public double pitchStep(RotationType type) {
         return switch (type) {
-            case Interact -> interactPitchStep.get();
-            case BlockPlace -> blockPitchStep.get();
-            case Attacking -> attackPitchStep.get();
-            case Mining -> minePitchStep.get();
-            case Use -> usePitchStep.get();
-            case Other -> 42069;
+            case Other, Use -> 42069;
+            default -> pitchStep.get();
         };
     }
 

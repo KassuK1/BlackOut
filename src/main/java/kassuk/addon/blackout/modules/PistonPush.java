@@ -225,7 +225,7 @@ public class PistonPush extends BlackOutModule {
         update();
 
         if (pistonPos == null) {
-            lastPiston = pistonPos;
+            lastPiston = null;
             lastRedstone = redstonePos;
             lastDirection = pistonDir;
             return;
