@@ -12,11 +12,13 @@ import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
@@ -40,6 +42,12 @@ public class AutoMend extends BlackOutModule {
     private final SettingGroup sgRender = settings.createGroup("Render");
 
     //--------------------General--------------------//
+    private final Setting<Boolean> antiCharity = sgGeneral.add(new BoolSetting.Builder()
+        .name("Anti Charity")
+        .description("Doesn't mend if any enemy is at same position.")
+        .defaultValue(true)
+        .build()
+    );
     private final Setting<Double> speed = sgGeneral.add(new DoubleSetting.Builder()
         .name("Throw Speed")
         .description("How many bottles to throw every second. 20 is recommended.")
@@ -306,9 +314,7 @@ public class AutoMend extends BlackOutModule {
     private boolean shouldMend() {
         List<ItemStack> armors = new ArrayList<>();
 
-        for (int i = 0; i < 4; i++)
-            //noinspection DataFlowIssue
-            armors.add(mc.player.getInventory().getArmorStack(i));
+        for (int i = 0; i < 4; i++) armors.add(mc.player.getInventory().getArmorStack(i));
 
         float max = -1;
         float lowest = 500;
@@ -324,14 +330,22 @@ public class AutoMend extends BlackOutModule {
                 lowest = dur;
             }
         }
-        if (lowest <= forceMend.get()) {
-            return true;
-        }
-        if (max >= antiWaste.get()) {
-            return false;
-        }
+        if (lowest <= forceMend.get()) return true;
+
+        if (antiCharity.get() && playerAtPos()) return false;
+
+        if (max >= antiWaste.get()) return false;
 
         return lowest <= minDur.get() || started;
+    }
+
+    private boolean playerAtPos() {
+        for (AbstractClientPlayerEntity player : mc.world.getPlayers()) {
+            if (player == mc.player) continue;
+            if (Friends.get().isFriend(player)) continue;
+            if (player.getBlockPos().equals(mc.player.getBlockPos())) return true;
+        }
+        return false;
     }
 
     private void throwBottle(Hand hand) {
