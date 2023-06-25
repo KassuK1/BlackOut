@@ -135,7 +135,7 @@ public class RotationSettings extends BlackOutModule {
 
     public final Vec3d vec = new Vec3d(0, 0, 0);
 
-    public boolean rotationCheck(Box box, BlockPos pos, RotationType type) {
+    public boolean rotationCheck(Box box, RotationType type) {
         List<RotationManager.Rotation> history = RotationManager.history;
         if (box == null) return false;
 

@@ -86,7 +86,7 @@ public class SettingUtils extends Utils {
     public static boolean shouldRotate(RotationType type) {
         return rotation.shouldRotate(type);
     }
-    public static boolean rotationCheck(Box box, BlockPos pos, RotationType type) {return rotation.rotationCheck(box, pos, type);}
+    public static boolean rotationCheck(Box box, RotationType type) {return rotation.rotationCheck(box, type);}
 
     //  Swing
     public static void swing(SwingState state, SwingType type, Hand hand) {

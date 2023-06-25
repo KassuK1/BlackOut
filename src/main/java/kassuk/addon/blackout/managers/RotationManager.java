@@ -270,9 +270,9 @@ public class RotationManager {
             return false;
         }
 
-        boolean alreadyRotated = SettingUtils.rotationCheck(box, pos, type);
+        boolean alreadyRotated = SettingUtils.rotationCheck(box, type);
 
-        if (p < priority || (p == priority && (!(target instanceof BoxTarget) || SettingUtils.rotationCheck(((BoxTarget) target).box, pos, type)))) {
+        if (p < priority || (p == priority && (!(target instanceof BoxTarget) || SettingUtils.rotationCheck(((BoxTarget) target).box, type)))) {
             if (!alreadyRotated) {
                 priority = p;
             }
@@ -306,7 +306,7 @@ public class RotationManager {
         history = history.subList(0, Math.min(history.size(), 20));
     }
 
-    public record Rotation(double yaw, double pitch, Vec3d vec) { }
+    public record Rotation(double yaw, double pitch, Vec3d vec) {}
 
     public Vec3d getTargetPos() {
         BoxTarget t = (BoxTarget) target;
