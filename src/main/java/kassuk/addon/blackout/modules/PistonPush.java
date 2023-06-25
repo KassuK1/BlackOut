@@ -14,6 +14,7 @@ import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
+import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.*;
@@ -44,6 +45,7 @@ public class PistonPush extends BlackOutModule {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgDelay = settings.createGroup("Delay");
     private final SettingGroup sgSwing = settings.createGroup("Swing");
+    private final SettingGroup sgRender = settings.createGroup("Render");
 
     //--------------------General--------------------//
     private final Setting<Boolean> pauseEat = addPauseEat(sgGeneral);
@@ -132,6 +134,44 @@ public class PistonPush extends BlackOutModule {
         .build()
     );
 
+    //--------------------Render--------------------//
+    private final Setting<ShapeMode> pistonShape = sgRender.add(new EnumSetting.Builder<ShapeMode>()
+        .name("Piston Shape Mode")
+        .description("Which parts should be rendered.")
+        .defaultValue(ShapeMode.Both)
+        .build()
+    );
+    private final Setting<SettingColor> psColor = sgRender.add(new ColorSetting.Builder()
+        .name("Piston Side Color")
+        .description(BlackOut.COLOR)
+        .defaultValue(new SettingColor(255, 255, 255, 50))
+        .build()
+    );
+    private final Setting<SettingColor> plColor = sgRender.add(new ColorSetting.Builder()
+        .name("Piston Line Color")
+        .description(BlackOut.COLOR)
+        .defaultValue(new SettingColor(255, 255, 25, 255))
+        .build()
+    );
+    private final Setting<ShapeMode> redstoneShape = sgRender.add(new EnumSetting.Builder<ShapeMode>()
+        .name("Redstone Shape Mode")
+        .description("Which parts should be rendered.")
+        .defaultValue(ShapeMode.Both)
+        .build()
+    );
+    private final Setting<SettingColor> rsColor = sgRender.add(new ColorSetting.Builder()
+        .name("Redstone Side Color")
+        .description(BlackOut.COLOR)
+        .defaultValue(new SettingColor(255, 0, 0, 50))
+        .build()
+    );
+    private final Setting<SettingColor> rlColor = sgRender.add(new ColorSetting.Builder()
+        .name("Redstone Line Color")
+        .description(BlackOut.COLOR)
+        .defaultValue(new SettingColor(255, 0, 0, 255))
+        .build()
+    );
+
     private long pistonTime = 0;
     private long redstoneTime = 0;
     private long mineTime = 0;
@@ -191,8 +231,8 @@ public class PistonPush extends BlackOutModule {
             return;
         }
 
-        event.renderer.box(getBox(pistonPos), new Color(255, 255, 0, 50), new Color(255, 255, 0, 255), ShapeMode.Both, 0);
-        event.renderer.box(getBox(redstonePos), new Color(255, 0, 0, 50), new Color(255, 0, 0, 255), ShapeMode.Both, 0);
+        event.renderer.box(getBox(pistonPos), psColor.get(), plColor.get(), pistonShape.get(), 0);
+        event.renderer.box(getBox(redstonePos), rsColor.get(), rlColor.get(), redstoneShape.get(), 0);
 
         if ((System.currentTimeMillis() - mineTime > mpDelay.get() * 1000 && redstonePlaced && pistonPlaced && mined) || !pistonPos.equals(lastPiston) || !redstonePos.equals(lastRedstone) || !pistonDir.equals(lastDirection)) {
             redstonePlaced = false;

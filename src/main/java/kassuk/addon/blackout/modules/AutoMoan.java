@@ -75,7 +75,7 @@ public class AutoMoan extends BlackOutModule {
         "i made %s cum so hard with my tight bussy",
         "Your cock is so big and juicy daddy!",
         "Please fuck me as hard as you can",
-        "im %s's personal femboy cumdupster!",
+        "im %s's personal femboy cumdumpster!",
         //The fact that someone has actually said all of these non ironically shows how weird the world is
         "Please shoot your hot load deep inside me daddy!",
         "I love how %s's dick feels inside of me!",

@@ -15,6 +15,7 @@ import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.mixininterface.IVec3d;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Modules;
@@ -55,6 +56,7 @@ public class ScaffoldPlus extends BlackOutModule {
     private final SettingGroup sgPlacing = settings.createGroup("Placing");
     private final SettingGroup sgRender = settings.createGroup("Render");
 
+    //--------------------General--------------------//
     private final Setting<ScaffoldMode> scaffoldMode = sgGeneral.add(new EnumSetting.Builder<ScaffoldMode>()
         .name("Scaffold Mode")
         .description("Mode for scaffold.")
@@ -68,8 +70,13 @@ public class ScaffoldPlus extends BlackOutModule {
         .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
         .build()
     );
-
-    //--------------------General--------------------//
+    private final Setting<Boolean> tower = sgGeneral.add(new BoolSetting.Builder()
+        .name("Tower")
+        .description("Flies up with blocks.")
+        .defaultValue(true)
+        .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
+        .build()
+    );
     private final Setting<Boolean> sSprint = sgGeneral.add(new BoolSetting.Builder()
         .name("Stop Sprint")
         .description("Stops you from sprinting.")
@@ -193,6 +200,9 @@ public class ScaffoldPlus extends BlackOutModule {
     private int placesLeft = 0;
     public static boolean shouldStopSprinting = false;
     private final List<Render> render = new ArrayList<>();
+    private int jumpProgress = -1;
+
+    private final double[] velocities = new double[]{0.42, 0.33319999999999994, 0.2468};
 
     @Override
     public void onDeactivate() {
@@ -257,10 +267,13 @@ public class ScaffoldPlus extends BlackOutModule {
 
             motion = event.movement;
 
+            yVel();
+
             if (sSprint.get()) {
                 shouldStopSprinting = true;
                 mc.player.setSprinting(false);
             }
+
             if (useTimer.get()) Modules.get().get(Timer.class).setOverride(timer.get());
 
             List<BlockPos> placements = getBlocks();
@@ -337,6 +350,27 @@ public class ScaffoldPlus extends BlackOutModule {
             if (safeWalk.get() && Modules.get().get(SafeWalk.class).isActive()) {
                 Modules.get().get(SafeWalk.class).toggle();
             }
+        }
+    }
+
+    void yVel() {
+        if (!tower.get()) return;
+
+        if (mc.options.jumpKey.isPressed() && mc.player.input.movementForward == 0 && mc.player.input.movementSideways == 0) {
+            if (mc.player.isOnGround() || jumpProgress == 3) {
+                jumpProgress = 0;
+            }
+
+            if (jumpProgress > -1) {
+                if (jumpProgress < 3) {
+                    ((IVec3d) motion).setXZ(0, 0);
+                    ((IVec3d) motion).setY(velocities[jumpProgress]);
+                    ((IVec3d) mc.player.getVelocity()).setY(velocities[jumpProgress]);
+                    jumpProgress++;
+                }
+            }
+        } else {
+            jumpProgress = -1;
         }
     }
 

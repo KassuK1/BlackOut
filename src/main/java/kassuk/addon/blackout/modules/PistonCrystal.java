@@ -247,13 +247,13 @@ public class PistonCrystal extends BlackOutModule {
     private final Setting<SettingColor> crystalLineColor = sgRender.add(new ColorSetting.Builder()
         .name("Crystal Line Color")
         .description(BlackOut.COLOR)
-        .defaultValue(new SettingColor(255, 0, 255, 255))
+        .defaultValue(new SettingColor(255, 0, 0, 255))
         .build()
     );
     public final Setting<SettingColor> crystalColor = sgRender.add(new ColorSetting.Builder()
         .name("Crystal Side Color")
         .description(BlackOut.COLOR)
-        .defaultValue(new SettingColor(255, 0, 255, 50))
+        .defaultValue(new SettingColor(255, 0, 0, 50))
         .build()
     );
     private final Setting<Double> pistonHeight = sgGeneral.add(new DoubleSetting.Builder()
@@ -272,13 +272,13 @@ public class PistonCrystal extends BlackOutModule {
     private final Setting<SettingColor> pistonLineColor = sgRender.add(new ColorSetting.Builder()
         .name("Piston Line Color")
         .description(BlackOut.COLOR)
-        .defaultValue(new SettingColor(255, 255, 0, 255))
+        .defaultValue(new SettingColor(255, 255, 255, 255))
         .build()
     );
     public final Setting<SettingColor> pistonColor = sgRender.add(new ColorSetting.Builder()
         .name("Piston Side Color")
         .description(BlackOut.COLOR)
-        .defaultValue(new SettingColor(255, 255, 0, 50))
+        .defaultValue(new SettingColor(255, 255, 255, 50))
         .build()
     );
     private final Setting<Double> redstoneHeight = sgGeneral.add(new DoubleSetting.Builder()

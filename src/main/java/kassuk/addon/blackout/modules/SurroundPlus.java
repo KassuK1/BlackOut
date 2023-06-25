@@ -746,8 +746,8 @@ public class SurroundPlus extends BlackOutModule {
     private int[] getSize(PlayerEntity player) {
         int[] size = new int[4];
 
-        double x = mc.player.getX() - currentPos.getX();
-        double z = mc.player.getZ() - currentPos.getZ();
+        double x = player.getX() - player.getBlockX();
+        double z = player.getZ() - player.getBlockZ();
 
         if (x < 0.3) {
             size[0] = -1;

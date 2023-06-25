@@ -663,21 +663,15 @@ public class AutoMine extends BlackOutModule {
     private boolean crystalCheck() {
         switch (target.type) {
             case Cev, TrapCev, SurroundCev -> {
-                if (crystalAt(target.crystalPos) != null) {
-                    return true;
-                }
+                if (crystalAt(target.crystalPos) != null) return true;
                 if (!EntityUtils.intersectsWithEntity(Box.from(new BlockBox(target.crystalPos)).withMaxY(target.crystalPos.getY() + (cc.get() ? 1 : 2)), entity -> !entity.isSpectator())) {
                     placeCrystal();
                     return false;
                 }
             }
             case AutoCity -> {
-                if (crystalAt(target.crystalPos) != null) {
-                    return true;
-                }
-                if (!EntityUtils.intersectsWithEntity(Box.from(new BlockBox(target.crystalPos)).withMaxY(target.crystalPos.getY() + (cc.get() ? 1 : 2)), entity -> !entity.isSpectator())) {
-                    return placeCrystal();
-                }
+                if (crystalAt(target.crystalPos) != null) return true;
+                if (!EntityUtils.intersectsWithEntity(Box.from(new BlockBox(target.crystalPos)).withMaxY(target.crystalPos.getY() + (cc.get() ? 1 : 2)), entity -> !entity.isSpectator())) return placeCrystal();
             }
             default -> {
                 return true;
