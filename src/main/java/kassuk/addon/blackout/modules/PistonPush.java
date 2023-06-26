@@ -150,7 +150,7 @@ public class PistonPush extends BlackOutModule {
     private final Setting<SettingColor> plColor = sgRender.add(new ColorSetting.Builder()
         .name("Piston Line Color")
         .description(BlackOut.COLOR)
-        .defaultValue(new SettingColor(255, 255, 25, 255))
+        .defaultValue(new SettingColor(255, 255, 255, 255))
         .build()
     );
     private final Setting<ShapeMode> redstoneShape = sgRender.add(new EnumSetting.Builder<ShapeMode>()
