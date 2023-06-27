@@ -26,8 +26,8 @@ public class JesusPlus extends BlackOutModule {
 
     private final Setting<Double> bob = sgGeneral.add(new DoubleSetting.Builder()
         .name("Bob force")
-        .description(".")
-        .defaultValue(0.1)
+        .description("Use 0.005 or 0.1")
+        .defaultValue(0.005)
         .min(0)
         .sliderMax(1)
         .build()
