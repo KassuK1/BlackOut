@@ -1149,12 +1149,8 @@ public class AutoCrystalPlus extends BlackOutModule {
             placeLimitTimer = 0;
             placeTimer = 1;
 
-            SettingUtils.swing(SwingState.Pre, SwingType.Interact, switched ? Hand.MAIN_HAND : handToUse);
+            interactBlock(switched ? Hand.MAIN_HAND : handToUse, pos.toCenterPos(), dir, pos);
 
-            sendPacket(new PlayerInteractBlockC2SPacket(switched ? Hand.MAIN_HAND : handToUse,
-                new BlockHitResult(new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), dir, pos, false), 0));
-
-            SettingUtils.swing(SwingState.Post, SwingType.Interact, switched ? Hand.MAIN_HAND : handToUse);
             if (placeSwing.get()) clientSwing(placeHand.get(), switched ? Hand.MAIN_HAND : handToUse);
 
             if (SettingUtils.shouldRotate(RotationType.Interact)) {

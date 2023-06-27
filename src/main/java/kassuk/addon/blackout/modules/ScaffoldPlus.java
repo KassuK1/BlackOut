@@ -418,13 +418,8 @@ public class ScaffoldPlus extends BlackOutModule {
         render.add(new Render(ogPos, System.currentTimeMillis()));
         placesLeft--;
 
-        SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand);
+        placeBlock(hand, d.pos().toCenterPos(), d.dir(), d.pos());
 
-        sendPacket(new PlayerInteractBlockC2SPacket(hand,
-            new BlockHitResult(new Vec3d(d.pos().getX() + 0.5, d.pos().getY() + 0.5, d.pos().getZ() + 0.5),
-                d.dir(), d.pos(), false), 0));
-
-        SettingUtils.swing(SwingState.Post, SwingType.Placing, hand);
         if (placeSwing.get()) clientSwing(placeHand.get(), hand);
 
         mc.world.setBlockState(ogPos, block.getDefaultState());

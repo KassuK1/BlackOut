@@ -390,11 +390,8 @@ public class AnchorAuraPlus extends BlackOutModule {
     }
 
     private void place(Hand hand) {
-        SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand);
+        placeBlock(hand, placeData.pos().toCenterPos(), placeData.dir(), placeData.pos());
 
-        sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(Vec3d.ofCenter(placeData.pos()), placeData.dir(), placeData.pos(), false), 0));
-
-        SettingUtils.swing(SwingState.Post, SwingType.Placing, hand);
         if (placeSwing.get()) clientSwing(placeHand.get(), hand);
     }
 
@@ -608,11 +605,8 @@ public class AnchorAuraPlus extends BlackOutModule {
     }
 
     private void interact(BlockPos pos, Direction dir, Hand hand) {
-        SettingUtils.swing(SwingState.Pre, SwingType.Interact, hand);
+        interactBlock(hand, pos.toCenterPos(), dir, pos);
 
-        sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(Vec3d.ofCenter(pos), dir, pos, false), 0));
-
-        SettingUtils.swing(SwingState.Post, SwingType.Interact, hand);
         if (interactSwing.get()) clientSwing(interactHand.get(), hand);
     }
 

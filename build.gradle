@@ -43,3 +43,7 @@ processResources {
 tasks.withType(JavaCompile).configureEach {
     it.options.encoding("UTF-8")
 }
+
+loom {
+    accessWidenerPath = file("src/main/resources/blackout.accesswidener")
+}

@@ -49,6 +49,7 @@ public class PistonCrystal extends BlackOutModule {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgDelay = settings.createGroup("Delay");
     private final SettingGroup sgSwitch = settings.createGroup("Switch");
+    private final SettingGroup sgToggle = settings.createGroup("Toggle");
     private final SettingGroup sgSwing = settings.createGroup("Swing");
     private final SettingGroup sgRender = settings.createGroup("Render");
 
@@ -86,16 +87,8 @@ public class PistonCrystal extends BlackOutModule {
         .sliderRange(0, 20)
         .build()
     );
-    private final Setting<Double> attackDelay = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Attack Delay")
-        .description("Waits for x seconds after placing redstone before attacking the crystal.")
-        .defaultValue(0.1)
-        .min(0)
-        .sliderRange(0, 1)
-        .build()
-    );
 
-    //--------------------General--------------------//
+    //--------------------Delay--------------------//
     private final Setting<Double> pcDelay = sgDelay.add(new DoubleSetting.Builder()
         .name("Piston > Crystal")
         .description("How many seconds to wait between placing piston and redstone.")
@@ -160,6 +153,20 @@ public class PistonCrystal extends BlackOutModule {
         .name("Fire Switch")
         .description("Method of switching. Silent is the most reliable.")
         .defaultValue(SwitchMode.Silent)
+        .build()
+    );
+
+    //--------------------Toggle--------------------//
+    private final Setting<Boolean> toggleMove = sgGeneral.add(new BoolSetting.Builder()
+        .name("Toggle Move")
+        .description("Toggles when you move.")
+        .defaultValue(false)
+        .build()
+    );
+    private final Setting<Boolean> toggleEnemyMove = sgGeneral.add(new BoolSetting.Builder()
+        .name("Toggle Enemy Move")
+        .description("Toggles when your target moves.")
+        .defaultValue(false)
         .build()
     );
 
@@ -317,12 +324,14 @@ public class PistonCrystal extends BlackOutModule {
     private BlockPos lastCrystalPos = null;
     private BlockPos lastPistonPos = null;
     private BlockPos lastRedstonePos = null;
+    private Entity lastTarget = null;
 
     private Direction pistonDir = null;
     private PlaceData pistonData = null;
     private Direction crystalPlaceDir = null;
     private Direction crystalDir = null;
     private PlaceData redstoneData = null;
+    private Entity target = null;
 
     private BlockPos closestCrystalPos = null;
     private BlockPos closestPistonPos = null;
@@ -348,6 +357,9 @@ public class PistonCrystal extends BlackOutModule {
 
     private double cd;
     private double d;
+
+    private BlockPos lastPos = null;
+    private BlockPos lastEnemyPos = null;
 
     @Override
     public void onActivate() {
@@ -510,9 +522,7 @@ public class PistonCrystal extends BlackOutModule {
 
         hand = hand == null ? Hand.MAIN_HAND : hand;
 
-        SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand);
-        sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(Vec3d.ofCenter(pistonData.pos()), pistonData.dir(), pistonData.pos(), false), 0));
-        SettingUtils.swing(SwingState.Post, SwingType.Placing, hand);
+        placeBlock(hand, pistonData.pos().toCenterPos(), pistonData.dir(), pistonData.pos());
 
         if (pistonSwing.get()) clientSwing(pistonHand.get(), hand);
 
@@ -568,9 +578,7 @@ public class PistonCrystal extends BlackOutModule {
 
         hand = hand == null ? Hand.MAIN_HAND : hand;
 
-        SettingUtils.swing(SwingState.Pre, SwingType.Interact, hand);
-        sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(Vec3d.ofCenter(crystalPos.down()), crystalPlaceDir, crystalPos.down(), false), 0));
-        SettingUtils.swing(SwingState.Post, SwingType.Interact, hand);
+        interactBlock(hand, crystalPos.down().toCenterPos(), crystalPlaceDir, crystalPos.down());
 
         if (crystalSwing.get()) clientSwing(crystalHand.get(), hand);
 
@@ -623,9 +631,7 @@ public class PistonCrystal extends BlackOutModule {
 
         hand = hand == null ? Hand.MAIN_HAND : hand;
 
-        SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand);
-        sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(Vec3d.ofCenter(redstoneData.pos()), redstoneData.dir(), redstoneData.pos(), false), 0));
-        SettingUtils.swing(SwingState.Post, SwingType.Placing, hand);
+        placeBlock(hand, redstoneData.pos().toCenterPos(), redstoneData.dir(), redstoneData.pos());
 
         if (redstoneSwing.get()) clientSwing(redstoneHand.get(), hand);
 
@@ -727,9 +733,7 @@ public class PistonCrystal extends BlackOutModule {
 
         hand = hand == null ? Hand.MAIN_HAND : hand;
 
-        SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand);
-        sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(Vec3d.ofCenter(data.pos()), data.dir(), data.pos(), false), 0));
-        SettingUtils.swing(SwingState.Post, SwingType.Placing, hand);
+        interactBlock(hand, data.pos().toCenterPos(), data.dir(), data.pos());
 
         if (fireSwing.get()) clientSwing(fireHand.get(), hand);
 
@@ -748,6 +752,7 @@ public class PistonCrystal extends BlackOutModule {
         lastCrystalPos = crystalPos;
         lastPistonPos = pistonPos;
         lastRedstonePos = redstonePos;
+        lastTarget = target;
 
         closestCrystalPos = null;
         closestPistonPos = null;
@@ -840,6 +845,7 @@ public class PistonCrystal extends BlackOutModule {
         crystalPlaceDir = closestCrystalPlaceDir;
         crystalDir = closestCrystalDir;
         redstoneData = closestRedstoneData;
+        target = player;
     }
 
     private void getPistonPos(BlockPos pos, Direction dir) {

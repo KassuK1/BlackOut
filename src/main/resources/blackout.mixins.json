@@ -6,19 +6,23 @@
     "MixinBackground",
     "MixinBlockSettings",
     "MixinClientPlayerEntity",
+    "MixinClientPlayNetworkHandler",
     "MixinEntity",
     "MixinExplosion",
     "MixinHeldItemRenderer",
     "MixinInteractEntityC2SPacket",
     "MixinLivingEntityRenderer",
+    "MixinMinecraftClient",
     "MixinPlayerEntity",
     "MixinPlayerMoveC2SPacket",
-    "MixinRaycastContext"
+    "MixinRaycastContext",
+    "MixinSpectatorTeleportC2SPacket",
+    "MixinEntityS2CPacket",
+    "MixinEntitySetHeadYawS2CPacket",
+    "MixinEntityStatusS2CPacket",
+    "MixinSetCameraEntityS2CPacket"
   ],
   "injectors": {
     "defaultRequire": 1
-  },
-  "mixins": [
-
-  ]
+  }
 }

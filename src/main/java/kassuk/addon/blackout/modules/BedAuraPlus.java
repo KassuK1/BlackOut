@@ -497,11 +497,8 @@ public class BedAuraPlus extends BlackOutModule {
     }
 
     private void place(Hand hand) {
-        SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand);
+        placeBlock(hand, placeData.pos().toCenterPos(), placeData.dir(), placeData.pos());
 
-        sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(Vec3d.ofCenter(placeData.pos()), placeData.dir(), placeData.pos(), false), 0));
-
-        SettingUtils.swing(SwingState.Post, SwingType.Placing, hand);
         if (placeSwing.get()) clientSwing(placeHand.get(), hand);
     }
 
@@ -545,11 +542,8 @@ public class BedAuraPlus extends BlackOutModule {
             return null;
         }
 
-        SettingUtils.swing(SwingState.Pre, SwingType.Interact, Hand.MAIN_HAND);
+        interactBlock(Hand.MAIN_HAND, interactPos.toCenterPos(), interactDir, interactPos);
 
-        sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(interactPos), interactDir, interactPos, false), 0));
-
-        SettingUtils.swing(SwingState.Post, SwingType.Interact, Hand.MAIN_HAND);
         if (interactSwing.get()) clientSwing(interactHand.get(), Hand.MAIN_HAND);
 
         if (SettingUtils.shouldRotate(RotationType.Interact)) {
@@ -567,11 +561,8 @@ public class BedAuraPlus extends BlackOutModule {
             return false;
         }
 
-        SettingUtils.swing(SwingState.Pre, SwingType.Interact, Hand.MAIN_HAND);
+        interactBlock(Hand.MAIN_HAND, pos.toCenterPos(), dir, pos);
 
-        sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(pos), dir, pos, false), 0));
-
-        SettingUtils.swing(SwingState.Post, SwingType.Interact, Hand.MAIN_HAND);
         if (interactSwing.get()) clientSwing(interactHand.get(), Hand.MAIN_HAND);
         return true;
     }

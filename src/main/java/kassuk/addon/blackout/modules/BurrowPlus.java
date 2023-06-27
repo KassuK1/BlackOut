@@ -140,9 +140,8 @@ public class BurrowPlus extends BlackOutModule {
             sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.getX(), mc.player.getY() + y, mc.player.getZ(), false));
         }
 
-        SettingUtils.swing(SwingState.Pre, SwingType.Placing, Hand.MAIN_HAND);
-        sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, new BlockHitResult(mc.player.getBlockPos().down().toCenterPos(), Direction.UP, mc.player.getBlockPos().down(), false), 0));
-        SettingUtils.swing(SwingState.Post, SwingType.Placing, Hand.MAIN_HAND);
+        placeBlock(Hand.MAIN_HAND, mc.player.getBlockPos().down().toCenterPos(), Direction.UP, mc.player.getBlockPos().down());
+
         if (placeSwing.get()) clientSwing(placeHand.get(), Hand.MAIN_HAND);
 
         while (y < 5) {

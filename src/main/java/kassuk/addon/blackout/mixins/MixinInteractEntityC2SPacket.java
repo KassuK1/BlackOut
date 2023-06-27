@@ -12,5 +12,8 @@ public interface MixinInteractEntityC2SPacket {
     @Final
     @Mutable
     void setId(final int id);
+
+    @Accessor("entityId")
+    int getId();
 }
 

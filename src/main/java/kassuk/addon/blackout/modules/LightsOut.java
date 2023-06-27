@@ -28,8 +28,8 @@ public class LightsOut extends BlackOutModule {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
     private final Setting<Double> delay = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Delay")
-        .description("Delay between button clicks.")
+        .name("Tick Delay")
+        .description("Delay between breaking torches.")
         .defaultValue(2)
         .range(0, 10)
         .sliderRange(0, 10)

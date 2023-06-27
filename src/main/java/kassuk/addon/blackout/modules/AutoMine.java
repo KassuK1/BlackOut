@@ -25,6 +25,7 @@ import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.*;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.network.SequencedPacketCreator;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.Entity;
@@ -383,6 +384,8 @@ public class AutoMine extends BlackOutModule {
     private boolean reset = false;
     private boolean mined = false;
 
+    private int sequence = 0;
+
     @Override
     public void onActivate() {
         target = null;
@@ -509,8 +512,7 @@ public class AutoMine extends BlackOutModule {
 
         if (target.pos != null && !target.pos.equals(lastPos)) {
             if (started) {
-                Direction dir = SettingUtils.getPlaceOnDirection(target.pos);
-                send(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, target.pos, dir == null ? Direction.UP : dir, 0));
+                sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, target.pos, Direction.DOWN, 0));
             }
             started = false;
         }
@@ -531,7 +533,9 @@ public class AutoMine extends BlackOutModule {
 
                 Direction dir = SettingUtils.getPlaceOnDirection(target.pos);
 
-                send(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, target.pos, dir == null ? Direction.UP : dir, 0));
+                ignore = true;
+                sendSequenced(s -> new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, target.pos, dir == null ? Direction.UP : dir, s));
+                ignore = false;
 
                 SettingUtils.mineSwing(SwingSettings.MiningSwingState.Start);
 
@@ -630,7 +634,10 @@ public class AutoMine extends BlackOutModule {
             return;
         }
 
-        send(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, target.pos, dir, 0));
+        ignore = true;
+        sendSequenced(s -> new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, target.pos, dir, s));
+        ignore = false;
+
         mined = true;
         SettingUtils.mineSwing(SwingSettings.MiningSwingState.End);
         if (mineEndSwing.get()) clientSwing(mineHand.get(), Hand.MAIN_HAND);
@@ -730,9 +737,8 @@ public class AutoMine extends BlackOutModule {
             return false;
         }
 
-        SettingUtils.swing(SwingState.Pre, SwingType.Interact, hand == null ? Hand.MAIN_HAND : hand);
-        sendPacket(new PlayerInteractBlockC2SPacket(hand == null ? Hand.MAIN_HAND : hand, new BlockHitResult(Vec3d.ofCenter(target.crystalPos.down()), dir, target.crystalPos.down(), false), 0));
-        SettingUtils.swing(SwingState.Post, SwingType.Interact, hand == null ? Hand.MAIN_HAND : hand);
+        interactBlock(hand == null ? Hand.MAIN_HAND : hand, target.crystalPos.down().toCenterPos(), dir, target.crystalPos.down());
+
         if (placeSwing.get()) clientSwing(placeHand.get(), hand == null ? Hand.MAIN_HAND : hand);
 
         lastPlace = System.currentTimeMillis();
@@ -1069,10 +1075,15 @@ public class AutoMine extends BlackOutModule {
         return priority.priority >= current.priority;
     }
 
-    private void send(Packet<?> packet) {
-        ignore = true;
-        sendPacket(packet);
-        ignore = false;
+    public void handleAttack(BlockPos pos) {
+        if (target != null && pos.equals(target.pos)) {
+            return;
+        }
+        if (manualMine.get() && getBlock(pos) != Blocks.BEDROCK) {
+            started = false;
+
+            target = new Target(pos, null, MineType.Manual, 0, manualInsta.get(), true);
+        }
     }
 
     private void handleStart(PacketEvent.Send event) {

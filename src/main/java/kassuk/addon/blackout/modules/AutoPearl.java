@@ -186,7 +186,8 @@ public class AutoPearl extends BlackOutModule {
 
         if (hand == null && !switched) return false;
 
-        sendPacket(new PlayerInteractBlockC2SPacket(hand == null ? Hand.MAIN_HAND : Hand.OFF_HAND, new BlockHitResult(pos.down().toCenterPos(), Direction.UP, pos.down(), false), 0));
+        placeBlock(hand == null ? Hand.MAIN_HAND : hand, pos.down().toCenterPos(), Direction.UP, pos.down());
+
         placed = true;
 
         if (hand == null) {

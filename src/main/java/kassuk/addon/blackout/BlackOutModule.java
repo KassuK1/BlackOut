@@ -1,8 +1,11 @@
 package kassuk.addon.blackout;
 
 import kassuk.addon.blackout.enums.SwingHand;
+import kassuk.addon.blackout.enums.SwingState;
+import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.modules.SwingModifier;
 import kassuk.addon.blackout.utils.PriorityUtils;
+import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.mixininterface.IChatHud;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.config.Config;
@@ -10,10 +13,18 @@ import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
+import net.minecraft.client.network.ClientPlayerInteractionManager;
+import net.minecraft.client.network.PendingUpdateManager;
+import net.minecraft.client.network.SequencedPacketCreator;
 import net.minecraft.network.packet.Packet;
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 
 import java.util.Objects;
 
@@ -75,8 +86,43 @@ public class BlackOutModule extends Module {
     }
 
     public void sendPacket(Packet<?> packet) {
-        if (mc.getNetworkHandler() == null) {return;}
+        if (mc.getNetworkHandler() == null) return;
         mc.getNetworkHandler().sendPacket(packet);
+    }
+
+    public void sendSequenced(SequencedPacketCreator packetCreator) {
+        if (mc.interactionManager == null || mc.world == null || mc.getNetworkHandler() == null) return;
+
+        PendingUpdateManager sequence = mc.world.getPendingUpdateManager().incrementSequence();
+        Packet<?> packet = packetCreator.predict(sequence.getSequence());
+
+        mc.getNetworkHandler().sendPacket(packet);
+
+        sequence.close();
+    }
+
+    public void placeBlock(Hand hand, Vec3d blockHitVec, Direction blockDirection, BlockPos pos) {
+        Vec3d eyes = mc.player.getEyePos();
+        boolean inside =
+            eyes.x > pos.getX() && eyes.x < pos.getX() + 1 &&
+                eyes.y > pos.getY() && eyes.y < pos.getY() + 1 &&
+                eyes.z > pos.getZ() && eyes.z < pos.getZ() + 1;
+
+        SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand);
+        sendSequenced(s -> new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(blockHitVec, blockDirection, pos, inside), s));
+        SettingUtils.swing(SwingState.Post, SwingType.Placing, hand);
+    }
+
+    public void interactBlock(Hand hand, Vec3d blockHitVec, Direction blockDirection, BlockPos pos) {
+        Vec3d eyes = mc.player.getEyePos();
+        boolean inside =
+            eyes.x > pos.getX() && eyes.x < pos.getX() + 1 &&
+            eyes.y > pos.getY() && eyes.y < pos.getY() + 1 &&
+            eyes.z > pos.getZ() && eyes.z < pos.getZ() + 1;
+
+        SettingUtils.swing(SwingState.Pre, SwingType.Interact, hand);
+        sendSequenced(s -> new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(blockHitVec, blockDirection, pos, inside), s));
+        SettingUtils.swing(SwingState.Post, SwingType.Interact, hand);
     }
 
     public void clientSwing(SwingHand swingHand, Hand realHand) {

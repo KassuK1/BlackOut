@@ -195,11 +195,8 @@ public class AutoCraftingTable extends BlackOutModule {
             return false;
         }
 
-        SettingUtils.swing(SwingState.Pre, SwingType.Interact, Hand.MAIN_HAND);
+        interactBlock(Hand.MAIN_HAND, tablePos.toCenterPos(), tableDir, tablePos);
 
-        sendPacket(new PlayerInteractBlockC2SPacket(Hand.MAIN_HAND, new BlockHitResult(Vec3d.ofCenter(tablePos), tableDir, tablePos, false), 0));
-
-        SettingUtils.swing(SwingState.Post, SwingType.Interact, Hand.MAIN_HAND);
         if (interactSwing.get()) clientSwing(interactHand.get(), Hand.MAIN_HAND);
 
         return true;
@@ -245,11 +242,8 @@ public class AutoCraftingTable extends BlackOutModule {
 
         Hand rHand = hand != null ? hand : Hand.MAIN_HAND;
 
-        SettingUtils.swing(SwingState.Pre, SwingType.Placing, rHand);
+        placeBlock(rHand, placeData.pos().toCenterPos(), placeData.dir(), placeData.pos());
 
-        sendPacket(new PlayerInteractBlockC2SPacket(rHand, new BlockHitResult(Vec3d.ofCenter(placeData.pos()), placeData.dir(), placeData.pos(), false), 0));
-
-        SettingUtils.swing(SwingState.Post, SwingType.Placing, rHand);
         if (placeSwing.get()) clientSwing(placeHand.get(), rHand);
 
         if (hand == null) {

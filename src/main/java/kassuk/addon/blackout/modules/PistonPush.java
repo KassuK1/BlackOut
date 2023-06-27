@@ -292,9 +292,7 @@ public class PistonPush extends BlackOutModule {
 
         hand = hand == null ? Hand.MAIN_HAND : hand;
 
-        SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand);
-        sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(Vec3d.ofCenter(pistonData.pos()), pistonData.dir(), pistonData.pos(), false), 0));
-        SettingUtils.swing(SwingState.Post, SwingType.Placing, hand);
+        placeBlock(hand, pistonData.pos().toCenterPos(), pistonData.dir(), pistonData.pos());
 
         pistonTime = System.currentTimeMillis();
         pistonPlaced = true;
@@ -349,9 +347,7 @@ public class PistonPush extends BlackOutModule {
 
         hand = hand == null ? Hand.MAIN_HAND : hand;
 
-        SettingUtils.swing(SwingState.Pre, SwingType.Placing, hand);
-        sendPacket(new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(Vec3d.ofCenter(redstoneData.pos()), redstoneData.dir(), redstoneData.pos(), false), 0));
-        SettingUtils.swing(SwingState.Post, SwingType.Placing, hand);
+        placeBlock(hand, redstoneData.pos().toCenterPos(), redstoneData.dir(), redstoneData.pos());
 
         redstonePlaced = true;
         redstoneTime = System.currentTimeMillis();
@@ -413,7 +409,7 @@ public class PistonPush extends BlackOutModule {
             if (mc.player.distanceTo(player) > 10) continue;
             if (player.getHealth() <= 0) continue;
             if (player.isSpectator()) continue;
-            if (onlyHole.get() && HoleUtils.getHole(player.getBlockPos(), true, true, false, 1).type == HoleType.NotHole) return;
+            if (!OLEPOSSUtils.solid2(player.getBlockPos()) && onlyHole.get() && HoleUtils.getHole(player.getBlockPos(), true, true, false, 1).type == HoleType.NotHole) return;
 
             updatePos(player);
             if (pistonPos != null) return;
