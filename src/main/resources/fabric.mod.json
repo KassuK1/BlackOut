@@ -21,6 +21,7 @@
   "mixins": [
     "blackout.mixins.json"
   ],
+  "accessWidener": "blackout.accesswidener",
   "custom": {
     "meteor-client:color": "225,25,25"
   },

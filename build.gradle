@@ -8,6 +8,10 @@ archivesBaseName = project.archives_base_name
 version = project.mod_version
 group = project.maven_group
 
+loom {
+    accessWidenerPath = file("src/main/resources/blackout.accesswidener")
+}
+
 repositories {
     maven {
         name = "meteor-maven"
@@ -42,8 +46,4 @@ processResources {
 
 tasks.withType(JavaCompile).configureEach {
     it.options.encoding("UTF-8")
-}
-
-loom {
-    accessWidenerPath = file("src/main/resources/blackout.accesswidener")
 }
