@@ -303,7 +303,12 @@ public class RotationManager {
 
     public void addHistory(double yaw, double pitch) {
         history.add(0, new Rotation(yaw, pitch, mc.player.getEyePos()));
-        history = history.subList(0, Math.min(history.size(), 20));
+
+        for (int i = history.size(); i > 20; i--) {
+            if (history.size() - 1 < i) continue;
+
+            history.remove(i);
+        }
     }
 
     public record Rotation(double yaw, double pitch, Vec3d vec) {}
