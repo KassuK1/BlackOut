@@ -41,13 +41,13 @@ public class StepPlus extends BlackOutModule {
     public final Setting<Boolean> slow = sgGeneral.add(new BoolSetting.Builder()
         .name("Slow")
         .description("Moves up slowly to prevent lagbacks.")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
     private final Setting<Boolean> strict = sgGeneral.add(new BoolSetting.Builder()
         .name("Strict")
         .description("Strict 2b2tpvp step.")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
     public final Setting<Double> height = sgGeneral.add(new DoubleSetting.Builder()
