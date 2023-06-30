@@ -80,7 +80,7 @@ public class RotationSettings extends BlackOutModule {
     private final Setting<Boolean> mineRotate = rotateSetting("Mining", "mining a block", sgMining);
     public final Setting<Double> mineTime = timeSetting("Mining", sgMining);
     public final Setting<RotationCheckMode> mineMode = modeSetting("Mining", sgMining);
-    public final Setting<MiningRotMode> mineTiming = sgMining.add(new EnumSetting.Builder<MiningRotMode>().name("Mining Rotate Timing").description(".").defaultValue(MiningRotMode.Disabled).build());
+    public final Setting<MiningRotMode> mineTiming = sgMining.add(new EnumSetting.Builder<MiningRotMode>().name("Mining Rotate Timing").description(".").defaultValue(MiningRotMode.End).build());
     public final Setting<Double> mineYawAngle = yawAngleSetting("Mining", sgMining, () -> mineMode.get() == RotationCheckMode.Angle);
     public final Setting<Double> minePitchAngle = pitchAngleSetting("Mining", sgMining, () -> mineMode.get() == RotationCheckMode.Angle);
     public final Setting<Integer> mineMemory = memorySetting("Mining", sgMining);
@@ -97,7 +97,6 @@ public class RotationSettings extends BlackOutModule {
     public final Setting<Double> useTime = timeSetting("Use", sgUse);
 
     public enum MiningRotMode {
-        Disabled,
         Start,
         End,
         Double
@@ -285,10 +284,12 @@ public class RotationSettings extends BlackOutModule {
     }
 
     public boolean endMineRot() {
+        if (!mineRotate.get()) return false;
         return mineTiming.get() == MiningRotMode.End || mineTiming.get() == MiningRotMode.Double;
     }
 
     public boolean startMineRot() {
+        if (!mineRotate.get()) return false;
         return mineTiming.get() == MiningRotMode.Start || mineTiming.get() == MiningRotMode.Double;
     }
 }

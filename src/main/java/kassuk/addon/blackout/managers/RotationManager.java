@@ -11,6 +11,7 @@ import meteordevelopment.meteorclient.events.entity.player.SendMovementPacketsEv
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.mixininterface.IVec3d;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.player.Rotations;
@@ -50,6 +51,8 @@ public class RotationManager {
     float[] next;
     boolean rotated = false;
 
+    Vec3d eyePos = new Vec3d(0, 0, 0);
+
     public RotationManager() {
         MeteorClient.EVENT_BUS.subscribe(this);
     }
@@ -71,6 +74,7 @@ public class RotationManager {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onMovePost(SendMovementPacketsEvent.Post event) {
         if (unsent && updateShouldRotate()) {
+            setEyePos(mc.player.getPos());
             updateNextRotation();
 
             if (rotated) {
@@ -107,6 +111,8 @@ public class RotationManager {
         if (!updateShouldRotate()) {
             return packet;
         }
+
+        setEyePos(new Vec3d(packet.getX(0), packet.getY(0), packet.getZ(0)));
         updateNextRotation();
 
         if (rotated) {
@@ -121,6 +127,8 @@ public class RotationManager {
         if (!updateShouldRotate()) {
             return packet;
         }
+
+        setEyePos(new Vec3d(packet.getX(0), packet.getY(0), packet.getZ(0)));
         updateNextRotation();
 
         if (rotated) {
@@ -135,6 +143,8 @@ public class RotationManager {
         if (!updateShouldRotate()) {
             return packet;
         }
+
+        setEyePos(mc.player.getPos());
         updateNextRotation();
 
         if (rotated) {
@@ -152,6 +162,8 @@ public class RotationManager {
         if (!updateShouldRotate()) {
             return packet;
         }
+
+        setEyePos(mc.player.getPos());
         updateNextRotation();
 
         if (rotated) {
@@ -170,7 +182,7 @@ public class RotationManager {
         if (shouldRotate) {
             if (target instanceof BoxTarget) {
                 ((BoxTarget) target).vec = getTargetPos();
-                next = new float[]{RotationUtils.nextYaw(lastDir[0], Rotations.getYaw(((BoxTarget) target).vec), settings.yawStep(((BoxTarget) target).type)), RotationUtils.nextPitch(lastDir[1], Rotations.getPitch(((BoxTarget) target).vec), settings.pitchStep(((BoxTarget) target).type))};
+                next = new float[]{RotationUtils.nextYaw(lastDir[0], RotationUtils.getYaw(eyePos, ((BoxTarget) target).vec), settings.yawStep(((BoxTarget) target).type)), RotationUtils.nextPitch(lastDir[1], RotationUtils.getPitch(eyePos, ((BoxTarget) target).vec), settings.pitchStep(((BoxTarget) target).type))};
             } else {
                 next = new float[]{RotationUtils.nextYaw(lastDir[0], ((AngleTarget) target).yaw, settings.yawStep(((AngleTarget) target).type)), RotationUtils.nextPitch(lastDir[1], ((AngleTarget) target).pitch, settings.pitchStep(((AngleTarget) target).type))};
             }
@@ -299,6 +311,10 @@ public class RotationManager {
 
     public boolean start(BlockPos pos, Vec3d vec, double p, RotationType type) {
         return start(pos, new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 1, pos.getZ() + 1), vec, p, type);
+    }
+
+    private void setEyePos(Vec3d vec3d) {
+        eyePos = vec3d.add(0, mc.player.getEyeHeight(mc.player.getPose()), 0);
     }
 
     public void addHistory(double yaw, double pitch) {

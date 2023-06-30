@@ -22,7 +22,7 @@ The development of the addon might not be super active due to us having our own 
 #### Latest build: https://github.com/KassuK1/BlackOut/releases/download/latest/blackout-1.0.1.jar
 
 #### Credits
-Doogie13 for helping with the block mining calculations.
+Doogie13 for helping with the block mining calculations and step offsets.
 
 RickyTheRaccoon for his InvSwitch.
 

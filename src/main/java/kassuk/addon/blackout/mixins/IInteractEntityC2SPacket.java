@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(PlayerInteractEntityC2SPacket.class)
-public interface MixinInteractEntityC2SPacket {
+public interface IInteractEntityC2SPacket {
     @Accessor("entityId")
     @Final
     @Mutable

@@ -3,6 +3,8 @@ package kassuk.addon.blackout.utils;
 import kassuk.addon.blackout.enums.HoleType;
 import net.minecraft.util.math.BlockPos;
 
+import static meteordevelopment.meteorclient.MeteorClient.mc;
+
 /**
  * @author OLEPOSSU
  */
@@ -10,15 +12,19 @@ import net.minecraft.util.math.BlockPos;
 public class HoleUtils {
 
     public static Hole getHole(BlockPos pos) {
-        return getHole(pos, true, true, true, 3);
+        return getHole(pos, true, true, true, 3, true);
     }
 
     public static Hole getHole(BlockPos pos, int depth) {
-        return getHole(pos, true, true, true, depth);
+        return getHole(pos, depth, true);
     }
 
-    public static Hole getHole(BlockPos pos, boolean s, boolean d, boolean q, int depth) {
-        if (!isHole(pos, depth)) {
+    public static Hole getHole(BlockPos pos, int depth, boolean floor) {
+        return getHole(pos, true, true, true, depth, floor);
+    }
+
+    public static Hole getHole(BlockPos pos, boolean s, boolean d, boolean q, int depth, boolean floor) {
+        if (!isHole(pos, depth, floor)) {
             return new Hole(pos, HoleType.NotHole);
         }
 
@@ -26,8 +32,8 @@ public class HoleUtils {
             return new Hole(pos, HoleType.NotHole);
         }
 
-        boolean x = isHole(pos.east(), depth) && isBlock(pos.east().north()) && isBlock(pos.east(2));
-        boolean z = isHole(pos.south(), depth) && isBlock(pos.south().west()) && isBlock(pos.south(2));
+        boolean x = isHole(pos.east(), depth, floor) && isBlock(pos.east().north()) && isBlock(pos.east(2));
+        boolean z = isHole(pos.south(), depth, floor) && isBlock(pos.south().west()) && isBlock(pos.south(2));
 
         // Single
         if (s && !x && !z && isBlock(pos.east()) && isBlock(pos.south())) {
@@ -35,7 +41,7 @@ public class HoleUtils {
         }
 
         // Quad
-        if (q && x && z && isHole(pos.south().east(), depth) && isBlock(pos.east().east().south()) && isBlock(pos.south().south().east())) {
+        if (q && x && z && isHole(pos.south().east(), depth, floor) && isBlock(pos.east().east().south()) && isBlock(pos.south().south().east())) {
             return new Hole(pos, HoleType.Quad);
         }
 
@@ -61,8 +67,8 @@ public class HoleUtils {
         return OLEPOSSUtils.collidable(pos);
     }
 
-    static boolean isHole(BlockPos pos, int depth) {
-        if (!isBlock(pos.down())) {
+    static boolean isHole(BlockPos pos, int depth, boolean floor) {
+        if (floor && !isBlock(pos.down())) {
             return false;
         }
 

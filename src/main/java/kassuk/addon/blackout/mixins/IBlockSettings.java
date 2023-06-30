@@ -5,7 +5,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(AbstractBlock.Settings.class)
-public interface MixinBlockSettings {
+public interface IBlockSettings {
     @Accessor("replaceable")
     boolean replaceable();
 }

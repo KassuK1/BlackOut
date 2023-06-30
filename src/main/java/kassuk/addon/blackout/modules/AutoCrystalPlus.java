@@ -7,7 +7,7 @@ import kassuk.addon.blackout.enums.SwingHand;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
-import kassuk.addon.blackout.mixins.MixinInteractEntityC2SPacket;
+import kassuk.addon.blackout.mixins.IInteractEntityC2SPacket;
 import kassuk.addon.blackout.timers.IntTimerList;
 import kassuk.addon.blackout.utils.BOInvUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
@@ -39,7 +39,6 @@ import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.*;
 
 import java.util.ArrayList;
@@ -652,10 +651,6 @@ public class AutoCrystalPlus extends BlackOutModule {
     private double attackTimer = 0;
     private double switchTimer = 0;
     private int confirmed = Integer.MIN_VALUE;
-    private double infoCps = 0;
-    private double cps = 0;
-    private long cpsTime = System.currentTimeMillis();
-    private int explosions = 0;
     private long lastMillis = System.currentTimeMillis();
     private boolean suicide = false;
     public static boolean placing = false;
@@ -667,6 +662,10 @@ public class AutoCrystalPlus extends BlackOutModule {
     private AutoMine autoMine = null;
 
     private int attacked = 0;
+
+    private double cps = 0;
+    private double infoCps = 0;
+    private long lastExplosion = 0;
 
     private final List<Predict> predicts = new ArrayList<>();
     private final List<SetDead> setDeads = new ArrayList<>();
@@ -686,9 +685,6 @@ public class AutoCrystalPlus extends BlackOutModule {
         renderPos = null;
         renderProgress = 0;
         lastMillis = System.currentTimeMillis();
-        cps = 0;
-        infoCps = 0;
-        cpsTime = System.currentTimeMillis();
 
         predicts.clear();
         setDeads.clear();
@@ -701,8 +697,8 @@ public class AutoCrystalPlus extends BlackOutModule {
         return ((float) Math.round(infoCps * 10) / 10) + " CPS";
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST + 1)
-    private void onTickPre(TickEvent.Pre event) {
+    @EventHandler(priority = EventPriority.HIGHEST)
+    private void onTickPost(TickEvent.Post event) {
         delayTicks++;
         ticksEnabled++;
         attacked++;
@@ -760,10 +756,7 @@ public class AutoCrystalPlus extends BlackOutModule {
             }
         });
         toRemove.forEach(own::remove);
-    }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
-    private void onTickPost(TickEvent.Post event) {
         if (performance.get()) {
             updatePlacement();
         }
@@ -779,13 +772,9 @@ public class AutoCrystalPlus extends BlackOutModule {
         double d = (System.currentTimeMillis() - lastMillis) / 1000f;
         lastMillis = System.currentTimeMillis();
 
-        infoCps = smoothChange(cps, infoCps, d * 6);
+        if (System.currentTimeMillis() - lastExplosion > 5) cps = 0;
 
-        if (System.currentTimeMillis() - cpsTime >= 1000) {
-            cps = explosions * (System.currentTimeMillis() - cpsTime) / 1000f;
-            cpsTime = System.currentTimeMillis();
-            explosions = 0;
-        }
+        infoCps = MathHelper.lerp(d / 10, infoCps, cps);
 
         attackedList.update();
         attackTimer = Math.max(attackTimer - d, 0);
@@ -950,10 +939,12 @@ public class AutoCrystalPlus extends BlackOutModule {
     private void onReceive(PacketEvent.Receive event) {
         if (event.packet instanceof ExplosionS2CPacket packet) {
             Vec3d pos = new Vec3d(packet.getX(), packet.getY(), packet.getZ());
-            ;
-            if (isOwn(pos)) {
-                explosions++;
-            }
+
+            if (!isOwn(pos)) return;
+            double delta = System.currentTimeMillis() - lastExplosion;
+            lastExplosion = System.currentTimeMillis();
+
+            cps = 1000 / delta;
         }
     }
 
@@ -1235,7 +1226,7 @@ public class AutoCrystalPlus extends BlackOutModule {
 
             SettingUtils.registerAttack(bb);
             PlayerInteractEntityC2SPacket packet = PlayerInteractEntityC2SPacket.attack(mc.player, mc.player.isSneaking());
-            ((MixinInteractEntityC2SPacket) packet).setId(id);
+            ((IInteractEntityC2SPacket) packet).setId(id);
 
             SettingUtils.swing(SwingState.Pre, SwingType.Attacking, Hand.MAIN_HAND);
 

@@ -314,7 +314,7 @@ public class HoleFillRewrite extends BlackOutModule {
                 for (int z = (int) -Math.ceil(range); z <= Math.ceil(range); z++) {
                     BlockPos pos = mc.player.getBlockPos().add(x, y, z);
 
-                    Hole h = HoleUtils.getHole(pos, single.get(), doubleHole.get(), quad.get(), 3);
+                    Hole h = HoleUtils.getHole(pos, single.get(), doubleHole.get(), quad.get(), 3, true);
 
                     if (h.type == HoleType.NotHole) {
                         continue;

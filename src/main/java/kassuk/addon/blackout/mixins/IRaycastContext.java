@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(RaycastContext.class)
-public interface MixinRaycastContext {
+public interface IRaycastContext {
     @Mutable
     @Accessor("start")
     void setStart(Vec3d start);

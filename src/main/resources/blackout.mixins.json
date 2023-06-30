@@ -4,23 +4,23 @@
   "compatibilityLevel": "JAVA_17",
   "client": [
     "MixinBackground",
-    "MixinBlockSettings",
+    "IBlockSettings",
     "MixinClientPlayerEntity",
     "MixinClientPlayNetworkHandler",
     "MixinEntity",
     "MixinExplosion",
     "MixinHeldItemRenderer",
-    "MixinInteractEntityC2SPacket",
+    "IInteractEntityC2SPacket",
     "MixinLivingEntityRenderer",
     "MixinMinecraftClient",
     "MixinPlayerEntity",
-    "MixinPlayerMoveC2SPacket",
-    "MixinRaycastContext",
-    "MixinSpectatorTeleportC2SPacket",
-    "MixinEntityS2CPacket",
-    "MixinEntitySetHeadYawS2CPacket",
-    "MixinEntityStatusS2CPacket",
-    "MixinSetCameraEntityS2CPacket"
+    "IPlayerMoveC2SPacket",
+    "IRaycastContext",
+    "ISpectatorTeleportC2SPacket",
+    "IEntityS2CPacket",
+    "IEntitySetHeadYawS2CPacket",
+    "IEntityStatusS2CPacket",
+    "ISetCameraEntityS2CPacket"
   ],
   "injectors": {
     "defaultRequire": 1

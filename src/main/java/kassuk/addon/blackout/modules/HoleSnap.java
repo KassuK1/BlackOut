@@ -262,7 +262,7 @@ public class HoleSnap extends BlackOutModule {
                 for (int z = -range.get(); z < range.get(); z++) {
                     BlockPos pos = mc.player.getBlockPos().add(x, y, z);
 
-                    Hole hole = HoleUtils.getHole(pos, singleHoles.get(), doubleHoles.get(), quadHoles.get(), depth.get());
+                    Hole hole = HoleUtils.getHole(pos, singleHoles.get(), doubleHoles.get(), quadHoles.get(), depth.get(), true);
 
                     if (hole.type == HoleType.NotHole) {
                         continue;

@@ -18,6 +18,7 @@ import net.minecraft.client.network.PendingUpdateManager;
 import net.minecraft.client.network.SequencedPacketCreator;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
+import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
@@ -123,6 +124,12 @@ public class BlackOutModule extends Module {
         SettingUtils.swing(SwingState.Pre, SwingType.Interact, hand);
         sendSequenced(s -> new PlayerInteractBlockC2SPacket(hand, new BlockHitResult(blockHitVec, blockDirection, pos, inside), s));
         SettingUtils.swing(SwingState.Post, SwingType.Interact, hand);
+    }
+
+    public void useItem(Hand hand) {
+        SettingUtils.swing(SwingState.Pre, SwingType.Using, hand);
+        sendSequenced(s -> new PlayerInteractItemC2SPacket(hand, s));
+        SettingUtils.swing(SwingState.Post, SwingType.Using, hand);
     }
 
     public void clientSwing(SwingHand swingHand, Hand realHand) {

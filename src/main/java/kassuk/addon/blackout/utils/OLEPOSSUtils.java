@@ -1,13 +1,12 @@
 package kassuk.addon.blackout.utils;
 
-import kassuk.addon.blackout.mixins.MixinBlockSettings;
+import kassuk.addon.blackout.mixins.IBlockSettings;
 import meteordevelopment.meteorclient.mixin.AbstractBlockAccessor;
 import net.minecraft.block.*;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.math.*;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
@@ -57,7 +56,7 @@ public class OLEPOSSUtils {
 
     @SuppressWarnings("DataFlowIssue")
     public static boolean replaceable(BlockPos block) {
-        return ((MixinBlockSettings) AbstractBlock.Settings.copy(mc.world.getBlockState(block).getBlock())).replaceable();
+        return ((IBlockSettings) AbstractBlock.Settings.copy(mc.world.getBlockState(block).getBlock())).replaceable();
     }
 
     public static boolean solid2(BlockPos block) {

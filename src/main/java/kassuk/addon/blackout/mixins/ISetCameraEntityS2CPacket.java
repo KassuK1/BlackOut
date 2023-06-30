@@ -5,7 +5,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(SetCameraEntityS2CPacket.class)
-public interface MixinSetCameraEntityS2CPacket {
+public interface ISetCameraEntityS2CPacket {
     @Accessor("entityId")
     int getId();
 }

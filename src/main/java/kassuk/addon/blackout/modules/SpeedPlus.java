@@ -8,6 +8,7 @@ import meteordevelopment.meteorclient.mixininterface.IVec3d;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.systems.modules.world.Timer;
+import meteordevelopment.meteorclient.utils.misc.Keybind;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.entity.effect.StatusEffects;
@@ -58,22 +59,18 @@ public class SpeedPlus extends BlackOutModule {
         .visible(() -> mode.get() == SpeedMode.Accelerate)
         .build()
     );
-    private final Setting<Double> jumpForce = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Jump Force")
-        .description("Where should the y motion be set for jumping. 0.42 is vanilla.")
-        .defaultValue(0.42)
-        .min(0)
-        .sliderMax(1)
-        .visible(() -> mode.get() == SpeedMode.Strafe)
+    private final Setting<Boolean> onlyPressed = sgGeneral.add(new BoolSetting.Builder()
+        .name("Only Pressed")
+        .description("Uses instant mode when you arent pressing jump key.")
+        .defaultValue(false)
+        .visible(() -> mode.get() == SpeedMode.CCStrafe)
         .build()
     );
-    private final Setting<Double> jumpBoost = sgGeneral.add(new DoubleSetting.Builder()
-        .name("Jump Boost")
-        .description("Boosts velocity by x blocks per tick when jumping.")
-        .defaultValue(0.05)
-        .min(0)
-        .sliderMax(1)
-        .visible(() -> mode.get() == SpeedMode.Strafe)
+    private final Setting<Keybind> strafeBind = sgGeneral.add(new KeybindSetting.Builder()
+        .name("Strafe Bind")
+        .description("Strafes when this key is pressed.")
+        .defaultValue(Keybind.fromKey(-1))
+        .visible(() -> mode.get() == SpeedMode.CCStrafe && onlyPressed.get())
         .build()
     );
     private final Setting<Double> speed = sgGeneral.add(new DoubleSetting.Builder()
@@ -138,6 +135,7 @@ public class SpeedPlus extends BlackOutModule {
     private double acceleration = 0;
     private double ax = 0;
     private double az = 0;
+    private int jumpPhase = 1;
 
     @Override
     public void onActivate() {
@@ -219,14 +217,38 @@ public class SpeedPlus extends BlackOutModule {
                 }
             }
 
-            if (mode.get() == SpeedMode.Strafe) {
-                if (mc.player.isOnGround() && (Math.abs(mc.player.input.movementForward) > 0.01 || Math.abs(mc.player.input.movementSideways) > 0.01)) {
-                    ((IVec3d) mc.player.getVelocity()).setY(mc.player.input.jumping ? 0.42 : jumpForce.get());
-                    velocity += jumpBoost.get();
-                }
-            }
+            double forward = mc.player.input.movementForward;
+            double sideways = mc.player.input.movementSideways;
 
-            velocity = Math.max(speed.get(), velocity * 0.98);
+            double yaw = getYaw(forward, sideways);
+
+            if (mode.get() == SpeedMode.CCStrafe && (!onlyPressed.get() || strafeBind.get().isPressed())) {
+                if (jumpPhase == 4) {
+                    velocity *= 0.9888888889;
+
+                    if (mc.player.isOnGround()) {
+                        jumpPhase = 1;
+                    }
+                }
+                if (jumpPhase == 3) {
+                    velocity = velocity + (0.2873 - velocity) * 0.6;
+                    jumpPhase = 4;
+                }
+                if (jumpPhase == 2) {
+                    ((IVec3d) event.movement).setY(0.4);
+                    velocity *= 1.85;
+                    jumpPhase = 3;
+                }
+                if (jumpPhase == 1) {
+                    if (mc.player.isOnGround() && move) {
+                        velocity = 0.2873;
+                        jumpPhase = 2;
+                    }
+                }
+
+                velocity = Math.max(velocity, 0.2873);
+            } else
+                velocity = Math.max(speed.get(), velocity * 0.98);
 
             double motion = velocity;
             if (velocity < 0.01) {
@@ -239,16 +261,12 @@ public class SpeedPlus extends BlackOutModule {
                 motion /= 1.2 + mc.player.getStatusEffect(StatusEffects.SLOWNESS).getAmplifier() * 0.2;
             }
 
-            double forward = mc.player.input.movementForward;
-            double sideways = mc.player.input.movementSideways;
-
-            double yaw = getYaw(forward, sideways);
             double x = Math.cos(Math.toRadians(yaw + 90.0f));
             double y = mc.player.getVelocity().getY();
             double z = Math.sin(Math.toRadians(yaw + 90.0f));
 
             switch (mode.get()) {
-                case Strafe, Instant -> {
+                case CCStrafe, Instant -> {
                     if (move) {
                         ((IVec3d) event.movement).set(motion * x, y, motion * z);
                     } else {
@@ -292,7 +310,7 @@ public class SpeedPlus extends BlackOutModule {
     }
 
     public enum SpeedMode {
-        Strafe,
+        CCStrafe,
         Instant,
         Accelerate
     }

@@ -37,7 +37,7 @@ public class SwingSettings extends BlackOutModule {
     public final Setting<SwingState> interactState = sgInteract.add(new EnumSetting.Builder<SwingState>()
         .name("Interact State")
         .description("Should we swing our hand before or after the action.")
-        .defaultValue(SwingState.Pre)
+        .defaultValue(SwingState.Post)
         .visible(interact::get)
         .build()
     );
@@ -50,7 +50,7 @@ public class SwingSettings extends BlackOutModule {
     public final Setting<SwingState> blockPlaceState = sgBlockPlace.add(new EnumSetting.Builder<SwingState>()
         .name("Block Place State")
         .description("Should we swing our hand before or after the action.")
-        .defaultValue(SwingState.Pre)
+        .defaultValue(SwingState.Post)
         .visible(blockPlace::get)
         .build()
     );
@@ -69,7 +69,7 @@ public class SwingSettings extends BlackOutModule {
     public final Setting<SwingState> attackState = sgAttack.add(new EnumSetting.Builder<SwingState>()
         .name("Attack State")
         .description("Should we swing our hand before or after the action.")
-        .defaultValue(SwingState.Pre)
+        .defaultValue(SwingState.Post)
         .visible(attack::get)
         .build()
     );
@@ -82,7 +82,7 @@ public class SwingSettings extends BlackOutModule {
     public final Setting<SwingState> useState = sgUse.add(new EnumSetting.Builder<SwingState>()
         .name("Using State")
         .description("Should we swing our hand before or after the action.")
-        .defaultValue(SwingState.Pre)
+        .defaultValue(SwingState.Post)
         .visible(use::get)
         .build()
     );

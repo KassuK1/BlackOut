@@ -409,7 +409,7 @@ public class PistonPush extends BlackOutModule {
             if (mc.player.distanceTo(player) > 10) continue;
             if (player.getHealth() <= 0) continue;
             if (player.isSpectator()) continue;
-            if (!OLEPOSSUtils.solid2(player.getBlockPos()) && onlyHole.get() && HoleUtils.getHole(player.getBlockPos(), true, true, false, 1).type == HoleType.NotHole) return;
+            if (!OLEPOSSUtils.solid2(player.getBlockPos()) && onlyHole.get() && HoleUtils.getHole(player.getBlockPos(), true, true, false, 1, true).type == HoleType.NotHole) return;
 
             updatePos(player);
             if (pistonPos != null) return;

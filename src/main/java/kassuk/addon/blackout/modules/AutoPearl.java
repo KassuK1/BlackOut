@@ -131,10 +131,8 @@ public class AutoPearl extends BlackOutModule {
             return;
         }
 
-        SettingUtils.swing(SwingState.Pre, SwingType.Using, Hand.MAIN_HAND);
-        sendPacket(new PlayerInteractItemC2SPacket(Hand.MAIN_HAND, 0));
-        SettingUtils.swing(SwingState.Post, SwingType.Using, Hand.MAIN_HAND);
-        if (swing.get()) clientSwing(swingHand.get(), Hand.MAIN_HAND);
+        useItem(hand == null ? Hand.MAIN_HAND : hand);
+        if (swing.get()) clientSwing(swingHand.get(), hand == null ? Hand.MAIN_HAND : hand);
 
         toggle();
         sendToggledMsg("success");
