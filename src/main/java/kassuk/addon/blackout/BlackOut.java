@@ -81,6 +81,7 @@ public class BlackOut extends MeteorAddon {
         modules.add(new PingSpoof());
         modules.add(new PistonCrystal());
         modules.add(new PistonPush());
+        modules.add(new PortalGodMode());
         modules.add(new RPC());
         modules.add(new ScaffoldPlus());
         modules.add(new SelfTrapPlus());
