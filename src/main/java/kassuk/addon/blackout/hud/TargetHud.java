@@ -1,6 +1,5 @@
 package kassuk.addon.blackout.hud;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.utils.RenderUtils;
 import meteordevelopment.meteorclient.MeteorClient;
@@ -15,7 +14,6 @@ import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.gui.PlayerSkinDrawer;
-import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.util.math.MatrixStack;

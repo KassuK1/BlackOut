@@ -1,6 +1,5 @@
 package kassuk.addon.blackout.mixins;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import kassuk.addon.blackout.modules.Fog;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import net.minecraft.client.render.BackgroundRenderer;

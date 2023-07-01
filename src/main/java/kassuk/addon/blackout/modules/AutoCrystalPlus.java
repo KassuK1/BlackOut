@@ -10,6 +10,7 @@ import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.mixins.IInteractEntityC2SPacket;
 import kassuk.addon.blackout.timers.IntTimerList;
 import kassuk.addon.blackout.utils.BOInvUtils;
+import kassuk.addon.blackout.utils.ExtrapolationUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
 import kassuk.addon.blackout.utils.meteor.BODamageUtils;
@@ -29,6 +30,7 @@ import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.AirBlock;
 import net.minecraft.block.Blocks;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -642,10 +644,9 @@ public class AutoCrystalPlus extends BlackOutModule {
     private final Map<BlockPos, Long> existedList = new HashMap<>();
     private final Map<BlockPos, Long> existedTicksList = new HashMap<>();
     private final Map<BlockPos, Long> own = new HashMap<>();
-    private Map<PlayerEntity, Box> extPos = new HashMap<>();
-    private Map<PlayerEntity, Box> extHitbox = new HashMap<>();
+    private final Map<AbstractClientPlayerEntity, Box> extPos = new HashMap<>();
+    private final Map<AbstractClientPlayerEntity, Box> extHitbox = new HashMap<>();
     private Vec3d rangePos = null;
-    private final Map<String, List<Vec3d>> motions = new HashMap<>();
     private final List<Box> blocked = new ArrayList<>();
     private final Map<BlockPos, Double[]> earthMap = new HashMap<>();
     private double attackTimer = 0;
@@ -679,7 +680,6 @@ public class AutoCrystalPlus extends BlackOutModule {
         existedTicksList.clear();
         existedList.clear();
         blocked.clear();
-        motions.clear();
         extPos.clear();
         own.clear();
         renderPos = null;
@@ -707,31 +707,11 @@ public class AutoCrystalPlus extends BlackOutModule {
             return;
         }
 
-        for (PlayerEntity pl : mc.world.getPlayers()) {
-            String key = pl.getName().getString();
-            if (motions.containsKey(key)) {
-                List<Vec3d> vec = motions.get(key);
+        ExtrapolationUtils.extrapolateMap(extPos, player -> player == mc.player ? selfExt.get() : extrapolation.get(), player -> extSmoothness.get());
+        ExtrapolationUtils.extrapolateMap(extHitbox, player -> hitboxExtrapolation.get(), player -> extSmoothness.get());
 
-                if (vec != null) {
-                    if (vec.size() >= extSmoothness.get()) {
-                        int p = vec.size() - extSmoothness.get();
-
-                        if (p > 0) {
-                            vec.subList(0, p).clear();
-                        }
-                    }
-                    vec.add(motionCalc(pl));
-                    continue;
-                }
-            }
-
-            List<Vec3d> list = new ArrayList<>();
-            list.add(motionCalc(pl));
-            motions.put(key, list);
-        }
-        extPos = getExtPos();
-        rangePos = getRangeExt();
-        extHitbox = getHitboxExt();
+        Box rangeBox = ExtrapolationUtils.extrapolate(mc.player, rangeExtrapolation.get(), extSmoothness.get());
+        rangePos = new Vec3d((rangeBox.minX + rangeBox.maxX) / 2f, rangeBox.minY + mc.player.getEyeHeight(mc.player.getPose()), (rangeBox.minZ + rangeBox.maxZ) / 2f);
 
         List<BlockPos> toRemove = new ArrayList<>();
         existedList.forEach((key, val) -> {
@@ -1220,8 +1200,6 @@ public class AutoCrystalPlus extends BlackOutModule {
             delayTimer = 0;
             delayTicks = 0;
 
-
-
             removeExisted(BlockPos.ofFloored(vec));
 
             SettingUtils.registerAttack(bb);
@@ -1501,8 +1479,8 @@ public class AutoCrystalPlus extends BlackOutModule {
         double highestFriend = -1;
         double enemyHP = -1;
         double friendHP = -1;
-        for (Map.Entry<PlayerEntity, Box> entry : extPos.entrySet()) {
-            PlayerEntity player = entry.getKey();
+        for (Map.Entry<AbstractClientPlayerEntity, Box> entry : extPos.entrySet()) {
+            AbstractClientPlayerEntity player = entry.getKey();
             Box box = entry.getValue();
             if (player.getHealth() <= 0 || player == mc.player) {
                 continue;
@@ -1574,203 +1552,6 @@ public class AutoCrystalPlus extends BlackOutModule {
         return new Vec3d(current.x > target.x ? Math.max(target.x, current.x - x) : Math.min(target.x, current.x + x),
             current.y > target.y ? Math.max(target.y, current.y - y) : Math.min(target.y, current.y + y),
             current.z > target.z ? Math.max(target.z, current.z - z) : Math.min(target.z, current.z + z));
-    }
-
-    private Vec3d motionCalc(PlayerEntity en) {
-        return new Vec3d(en.getX() - en.prevX, en.getY() - en.prevY, en.getZ() - en.prevZ);
-    }
-
-    private Map<PlayerEntity, Box> getExtPos() {
-
-        Map<PlayerEntity, Box> map = new HashMap<>();
-
-        if (!mc.world.getPlayers().isEmpty()) {
-            if (!motions.isEmpty()) {
-                for (int p = 0; p < mc.world.getPlayers().size(); p++) {
-
-                    PlayerEntity en = mc.world.getPlayers().get(p);
-
-                    if (en.getHealth() <= 0) {
-                        continue;
-                    }
-
-                    Vec3d motion = average(motions.get(en.getName().getString()));
-
-                    double x = motion.x;
-                    double y = motion.y;
-                    double z = motion.z;
-
-                    Box box = en.getBoundingBox();
-
-                    if (!inside(en, box)) {
-                        for (int i = 0; i < (en == mc.player ? selfExt.get() : extrapolation.get()); i++) {
-
-                            // y
-                            if (!inside(en, box.offset(0, -0.01, 0))) {
-                                y = (y - 0.08) * 0.98;
-                                if (!inside(en, box.offset(0, y, 0))) {
-                                    box = box.offset(0, y, 0);
-                                }
-                            } else {
-                                y = -0.0784;
-                            }
-
-                            // half block step check
-                            if (inside(en, box.offset(x, 0, z)) && !inside(en, box.offset(x, 0.5, z))) {
-                                box = box.offset(x, 0.5, z);
-                                continue;
-                            }
-
-                            // x
-                            if (!inside(en, box.offset(x, 0, 0))) {
-                                box = box.offset(x, 0, 0);
-                            }
-
-                            // z
-                            if (!inside(en, box.offset(0, 0, z))) {
-                                box = box.offset(0, 0, z);
-                            }
-                        }
-                    }
-
-                    map.put(en, box);
-                }
-            }
-        }
-        return map;
-    }
-
-    private Map<PlayerEntity, Box> getHitboxExt() {
-
-        Map<PlayerEntity, Box> map = new HashMap<>();
-
-        if (!mc.world.getPlayers().isEmpty()) {
-            if (!motions.isEmpty()) {
-                for (int p = 0; p < mc.world.getPlayers().size(); p++) {
-
-                    PlayerEntity en = mc.world.getPlayers().get(p);
-
-                    if (en == mc.player) {
-                        continue;
-                    }
-
-                    if (en.getHealth() <= 0) {
-                        continue;
-                    }
-
-                    Vec3d motion = average(motions.get(en.getName().getString()));
-
-                    double x = motion.x;
-                    double y = motion.y;
-                    double z = motion.z;
-
-                    Box box = en.getBoundingBox();
-
-                    if (!inside(en, box)) {
-                        for (int i = 0; i < hitboxExtrapolation.get(); i++) {
-
-                            // y
-                            if (!inside(en, box.offset(0, -0.01, 0))) {
-                                y = (y - 0.08) * 0.98;
-                                if (!inside(en, box.offset(0, y, 0))) {
-                                    box = box.offset(0, y, 0);
-                                }
-                            } else {
-                                y = -0.0784;
-                            }
-
-                            // half block step check
-                            if (inside(en, box.offset(x, 0, z)) && !inside(en, box.offset(x, 0.5, z))) {
-                                box = box.offset(x, 0.5, z);
-                                continue;
-                            }
-
-                            // x
-                            if (!inside(en, box.offset(x, 0, 0))) {
-                                box = box.offset(x, 0, 0);
-                            }
-
-                            // z
-                            if (!inside(en, box.offset(0, 0, z))) {
-                                box = box.offset(0, 0, z);
-                            }
-                        }
-                    }
-
-                    map.put(en, box);
-                }
-            }
-        }
-        return map;
-    }
-
-    private Vec3d getRangeExt() {
-        if (!motions.containsKey(mc.player.getName().getString())) {
-            return mc.player.getEyePos();
-        }
-
-        Vec3d motion = average(motions.get(mc.player.getName().getString()));
-
-        double x = motion.x;
-        double y = motion.y;
-        double z = motion.z;
-
-        Box box = mc.player.getBoundingBox();
-
-        if (!inside(mc.player, box)) {
-            for (int i = 0; i < rangeExtrapolation.get(); i++) {
-
-                // y
-                if (!inside(mc.player, box.offset(0, -0.01, 0))) {
-                    y = (y - 0.08) * 0.98;
-                    if (!inside(mc.player, box.offset(0, y, 0))) {
-                        box = box.offset(0, y, 0);
-                    }
-                } else {
-                    y = -0.0784;
-                }
-
-                // half block step check
-                if (inside(mc.player, box.offset(x, 0, z)) && !inside(mc.player, box.offset(x, 0.5, z))) {
-                    box = box.offset(x, 0.5, z);
-                    continue;
-                }
-
-                // x
-                if (!inside(mc.player, box.offset(x, 0, 0))) {
-                    box = box.offset(x, 0, 0);
-                }
-
-                // z
-                if (!inside(mc.player, box.offset(0, 0, z))) {
-                    box = box.offset(0, 0, z);
-                }
-            }
-        }
-        return new Vec3d((box.minX + box.maxX) / 2, box.minY, (box.minZ + box.maxZ) / 2);
-    }
-
-    private Vec3d average(List<Vec3d> vec) {
-        Vec3d total = new Vec3d(0, 0, 0);
-        if (vec != null) {
-            if (!vec.isEmpty()) {
-                for (Vec3d vec3d : vec) {
-                    total = total.add(vec3d);
-                }
-                return new Vec3d(total.x / vec.size(), vec.get(vec.size() - 1).y, total.z / vec.size());
-            }
-        }
-        return total;
-    }
-
-    private boolean inside(PlayerEntity en, Box bb) {
-        return mc.world.getBlockCollisions(en, bb).iterator().hasNext();
-    }
-
-    private double smoothChange(double target, double current, double delta) {
-        double d = target - current;
-        double c = d * delta;
-        return Math.abs(d) <= Math.abs(c) ? target : current + c;
     }
 
     private boolean validForIntersect(Entity entity) {

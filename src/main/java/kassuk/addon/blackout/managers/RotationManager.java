@@ -3,23 +3,18 @@ package kassuk.addon.blackout.managers;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.globalsettings.RotationSettings;
 import kassuk.addon.blackout.utils.NCPRaytracer;
+import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.RotationUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
-import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.entity.player.SendMovementPacketsEvent;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
-import meteordevelopment.meteorclient.mixininterface.IVec3d;
 import meteordevelopment.meteorclient.systems.modules.Modules;
-import meteordevelopment.meteorclient.utils.player.ChatUtils;
-import meteordevelopment.meteorclient.utils.player.Rotations;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
-import net.minecraft.text.Text;
 import net.minecraft.util.math.*;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
@@ -321,9 +316,7 @@ public class RotationManager {
         history.add(0, new Rotation(yaw, pitch, mc.player.getEyePos()));
 
         for (int i = history.size(); i > 20; i--) {
-            if (history.size() - 1 < i) continue;
-
-            history.remove(i);
+            if (history.size() > i) history.remove(i);
         }
     }
 

@@ -4,13 +4,11 @@ import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.mixin.AbstractBlockAccessor;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import org.reflections.vfs.Vfs;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Stream;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 

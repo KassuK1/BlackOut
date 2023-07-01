@@ -2,22 +2,12 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
-import kassuk.addon.blackout.enums.RotationType;
-import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
-import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
-import meteordevelopment.meteorclient.events.world.TickEvent;
-import meteordevelopment.meteorclient.mixininterface.IVec3d;
-import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.systems.friends.Friends;
-import meteordevelopment.meteorclient.systems.modules.Modules;
-import meteordevelopment.meteorclient.utils.player.Rotations;
-import meteordevelopment.orbit.EventHandler;
-import meteordevelopment.orbit.EventPriority;
+import meteordevelopment.meteorclient.settings.BoolSetting;
+import meteordevelopment.meteorclient.settings.DoubleSetting;
+import meteordevelopment.meteorclient.settings.Setting;
+import meteordevelopment.meteorclient.settings.SettingGroup;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
@@ -25,7 +15,6 @@ import net.minecraft.util.shape.VoxelShape;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
-import java.util.Random;
 
 /**
  * @author OLEPOSSU
@@ -79,7 +68,7 @@ public class StepPlus extends BlackOutModule {
         List<VoxelShape> list = entity.getWorld().getEntityCollisions(entity, box.stretch(movement));
         Vec3d vec3d = movement.lengthSquared() == 0.0 ? movement : Entity.adjustMovementForCollisions(entity, movement, box, entity.getWorld(), list);
 
-        if (movement.x != vec3d.x || movement.z != vec3d.z) {
+        if ((movement.x != vec3d.x || movement.z != vec3d.z) || stepping) {
             if (entity.isOnGround() && !stepping) {
                 Vec3d vec3d2 = Entity.adjustMovementForCollisions(entity, new Vec3d(movement.x, height.get(), movement.z), box, entity.getWorld(), list);
                 Vec3d vec3d3 = Entity.adjustMovementForCollisions(entity, new Vec3d(0.0, height.get(), 0.0), box.stretch(movement.x, 0.0, movement.z), entity.getWorld(), list);
@@ -93,9 +82,10 @@ public class StepPlus extends BlackOutModule {
                 if (vec3d2.horizontalLengthSquared() > vec3d.horizontalLengthSquared()) {
                     Vec3d vec = vec3d2.add(Entity.adjustMovementForCollisions(entity, new Vec3d(0.0, -vec3d2.y + movement.y, 0.0), box.offset(vec3d2), entity.getWorld(), list));
 
-                    currentOffsets = getOffsets(vec.y);
+                    double[] o = getOffsets(vec.y);
 
-                    if (currentOffsets != null) {
+                    if (o != null) {
+                        currentOffsets = o;
                         targetY = mc.player.getY() + vec.y;
                         stepping = true;
                         index = -1;
@@ -117,11 +107,9 @@ public class StepPlus extends BlackOutModule {
                     stepping = false;
                 }
 
-                ((IVec3d) vec3d).setY(offset);
-
                 Vec3d vec3d4;
-                if (!strict.get() || index > 2) {
-                    Vec3d vec3d3 = Entity.adjustMovementForCollisions(entity, new Vec3d(0.0, offset, 0.0), box.stretch(movement.x, 0.0, movement.z), entity.getWorld(), list);
+                if (!strict.get() || index > 1) {
+                    Vec3d vec3d3 = Entity.adjustMovementForCollisions(entity, new Vec3d(0, offset, 0), box.stretch(0, 0.0, 0), entity.getWorld(), list);
                     vec3d4 = Entity.adjustMovementForCollisions(entity, new Vec3d(movement.x, 0.0, movement.z), box.offset(vec3d3), entity.getWorld(), list).add(vec3d3);
                 } else {
                     vec3d4 = Entity.adjustMovementForCollisions(entity, new Vec3d(0, offset, 0), box.stretch(0, 0.0, 0), entity.getWorld(), list);

@@ -11,6 +11,7 @@ import meteordevelopment.meteorclient.mixin.EntityTrackingSectionAccessor;
 import meteordevelopment.meteorclient.mixin.SectionedEntityCacheAccessor;
 import meteordevelopment.meteorclient.mixin.SimpleEntityLookupAccessor;
 import meteordevelopment.meteorclient.mixin.WorldAccessor;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.Box;
@@ -27,7 +28,7 @@ import java.util.function.Predicate;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class BOEntityUtils {
-    public static boolean intersectsWithEntity(Box box, Predicate<Entity> predicate, Map<PlayerEntity, Box> customBoxes) {
+    public static boolean intersectsWithEntity(Box box, Predicate<Entity> predicate, Map<AbstractClientPlayerEntity, Box> customBoxes) {
         EntityLookup<Entity> entityLookup = ((WorldAccessor) mc.world).getEntityLookup();
 
         // Fast implementation using SimpleEntityLookup that returns on the first intersecting entity

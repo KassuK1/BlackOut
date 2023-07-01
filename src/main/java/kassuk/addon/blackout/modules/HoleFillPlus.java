@@ -2,35 +2,26 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
-import kassuk.addon.blackout.enums.*;
-import kassuk.addon.blackout.managers.Managers;
+import kassuk.addon.blackout.enums.HoleType;
+import kassuk.addon.blackout.enums.SwingHand;
 import kassuk.addon.blackout.timers.BlockTimerList;
-import kassuk.addon.blackout.utils.*;
+import kassuk.addon.blackout.utils.Hole;
+import kassuk.addon.blackout.utils.HoleUtils;
+import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.systems.friends.Friends;
-import meteordevelopment.meteorclient.utils.entity.EntityUtils;
-import meteordevelopment.meteorclient.utils.player.FindItemResult;
-import meteordevelopment.meteorclient.utils.player.InvUtils;
-import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.*;
+import net.minecraft.util.math.BlockPos;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author OLEPOSSU
@@ -41,37 +32,55 @@ public class HoleFillPlus extends BlackOutModule {
         super(BlackOut.BLACKOUT, "Hole Fill Rewrite", "Automatically is a cunt to your enemies.");
     }
 
-    private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final SettingGroup sgNear = settings.createGroup("Near");
+    private final SettingGroup sgWalking = settings.createGroup("Walking");
+    private final SettingGroup sgLooking = settings.createGroup("Looking");
     private final SettingGroup sgPlacing = settings.createGroup("Placing");
     private final SettingGroup sgRender = settings.createGroup("Render");
     private final SettingGroup sgHole = settings.createGroup("Hole");
 
-    //--------------------General--------------------//
-    private final Setting<Boolean> pauseEat = sgGeneral.add(new BoolSetting.Builder()
-        .name("Pause Eat")
-        .description("Pauses when you are eating")
-        .defaultValue(false)
+    //--------------------Near--------------------//
+    private final Setting<Boolean> near = sgNear.add(new BoolSetting.Builder()
+        .name("Near")
+        .description(".")
+        .defaultValue(true)
         .build()
     );
-    private final Setting<Boolean> efficient = sgGeneral.add(new BoolSetting.Builder()
+    private final Setting<Double> nearDistance = sgNear.add(new DoubleSetting.Builder()
+        .name("Near Distance")
+        .description(".")
+        .defaultValue(3)
+        .min(0)
+        .sliderRange(0, 10)
+        .build()
+    );
+    private final Setting<Integer> nearExt = sgNear.add(new IntSetting.Builder()
+        .name("Near Extrapolation")
+        .description(".")
+        .defaultValue(5)
+        .min(0)
+        .sliderRange(0, 20)
+        .build()
+    );
+    private final Setting<Boolean> efficient = sgNear.add(new BoolSetting.Builder()
         .name("Efficient")
         .description("Only places if the hole is closer to target")
         .defaultValue(true)
         .build()
     );
-    private final Setting<Boolean> above = sgGeneral.add(new BoolSetting.Builder()
+    private final Setting<Boolean> above = sgNear.add(new BoolSetting.Builder()
         .name("Above")
         .description("Only places if target is above the hole")
         .defaultValue(true)
         .build()
     );
-    private final Setting<Boolean> iHole = sgGeneral.add(new BoolSetting.Builder()
+    private final Setting<Boolean> iHole = sgNear.add(new BoolSetting.Builder()
         .name("Ignore Hole")
         .description("Doesn't place if enemy is in a hole")
         .defaultValue(true)
         .build()
     );
-    private final Setting<Double> holeRange = sgGeneral.add(new DoubleSetting.Builder()
+    private final Setting<Double> holeRange = sgNear.add(new DoubleSetting.Builder()
         .name("Hole Range")
         .description("Places when enemy is close enough to target hole")
         .defaultValue(3)
@@ -81,6 +90,7 @@ public class HoleFillPlus extends BlackOutModule {
     );
 
     //--------------------Placing--------------------//
+    private final Setting<Boolean> pauseEat = addPauseEat(sgPlacing);
     private final Setting<SwitchMode> switchMode = sgPlacing.add(new EnumSetting.Builder<SwitchMode>()
         .name("Switch Mode")
         .description("Method of switching. Silent is the most reliable but delays crystals on some servers.")
@@ -260,5 +270,9 @@ public class HoleFillPlus extends BlackOutModule {
         Silent,
         PickSilent,
         InvSwitch
+    }
+
+    public enum LookCheckMode {
+
     }
 }

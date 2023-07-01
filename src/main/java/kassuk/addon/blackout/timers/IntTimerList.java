@@ -11,11 +11,6 @@ import java.util.List;
 public class IntTimerList {
     public List<IntTimer> timers;
 
-    public IntTimerList() {
-        MeteorClient.EVENT_BUS.subscribe(this);
-        timers = new ArrayList<>();
-    }
-
     public IntTimerList(boolean autoUpdate) {
         if (autoUpdate) {
             MeteorClient.EVENT_BUS.subscribe(this);

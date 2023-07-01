@@ -3,8 +3,6 @@ package kassuk.addon.blackout.utils;
 import kassuk.addon.blackout.enums.HoleType;
 import net.minecraft.util.math.BlockPos;
 
-import static meteordevelopment.meteorclient.MeteorClient.mc;
-
 /**
  * @author OLEPOSSU
  */

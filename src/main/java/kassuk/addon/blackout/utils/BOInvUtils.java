@@ -18,7 +18,6 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 @SuppressWarnings("DataFlowIssue")
 public class BOInvUtils {
-    public boolean shouldCancel = false;
     private static int[] slots;
     public static int pickSlot = -1;
 

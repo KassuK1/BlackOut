@@ -1,10 +1,7 @@
 package kassuk.addon.blackout.utils;
 
 import meteordevelopment.meteorclient.mixininterface.IVec3d;
-import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 
