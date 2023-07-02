@@ -52,13 +52,13 @@ public class ExtrapolationUtils {
         motions = newMotions;
     }
 
-    public static void extrapolateMap(Map<AbstractClientPlayerEntity, Box> old, IntInterface<AbstractClientPlayerEntity> extrapolation, IntInterface<AbstractClientPlayerEntity> smoothening) {
+    public static void extrapolateMap(Map<AbstractClientPlayerEntity, Box> old, EpicInterface<AbstractClientPlayerEntity, Integer> extrapolation, EpicInterface<AbstractClientPlayerEntity, Integer> smoothening) {
         old.clear();
 
         motions.forEach((player, m) -> {
+            if (m == null) return;
             old.put(player, extrapolate(player, m, extrapolation.get(player), smoothening.get(player)));
         });
-
     }
 
     public static Box extrapolate(AbstractClientPlayerEntity player, int extrapolation, int smoothening) {

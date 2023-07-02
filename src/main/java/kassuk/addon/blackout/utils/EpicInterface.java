@@ -1,6 +1,6 @@
 package kassuk.addon.blackout.utils;
 
 @FunctionalInterface
-public interface IntInterface<T> {
-    int get(T t);
+public interface EpicInterface<T, E> {
+    E get(T t);
 }

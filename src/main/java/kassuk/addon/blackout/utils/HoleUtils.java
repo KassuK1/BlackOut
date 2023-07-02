@@ -1,6 +1,7 @@
 package kassuk.addon.blackout.utils;
 
 import kassuk.addon.blackout.enums.HoleType;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.BlockPos;
 
 /**
@@ -76,5 +77,30 @@ public class HoleUtils {
             }
         }
         return true;
+    }
+
+    public static boolean inHole(PlayerEntity player) {
+        BlockPos pos = player.getBlockPos();
+
+        if (getHole(pos, 1).type == HoleType.Single)
+            return true;
+
+        // DoubleX
+        if (getHole(pos, 1).type == HoleType.DoubleX ||
+            getHole(pos.add(-1, 0, 0), 1).type == HoleType.DoubleX) {
+            return true;
+        }
+
+        // DoubleZ
+        if (getHole(pos, 1).type == HoleType.DoubleZ ||
+            getHole(pos.add(0, 0, -1), 1).type == HoleType.DoubleZ) {
+            return true;
+        }
+
+        // Quad
+        return getHole(pos, 1).type == HoleType.Quad ||
+            getHole(pos.add(-1, 0, -1), 1).type == HoleType.Quad ||
+            getHole(pos.add(-1, 0, 0), 1).type == HoleType.Quad ||
+            getHole(pos.add(0, 0, -1), 1).type == HoleType.Quad;
     }
 }

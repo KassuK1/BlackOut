@@ -773,11 +773,6 @@ public class SurroundPlus extends BlackOutModule {
 
     public record Render(BlockPos pos, long time) {}
 
-    public enum Mode {
-        Center,
-        Fat
-    }
-
     public enum SwitchMode {
         Disabled,
         Normal,
