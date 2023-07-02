@@ -13,7 +13,7 @@ import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.utils.entity.EntityUtils;
+import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
@@ -43,7 +43,7 @@ public class HoleFillPlus extends BlackOutModule {
     private final SettingGroup sgNear = settings.createGroup("Near");
     private final SettingGroup sgWalking = settings.createGroup("Walking");
     private final SettingGroup sgLooking = settings.createGroup("Looking");
-    private final SettingGroup sgHS = settings.createGroup("Hole Switch");
+    private final SettingGroup sgSelf = settings.createGroup("Self");
     private final SettingGroup sgPlacing = settings.createGroup("Placing");
     private final SettingGroup sgRender = settings.createGroup("Render");
     private final SettingGroup sgHole = settings.createGroup("Hole");
@@ -93,20 +93,6 @@ public class HoleFillPlus extends BlackOutModule {
         .defaultValue(true)
         .build()
     );
-    private final Setting<Boolean> iSelfHole = sgNear.add(new BoolSetting.Builder()
-        .name("Ignore Self Hole")
-        .description("Doesn't check 'efficient' if you are in a hole.")
-        .defaultValue(true)
-        .visible(efficient::get)
-        .build()
-    );
-    private final Setting<Boolean> selfAbove = sgNear.add(new BoolSetting.Builder()
-        .name("Self Above")
-        .description("Only checks 'efficient' if you are above the hole.")
-        .defaultValue(true)
-        .visible(efficient::get)
-        .build()
-    );
     private final Setting<Boolean> above = sgNear.add(new BoolSetting.Builder()
         .name("Above")
         .description("Only places if target is above the hole.")
@@ -127,12 +113,20 @@ public class HoleFillPlus extends BlackOutModule {
         .defaultValue(true)
         .build()
     );
-    private final Setting<Double> walkingDist = sgNear.add(new DoubleSetting.Builder()
+    private final Setting<Double> walkingDist = sgWalking.add(new DoubleSetting.Builder()
         .name("Walking Dist")
         .description(".")
         .defaultValue(6)
         .min(0)
         .sliderRange(0, 10)
+        .build()
+    );
+    private final Setting<Integer> walkMemory = sgWalking.add(new IntSetting.Builder()
+        .name("Walk Memory")
+        .description("Fills the hole is enemy was walking to it during previous x ticks.")
+        .defaultValue(5)
+        .min(0)
+        .sliderRange(0, 20)
         .build()
     );
 
@@ -149,6 +143,58 @@ public class HoleFillPlus extends BlackOutModule {
         .defaultValue(10)
         .min(0)
         .sliderRange(0, 10)
+        .build()
+    );
+    private final Setting<Integer> lookMemory = sgWalking.add(new IntSetting.Builder()
+        .name("Look Memory")
+        .description("Fills the hole is enemy was looking at it during previous x ticks.")
+        .defaultValue(5)
+        .min(0)
+        .sliderRange(0, 20)
+        .build()
+    );
+
+    //--------------------Self--------------------//
+    private final Setting<Boolean> iSelfHole = sgSelf.add(new BoolSetting.Builder()
+        .name("Ignore Self Hole")
+        .description("Doesn't check 'efficient' if you are in a hole.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Boolean> selfAbove = sgSelf.add(new BoolSetting.Builder()
+        .name("Self Above")
+        .description("Only checks 'efficient' if you are above the hole.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Double> selfDistance = sgSelf.add(new DoubleSetting.Builder()
+        .name("Self Distance")
+        .description("Doesn't place if the block is this close to you.")
+        .defaultValue(0)
+        .sliderRange(0, 10)
+        .build()
+    );
+    private final Setting<Boolean> selfWalking = sgSelf.add(new BoolSetting.Builder()
+        .name("Self Walking")
+        .description("Doesn't check 'efficient' if you are in a hole.")
+        .defaultValue(true)
+        .visible(efficient::get)
+        .build()
+    );
+    private final Setting<Double> selfWalkingDist = sgSelf.add(new DoubleSetting.Builder()
+        .name("Self Walk Dist")
+        .description(".")
+        .defaultValue(3)
+        .min(0)
+        .sliderRange(0, 10)
+        .build()
+    );
+    private final Setting<Integer> selfWalkMemory = sgSelf.add(new IntSetting.Builder()
+        .name("Self Walk Memory")
+        .description("Doesn't fill any hole you were walking to during past x ticks.")
+        .defaultValue(2)
+        .min(0)
+        .sliderRange(0, 20)
         .build()
     );
 
@@ -193,7 +239,7 @@ public class HoleFillPlus extends BlackOutModule {
     );
     private final Setting<Double> delay = sgPlacing.add(new DoubleSetting.Builder()
         .name("Delay")
-        .description("Waits x seconds before tryign to place at the same position if there is more than 1 missing block.")
+        .description("Waits x seconds before trying to place at the same position if there is more than 1 missing block.")
         .defaultValue(0.3)
         .min(0)
         .sliderRange(0, 1)
@@ -343,7 +389,7 @@ public class HoleFillPlus extends BlackOutModule {
         render.removeIf(r -> System.currentTimeMillis() - r.time > 1000);
 
         render.forEach(r -> {
-            double progress = 1 - Math.min(System.currentTimeMillis() - r.time, 500) / 500d;
+            double progress = 1 - Math.min(System.currentTimeMillis() - r.time + renderTime.get() * 1000, fadeTime.get() * 1000) / (fadeTime.get() * 1000d);
 
             event.renderer.box(r.pos, new Color(sideColor.get().r, sideColor.get().g, sideColor.get().b, (int) Math.round(sideColor.get().a * progress)), new Color(lineColor.get().r, lineColor.get().g, lineColor.get().b, (int) Math.round(lineColor.get().a * progress)), shapeMode.get(), 0);
         });
@@ -490,6 +536,7 @@ public class HoleFillPlus extends BlackOutModule {
     }
 
     private boolean validPos(BlockPos pos) {
+        if (timers.contains(pos)) return false;
         PlaceData data = SettingUtils.getPlaceData(pos);
         if (!data.valid()) return false;
         if (!SettingUtils.inPlaceRange(data.pos())) return false;
@@ -501,15 +548,24 @@ public class HoleFillPlus extends BlackOutModule {
     private boolean validHole(Hole hole) {
         double pDist = mc.player.getPos().distanceTo(hole.middle);
 
-        for (AbstractClientPlayerEntity player : mc.world.getPlayers()) {
-            if (player.isSpectator() || player == mc.player || player.getHealth() <= 0) continue;
+        if (selfCheck(hole)) return false;
 
-            // near
+        for (AbstractClientPlayerEntity player : mc.world.getPlayers()) {
+            if (player.isSpectator() || player == mc.player || player.getHealth() <= 0 || Friends.get().isFriend(player)) continue;
+
             if (nearCheck(player, hole, pDist)) return true;
             if (walkingCheck(player, hole)) return true;
             if (lookCheck(player, hole)) return true;
         }
-        
+
+        return false;
+    }
+
+    private boolean selfCheck(Hole hole) {
+        BlockPos pos = new BlockPos(mc.player.getBlockX(), (int) Math.round(mc.player.getY()), mc.player.getBlockZ());
+        if ((!selfAbove.get() || mc.player.getY() > hole.middle.y) && (!iSelfHole.get() || (!HoleUtils.inHole(mc.player) && !OLEPOSSUtils.collidable(pos))) && mc.player.getPos().distanceTo(hole.middle) <= selfDistance.get()) return true;
+        if (selfWalking.get() && walkCheck(mc.player, hole, selfWalkMemory.get(), selfWalkingDist.get())) return true;
+
         return false;
     }
 
@@ -524,8 +580,7 @@ public class HoleFillPlus extends BlackOutModule {
         double eDist = player.getPos().distanceTo(hole.middle);
         if (eDist > nearDistance.get()) return false;
 
-        pos = new BlockPos(mc.player.getBlockX(), (int) Math.round(mc.player.getY()), mc.player.getBlockZ());
-        if (efficient.get() && (!selfAbove.get() || mc.player.getY() > hole.middle.y) && (!iSelfHole.get() || (!HoleUtils.inHole(player) && !OLEPOSSUtils.collidable(pos))) && pDist < eDist) return false;
+        if (efficient.get() && pDist < eDist) return false;
 
         return true;
     }
@@ -533,9 +588,16 @@ public class HoleFillPlus extends BlackOutModule {
     private boolean walkingCheck(AbstractClientPlayerEntity player, Hole hole) {
         if (!walking.get()) return false;
 
+        return walkCheck(player, hole, walkMemory.get(), walkingDist.get());
+    }
+
+    private boolean walkCheck(AbstractClientPlayerEntity player, Hole hole, int ticks, double dist) {
+        int i = 0;
         for (Movement m : walkAngles.get(player)) {
+            i++;
+            if (i > ticks) break;
             if (m.movementAngle == null) continue;
-            if (m.vec().distanceTo(hole.middle) > 8) continue;
+            if (m.vec().distanceTo(hole.middle) > dist) continue;
 
             double yawToHole = RotationUtils.getYaw(m.vec(), hole.middle);
             double highestAngle = MathHelper.lerp(Math.min(player.getPos().distanceTo(hole.middle) / 8, 1), 90, 0);
@@ -547,11 +609,14 @@ public class HoleFillPlus extends BlackOutModule {
     private boolean lookCheck(AbstractClientPlayerEntity player, Hole hole) {
         if (!look.get()) return false;
 
+        int i = 0;
         for (Look l : lookAngles.get(player)) {
+            i++;
+            if (i > lookMemory.get()) break;
             if (l.vec().distanceTo(hole.middle) > lookDist.get()) continue;
 
             double yawToHole = RotationUtils.getYaw(l.vec(), hole.middle);
-            double highestAngle = MathHelper.lerp(Math.min(player.getPos().distanceTo(hole.middle) / 20, 1), 90, 5);
+            double highestAngle = MathHelper.lerp(Math.min(player.getPos().distanceTo(hole.middle) / 20, 1), 35, 5);
             if (Math.abs(RotationUtils.yawAngle(yawToHole, l.yaw)) < highestAngle &&
                 Math.abs(RotationUtils.getPitch(l.vec, hole.middle) - l.pitch()) < highestAngle) return true;
         }
@@ -576,11 +641,9 @@ public class HoleFillPlus extends BlackOutModule {
     }
 
     private void place(BlockPos pos) {
-        debug("pigu");
         if (blocksLeft <= 0) {
             return;
         }
-        debug("2");
 
         PlaceData data = SettingUtils.getPlaceData(pos);
 
@@ -588,13 +651,10 @@ public class HoleFillPlus extends BlackOutModule {
             return;
         }
 
-        debug("sus");
-
         placing = true;
 
         if (SettingUtils.shouldRotate(RotationType.BlockPlace) && !Managers.ROTATION.start(data.pos(), priority, RotationType.BlockPlace)) {return;}
 
-        debug("large");
         if (!switched && hand == null) {
             switch (switchMode.get()) {
                 case Normal, Silent -> {
@@ -609,9 +669,9 @@ public class HoleFillPlus extends BlackOutModule {
         if (!switched && hand == null) {
             return;
         }
-        debug("progamru");
 
         render.add(new Render(pos, System.currentTimeMillis()));
+        timers.add(pos, delay.get());
 
         placeBlock(hand == null ? Hand.MAIN_HAND : hand, data.pos().toCenterPos(), data.dir(), data.pos());
 
