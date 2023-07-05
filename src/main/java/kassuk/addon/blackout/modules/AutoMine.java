@@ -383,8 +383,6 @@ public class AutoMine extends BlackOutModule {
     private boolean reset = false;
     private boolean mined = false;
 
-    private int sequence = 0;
-
     @Override
     public void onActivate() {
         target = null;
@@ -455,6 +453,11 @@ public class AutoMine extends BlackOutModule {
                     Managers.ROTATION.end(targetCrystal.getBoundingBox());
             }
         }
+    }
+
+    public double getMineProgress() {
+        if (target == null) return -1;
+        return minedFor / getMineTicks(fastestSlot(), true);
     }
 
     private void render(Renderer3D r) {

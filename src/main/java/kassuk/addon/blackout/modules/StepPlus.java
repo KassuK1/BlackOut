@@ -48,6 +48,14 @@ public class StepPlus extends BlackOutModule {
         .visible(() -> !strict.get())
         .build()
     );
+    public final Setting<Double> cooldown = sgGeneral.add(new DoubleSetting.Builder()
+        .name("Cooldown")
+        .description("Waits x seconds between steps.")
+        .defaultValue(0.25)
+        .min(0)
+        .sliderRange(0, 1)
+        .build()
+    );
 
     public boolean stepping = false;
 
@@ -55,6 +63,7 @@ public class StepPlus extends BlackOutModule {
 
     public int index = 0;
     public double[] currentOffsets = null;
+    public long lastStep = 0;
 
     public void onActivate() {
         index = 0;
@@ -69,7 +78,7 @@ public class StepPlus extends BlackOutModule {
         Vec3d vec3d = movement.lengthSquared() == 0.0 ? movement : Entity.adjustMovementForCollisions(entity, movement, box, entity.getWorld(), list);
 
         if ((movement.x != vec3d.x || movement.z != vec3d.z) || stepping) {
-            if (entity.isOnGround() && !stepping) {
+            if (entity.isOnGround() && !stepping && System.currentTimeMillis() - lastStep > cooldown.get() * 1000) {
                 Vec3d vec3d2 = Entity.adjustMovementForCollisions(entity, new Vec3d(movement.x, height.get(), movement.z), box, entity.getWorld(), list);
                 Vec3d vec3d3 = Entity.adjustMovementForCollisions(entity, new Vec3d(0.0, height.get(), 0.0), box.stretch(movement.x, 0.0, movement.z), entity.getWorld(), list);
                 if (vec3d3.y < height.get()) {
@@ -85,6 +94,7 @@ public class StepPlus extends BlackOutModule {
                     double[] o = getOffsets(vec.y);
 
                     if (o != null) {
+                        lastStep = System.currentTimeMillis();
                         currentOffsets = o;
                         targetY = mc.player.getY() + vec.y;
                         stepping = true;
@@ -152,6 +162,7 @@ public class StepPlus extends BlackOutModule {
             offset += v;
             sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.getX(), mc.player.getY() + offset, mc.player.getZ(), false));
         }
+        lastStep = System.currentTimeMillis();
     }
 
     private boolean i(Box b) {

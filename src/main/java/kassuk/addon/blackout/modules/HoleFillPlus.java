@@ -537,6 +537,8 @@ public class HoleFillPlus extends BlackOutModule {
 
     private boolean validPos(BlockPos pos) {
         if (timers.contains(pos)) return false;
+        if (!OLEPOSSUtils.replaceable(pos)) return false;
+
         PlaceData data = SettingUtils.getPlaceData(pos);
         if (!data.valid()) return false;
         if (!SettingUtils.inPlaceRange(data.pos())) return false;

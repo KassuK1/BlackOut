@@ -62,7 +62,9 @@ public class ExtrapolationUtils {
     }
 
     public static Box extrapolate(AbstractClientPlayerEntity player, int extrapolation, int smoothening) {
-        return extrapolate(player, motions.get(player), extrapolation, smoothening);
+        List<Vec3d> m = motions.get(player);
+        if (m == null) return null;
+        return extrapolate(player, m, extrapolation, smoothening);
     }
 
     public static Box extrapolate(AbstractClientPlayerEntity player, List<Vec3d> m, int extrapolation, int smoothening) {

@@ -603,6 +603,34 @@ public class AutoCrystalPlus extends BlackOutModule {
         .sliderRange(1, 5)
         .build()
     );
+    private final Setting<Boolean> amPlace = sgCompatibility.add(new BoolSetting.Builder()
+        .name("Auto Mine Place")
+        .description("Ignores automine block before if actually breaks.")
+        .defaultValue(true)
+        .build()
+    );
+    private final Setting<Double> amProgress = sgCompatibility.add(new DoubleSetting.Builder()
+        .name("Auto Mine Progress")
+        .description("Ignores the block after it has reached this progress.")
+        .defaultValue(0.95)
+        .range(0, 1)
+        .sliderRange(0, 1)
+        .visible(amPlace::get)
+        .build()
+    );
+    private final Setting<Boolean> amSpam = sgCompatibility.add(new BoolSetting.Builder()
+        .name("Auto Mine Spam")
+        .description("Spams crystals before the block breaks.")
+        .defaultValue(false)
+        .visible(amPlace::get)
+        .build()
+    );
+    private final Setting<AutoMineBrokenMode> amBroken = sgCompatibility.add(new EnumSetting.Builder<AutoMineBrokenMode>()
+        .name("Auto Mine Broken")
+        .description("Doesn't place on automine block.")
+        .defaultValue(AutoMineBrokenMode.Near)
+        .build()
+    );
     private final Setting<Boolean> paAttack = sgCompatibility.add(new BoolSetting.Builder()
         .name("Piston Crystal Attack")
         .description("Doesn't attack the crystal placed by piston crystal.")
@@ -711,7 +739,8 @@ public class AutoCrystalPlus extends BlackOutModule {
         ExtrapolationUtils.extrapolateMap(extHitbox, player -> hitboxExtrapolation.get(), player -> extSmoothness.get());
 
         Box rangeBox = ExtrapolationUtils.extrapolate(mc.player, rangeExtrapolation.get(), extSmoothness.get());
-        rangePos = new Vec3d((rangeBox.minX + rangeBox.maxX) / 2f, rangeBox.minY + mc.player.getEyeHeight(mc.player.getPose()), (rangeBox.minZ + rangeBox.maxZ) / 2f);
+        if (rangeBox == null) rangePos = mc.player.getEyePos();
+        else rangePos = new Vec3d((rangeBox.minX + rangeBox.maxX) / 2f, rangeBox.minY + mc.player.getEyeHeight(mc.player.getPose()), (rangeBox.minZ + rangeBox.maxZ) / 2f);
 
         List<BlockPos> toRemove = new ArrayList<>();
         existedList.forEach((key, val) -> {
@@ -945,7 +974,7 @@ public class AutoCrystalPlus extends BlackOutModule {
                 if (!(en instanceof EndCrystalEntity)) continue;
                 if (switchTimer > 0) continue;
 
-                double[] dmg = getDmg(en.getPos())[0];
+                double[] dmg = getDmg(en.getPos(), true)[0];
 
                 if (!canExplode(en.getPos())) continue;
 
@@ -1267,7 +1296,7 @@ public class AutoCrystalPlus extends BlackOutModule {
             return false;
         }
 
-        double[][] result = getDmg(vec);
+        double[][] result = getDmg(vec, true);
         return explodeDamageCheck(result[0], result[1], isOwn(vec));
     }
 
@@ -1279,7 +1308,7 @@ public class AutoCrystalPlus extends BlackOutModule {
             return false;
         }
 
-        double[][] result = getDmg(vec);
+        double[][] result = getDmg(vec, false);
         return explodeDamageCheck(result[0], result[1], isOwn(vec));
     }
 
@@ -1311,35 +1340,25 @@ public class AutoCrystalPlus extends BlackOutModule {
                 for (int z = -r; z <= r; z++) {
                     BlockPos pos = pPos.add(x, y, z);
                     // Checks if crystal can be placed
-                    if (!air(pos) || !(!oldVerPlacements.get() || air(pos.up())) || !crystalBlock(pos.down())) {
-                        continue;
-                    }
+                    if (!air(pos) || !(!oldVerPlacements.get() || air(pos.up())) || !crystalBlock(pos.down()) || blockBroken(pos.down())) continue;
 
                     // Checks if there is possible placing direction
                     Direction dir = SettingUtils.getPlaceOnDirection(pos.down());
-                    if (dir == null) {
-                        continue;
-                    }
+                    if (dir == null) continue;
 
                     // Checks if the placement is in range
-                    if (!inPlaceRange(pos.down()) || !inExplodeRangePlacing(new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5))) {
-                        continue;
-                    }
+                    if (!inPlaceRange(pos.down()) || !inExplodeRangePlacing(new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5))) continue;
 
                     // Calculates damages and healths
-                    double[][] result = getDmg(new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5));
+                    double[][] result = getDmg(new Vec3d(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5), false);
 
                     // Checks if damages are valid
-                    if (!placeDamageCheck(result[0], result[1], highest)) {
-                        continue;
-                    }
+                    if (!placeDamageCheck(result[0], result[1], highest)) continue;
 
                     // Checks if placement is blocked by other entities (other than players)
                     Box box = new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + (ccPlacements.get() ? 1 : 2), pos.getZ() + 1);
 
-                    if (BOEntityUtils.intersectsWithEntity(box, this::validForIntersect, extHitbox)) {
-                        continue;
-                    }
+                    if (BOEntityUtils.intersectsWithEntity(box, this::validForIntersect, extHitbox)) continue;
 
                     // Sets best pos to calculated one
                     bestDir = dir;
@@ -1358,45 +1377,25 @@ public class AutoCrystalPlus extends BlackOutModule {
 
         //  Dmg Check
         if (highest != null) {
-            if (dmgCheckMode.get().equals(DmgCheckMode.Normal) && dmg[0] < highest[0]) {
-                return false;
-            }
-            if (dmgCheckMode.get().equals(DmgCheckMode.Safe) && dmg[2] / dmg[0] > highest[2] / highest[0]) {
-                return false;
-            }
+            if (dmgCheckMode.get().equals(DmgCheckMode.Normal) && dmg[0] < highest[0]) return false;
+            if (dmgCheckMode.get().equals(DmgCheckMode.Safe) && dmg[2] / dmg[0] > highest[2] / highest[0]) return false;
         }
 
         //  Force/anti-pop check
         double playerHP = mc.player.getHealth() + mc.player.getAbsorptionAmount();
 
-        if (playerHP >= 0 && dmg[2] * antiSelfPop.get() >= playerHP) {
-            return false;
-        }
-        if (health[1] >= 0 && dmg[1] * antiFriendPop.get() >= health[1]) {
-            return false;
-        }
-        if (health[0] >= 0 && dmg[0] * forcePop.get() >= health[0]) {
-            return true;
-        }
+        if (playerHP >= 0 && dmg[2] * antiSelfPop.get() >= playerHP) return false;
+        if (health[1] >= 0 && dmg[1] * antiFriendPop.get() >= health[1]) return false;
+        if (health[0] >= 0 && dmg[0] * forcePop.get() >= health[0]) return true;
 
         //  Min Damage
-        if (dmg[0] < minPlace.get()) {
-            return false;
-        }
+        if (dmg[0] < minPlace.get()) return false;
 
         //  Max Damage
-        if (dmg[1] > maxFriendPlace.get()) {
-            return false;
-        }
-        if (dmg[1] >= 0 && dmg[0] / dmg[1] < minFriendPlaceRatio.get()) {
-            return false;
-        }
-        if (dmg[2] > maxPlace.get()) {
-            return false;
-        }
-        if (dmg[2] >= 0 && dmg[0] / dmg[2] < minPlaceRatio.get()) {
-            return false;
-        }
+        if (dmg[1] > maxFriendPlace.get()) return false;
+        if (dmg[1] >= 0 && dmg[0] / dmg[1] < minFriendPlaceRatio.get()) return false;
+        if (dmg[2] > maxPlace.get()) return false;
+        if (dmg[2] >= 0 && dmg[0] / dmg[2] < minPlaceRatio.get()) return false;
 
         return true;
     }
@@ -1416,42 +1415,26 @@ public class AutoCrystalPlus extends BlackOutModule {
         //  Force/anti-pop check
         double playerHP = mc.player.getHealth() + mc.player.getAbsorptionAmount();
         if (checkOwn) {
-            if (playerHP >= 0 && dmg[2] * forcePop.get() >= playerHP) {
-                return false;
-            }
-            if (health[1] >= 0 && dmg[1] * antiFriendPop.get() >= health[1]) {
-                return false;
-            }
+            if (playerHP >= 0 && dmg[2] * forcePop.get() >= playerHP) return false;
+            if (health[1] >= 0 && dmg[1] * antiFriendPop.get() >= health[1]) return false;
 
         }
         if (checkDmg) {
-            if (health[0] >= 0 && dmg[0] * forcePop.get() >= health[0]) {
-                return true;
-            }
+            if (health[0] >= 0 && dmg[0] * forcePop.get() >= health[0]) return true;
 
         }
 
         if (checkDmg) {
-            if (dmg[0] < minExplode.get()) {
-                return false;
-            }
+            if (dmg[0] < minExplode.get()) return false;
 
-            if (dmg[1] >= 0 && dmg[0] / dmg[1] < minFriendExpRatio.get()) {
-                return false;
-            }
-            if (dmg[2] >= 0 && dmg[0] / dmg[2] < minExpRatio.get()) {
-                return false;
-            }
+            if (dmg[1] >= 0 && dmg[0] / dmg[1] < minFriendExpRatio.get()) return false;
+            if (dmg[2] >= 0 && dmg[0] / dmg[2] < minExpRatio.get()) return false;
         }
 
 
         if (checkOwn) {
-            if (dmg[1] > maxFriendExp.get()) {
-                return false;
-            }
-            if (dmg[2] > maxExp.get()) {
-                return false;
-            }
+            if (dmg[1] > maxFriendExp.get()) return false;
+            if (dmg[2] > maxExp.get()) return false;
         }
         return true;
     }
@@ -1469,12 +1452,11 @@ public class AutoCrystalPlus extends BlackOutModule {
         return false;
     }
 
-    private double[][] getDmg(Vec3d vec) {
-        double self = BODamageUtils.crystalDamage(mc.player, extPos.containsKey(mc.player) ? extPos.get(mc.player) : mc.player.getBoundingBox(), vec, null, ignoreTerrain.get());
+    private double[][] getDmg(Vec3d vec, boolean attack) {
+        double self = BODamageUtils.crystalDamage(mc.player, extPos.containsKey(mc.player) ? extPos.get(mc.player) : mc.player.getBoundingBox(), vec, ignorePos(attack), ignoreTerrain.get());
 
-        if (suicide) {
-            return new double[][]{new double[]{self, -1, -1}, new double[]{20, 20}};
-        }
+        if (suicide) return new double[][]{new double[]{self, -1, -1}, new double[]{20, 20}};
+
         double highestEnemy = -1;
         double highestFriend = -1;
         double enemyHP = -1;
@@ -1486,7 +1468,7 @@ public class AutoCrystalPlus extends BlackOutModule {
                 continue;
             }
 
-            double dmg = BODamageUtils.crystalDamage(player, box, vec, null, ignoreTerrain.get());
+            double dmg = BODamageUtils.crystalDamage(player, box, vec, ignorePos(attack), ignoreTerrain.get());
             if (BlockPos.ofFloored(vec).down().equals(autoMine.targetPos())) {
                 dmg *= autoMineDamage.get();
             }
@@ -1535,7 +1517,7 @@ public class AutoCrystalPlus extends BlackOutModule {
     }
 
     private boolean shouldSlow() {
-        return placePos != null && getDmg(new Vec3d(placePos.getX() + 0.5, placePos.getY(), placePos.getZ() + 0.5))[0][0] <= slowDamage.get();
+        return placePos != null && getDmg(new Vec3d(placePos.getX() + 0.5, placePos.getY(), placePos.getZ() + 0.5), false)[0][0] <= slowDamage.get();
     }
 
     private Vec3d smoothMove(Vec3d current, Vec3d target, double delta) {
@@ -1560,6 +1542,32 @@ public class AutoCrystalPlus extends BlackOutModule {
         }
 
         return !(entity instanceof PlayerEntity) || !entity.isSpectator();
+    }
+
+    private BlockPos ignorePos(boolean attack) {
+        if (!amPlace.get()) return null;
+        if (!amSpam.get() && attack) return null;
+        if (autoMine == null || !autoMine.isActive()) return null;
+        if (autoMine.targetPos() == null) return null;
+
+        return autoMine.getMineProgress() > amProgress.get() ? autoMine.targetPos() : null;
+    }
+
+    private boolean blockBroken(BlockPos pos) {
+        if (!amPlace.get()) return false;
+
+
+        if (autoMine == null || !autoMine.isActive()) return false;
+        if (autoMine.targetPos() == null) return false;
+        if (!autoMine.targetPos().equals(pos)) return false;
+
+        double progress = autoMine.getMineProgress();
+
+        if (progress >= 1 && !amBroken.get().broken) return true;
+        if (progress >= amProgress.get() && !amBroken.get().near) return true;
+        if (progress < amProgress.get() && !amBroken.get().normal) return true;
+
+        return false;
     }
 
     private void addPredict(int id, Vec3d pos, double delay) {
@@ -1647,6 +1655,23 @@ public class AutoCrystalPlus extends BlackOutModule {
         Up,
         Down,
         Normal
+    }
+
+    public enum AutoMineBrokenMode {
+        Near(true, false, false),
+        Broken(true, true, false),
+        Never(false, false, false),
+        Always(true, true, true);
+
+        public final boolean normal;
+        public final boolean near;
+        public final boolean broken;
+
+        AutoMineBrokenMode(boolean normal, boolean near, boolean broken) {
+            this.normal = normal;
+            this.near = near;
+            this.broken = broken;
+        }
     }
 
     private record Predict(int id, Vec3d pos, long time) {

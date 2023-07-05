@@ -67,6 +67,8 @@ public abstract class MixinEntity {
             return;
         }
 
+        active = active && System.currentTimeMillis() - step.lastStep > step.cooldown.get() * 1000;
+
         Box box = this.getBoundingBox();
         List<VoxelShape> list = this.getWorld().getEntityCollisions(entity, box.stretch(movement));
         Vec3d vec3d = movement.lengthSquared() == 0.0 ? movement : Entity.adjustMovementForCollisions(entity, movement, box, this.getWorld(), list);

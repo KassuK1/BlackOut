@@ -265,7 +265,7 @@ public class BODamageUtils {
     private static BlockHitResult raycast(RaycastContext context, BlockPos obsidianPos, boolean ignoreTerrain) {
         return BlockView.raycast(context.getStart(), context.getEnd(), context, (raycastContext, blockPos) -> {
             BlockState blockState;
-            if (blockPos.equals(obsidianPos)) blockState = Blocks.OBSIDIAN.getDefaultState();
+            if (blockPos.equals(obsidianPos)) blockState = Blocks.AIR.getDefaultState();
             else {
                 blockState = mc.world.getBlockState(blockPos);
                 if (blockState.getBlock().getBlastResistance() < 600 && ignoreTerrain)
