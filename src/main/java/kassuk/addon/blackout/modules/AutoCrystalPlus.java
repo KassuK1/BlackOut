@@ -1040,8 +1040,8 @@ public class AutoCrystalPlus extends BlackOutModule {
                 int hotbar = InvUtils.findInHotbar(Items.END_CRYSTAL).slot();
                 if (handToUse != null || (switchMode.get() == SwitchMode.Silent && hotbar >= 0) || ((switchMode.get() == SwitchMode.PickSilent || switchMode.get() == SwitchMode.InvSilent) && silentSlot >= 0)) {
                     placing = true;
-                    if (speedCheck() && delayCheck()) {
-                        if (!SettingUtils.shouldRotate(RotationType.Interact) || Managers.ROTATION.start(placePos.down(), smartRot.get() ? new Vec3d(placePos.getX() + 0.5, placePos.getY(), placePos.getZ() + 0.5) : null, priority, RotationType.Interact)) {
+                    if (!SettingUtils.shouldRotate(RotationType.Interact) || Managers.ROTATION.start(placePos.down(), smartRot.get() ? new Vec3d(placePos.getX() + 0.5, placePos.getY(), placePos.getZ() + 0.5) : null, priority, RotationType.Interact)) {
+                        if (speedCheck() && delayCheck()) {
                             placeCrystal(placePos.down(), placeDir, handToUse, silentSlot, hotbar);
                         }
                     }
