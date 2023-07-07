@@ -2,6 +2,7 @@ package kassuk.addon.blackout.managers;
 
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.globalsettings.RotationSettings;
+import kassuk.addon.blackout.modules.AutoCrystalPlus;
 import kassuk.addon.blackout.utils.NCPRaytracer;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.RotationUtils;
@@ -174,6 +175,8 @@ public class RotationManager {
     }
 
     private void updateNextRotation() {
+        Modules.get().get(AutoCrystalPlus.class).onPreRotation(eyePos);
+
         if (shouldRotate) {
             if (target instanceof BoxTarget) {
                 ((BoxTarget) target).vec = getTargetPos();
