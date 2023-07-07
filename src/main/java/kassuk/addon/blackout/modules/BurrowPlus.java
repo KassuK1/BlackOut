@@ -31,8 +31,10 @@ public class BurrowPlus extends BlackOutModule {
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final SettingGroup sgRubberband = settings.createGroup("Rubberband");
     private final SettingGroup sgRender = settings.createGroup("Render");
 
+    //--------------------General--------------------//
     private final Setting<SwitchMode> switchMode = sgGeneral.add(new EnumSetting.Builder<SwitchMode>()
         .name("Switch Mode")
         .description("Which method of switching should be used.")
@@ -62,6 +64,23 @@ public class BurrowPlus extends BlackOutModule {
         .description("Enables scaffold+ after lagging back inside the block.")
         .defaultValue(false)
         .visible(pFly::get)
+        .build()
+    );
+
+    //--------------------Rubberband--------------------//
+    private final Setting<Double> rubberbandOffset = sgRubberband.add(new DoubleSetting.Builder()
+        .name("Rubberband Offset")
+        .description("Y offset of rubberband packet.")
+        .defaultValue(9)
+        .sliderRange(-10, 10)
+        .build()
+    );
+    private final Setting<Integer> rubberbandPackets = sgRubberband.add(new IntSetting.Builder()
+        .name("Rubberband Packets")
+        .description("How many offset packets to send.")
+        .defaultValue(1)
+        .min(0)
+        .sliderRange(0, 10)
         .build()
     );
 
@@ -140,9 +159,8 @@ public class BurrowPlus extends BlackOutModule {
 
         if (placeSwing.get()) clientSwing(placeHand.get(), Hand.MAIN_HAND);
 
-        while (y < 5) {
-            y += 0.5;
-            sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.getX(), mc.player.getY() + y, mc.player.getZ(), false));
+        for (int i = 0; i < rubberbandPackets.get(); i++) {
+            sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(mc.player.getX(), mc.player.getY() + y + rubberbandOffset.get(), mc.player.getZ(), false));
         }
 
         success = true;
