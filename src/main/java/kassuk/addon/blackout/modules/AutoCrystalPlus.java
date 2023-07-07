@@ -725,6 +725,10 @@ public class AutoCrystalPlus extends BlackOutModule {
         return ((float) Math.round(infoCps * 10) / 10) + " CPS";
     }
 
+    public void onPreRotation(Vec3d newPos) {
+
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onTickPost(TickEvent.Post event) {
         delayTicks++;
