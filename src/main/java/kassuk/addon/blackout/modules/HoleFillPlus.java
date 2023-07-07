@@ -594,6 +594,8 @@ public class HoleFillPlus extends BlackOutModule {
     }
 
     private boolean walkCheck(AbstractClientPlayerEntity player, Hole hole, int ticks, double dist) {
+        if (walkAngles.get(player) == null) return false;
+
         int i = 0;
         for (Movement m : walkAngles.get(player)) {
             i++;
@@ -610,6 +612,7 @@ public class HoleFillPlus extends BlackOutModule {
 
     private boolean lookCheck(AbstractClientPlayerEntity player, Hole hole) {
         if (!look.get()) return false;
+        if (lookAngles.get(player) == null) return false;
 
         int i = 0;
         for (Look l : lookAngles.get(player)) {
