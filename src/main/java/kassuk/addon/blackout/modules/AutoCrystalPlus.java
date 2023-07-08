@@ -965,43 +965,7 @@ public class AutoCrystalPlus extends BlackOutModule {
         placing = false;
         expEntity = null;
 
-        PistonCrystal pa = Modules.get().get(PistonCrystal.class);
-
-        double[] value = null;
         Hand hand = getHand(stack -> stack.getItem() == Items.END_CRYSTAL);
-
-        if (!isPaused() && (hand != null || switchMode.get() == SwitchMode.Silent || switchMode.get() == SwitchMode.PickSilent || switchMode.get() == SwitchMode.InvSilent) && explode.get()) {
-            for (Entity en : mc.world.getEntities()) {
-
-                if (paAttack.get() && pa.isActive() && en.getBlockPos().equals(pa.crystalPos)) continue;
-                if (!(en instanceof EndCrystalEntity)) continue;
-                if (switchTimer > 0) continue;
-
-                double[] dmg = getDmg(en.getPos(), true)[0];
-
-                if (!canExplode(en.getPos())) continue;
-
-                if ((expEntity == null || value == null) || ((dmgCheckMode.get().equals(DmgCheckMode.Normal) && dmg[0] > value[0]) || (dmgCheckMode.get().equals(DmgCheckMode.Safe) && dmg[2] / dmg[0] < value[2] / dmg[0]))) {
-                    expEntity = en;
-                    value = dmg;
-                }
-            }
-        }
-
-        if (expEntity != null) {
-            if (multiTaskCheck() && !isAttacked(expEntity.getId()) && attackTimer <= 0 && existedCheck(expEntity.getBlockPos())) {
-                if (!SettingUtils.shouldRotate(RotationType.Attacking) || startAttackRot()) {
-                    if (SettingUtils.shouldRotate(RotationType.Attacking)) {
-                        expEntityBB = expEntity.getBoundingBox();
-                    }
-                    explode(expEntity.getId(), expEntity.getPos());
-                }
-            }
-        }
-
-        if (!isAlive(expEntityBB) && SettingUtils.shouldRotate(RotationType.Attacking)) {
-            Managers.ROTATION.end(expEntityBB);
-        }
 
         Hand handToUse = hand;
         if (!performance.get()) {
@@ -1046,6 +1010,42 @@ public class AutoCrystalPlus extends BlackOutModule {
                     }
                 }
             }
+        }
+
+        PistonCrystal pa = Modules.get().get(PistonCrystal.class);
+        double[] value = null;
+
+        if (!isPaused() && (hand != null || switchMode.get() == SwitchMode.Silent || switchMode.get() == SwitchMode.PickSilent || switchMode.get() == SwitchMode.InvSilent) && explode.get()) {
+            for (Entity en : mc.world.getEntities()) {
+
+                if (paAttack.get() && pa.isActive() && en.getBlockPos().equals(pa.crystalPos)) continue;
+                if (!(en instanceof EndCrystalEntity)) continue;
+                if (switchTimer > 0) continue;
+
+                double[] dmg = getDmg(en.getPos(), true)[0];
+
+                if (!canExplode(en.getPos())) continue;
+
+                if ((expEntity == null || value == null) || ((dmgCheckMode.get().equals(DmgCheckMode.Normal) && dmg[0] > value[0]) || (dmgCheckMode.get().equals(DmgCheckMode.Safe) && dmg[2] / dmg[0] < value[2] / dmg[0]))) {
+                    expEntity = en;
+                    value = dmg;
+                }
+            }
+        }
+
+        if (expEntity != null) {
+            if (multiTaskCheck() && !isAttacked(expEntity.getId()) && attackTimer <= 0 && existedCheck(expEntity.getBlockPos())) {
+                if (!SettingUtils.shouldRotate(RotationType.Attacking) || startAttackRot()) {
+                    if (SettingUtils.shouldRotate(RotationType.Attacking)) {
+                        expEntityBB = expEntity.getBoundingBox();
+                    }
+                    explode(expEntity.getId(), expEntity.getPos());
+                }
+            }
+        }
+
+        if (!isAlive(expEntityBB) && SettingUtils.shouldRotate(RotationType.Attacking)) {
+            Managers.ROTATION.end(expEntityBB);
         }
     }
 
