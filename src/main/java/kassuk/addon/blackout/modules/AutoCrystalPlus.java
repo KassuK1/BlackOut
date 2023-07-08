@@ -691,6 +691,7 @@ public class AutoCrystalPlus extends BlackOutModule {
     private AutoMine autoMine = null;
 
     private int attacked = 0;
+    private int placed = 0;
 
     private double cps = 0;
     private double infoCps = 0;
@@ -725,15 +726,12 @@ public class AutoCrystalPlus extends BlackOutModule {
         return ((float) Math.round(infoCps * 10) / 10) + " CPS";
     }
 
-    public void onPreRotation(Vec3d newPos) {
-
-    }
-
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onTickPost(TickEvent.Post event) {
         delayTicks++;
         ticksEnabled++;
         attacked++;
+        placed++;
 
         if (mc.player == null || mc.world == null) {
             return;
@@ -990,12 +988,14 @@ public class AutoCrystalPlus extends BlackOutModule {
         }
 
         if (expEntity != null) {
-            if (!isAttacked(expEntity.getId()) && attackTimer <= 0 && existedCheck(expEntity.getBlockPos())) {
-                if (!SettingUtils.shouldRotate(RotationType.Attacking) || startAttackRot()) {
-                    if (SettingUtils.shouldRotate(RotationType.Attacking)) {
-                        expEntityBB = expEntity.getBoundingBox();
+            if (!multiTaskCheck(placed)) {
+                if (!isAttacked(expEntity.getId()) && attackTimer <= 0 && existedCheck(expEntity.getBlockPos())) {
+                    if (!SettingUtils.shouldRotate(RotationType.Attacking) || startAttackRot()) {
+                        if (SettingUtils.shouldRotate(RotationType.Attacking)) {
+                            expEntityBB = expEntity.getBoundingBox();
+                        }
+                        explode(expEntity.getId(), expEntity.getPos());
                     }
-                    explode(expEntity.getId(), expEntity.getPos());
                 }
             }
         }
@@ -1152,6 +1152,7 @@ public class AutoCrystalPlus extends BlackOutModule {
 
             placeLimitTimer = 0;
             placeTimer = 1;
+            placed = 0;
 
             interactBlock(switched ? Hand.MAIN_HAND : handToUse, pos.toCenterPos(), dir, pos);
 
@@ -1180,7 +1181,7 @@ public class AutoCrystalPlus extends BlackOutModule {
     }
 
     private boolean delayCheck() {
-        if (multiTaskCheck()) {
+        if (multiTaskCheck(attacked)) {
             return false;
         }
 
@@ -1190,8 +1191,8 @@ public class AutoCrystalPlus extends BlackOutModule {
         return delayTicks >= placeDelayTicks.get();
     }
 
-    private boolean multiTaskCheck() {
-        return attacked < sequential.get().ticks;
+    private boolean multiTaskCheck(int t) {
+        return t < sequential.get().ticks;
     }
 
     private int getHighest() {

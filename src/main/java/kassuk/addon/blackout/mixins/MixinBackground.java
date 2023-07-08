@@ -14,7 +14,7 @@ public class MixinBackground {
     @Inject(method = "applyFog", at = @At("TAIL"))
     private static void applyFog(Camera camera, BackgroundRenderer.FogType fogType, float viewDistance, boolean thickFog, float tickDelta, CallbackInfo info) {
         Fog fog = Modules.get().get(Fog.class);
-        if (fog != null && fog.isActive() && fogType.equals(BackgroundRenderer.FogType.FOG_TERRAIN)) {
+        if (fog != null && fog.isActive()) {
             fog.modifyFog();
         }
     }

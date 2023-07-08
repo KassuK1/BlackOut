@@ -8,6 +8,11 @@ import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.network.packet.c2s.play.KeepAliveC2SPacket;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 /**
@@ -15,9 +20,8 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
  */
 
 public class KeepAliveManager {
-    private long nextId = 0;
-    private long time = 0;
-    private boolean waitingToSend = false;
+    // id, time
+    private final Map<Long, Long> delayed = new HashMap<>();
 
     public KeepAliveManager() {
         MeteorClient.EVENT_BUS.subscribe(this);
@@ -25,17 +29,19 @@ public class KeepAliveManager {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
-        if (!waitingToSend) return;
-        if (System.currentTimeMillis() < time) return;
-        if (mc.getNetworkHandler() == null || mc.player == null || mc.world == null) return;
+        List<Long> toSend = new ArrayList<>();
 
-        mc.getNetworkHandler().sendPacket(new KeepAliveC2SPacket(nextId));
-        waitingToSend = false;
+        for (Map.Entry<Long, Long> entry : delayed.entrySet()) {
+            toSend.add(entry.getKey());
+        }
+        toSend.forEach(id -> {
+            delayed.remove(id);
+            mc.getNetworkHandler().sendPacket(new KeepAliveC2SPacket(id));
+        });
+        toSend.clear();
     }
 
-    public void set(long id) {
-        nextId = id;
-        time = System.currentTimeMillis() + Modules.get().get(PingSpoof.class).ping.get();
-        waitingToSend = true;
+    public void add(long id) {
+        delayed.put(id, System.currentTimeMillis() + Modules.get().get(PingSpoof.class).ping.get());
     }
 }

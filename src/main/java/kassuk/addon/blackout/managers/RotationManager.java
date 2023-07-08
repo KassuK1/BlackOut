@@ -175,8 +175,6 @@ public class RotationManager {
     }
 
     private void updateNextRotation() {
-        Modules.get().get(AutoCrystalPlus.class).onPreRotation(eyePos);
-
         if (shouldRotate) {
             if (target instanceof BoxTarget) {
                 ((BoxTarget) target).vec = getTargetPos();

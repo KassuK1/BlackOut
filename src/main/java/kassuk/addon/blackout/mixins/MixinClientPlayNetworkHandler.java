@@ -17,6 +17,6 @@ public class MixinClientPlayNetworkHandler {
         if (!Modules.get().isActive(PingSpoof.class)) return;
 
         ci.cancel();
-        Managers.KEEP_ALIVE.set(packet.getId());
+        Managers.KEEP_ALIVE.add(packet.getId());
     }
 }

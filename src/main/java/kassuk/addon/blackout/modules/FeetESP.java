@@ -1,9 +1,12 @@
 package kassuk.addon.blackout.modules;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.globalsettings.RotationSettings;
+import kassuk.addon.blackout.utils.RenderUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
+import meteordevelopment.meteorclient.events.render.RenderAfterWorldEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.friends.Friends;
@@ -11,7 +14,14 @@ import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
+import net.minecraft.client.render.BufferBuilder;
+import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.WorldRenderer;
+import net.minecraft.client.render.entity.EntityRenderer;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
 /**
@@ -70,40 +80,23 @@ public class FeetESP extends BlackOutModule {
         .build()
     );
 
-    @Override
-    public void onActivate() {
-        RotationSettings s = Modules.get().get(RotationSettings.class);
-
-        BlockPos pos = mc.player.getBlockPos();
-        debug(s.validForCheck(pos, mc.world.getBlockState(pos)) ? "tru" : "falsur");
-
-
-    }
-
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
-
-        if (mc.player == null || mc.world == null) {return;}
+        if (mc.player == null || mc.world == null) return;
 
         mc.world.getPlayers().forEach(player -> {
-            if (player.distanceTo(mc.player) > range.get()) {return;}
+            if (player.distanceTo(mc.player) > range.get()) return;
 
-            if (!friend.get() && Friends.get().isFriend(player)) {return;}
-            if (!other.get() && player != mc.player && !Friends.get().isFriend(player)) {return;}
-            if (!self.get() && mc.player == player) {return;}
+            if (!friend.get() && Friends.get().isFriend(player)) return;
+            if (!other.get() && player != mc.player && !Friends.get().isFriend(player)) return;
+            if (!self.get() && mc.player == player) return;
 
             render(event, new Vec3d(
-                lerp(mc.getTickDelta(), player.prevX, player.getX()),
-                lerp(mc.getTickDelta(), player.prevY, player.getY()),
-                lerp(mc.getTickDelta(), player.prevZ, player.getZ())
+                MathHelper.lerp(mc.getTickDelta(), player.prevX, player.getX()),
+                MathHelper.lerp(mc.getTickDelta(), player.prevY, player.getY()),
+                MathHelper.lerp(mc.getTickDelta(), player.prevZ, player.getZ())
             ));
         });
-    }
-
-
-
-    private double lerp(double delta, double min, double max) {
-        return min + (max - min) * delta;
     }
 
     private void render(Render3DEvent event, Vec3d vec) {
