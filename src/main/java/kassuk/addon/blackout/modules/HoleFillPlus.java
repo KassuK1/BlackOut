@@ -564,11 +564,19 @@ public class HoleFillPlus extends BlackOutModule {
     }
 
     private boolean selfCheck(Hole hole) {
-        BlockPos pos = new BlockPos(mc.player.getBlockX(), (int) Math.round(mc.player.getY()), mc.player.getBlockZ());
-        if ((!selfAbove.get() || mc.player.getY() > hole.middle.y) && (!iSelfHole.get() || (!HoleUtils.inHole(mc.player) && !OLEPOSSUtils.collidable(pos))) && mc.player.getPos().distanceTo(hole.middle) <= selfDistance.get()) return true;
+        if (selfNearCheck(hole)) return true;
         if (selfWalking.get() && walkCheck(mc.player, hole, selfWalkMemory.get(), selfWalkingDist.get())) return true;
 
         return false;
+    }
+
+    private boolean selfNearCheck(Hole hole) {
+        BlockPos pos = new BlockPos(mc.player.getBlockX(), (int) Math.round(mc.player.getY()), mc.player.getBlockZ());
+
+        if (iSelfHole.get() && (HoleUtils.inHole(mc.player) || OLEPOSSUtils.collidable(pos))) return false;
+        if (selfAbove.get() && mc.player.getY() <= hole.middle.y) return false;
+
+        return mc.player.getPos().distanceTo(hole.middle) <= selfDistance.get();
     }
 
     private boolean nearCheck(AbstractClientPlayerEntity player, Hole hole, double pDist) {
