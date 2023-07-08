@@ -121,6 +121,20 @@ public class BurrowPlus extends BlackOutModule {
         Hand hand = predicate.test(Managers.HOLDING.getStack()) ? Hand.MAIN_HAND :
             predicate.test(mc.player.getOffHandStack()) ? Hand.OFF_HAND : null;
 
+        boolean blocksPresent = hand != null;
+
+        if (!blocksPresent) {
+            switch (switchMode.get()) {
+                case Normal, Silent -> blocksPresent = InvUtils.findInHotbar(predicate).found();
+                case PickSilent, InvSwitch -> blocksPresent = InvUtils.find(predicate).found();
+            }
+        }
+
+        if (!blocksPresent) return;
+
+        boolean rotated = instaRot.get() || !SettingUtils.shouldRotate(RotationType.BlockPlace) || Managers.ROTATION.startPitch(90, priority, RotationType.BlockPlace);
+        if (!rotated) return;
+
         boolean switched = hand != null;
 
         if (!switched) {
@@ -136,10 +150,6 @@ public class BurrowPlus extends BlackOutModule {
             sendToggledMsg("correct blocks not found");
             return;
         }
-
-        boolean rotated = instaRot.get() || !SettingUtils.shouldRotate(RotationType.BlockPlace) || Managers.ROTATION.startPitch(90, priority, RotationType.BlockPlace);
-        if (!rotated) return;
-
 
         if (instaRot.get() && SettingUtils.shouldRotate(RotationType.BlockPlace)) {
             sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(Managers.ROTATION.lastDir[0], 90, Managers.ONGROUND.isOnGround()));

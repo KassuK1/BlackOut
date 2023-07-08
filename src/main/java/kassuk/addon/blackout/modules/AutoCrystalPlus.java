@@ -32,6 +32,7 @@ import net.minecraft.block.AirBlock;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -39,6 +40,7 @@ import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
+import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.*;
@@ -783,9 +785,9 @@ public class AutoCrystalPlus extends BlackOutModule {
         double d = (System.currentTimeMillis() - lastMillis) / 1000f;
         lastMillis = System.currentTimeMillis();
 
-        if (System.currentTimeMillis() - lastExplosion > 5) cps = 0;
+        if (System.currentTimeMillis() - lastExplosion > 5000) cps = 0;
 
-        infoCps = MathHelper.lerp(d / 10, infoCps, cps);
+        infoCps = MathHelper.lerp(d / 3, infoCps, cps);
 
         attackedList.update();
         attackTimer = Math.max(attackTimer - d, 0);
@@ -948,10 +950,13 @@ public class AutoCrystalPlus extends BlackOutModule {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onReceive(PacketEvent.Receive event) {
-        if (event.packet instanceof ExplosionS2CPacket packet) {
+        if (event.packet instanceof EntitySpawnS2CPacket packet && packet.getEntityType() == EntityType.END_CRYSTAL) {
+
             Vec3d pos = new Vec3d(packet.getX(), packet.getY(), packet.getZ());
 
+            debug("sus");
             if (!isOwn(pos)) return;
+            debug("sus1");
             double delta = System.currentTimeMillis() - lastExplosion;
             lastExplosion = System.currentTimeMillis();
 

@@ -77,6 +77,7 @@ public class BlackOut extends MeteorAddon {
         modules.add(new KillAuraPlus());
         modules.add(new LightsOut());
         modules.add(new kassuk.addon.blackout.modules.Logger());
+        modules.add(new MineESP());
         modules.add(new OffHandPlus());
         modules.add(new PacketFly());
         modules.add(new PingSpoof());
