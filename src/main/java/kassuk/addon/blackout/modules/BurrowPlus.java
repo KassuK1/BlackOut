@@ -152,7 +152,7 @@ public class BurrowPlus extends BlackOutModule {
         }
 
         if (instaRot.get() && SettingUtils.shouldRotate(RotationType.BlockPlace)) {
-            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(Managers.ROTATION.lastDir[0], 90, Managers.ONGROUND.isOnGround()));
+            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(Managers.ROTATION.lastDir[0], 90, Managers.ON_GROUND.isOnGround()));
         }
 
         double y = 0;

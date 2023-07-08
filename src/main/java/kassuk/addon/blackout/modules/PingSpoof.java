@@ -15,6 +15,18 @@ public class PingSpoof extends BlackOutModule {
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
+    public final Setting<Boolean> keepAlive = sgGeneral.add(new BoolSetting.Builder()
+        .name("Keep Alive")
+        .description("Delays keep alive packets.")
+        .defaultValue(true)
+        .build()
+    );
+    public final Setting<Boolean> pong = sgGeneral.add(new BoolSetting.Builder()
+        .name("Pong")
+        .description("Delays pong packets.")
+        .defaultValue(false)
+        .build()
+    );
     public final Setting<Integer> ping = sgGeneral.add(new IntSetting.Builder()
         .name("Bonus Ping")
         .description("Increases your ping by this much.")

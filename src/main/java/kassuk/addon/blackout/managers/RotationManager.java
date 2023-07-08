@@ -2,7 +2,6 @@ package kassuk.addon.blackout.managers;
 
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.globalsettings.RotationSettings;
-import kassuk.addon.blackout.modules.AutoCrystalPlus;
 import kassuk.addon.blackout.utils.NCPRaytracer;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.RotationUtils;
@@ -74,7 +73,7 @@ public class RotationManager {
             updateNextRotation();
 
             if (rotated) {
-                mc.getNetworkHandler().sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(next[0], next[1], Managers.ONGROUND.isOnGround()));
+                mc.getNetworkHandler().sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(next[0], next[1], Managers.ON_GROUND.isOnGround()));
             }
         }
     }
@@ -146,7 +145,7 @@ public class RotationManager {
         if (rotated) {
             return new PlayerMoveC2SPacket.LookAndOnGround(next[0], next[1], packet.isOnGround());
         }
-        if (packet.isOnGround() != Managers.ONGROUND.isOnGround()) {
+        if (packet.isOnGround() != Managers.ON_GROUND.isOnGround()) {
             return new PlayerMoveC2SPacket.OnGroundOnly(packet.isOnGround());
         }
 

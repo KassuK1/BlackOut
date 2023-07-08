@@ -105,7 +105,7 @@ public class AutoPearl extends BlackOutModule {
 
 
         if (instaRot.get()) {
-            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(getYaw(), pitch.get(), Managers.ONGROUND.isOnGround()));
+            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(getYaw(), pitch.get(), Managers.ON_GROUND.isOnGround()));
         }
 
         boolean switched = hand != null;
@@ -156,7 +156,7 @@ public class AutoPearl extends BlackOutModule {
         if (!rotated) return false;
 
         if (instaRot.get())
-            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround((float) RotationUtils.getYaw(mc.player.getEyePos(), pos.toCenterPos()), (float) RotationUtils.getPitch(mc.player.getEyePos(), pos.toCenterPos()), Managers.ONGROUND.isOnGround()));
+            sendPacket(new PlayerMoveC2SPacket.LookAndOnGround((float) RotationUtils.getYaw(mc.player.getEyePos(), pos.toCenterPos()), (float) RotationUtils.getPitch(mc.player.getEyePos(), pos.toCenterPos()), Managers.ON_GROUND.isOnGround()));
 
         Hand hand = mc.player.getOffHandStack().getItem() instanceof BlockItem ? Hand.OFF_HAND :
             Managers.HOLDING.getStack().getItem() instanceof BlockItem ? Hand.MAIN_HAND : null;

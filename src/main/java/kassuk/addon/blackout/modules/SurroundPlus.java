@@ -415,7 +415,7 @@ public class SurroundPlus extends BlackOutModule {
             double dist = new Vec3d(targetX, 0, targetZ).distanceTo(new Vec3d(mc.player.getX(), 0, mc.player.getZ()));
 
             if (dist < 0.2873) {
-                sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(targetX, mc.player.getY(), targetZ, Managers.ONGROUND.isOnGround()));
+                sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(targetX, mc.player.getY(), targetZ, Managers.ON_GROUND.isOnGround()));
             }
 
             double x = mc.player.getX(), z = mc.player.getZ();
@@ -426,7 +426,7 @@ public class SurroundPlus extends BlackOutModule {
                 x += Math.cos(Math.toRadians(yaw)) * 0.2873;
                 z += Math.sin(Math.toRadians(yaw)) * 0.2873;
 
-                sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(x, mc.player.getY(), z, Managers.ONGROUND.isOnGround()));
+                sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(x, mc.player.getY(), z, Managers.ON_GROUND.isOnGround()));
             }
 
             mc.player.setPos(targetX, mc.player.getY(), targetZ);

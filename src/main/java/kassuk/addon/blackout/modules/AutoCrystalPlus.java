@@ -145,12 +145,6 @@ public class AutoCrystalPlus extends BlackOutModule {
         .sliderRange(0, 20)
         .build()
     );
-    private final Setting<SequentialMode> sequential = sgPlace.add(new EnumSetting.Builder<SequentialMode>()
-        .name("Sequential")
-        .description("Doesn't place and attack during the same tick.")
-        .defaultValue(SequentialMode.Disabled)
-        .build()
-    );
     private final Setting<DelayMode> placeDelayMode = sgPlace.add(new EnumSetting.Builder<DelayMode>()
         .name("Place Delay Mode")
         .description("Should we count the delay in seconds or ticks.")
@@ -221,6 +215,12 @@ public class AutoCrystalPlus extends BlackOutModule {
         .min(0)
         .sliderRange(0, 20)
         .visible(() -> existedMode.get() == DelayMode.Ticks)
+        .build()
+    );
+    private final Setting<SequentialMode> sequential = sgExplode.add(new EnumSetting.Builder<SequentialMode>()
+        .name("Sequential")
+        .description("Doesn't place and attack during the same tick.")
+        .defaultValue(SequentialMode.Disabled)
         .build()
     );
     private final Setting<Double> expSpeed = sgExplode.add(new DoubleSetting.Builder()
@@ -297,7 +297,7 @@ public class AutoCrystalPlus extends BlackOutModule {
     private final Setting<Double> minPlaceRatio = sgDamage.add(new DoubleSetting.Builder()
         .name("Min Place Ratio")
         .description("Max self damage ratio for placing (enemy / self).")
-        .defaultValue(3)
+        .defaultValue(1.4)
         .min(0)
         .sliderRange(0, 5)
         .build()
@@ -343,7 +343,7 @@ public class AutoCrystalPlus extends BlackOutModule {
     private final Setting<Double> minExpRatio = sgDamage.add(new DoubleSetting.Builder()
         .name("Min Explode Ratio")
         .description("Max self damage ratio for exploding a crystal (enemy / self).")
-        .defaultValue(2.5)
+        .defaultValue(1.1)
         .min(0)
         .sliderRange(0, 5)
         .build()
@@ -692,7 +692,6 @@ public class AutoCrystalPlus extends BlackOutModule {
 
     private AutoMine autoMine = null;
 
-    private int attacked = 0;
     private int placed = 0;
 
     private double cps = 0;
@@ -732,7 +731,6 @@ public class AutoCrystalPlus extends BlackOutModule {
     private void onTickPost(TickEvent.Post event) {
         delayTicks++;
         ticksEnabled++;
-        attacked++;
         placed++;
 
         if (mc.player == null || mc.world == null) {
@@ -954,9 +952,7 @@ public class AutoCrystalPlus extends BlackOutModule {
 
             Vec3d pos = new Vec3d(packet.getX(), packet.getY(), packet.getZ());
 
-            debug("sus");
             if (!isOwn(pos)) return;
-            debug("sus1");
             double delta = System.currentTimeMillis() - lastExplosion;
             lastExplosion = System.currentTimeMillis();
 
@@ -993,14 +989,12 @@ public class AutoCrystalPlus extends BlackOutModule {
         }
 
         if (expEntity != null) {
-            if (!multiTaskCheck(placed)) {
-                if (!isAttacked(expEntity.getId()) && attackTimer <= 0 && existedCheck(expEntity.getBlockPos())) {
-                    if (!SettingUtils.shouldRotate(RotationType.Attacking) || startAttackRot()) {
-                        if (SettingUtils.shouldRotate(RotationType.Attacking)) {
-                            expEntityBB = expEntity.getBoundingBox();
-                        }
-                        explode(expEntity.getId(), expEntity.getPos());
+            if (multiTaskCheck() && !isAttacked(expEntity.getId()) && attackTimer <= 0 && existedCheck(expEntity.getBlockPos())) {
+                if (!SettingUtils.shouldRotate(RotationType.Attacking) || startAttackRot()) {
+                    if (SettingUtils.shouldRotate(RotationType.Attacking)) {
+                        expEntityBB = expEntity.getBoundingBox();
                     }
+                    explode(expEntity.getId(), expEntity.getPos());
                 }
             }
         }
@@ -1186,18 +1180,14 @@ public class AutoCrystalPlus extends BlackOutModule {
     }
 
     private boolean delayCheck() {
-        if (multiTaskCheck(attacked)) {
-            return false;
-        }
-
         if (placeDelayMode.get() == DelayMode.Seconds) {
             return delayTimer >= placeDelay.get();
         }
         return delayTicks >= placeDelayTicks.get();
     }
 
-    private boolean multiTaskCheck(int t) {
-        return t < sequential.get().ticks;
+    private boolean multiTaskCheck() {
+        return placed >= sequential.get().ticks;
     }
 
     private int getHighest() {
@@ -1251,8 +1241,6 @@ public class AutoCrystalPlus extends BlackOutModule {
 
             SettingUtils.swing(SwingState.Post, SwingType.Attacking, Hand.MAIN_HAND);
             if (attackSwing.get()) clientSwing(attackHand.get(), Hand.MAIN_HAND);
-
-            attacked = 0;
 
             blocked.clear();
             if (setDead.get()) {
