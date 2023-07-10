@@ -581,6 +581,10 @@ public class Blocker extends BlackOutModule {
     }
 
     private void updateBlocks() {
+        toProtect.clear();
+
+        if (onlyHole.get() && !HoleUtils.inHole(mc.player)) return;
+
         BlockPos e = BlockPos.ofFloored(mc.player.getX(), mc.player.getBoundingBox().maxY, mc.player.getZ());
         BlockPos pos = new BlockPos(mc.player.getBlockX(), (int) Math.round(mc.player.getY()), mc.player.getBlockZ());
         int[] size = new int[4];
@@ -600,8 +604,6 @@ public class Blocker extends BlackOutModule {
         if (zOffset > 0.7) {
             size[3] = 1;
         }
-
-        toProtect.clear();
 
         updateSurround(pos, size);
         if (trapCev.get()) updateEyes(e, size);
