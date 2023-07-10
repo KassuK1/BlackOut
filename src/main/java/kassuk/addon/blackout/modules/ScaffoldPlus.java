@@ -138,8 +138,8 @@ public class ScaffoldPlus extends BlackOutModule {
         .visible(() -> scaffoldMode.get() == ScaffoldMode.Normal)
         .build()
     );
-    private final Setting<Double> delay = sgPlacing.add(new DoubleSetting.Builder()
-        .name("Delay")
+    private final Setting<Double> cooldown = sgPlacing.add(new DoubleSetting.Builder()
+        .name("Cooldown")
         .description("Delay between places at each spot.")
         .defaultValue(0.3)
         .range(0, 5)
@@ -410,7 +410,7 @@ public class ScaffoldPlus extends BlackOutModule {
 
 
     private void place(PlaceData d, BlockPos ogPos, Hand hand, Block block) {
-        timers.add(ogPos, delay.get());
+        timers.add(ogPos, cooldown.get());
         render.add(new Render(ogPos, System.currentTimeMillis()));
         placesLeft--;
 

@@ -150,17 +150,17 @@ public class SurroundPlus extends BlackOutModule {
         .sliderRange(0, 20)
         .build()
     );
-    private final Setting<Double> delay = sgSpeed.add(new DoubleSetting.Builder()
-        .name("Multi Delay")
-        .description("Waits x seconds before tryign to place at the same position if there is more than 1 missing block.")
+    private final Setting<Double> cooldown = sgSpeed.add(new DoubleSetting.Builder()
+        .name("Multi Cooldown")
+        .description("Waits x seconds before trying to place at the same position if there is more than 1 missing block.")
         .defaultValue(0.3)
         .min(0)
         .sliderRange(0, 1)
         .build()
     );
-    private final Setting<Double> singleDelay = sgSpeed.add(new DoubleSetting.Builder()
-        .name("Single Delay")
-        .description("Waits x seconds before tryign to place at the same position if there is only 1 missing block.")
+    private final Setting<Double> singleCooldown = sgSpeed.add(new DoubleSetting.Builder()
+        .name("Single Cooldown")
+        .description("Waits x seconds before trying to place at the same position if there is only 1 missing block.")
         .defaultValue(0.02)
         .min(0)
         .sliderRange(0, 1)
@@ -276,7 +276,7 @@ public class SurroundPlus extends BlackOutModule {
     private int tickTimer = 0;
     private double timer = 0;
     private final List<BlockPos> insideBlocks = new ArrayList<>();
-    private final List<BlockPos> surroundBlocks = new ArrayList<>();
+    public final List<BlockPos> surroundBlocks = new ArrayList<>();
     private final List<BlockPos> supportPositions = new ArrayList<>();
     private final List<BlockPos> valids = new ArrayList<>();
     private final BlockTimerList placed = new BlockTimerList();
@@ -561,7 +561,7 @@ public class SurroundPlus extends BlackOutModule {
             setBlock(pos);
         }
 
-        placed.add(pos, oneMissing() ? singleDelay.get() : delay.get());
+        placed.add(pos, oneMissing() ? singleCooldown.get() : cooldown.get());
         blocksLeft--;
         placesLeft--;
 
@@ -741,7 +741,7 @@ public class SurroundPlus extends BlackOutModule {
     }
 
     private boolean validEntity(Entity entity) {
-        if (entity instanceof EndCrystalEntity && System.currentTimeMillis() - lastAttack < 0.15) {return false;}
+        if (entity instanceof EndCrystalEntity && System.currentTimeMillis() - lastAttack < 100) {return false;}
         return !(entity instanceof ItemEntity);
     }
 

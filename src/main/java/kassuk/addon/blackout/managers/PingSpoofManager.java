@@ -22,31 +22,37 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
  */
 
 public class PingSpoofManager {
-    private final Map<Packet<?>, Long> delayed = new HashMap<>();
-
+    private final List<DelayedPacket> delayed = new ArrayList<>();
+    
     public PingSpoofManager() {
         MeteorClient.EVENT_BUS.subscribe(this);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
-        List<Packet<?>> toSend = new ArrayList<>();
+        List<DelayedPacket> toSend = new ArrayList<>();
 
-        for (Map.Entry<Packet<?>, Long> entry : delayed.entrySet()) {
-            if (System.currentTimeMillis() > entry.getValue()) toSend.add(entry.getKey());
+        synchronized (delayed) {
+            for (DelayedPacket d : delayed) {
+                if (System.currentTimeMillis() > d.time) toSend.add(d);
+            }
+
+            toSend.forEach(d -> {
+                mc.getNetworkHandler().sendPacket(d.packet);
+                delayed.remove(d);
+            });
         }
-        toSend.forEach(p -> {
-            delayed.remove(p);
-            mc.getNetworkHandler().sendPacket(p);
-        });
+
         toSend.clear();
     }
 
     public void addKeepAlive(long id) {
-        delayed.put(new KeepAliveC2SPacket(id), System.currentTimeMillis() + Modules.get().get(PingSpoof.class).ping.get());
+        delayed.add(new DelayedPacket(new KeepAliveC2SPacket(id), System.currentTimeMillis() + Modules.get().get(PingSpoof.class).ping.get()));
     }
 
     public void addPong(int id) {
-        delayed.put(new PlayPongC2SPacket(id), System.currentTimeMillis() + Modules.get().get(PingSpoof.class).ping.get());
+        delayed.add(new DelayedPacket(new PlayPongC2SPacket(id), System.currentTimeMillis() + Modules.get().get(PingSpoof.class).ping.get()));
     }
+
+    private record DelayedPacket(Packet<?> packet, long time) {}
 }

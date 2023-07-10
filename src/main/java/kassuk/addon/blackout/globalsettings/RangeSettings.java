@@ -214,7 +214,7 @@ public class RangeSettings extends BlackOutModule {
         .build()
     );
 
-    public double rangeMod = 0;
+    public double rangeMulti = 0;
 
     // Place Range Checks
     public boolean inPlaceRange(BlockPos pos, Vec3d from) {
@@ -275,7 +275,10 @@ public class RangeSettings extends BlackOutModule {
             return false;
         }
 
-        return attackRangeTo(bb, feet, from, true) <= (SettingUtils.attackTrace(bb) ? attackRange.get() : attackRangeWalls.get());
+        if (SettingUtils.attackTrace(bb)) {
+            return attackRangeTo(bb, feet, from, true) < attackRange.get();
+        }
+        return attackRangeTo(bb, feet, from, false) < attackRangeWalls.get();
     }
 
     public boolean inAttackRangeNoTrace(Box bb, Vec3d feet, Vec3d from) {
@@ -321,13 +324,12 @@ public class RangeSettings extends BlackOutModule {
                 getRange(from, new Vec3d(feet.x, Math.min(Math.max(from.getY(), bb.minY), bb.maxY), feet.z)) - getDistFromCenter(bb, feet, from);
         };
 
-        return dist + (countReduce && reduce.get() ? rangeMod : 0);
+        return dist * (countReduce && reduce.get() ? rangeMulti : 1);
     }
 
     public double getDistFromCenter(Box bb, Vec3d feet, Vec3d from) {
         Vec3d startPos = new Vec3d(feet.x, Math.min(Math.max(from.getY(), bb.minY), bb.maxY), feet.z);
         Vec3d rangePos = new Vec3d(feet.x, Math.min(Math.max(from.getY(), bb.minY), bb.maxY), feet.z);
-
 
         double halfWidth = Math.abs(bb.minX - bb.maxX) / 2f;
 
@@ -430,7 +432,11 @@ public class RangeSettings extends BlackOutModule {
     }
 
     public void registerAttack(Box bb) {
-        rangeMod = MathHelper.clamp(attackRangeTo(bb, getFeet(bb), null, false) <= attackRange.get() - reduceAmount.get() ? rangeMod - reduceStep.get() : rangeMod + reduceStep.get(), 0D, reduceAmount.get());
+        if (attackRangeTo(bb, getFeet(bb), null, false) <= attackRange.get() - reduceAmount.get()) {
+            rangeMulti = Math.min(rangeMulti + reduceStep.get(), 1);
+        } else {
+            rangeMulti = Math.max(rangeMulti - reduceStep.get(), (attackRange.get() - reduceStep.get() / attackRange.get()) / attackRange.get());
+        }
     }
 
     public enum PlaceRangeMode {

@@ -62,6 +62,7 @@ public class BlackOut extends MeteorAddon {
         modules.add(new AutoPvp());
         modules.add(new AutoTrapPlus());
         modules.add(new BedAuraPlus());
+        modules.add(new Blocker());
         modules.add(new BurrowPlus());
         modules.add(new CustomFOV());
         modules.add(new ElytraFlyPlus());
@@ -76,10 +77,10 @@ public class BlackOut extends MeteorAddon {
         modules.add(new JesusPlus());
         modules.add(new KillAuraPlus());
         modules.add(new LightsOut());
-        modules.add(new kassuk.addon.blackout.modules.Logger());
         modules.add(new MineESP());
         modules.add(new OffHandPlus());
         modules.add(new PacketFly());
+        modules.add(new PacketLogger());
         modules.add(new PingSpoof());
         modules.add(new PistonCrystal());
         modules.add(new PistonPush());

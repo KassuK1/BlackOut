@@ -36,8 +36,8 @@ import java.util.List;
  * @author OLEPOSSU
  */
 
-public class Logger extends BlackOutModule {
-    public Logger() {
+public class PacketLogger extends BlackOutModule {
+    public PacketLogger() {
         super(BlackOut.BLACKOUT, "Logger", "Logs packets or whatever you want. (only packets rn)");
     }
 

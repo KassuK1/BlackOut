@@ -259,14 +259,6 @@ public class HoleFillPlus extends BlackOutModule {
         .sliderRange(0, 20)
         .build()
     );
-    private final Setting<Integer> selfBoxExt = sgPlacing.add(new IntSetting.Builder()
-        .name("Self Box Extrapolation")
-        .description("Enemy hitbox extrapolation")
-        .defaultValue(0)
-        .min(0)
-        .sliderRange(0, 20)
-        .build()
-    );
     private final Setting<Integer> boxExtSmooth = sgPlacing.add(new IntSetting.Builder()
         .name("Box Extrapolation Smoothening")
         .description(".")
@@ -448,7 +440,7 @@ public class HoleFillPlus extends BlackOutModule {
         updateLook();
 
         ExtrapolationUtils.extrapolateMap(nearPosition, player -> player == mc.player ? selfExt.get() : nearExt.get(), player -> extSmooth.get());
-        ExtrapolationUtils.extrapolateMap(boxes, player -> player == mc.player ? selfBoxExt.get() : boxExt.get(), player -> boxExtSmooth.get());
+        ExtrapolationUtils.extrapolateMap(boxes, player -> player == mc.player ? 0 : boxExt.get(), player -> boxExtSmooth.get());
     }
 
     private void updateWalk() {
@@ -548,7 +540,7 @@ public class HoleFillPlus extends BlackOutModule {
     }
 
     private boolean validHole(Hole hole) {
-        double pDist = mc.player.getPos().distanceTo(hole.middle);
+        double pDist = (nearPosition.containsKey(mc.player) ? feet(nearPosition.get(mc.player)) : mc.player.getPos()).distanceTo(hole.middle);
 
         if (selfCheck(hole)) return false;
 
@@ -587,7 +579,7 @@ public class HoleFillPlus extends BlackOutModule {
 
         if (above.get() && player.getY() <= hole.middle.y) return false;
 
-        double eDist = player.getPos().distanceTo(hole.middle);
+        double eDist = (nearPosition.containsKey(player) ? feet(nearPosition.get(player)) : player.getPos()).distanceTo(hole.middle);
         if (eDist > nearDistance.get()) return false;
 
         if (efficient.get() && pDist < eDist) return false;
@@ -696,6 +688,10 @@ public class HoleFillPlus extends BlackOutModule {
         if (SettingUtils.shouldRotate(RotationType.BlockPlace)) {
             Managers.ROTATION.end(data.pos());
         }
+    }
+
+    private Vec3d feet(Box box) {
+        return new Vec3d((box.minX + box.maxX) / 2d, box.minY, (box.minZ + box.maxZ) / 2d);
     }
 
     private record Movement(Float movementAngle, Vec3d vec) {}
