@@ -223,12 +223,10 @@ public class AutoCrystalPlus extends BlackOutModule {
         .defaultValue(SequentialMode.Disabled)
         .build()
     );
-    private final Setting<Double> expSpeed = sgExplode.add(new DoubleSetting.Builder()
-        .name("Explode Speed")
-        .description("How many times to hit crystal each second.")
-        .defaultValue(4)
-        .range(0.01, 20)
-        .sliderRange(0.01, 20)
+    private final Setting<Boolean> instantAttack = sgExplode.add(new BoolSetting.Builder()
+        .name("Instant Attack")
+        .description("Delay isn't calculated for first attack.")
+        .defaultValue(true)
         .build()
     );
     private final Setting<Double> expSpeedLimit = sgExplode.add(new DoubleSetting.Builder()
@@ -237,6 +235,15 @@ public class AutoCrystalPlus extends BlackOutModule {
         .defaultValue(0)
         .min(0)
         .sliderRange(0, 20)
+        .visible(instantAttack::get)
+        .build()
+    );
+    private final Setting<Double> expSpeed = sgExplode.add(new DoubleSetting.Builder()
+        .name("Explode Speed")
+        .description("How many times to hit crystal each second.")
+        .defaultValue(4)
+        .range(0.01, 20)
+        .sliderRange(0.01, 20)
         .build()
     );
     private final Setting<Boolean> setDead = sgExplode.add(new BoolSetting.Builder()
@@ -1223,8 +1230,12 @@ public class AutoCrystalPlus extends BlackOutModule {
 
     private void attackEntity(int id, Box bb, Vec3d vec) {
         if (mc.player != null) {
-            attackedList.add(id, 1 / expSpeed.get());
-            attackTimer = expSpeedLimit.get() <= 0 ? 0 : 1 / expSpeedLimit.get();
+            if (instantAttack.get()) {
+                attackedList.add(id, 1 / expSpeed.get());
+                attackTimer = 1 / expSpeedLimit.get();
+            } else {
+                attackTimer = 1 / expSpeed.get();
+            }
 
             delayTimer = 0;
             delayTicks = 0;

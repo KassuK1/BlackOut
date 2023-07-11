@@ -348,13 +348,6 @@ public class Blocker extends BlackOutModule {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST)
-    private void onSent(PacketEvent.Sent event) {
-        if (event.packet instanceof PlayerActionC2SPacket p && p.getAction() == PlayerActionC2SPacket.Action.START_DESTROY_BLOCK) {
-            mineStart = new MineStart(p.getPos(), mc.player.getId(), System.currentTimeMillis());
-        }
-    }
-
     private void updatePlacing() {
         if (pauseEat.get() && mc.player.isUsingItem()) return;
 
