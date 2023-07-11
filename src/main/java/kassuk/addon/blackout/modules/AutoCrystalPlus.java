@@ -747,6 +747,8 @@ public class AutoCrystalPlus extends BlackOutModule {
             return;
         }
 
+        if (autoMine == null) autoMine = Modules.get().get(AutoMine.class);
+
         ExtrapolationUtils.extrapolateMap(extPos, player -> player == mc.player ? selfExt.get() : extrapolation.get(), player -> extSmoothness.get());
         ExtrapolationUtils.extrapolateMap(extHitbox, player -> hitboxExtrapolation.get(), player -> extSmoothness.get());
 
