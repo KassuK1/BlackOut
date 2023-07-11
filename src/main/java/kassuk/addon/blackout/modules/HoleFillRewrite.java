@@ -6,7 +6,7 @@ import kassuk.addon.blackout.enums.HoleType;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.enums.SwingHand;
 import kassuk.addon.blackout.managers.Managers;
-import kassuk.addon.blackout.timers.BlockTimerList;
+import kassuk.addon.blackout.timers.TimerList;
 import kassuk.addon.blackout.utils.*;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -189,7 +189,7 @@ public class HoleFillRewrite extends BlackOutModule {
     );
 
     private List<BlockPos> holes = new ArrayList<>();
-    private final BlockTimerList timers = new BlockTimerList();
+    private final TimerList<BlockPos> timers = new TimerList<>();
     private double placeTimer = 0;
     private final Map<BlockPos, Double[]> toRender = new HashMap<>();
 
@@ -200,6 +200,8 @@ public class HoleFillRewrite extends BlackOutModule {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
+        timers.update();
+
         double d = event.frameTime;
         if (mc.player != null && mc.world != null) {
             placeTimer = Math.min(placeTimer + event.frameTime, placeDelay.get());

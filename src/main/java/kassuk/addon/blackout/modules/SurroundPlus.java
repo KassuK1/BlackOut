@@ -7,7 +7,7 @@ import kassuk.addon.blackout.enums.SwingHand;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
-import kassuk.addon.blackout.timers.BlockTimerList;
+import kassuk.addon.blackout.timers.TimerList;
 import kassuk.addon.blackout.utils.BOInvUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.PlaceData;
@@ -279,7 +279,7 @@ public class SurroundPlus extends BlackOutModule {
     public final List<BlockPos> surroundBlocks = new ArrayList<>();
     private final List<BlockPos> supportPositions = new ArrayList<>();
     private final List<BlockPos> valids = new ArrayList<>();
-    private final BlockTimerList placed = new BlockTimerList();
+    private final TimerList<BlockPos> placed = new TimerList<>();
     private final List<Render> render = new ArrayList<>();
     private boolean support = false;
     private Hand hand = null;
@@ -318,6 +318,8 @@ public class SurroundPlus extends BlackOutModule {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
+        placed.update();
+
         placing = false;
         timer += event.frameTime;
 

@@ -8,7 +8,7 @@ import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.mixins.IInteractEntityC2SPacket;
-import kassuk.addon.blackout.timers.IntTimerList;
+import kassuk.addon.blackout.timers.TimerList;
 import kassuk.addon.blackout.utils.BOInvUtils;
 import kassuk.addon.blackout.utils.ExtrapolationUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
@@ -232,7 +232,7 @@ public class AutoCrystalPlus extends BlackOutModule {
     private final Setting<Double> expSpeedLimit = sgExplode.add(new DoubleSetting.Builder()
         .name("Explode Speed Limit")
         .description("How many times to hit any crystal each second. 0 = no limit")
-        .defaultValue(0)
+        .defaultValue(6)
         .min(0)
         .sliderRange(0, 20)
         .visible(instantAttack::get)
@@ -677,7 +677,7 @@ public class AutoCrystalPlus extends BlackOutModule {
     private Direction placeDir = null;
     private Entity expEntity = null;
     private Box expEntityBB = null;
-    private final IntTimerList attackedList = new IntTimerList(false);
+    private final TimerList<Integer> attackedList = new TimerList<>();
     private final Map<BlockPos, Long> existedList = new HashMap<>();
     private final Map<BlockPos, Long> existedTicksList = new HashMap<>();
     private final Map<BlockPos, Long> own = new HashMap<>();
@@ -692,6 +692,7 @@ public class AutoCrystalPlus extends BlackOutModule {
     private long lastMillis = System.currentTimeMillis();
     private boolean suicide = false;
     public static boolean placing = false;
+    private long lastAttack = 0;
 
     private Vec3d renderTarget = null;
     private Vec3d renderPos = null;
@@ -722,6 +723,8 @@ public class AutoCrystalPlus extends BlackOutModule {
         renderPos = null;
         renderProgress = 0;
         lastMillis = System.currentTimeMillis();
+        attackedList.clear();
+        lastAttack = 0;
 
         predicts.clear();
         setDeads.clear();
@@ -782,9 +785,9 @@ public class AutoCrystalPlus extends BlackOutModule {
 
     @EventHandler(priority = EventPriority.HIGHEST + 1)
     private void onRender3D(Render3DEvent event) {
-        if (autoMine == null) {
-            autoMine = Modules.get().get(AutoMine.class);
-        }
+        attackedList.update();
+
+        if (autoMine == null) autoMine = Modules.get().get(AutoMine.class);
 
         suicide = Modules.get().isActive(Suicide.class);
         double d = (System.currentTimeMillis() - lastMillis) / 1000f;
@@ -1041,7 +1044,7 @@ public class AutoCrystalPlus extends BlackOutModule {
         }
 
         if (expEntity != null) {
-            if (multiTaskCheck() && !isAttacked(expEntity.getId()) && attackTimer <= 0 && existedCheck(expEntity.getBlockPos())) {
+            if (multiTaskCheck() && !isAttacked(expEntity.getId()) && attackDelayCheck() && existedCheck(expEntity.getBlockPos())) {
                 if (!SettingUtils.shouldRotate(RotationType.Attacking) || startAttackRot()) {
                     if (SettingUtils.shouldRotate(RotationType.Attacking)) {
                         expEntityBB = expEntity.getBoundingBox();
@@ -1053,6 +1056,14 @@ public class AutoCrystalPlus extends BlackOutModule {
 
         if (!isAlive(expEntityBB) && SettingUtils.shouldRotate(RotationType.Attacking)) {
             Managers.ROTATION.end(expEntityBB);
+        }
+    }
+
+    private boolean attackDelayCheck() {
+        if (instantAttack.get()) {
+            return System.currentTimeMillis() > lastAttack + 1000 / expSpeedLimit.get();
+        } else {
+            return System.currentTimeMillis() > lastAttack + 1000 / expSpeed.get();
         }
     }
 
@@ -1225,17 +1236,15 @@ public class AutoCrystalPlus extends BlackOutModule {
     }
 
     private void explode(int id, Vec3d vec) {
-        attackEntity(id, OLEPOSSUtils.getCrystalBox(vec), vec);
+        if ((instantAttack.get() ? expSpeedLimit.get() : expSpeed.get()) > 0) {
+            attackEntity(id, OLEPOSSUtils.getCrystalBox(vec), vec);
+        }
     }
 
     private void attackEntity(int id, Box bb, Vec3d vec) {
         if (mc.player != null) {
-            if (instantAttack.get()) {
-                attackedList.add(id, 1 / expSpeed.get());
-                attackTimer = 1 / expSpeedLimit.get();
-            } else {
-                attackTimer = 1 / expSpeed.get();
-            }
+            lastAttack = System.currentTimeMillis();
+            attackedList.add(id, 1 / expSpeed.get());
 
             delayTimer = 0;
             delayTicks = 0;

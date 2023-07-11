@@ -6,7 +6,7 @@ import kassuk.addon.blackout.enums.HoleType;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.enums.SwingHand;
 import kassuk.addon.blackout.managers.Managers;
-import kassuk.addon.blackout.timers.BlockTimerList;
+import kassuk.addon.blackout.timers.TimerList;
 import kassuk.addon.blackout.utils.*;
 import kassuk.addon.blackout.utils.meteor.BOEntityUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
@@ -338,7 +338,7 @@ public class HoleFillPlus extends BlackOutModule {
     );
 
     private final List<BlockPos> holes = new ArrayList<>();
-    private final BlockTimerList timers = new BlockTimerList();
+    private final TimerList<BlockPos> timers = new TimerList<>();
     private final List<Render> render = new ArrayList<>();
 
     private final Map<AbstractClientPlayerEntity, List<Movement>> walkAngles = new HashMap<>();
@@ -371,6 +371,8 @@ public class HoleFillPlus extends BlackOutModule {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
+        timers.update();
+
         if (mc.player == null || mc.world == null) return;
 
         if (shouldUpdate) {

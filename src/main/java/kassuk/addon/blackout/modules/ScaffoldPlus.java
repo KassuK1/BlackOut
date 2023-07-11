@@ -5,7 +5,7 @@ import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.enums.SwingHand;
 import kassuk.addon.blackout.managers.Managers;
-import kassuk.addon.blackout.timers.BlockTimerList;
+import kassuk.addon.blackout.timers.TimerList;
 import kassuk.addon.blackout.utils.BOInvUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.PlaceData;
@@ -190,7 +190,7 @@ public class ScaffoldPlus extends BlackOutModule {
         .build()
     );
 
-    private final BlockTimerList timers = new BlockTimerList();
+    private final TimerList<BlockPos> timers = new TimerList<>();
     private Vec3d motion = null;
     private double placeTimer;
     private int placesLeft = 0;
@@ -217,6 +217,8 @@ public class ScaffoldPlus extends BlackOutModule {
 
     @EventHandler
     private void onRender(Render3DEvent event) {
+        timers.update();
+
         if (scaffoldMode.get() == ScaffoldMode.Legit) {return;}
 
         placeTimer = Math.min(placeDelay.get(), placeTimer + event.frameTime);

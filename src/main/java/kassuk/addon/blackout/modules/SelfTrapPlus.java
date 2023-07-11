@@ -5,7 +5,7 @@ import kassuk.addon.blackout.BlackOutModule;
 import kassuk.addon.blackout.enums.RotationType;
 import kassuk.addon.blackout.enums.SwingHand;
 import kassuk.addon.blackout.managers.Managers;
-import kassuk.addon.blackout.timers.BlockTimerList;
+import kassuk.addon.blackout.timers.TimerList;
 import kassuk.addon.blackout.utils.BOInvUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.PlaceData;
@@ -171,13 +171,15 @@ public class SelfTrapPlus extends BlackOutModule {
         .build()
     );
 
-    private final BlockTimerList timers = new BlockTimerList();
+    private final TimerList<BlockPos> timers = new TimerList<>();
+    private final TimerList<BlockPos> placed = new TimerList<>();
+
     private double placeTimer = 0;
     private int placesLeft = 0;
     private BlockPos startPos = new BlockPos(0, 0, 0);
     private boolean lastSneak = false;
     private final List<Render> render = new ArrayList<>();
-    private final BlockTimerList placed = new BlockTimerList();
+
     public static boolean placing = false;
 
     @Override
@@ -199,6 +201,9 @@ public class SelfTrapPlus extends BlackOutModule {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
+        timers.update();
+        placed.update();
+
         placing = false;
         placeTimer = Math.min(placeDelay.get(), placeTimer + event.frameTime);
         if (placeTimer >= placeDelay.get()) {
