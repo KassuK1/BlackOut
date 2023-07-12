@@ -105,6 +105,7 @@ public class BlackOut extends MeteorAddon {
         modules.add(new RangeSettings());
         modules.add(new RaytraceSettings());
         modules.add(new RotationSettings());
+        modules.add(new ServerSettings());
         modules.add(new SwingSettings());
     }
 

@@ -59,12 +59,6 @@ public class PistonCrystal extends BlackOutModule {
 
     //--------------------General--------------------//
     private final Setting<Boolean> pauseEat = addPauseEat(sgGeneral);
-    private final Setting<Boolean> oldVer = sgGeneral.add(new BoolSetting.Builder()
-        .name("1.12 Crystals")
-        .description("Crystals require 2 blocks tall space to be placed.")
-        .defaultValue(false)
-        .build()
-    );
     private final Setting<Boolean> fire = sgGeneral.add(new BoolSetting.Builder()
         .name("Fire")
         .description("Uses fire to blow up the crystal.")
@@ -161,18 +155,20 @@ public class PistonCrystal extends BlackOutModule {
     );
 
     //--------------------Toggle--------------------//
-    private final Setting<Boolean> toggleMove = sgGeneral.add(new BoolSetting.Builder()
+    /*
+    private final Setting<Boolean> toggleMove = sgToggle.add(new BoolSetting.Builder()
         .name("Toggle Move")
         .description("Toggles when you move.")
         .defaultValue(false)
         .build()
     );
-    private final Setting<Boolean> toggleEnemyMove = sgGeneral.add(new BoolSetting.Builder()
+    private final Setting<Boolean> toggleEnemyMove = sgToggle.add(new BoolSetting.Builder()
         .name("Toggle Enemy Move")
         .description("Toggles when your target moves.")
         .defaultValue(false)
         .build()
     );
+     */
 
     //--------------------Swing--------------------//
     private final Setting<Boolean> crystalSwing = sgSwing.add(new BoolSetting.Builder()
@@ -801,13 +797,13 @@ public class PistonCrystal extends BlackOutModule {
                 continue;
             }
             b = mc.world.getBlockState(cPos.up()).getBlock();
-            if (oldVer.get() && !(b instanceof AirBlock) && b != Blocks.PISTON_HEAD && b != Blocks.MOVING_PISTON) {
+            if (SettingUtils.oldCrystals() && !(b instanceof AirBlock) && b != Blocks.PISTON_HEAD && b != Blocks.MOVING_PISTON) {
                 continue;
             }
             if (mc.world.getBlockState(cPos.down()).getBlock() != Blocks.OBSIDIAN && mc.world.getBlockState(cPos.down()).getBlock() != Blocks.BEDROCK) {
                 continue;
             }
-            if (EntityUtils.intersectsWithEntity(Box.from(new BlockBox(cPos)).withMaxY(cPos.getY() + 2), entity -> !entity.isSpectator() && entity instanceof PlayerEntity)) {
+            if (EntityUtils.intersectsWithEntity(Box.from(new BlockBox(cPos)).withMaxY(cPos.getY() + (SettingUtils.cc() ? 1 : 2)), entity -> !entity.isSpectator() && entity instanceof PlayerEntity)) {
                 continue;
             }
             if (!SettingUtils.inPlaceRange(cPos)) {
@@ -911,7 +907,7 @@ public class PistonCrystal extends BlackOutModule {
         for (int x = dir.getOffsetX() == 0 ? -1 : dir.getOffsetX(); x <= (dir.getOffsetX() == 0 ? 1 : dir.getOffsetX()); x++) {
             for (int z = dir.getOffsetZ() == 0 ? -1 : dir.getOffsetZ(); z <= (dir.getOffsetZ() == 0 ? 1 : dir.getOffsetZ()); z++) {
                 for (int y = 0; y <= 1; y++) {
-                    if (x == 0 && y == 0 && z == 0 || (oldVer.get() && x == 0 && y == 1 && z == 0)) {
+                    if (x == 0 && y == 0 && z == 0 || (SettingUtils.oldCrystals() && x == 0 && y == 1 && z == 0)) {
                         continue;
                     }
 
@@ -961,7 +957,7 @@ public class PistonCrystal extends BlackOutModule {
                 if (position.equals(cPos)) {
                     continue;
                 }
-                if (oldVer.get() && position.equals(cPos.up())) {
+                if (SettingUtils.oldCrystals() && position.equals(cPos.up())) {
                     continue;
                 }
                 if (!OLEPOSSUtils.replaceable(position) && !(mc.world.getBlockState(position).getBlock() instanceof RedstoneTorchBlock) && !(mc.world.getBlockState(position).getBlock() instanceof FireBlock)) {

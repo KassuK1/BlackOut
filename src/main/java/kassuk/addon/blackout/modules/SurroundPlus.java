@@ -379,7 +379,7 @@ public class SurroundPlus extends BlackOutModule {
             if (antiCev.get()) {
                 for (BlockPos pos : surroundBlocks) {
                     if (entity.getBlockPos().equals(pos.up())) {
-                        double dmg = Math.max(10, BODamageUtils.crystalDamage(mc.player, mc.player.getBoundingBox(), entity.getPos(), null, false));
+                        double dmg = Math.max(10, BODamageUtils.crystal(mc.player, mc.player.getBoundingBox(), entity.getPos(), null, false));
 
                         if (dmg < lowest) {
                             lowest = dmg;
@@ -392,7 +392,7 @@ public class SurroundPlus extends BlackOutModule {
             for (BlockPos pos : alwaysAttack.get() ? surroundBlocks : valids) {
                 if (!Box.from(new BlockBox(pos)).intersects(entity.getBoundingBox())) continue;
 
-                double dmg = BODamageUtils.crystalDamage(mc.player, mc.player.getBoundingBox(), entity.getPos(), null, false);
+                double dmg = BODamageUtils.crystal(mc.player, mc.player.getBoundingBox(), entity.getPos(), null, false);
                 if (dmg < lowest) {
                     crystal = entity;
                     lowest = dmg;

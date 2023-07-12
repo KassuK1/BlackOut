@@ -43,10 +43,10 @@ public class RotationManager {
     public static List<Rotation> history = new ArrayList<>();
     public Target lastTarget = null;
     boolean shouldRotate = false;
-    float[] next;
-    boolean rotated = false;
+    private float[] next;
+    private boolean rotated = false;
 
-    Vec3d eyePos = new Vec3d(0, 0, 0);
+    private Vec3d eyePos = new Vec3d(0, 0, 0);
 
     public RotationManager() {
         MeteorClient.EVENT_BUS.subscribe(this);
@@ -327,7 +327,7 @@ public class RotationManager {
 
         if (settings.mode(t.type) != RotationSettings.RotationCheckMode.StrictRaytrace ||
             NCPRaytracer.raytrace(mc.player.getEyePos(), t.targetVec, t.box)) {
-            return t.targetVec;
+            return new Vec3d(MathHelper.clamp(t.targetVec.x + (Math.random() - 0.5) * 0.05, t.box.minX, t.box.maxX), MathHelper.clamp(t.targetVec.y + (Math.random() - 0.5) * 0.05, t.box.minY, t.box.maxY), MathHelper.clamp(t.targetVec.z + (Math.random() - 0.5) * 0.05, t.box.minZ, t.box.maxZ));
         }
 
         Vec3d eye = mc.player.getEyePos();

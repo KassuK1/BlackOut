@@ -5,6 +5,7 @@ https://github.com/MeteorDevelopment/meteor-client/blob/master/src/main/java/met
 
 package kassuk.addon.blackout.utils.meteor;
 
+import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.MeteorClient;
 import meteordevelopment.meteorclient.events.game.GameJoinedEvent;
 import meteordevelopment.meteorclient.mixininterface.IExplosion;
@@ -16,6 +17,7 @@ import meteordevelopment.meteorclient.utils.entity.fakeplayer.FakePlayerEntity;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.*;
@@ -24,6 +26,7 @@ import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.*;
@@ -33,6 +36,7 @@ import net.minecraft.world.BlockView;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.explosion.Explosion;
+import org.apache.commons.lang3.mutable.MutableInt;
 
 import java.util.Objects;
 
@@ -57,6 +61,10 @@ public class BODamageUtils {
     }
 
     // Crystal damage
+    public static double crystal(PlayerEntity player, Box bb, Vec3d crystal, BlockPos obsidianPos, boolean ignoreTerrain) {
+        if (SettingUtils.oldDamage()) return oldVerCrystal(player, bb, crystal, obsidianPos, ignoreTerrain);
+        return crystalDamage(player, bb, crystal, obsidianPos, ignoreTerrain);
+    }
 
     public static double crystalDamage(PlayerEntity player, Box bb, Vec3d crystal, BlockPos obsidianPos, boolean ignoreTerrain) {
         if (player == null) return 0;
@@ -79,6 +87,89 @@ public class BODamageUtils {
         damage = blastProtReduction(player, damage, explosion);
 
         return damage < 0 ? 0 : damage;
+    }
+
+    public static float oldVerCrystal(PlayerEntity player, Box bb, Vec3d crystal, BlockPos obsidianPos, boolean ignoreTerrain) {
+        ((IVec3d) vec3d).set((bb.minX + bb.maxX) / 2, bb.minY, (bb.minZ + bb.maxZ) / 2);
+
+        double dist = vec3d.distanceTo(crystal) / 12;
+        if (dist > 1) return 0;
+
+        double exposure = getExposure(crystal, player, bb, raycastContext, obsidianPos, ignoreTerrain);
+        double d10 = (1.0D - dist) * exposure;
+
+        float damage = (float)((int)((d10 * d10 + d10) / 2.0D * 7.0D * (double)12 + 1.0D));
+        damage = (float) getDamageForDifficulty(damage);
+
+        damage = getDamageAfterAbsorb(damage, (float)player.getArmor(), (float)player.getAttributeInstance(EntityAttributes.GENERIC_ARMOR_TOUGHNESS).getValue());
+        damage = oldVerPotionReduce(player, damage);
+
+        return damage;
+    }
+
+    public static float getDamageAfterAbsorb(float damage, float totalArmor, float toughnessAttribute) {
+        float f = 2.0F + toughnessAttribute / 4.0F;
+        float f1 = MathHelper.clamp(totalArmor - damage / f, totalArmor * 0.2F, 20.0F);
+        return damage * (1.0F - f1 / 25.0F);
+    }
+
+
+    private static float oldVerPotionReduce(LivingEntity livingEntity, float damage) {
+        if (livingEntity.hasStatusEffect(StatusEffects.RESISTANCE)) {
+            int i = (livingEntity.getStatusEffect(StatusEffects.RESISTANCE).getAmplifier() + 1) * 5;
+            int j = 25 - i;
+            float f = damage * (float) j;
+            damage = f / 25.0F;
+        }
+
+        int k = getEnchantmentModifierDamage(livingEntity.getArmorItems());
+
+        if (k > 0)
+        {
+            damage = getDamageAfterMagicAbsorb(damage, (float)k);
+        }
+
+        return damage;
+    }
+
+    private static int getEnchantmentModifierDamage(Iterable<ItemStack> stacks) {
+        int i = 0;
+
+        for (ItemStack stack : stacks) {
+            i += sus(stack);
+        }
+        return i;
+    }
+
+    private static int sus(ItemStack stack) {
+        int r = 0;
+        if (!stack.isEmpty()) {
+
+            NbtList nbttaglist = stack.getEnchantments();
+
+            for (int i = 0; i < nbttaglist.size(); ++i)
+            {
+                int j = nbttaglist.getCompound(i).getShort("id");
+                int k = nbttaglist.getCompound(i).getShort("lvl") + 1;
+                Enchantment e = Enchantment.byRawId(j);
+
+
+                if (e != null)
+                {
+                    if (e == Enchantments.BLAST_PROTECTION) {
+                        r += k * 2;
+                    } else if (e == Enchantments.PROTECTION) {
+                        r += k;
+                    }
+                }
+            }
+        }
+        return r;
+    }
+
+    private static float getDamageAfterMagicAbsorb(float damage, float enchantModifiers) {
+        float f = MathHelper.clamp(enchantModifiers, 0.0F, 20.0F);
+        return damage * (1.0F - f / 25.0F);
     }
 
     // Sword damage

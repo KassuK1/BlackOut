@@ -24,6 +24,7 @@ public class SettingUtils extends Utils {
     private static final RangeSettings range = Modules.get().get(RangeSettings.class);
     private static final RaytraceSettings raytrace = Modules.get().get(RaytraceSettings.class);
     private static final RotationSettings rotation = Modules.get().get(RotationSettings.class);
+    private static final ServerSettings server = Modules.get().get(ServerSettings.class);
     private static final SwingSettings swing = Modules.get().get(SwingSettings.class);
 
     //  Range
@@ -121,5 +122,16 @@ public class SettingUtils extends Utils {
     }
     public static boolean attackTrace(Box bb) {
         return !shouldAttackTrace() || raytrace.attackTrace(bb);
+    }
+
+    // Server
+    public static boolean oldDamage() {
+        return server.oldVerDamage.get();
+    }
+    public static boolean oldCrystals() {
+        return server.oldVerCrystals.get();
+    }
+    public static boolean cc() {
+        return server.cc.get();
     }
 }

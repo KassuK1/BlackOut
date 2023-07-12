@@ -108,20 +108,14 @@ public class AutoCrystalPlus extends BlackOutModule {
         .defaultValue(true)
         .build()
     );
+    private final Setting<Boolean> tickBased = sgGeneral.add(new BoolSetting.Builder()
+        .name("Tick Based")
+        .description(".")
+        .defaultValue(true)
+        .build()
+    );
 
     //--------------------Place--------------------//
-    private final Setting<Boolean> oldVerPlacements = sgPlace.add(new BoolSetting.Builder()
-        .name("1.12 Placements")
-        .description("Uses 1.12 crystal mechanics.")
-        .defaultValue(false)
-        .build()
-    );
-    private final Setting<Boolean> ccPlacements = sgPlace.add(new BoolSetting.Builder()
-        .name("CC Placements")
-        .description("Uses crystalpvp.cc hitboxes.")
-        .defaultValue(false)
-        .build()
-    );
     private final Setting<Boolean> instantPlace = sgPlace.add(new BoolSetting.Builder()
         .name("Instant Place")
         .description("Ignores delay after crystal has disappeared.")
@@ -232,7 +226,7 @@ public class AutoCrystalPlus extends BlackOutModule {
     private final Setting<Double> expSpeedLimit = sgExplode.add(new DoubleSetting.Builder()
         .name("Explode Speed Limit")
         .description("How many times to hit any crystal each second. 0 = no limit")
-        .defaultValue(6)
+        .defaultValue(0)
         .min(0)
         .sliderRange(0, 20)
         .visible(instantAttack::get)
@@ -783,6 +777,10 @@ public class AutoCrystalPlus extends BlackOutModule {
         if (performance.get()) {
             updatePlacement();
         }
+
+        if (tickBased.get()) {
+            update();
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST + 1)
@@ -806,7 +804,9 @@ public class AutoCrystalPlus extends BlackOutModule {
         delayTimer += d;
         switchTimer = Math.max(0, switchTimer - d);
 
-        update();
+        if (!tickBased.get()) {
+            update();
+        }
         checkDelayed();
 
         //Rendering
@@ -1063,7 +1063,7 @@ public class AutoCrystalPlus extends BlackOutModule {
 
     private boolean attackDelayCheck() {
         if (instantAttack.get()) {
-            return System.currentTimeMillis() > lastAttack + 1000 / expSpeedLimit.get();
+            return expSpeedLimit.get() <= 0 || System.currentTimeMillis() > lastAttack + 1000 / expSpeedLimit.get();
         } else {
             return System.currentTimeMillis() > lastAttack + 1000 / expSpeed.get();
         }
@@ -1075,7 +1075,7 @@ public class AutoCrystalPlus extends BlackOutModule {
     }
 
     private boolean blocksPlacePos(Entity entity) {
-        return placePos != null && entity.getBoundingBox().intersects(new Box(placePos.getX(), placePos.getY(), placePos.getZ(), placePos.getX() + 1, placePos.getY() + (ccPlacements.get() ? 1 : 2), placePos.getZ() + 1));
+        return placePos != null && entity.getBoundingBox().intersects(new Box(placePos.getX(), placePos.getY(), placePos.getZ(), placePos.getX() + 1, placePos.getY() + (SettingUtils.cc() ? 1 : 2), placePos.getZ() + 1));
     }
 
     private boolean isAlive(Box box) {
@@ -1238,9 +1238,7 @@ public class AutoCrystalPlus extends BlackOutModule {
     }
 
     private void explode(int id, Vec3d vec) {
-        if ((instantAttack.get() ? expSpeedLimit.get() : expSpeed.get()) > 0) {
-            attackEntity(id, OLEPOSSUtils.getCrystalBox(vec), vec);
-        }
+        attackEntity(id, OLEPOSSUtils.getCrystalBox(vec), vec);
     }
 
     private void attackEntity(int id, Box bb, Vec3d vec) {
@@ -1360,7 +1358,7 @@ public class AutoCrystalPlus extends BlackOutModule {
                 for (int z = -r; z <= r; z++) {
                     BlockPos pos = pPos.add(x, y, z);
                     // Checks if crystal can be placed
-                    if (!air(pos) || !(!oldVerPlacements.get() || air(pos.up())) || !crystalBlock(pos.down()) || blockBroken(pos.down())) continue;
+                    if (!air(pos) || !(!SettingUtils.oldCrystals() || air(pos.up())) || !crystalBlock(pos.down()) || blockBroken(pos.down())) continue;
 
                     // Checks if there is possible placing direction
                     Direction dir = SettingUtils.getPlaceOnDirection(pos.down());
@@ -1376,7 +1374,7 @@ public class AutoCrystalPlus extends BlackOutModule {
                     if (!placeDamageCheck(result[0], result[1], highest)) continue;
 
                     // Checks if placement is blocked by other entities (other than players)
-                    Box box = new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + (ccPlacements.get() ? 1 : 2), pos.getZ() + 1);
+                    Box box = new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + (SettingUtils.cc() ? 1 : 2), pos.getZ() + 1);
 
                     if (BOEntityUtils.intersectsWithEntity(box, this::validForIntersect, extHitbox)) continue;
 
@@ -1473,7 +1471,7 @@ public class AutoCrystalPlus extends BlackOutModule {
     }
 
     private double[][] getDmg(Vec3d vec, boolean attack) {
-        double self = BODamageUtils.crystalDamage(mc.player, extPos.containsKey(mc.player) ? extPos.get(mc.player) : mc.player.getBoundingBox(), vec, ignorePos(attack), ignoreTerrain.get());
+        double self = BODamageUtils.crystal(mc.player, extPos.containsKey(mc.player) ? extPos.get(mc.player) : mc.player.getBoundingBox(), vec, ignorePos(attack), ignoreTerrain.get());
 
         if (suicide) return new double[][]{new double[]{self, -1, -1}, new double[]{20, 20}};
 
@@ -1488,7 +1486,7 @@ public class AutoCrystalPlus extends BlackOutModule {
                 continue;
             }
 
-            double dmg = BODamageUtils.crystalDamage(player, box, vec, ignorePos(attack), ignoreTerrain.get());
+            double dmg = BODamageUtils.crystal(player, box, vec, ignorePos(attack), ignoreTerrain.get());
             if (BlockPos.ofFloored(vec).down().equals(autoMine.targetPos())) {
                 dmg *= autoMineDamage.get();
             }
