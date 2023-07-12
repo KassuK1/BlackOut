@@ -195,7 +195,7 @@ public class PacketLogger extends BlackOutModule {
         if (packet instanceof EntitySpawnS2CPacket p) return "EntitySpawn id:" + p.getId() + " type:" + p.getEntityType() + " x:" + p.getX() + " y:" + p.getY() + " z:" + p.getZ() + " yaw:" + p.getYaw() + " pitch:" + p.getPitch() + " velX:" + p.getVelocityX() + " velY:" + p.getVelocityY() + " velZ:" + p.getVelocityZ() + " headYaw:" + p.getHeadYaw() + " UUID:" + p.getUuid() + " data:" + p.getEntityData();
         if (packet instanceof EntityStatusEffectS2CPacket p) return "EntityStatusEffect entityId:" + p.getEntityId() + " effect:" + p.getEffectId().getName() + " amplifier:" + p.getAmplifier() + " duration:" + p.getDuration() + " showIcon:" + p.shouldShowIcon() + " particles:" + p.shouldShowParticles() + " ambient:" + p.isAmbient();
         if (packet instanceof EntityStatusS2CPacket p) return "EntityStatus status:" + p.getStatus() + " id:" + ((IEntityStatusS2CPacket) p).getId();
-        if (packet instanceof EntityTrackerUpdateS2CPacket p) return "EntityTrackerUpdate id:" + p.id();
+        if (packet instanceof EntityTrackerUpdateS2CPacket p) return "EntityTrackerUpdate id:" + p.id() ;
         if (packet instanceof EntityVelocityUpdateS2CPacket p) return "EntityVelocityUpdate id:" + p.getId() + " x:" + p.getVelocityX() + " y:" + p.getVelocityY() + " z:" + p.getVelocityZ();
         if (packet instanceof ExperienceBarUpdateS2CPacket p) return "ExperienceBarUpdate exp:" + p.getExperience() + " level" + p.getExperienceLevel() + " barProgress:" + p.getBarProgress();
         if (packet instanceof ExperienceOrbSpawnS2CPacket p) return "ExperienceOrbSpawn id:" + p.getId() + " x:" + p.getX() + " y:" + p.getY() + " z:" + p.getZ() + " expAmount" + p.getExperience();

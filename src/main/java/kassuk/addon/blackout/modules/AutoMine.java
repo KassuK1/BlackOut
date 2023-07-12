@@ -13,6 +13,7 @@ import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
+import meteordevelopment.meteorclient.events.world.BlockUpdateEvent;
 import meteordevelopment.meteorclient.renderer.Renderer3D;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
@@ -109,6 +110,12 @@ public class AutoMine extends BlackOutModule {
     private final Setting<Boolean> manualRemine = sgGeneral.add(new BoolSetting.Builder()
         .name("Manual Remine")
         .description("Mines the manually mined block again.")
+        .defaultValue(false)
+        .build()
+    );
+    private final Setting<Boolean> fastRemine = sgGeneral.add(new BoolSetting.Builder()
+        .name("Fast Remine")
+        .description("Calculates mining progress from last block broken.")
         .defaultValue(false)
         .build()
     );
@@ -370,12 +377,14 @@ public class AutoMine extends BlackOutModule {
     private double render = 1;
 
     private double delta = 0;
-    private boolean ignore = false;
 
     private final Map<BlockPos, Long> explodeAt = new HashMap<>();
 
     private boolean reset = false;
     private boolean mined = false;
+
+    private BlockState lastState = null;
+    private BlockPos lastPos = null;
 
     @Override
     public void onActivate() {
@@ -396,6 +405,20 @@ public class AutoMine extends BlackOutModule {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
+        if (mc.player == null || mc.world == null) return;
+
+        if (target != null) {
+            if (lastState != null && target.pos.equals(lastPos) && target.manual && manualRemine.get() && !fastRemine.get() && !lastState.isSolid() && OLEPOSSUtils.solid2(target.pos)) {
+                started = false;
+            }
+
+            lastPos = target.pos;
+            lastState = mc.world.getBlockState(target.pos);
+        } else {
+            lastPos = null;
+            lastState = null;
+        }
+
         delta = (System.currentTimeMillis() - lastTime) / 1000d;
         lastTime = System.currentTimeMillis();
 
@@ -514,9 +537,7 @@ public class AutoMine extends BlackOutModule {
 
                 Direction dir = SettingUtils.getPlaceOnDirection(target.pos);
 
-                ignore = true;
                 sendSequenced(s -> new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, target.pos, dir == null ? Direction.UP : dir, s));
-                ignore = false;
 
                 SettingUtils.mineSwing(SwingSettings.MiningSwingState.Start);
 
@@ -592,9 +613,7 @@ public class AutoMine extends BlackOutModule {
             return;
         }
 
-        ignore = true;
         sendSequenced(s -> new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, target.pos, dir, s));
-        ignore = false;
 
         mined = true;
         SettingUtils.mineSwing(SwingSettings.MiningSwingState.End);
@@ -1036,14 +1055,9 @@ public class AutoMine extends BlackOutModule {
     }
 
     private void abort(BlockPos pos) {
-        ignore = true;
-        civPos = null;
-
-        target = null;
         mc.getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK,
             pos, Direction.UP));
 
-        ignore = false;
         started = false;
     }
 
@@ -1117,6 +1131,9 @@ public class AutoMine extends BlackOutModule {
     public void onStart(BlockPos pos) {
         if (target != null && target.manual && pos.equals(target.pos)) {
             abort(target.pos);
+            civPos = null;
+            target = null;
+
             return;
         }
         if (manualMine.get() && getBlock(pos) != Blocks.BEDROCK) {
