@@ -794,6 +794,7 @@ public class AutoCrystalPlus extends BlackOutModule {
         delayTimer += d;
         switchTimer = Math.max(0, switchTimer - d);
 
+        update();
         checkDelayed();
 
         //Rendering
