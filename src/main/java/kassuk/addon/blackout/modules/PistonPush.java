@@ -389,16 +389,25 @@ public class PistonPush extends BlackOutModule {
             return;
         }
 
-        Direction mineDir = SettingUtils.getPlaceOnDirection(redstonePos);
-        if (mineDir != null) {
-            if (!mined) mineTime = System.currentTimeMillis();
+        AutoMine autoMine = Modules.get().get(AutoMine.class);
 
-            mined = true;
-            minedThisTick = true;
+        if (autoMine.isActive()) {
+            if (redstonePos.equals(autoMine.targetPos())) return;
 
-            sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, redstonePos, mineDir));
-            sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, redstonePos, mineDir));
+            autoMine.onStart(redstonePos);
+        } else {
+            Direction mineDir = SettingUtils.getPlaceOnDirection(redstonePos);
+
+            if (mineDir != null) {
+                sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, redstonePos, mineDir));
+                sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, redstonePos, mineDir));
+            }
         }
+
+        if (!mined) mineTime = System.currentTimeMillis();
+
+        mined = true;
+        minedThisTick = true;
     }
 
     private void update() {

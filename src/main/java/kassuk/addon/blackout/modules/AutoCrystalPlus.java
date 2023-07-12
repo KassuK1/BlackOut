@@ -108,12 +108,6 @@ public class AutoCrystalPlus extends BlackOutModule {
         .defaultValue(true)
         .build()
     );
-    private final Setting<Boolean> tickBased = sgGeneral.add(new BoolSetting.Builder()
-        .name("Tick Based")
-        .description(".")
-        .defaultValue(true)
-        .build()
-    );
 
     //--------------------Place--------------------//
     private final Setting<Boolean> instantPlace = sgPlace.add(new BoolSetting.Builder()
@@ -777,10 +771,6 @@ public class AutoCrystalPlus extends BlackOutModule {
         if (performance.get()) {
             updatePlacement();
         }
-
-        if (tickBased.get()) {
-            update();
-        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST + 1)
@@ -804,9 +794,6 @@ public class AutoCrystalPlus extends BlackOutModule {
         delayTimer += d;
         switchTimer = Math.max(0, switchTimer - d);
 
-        if (!tickBased.get()) {
-            update();
-        }
         checkDelayed();
 
         //Rendering

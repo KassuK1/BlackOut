@@ -431,18 +431,23 @@ public class PistonCrystal extends BlackOutModule {
         if (!redstonePlaced) return;
         if (minedThisTick) return;
 
-        if (Modules.get().isActive(AutoMine.class) && redstonePos.equals(Modules.get().get(AutoMine.class).targetPos())) return;
+        AutoMine autoMine = Modules.get().get(AutoMine.class);
 
-        Direction mineDir = SettingUtils.getPlaceOnDirection(redstonePos);
+        if (autoMine.isActive()) {
+            if (redstonePos.equals(autoMine.targetPos())) return;
 
-        if (mineDir != null) {
-            sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, redstonePos, mineDir));
-            sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, redstonePos, mineDir));
+            autoMine.onStart(redstonePos);
+        } else {
+            Direction mineDir = SettingUtils.getPlaceOnDirection(redstonePos);
+
+            if (mineDir != null) {
+                sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, redstonePos, mineDir));
+                sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, redstonePos, mineDir));
+            }
         }
 
-        if (!mined) {
-            mineTime = System.currentTimeMillis();
-        }
+        if (!mined) mineTime = System.currentTimeMillis();
+
         mined = true;
         minedThisTick = true;
     }
