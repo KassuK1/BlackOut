@@ -146,7 +146,7 @@ public class OffHandPlus extends BlackOutModule {
     private void move(int slot) {
         if (strict.get()) {
             BOInvUtils.pickSwitch(slot);
-            sendSequenced(s -> new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.SWAP_ITEM_WITH_OFFHAND, new BlockPos(0, 0, 0), Direction.DOWN, s));
+            sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.SWAP_ITEM_WITH_OFFHAND, new BlockPos(0, 0, 0), Direction.DOWN, 0));
             BOInvUtils.pickSwapBack();
             InvUtils.swap(Managers.HOLDING.slot, false);
             return;
