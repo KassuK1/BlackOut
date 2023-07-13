@@ -40,7 +40,6 @@ public class RotationSettings extends BlackOutModule {
         .defaultValue(false)
         .build()
     );
-
     public final Setting<Double> yawStep = sgGeneral.add(new DoubleSetting.Builder()
         .name("Yaw Step")
         .description("How many yaw degrees should be rotated each packet.")
@@ -49,13 +48,28 @@ public class RotationSettings extends BlackOutModule {
         .sliderRange(0, 180)
         .build()
     );
-
     public final Setting<Double> pitchStep = sgGeneral.add(new DoubleSetting.Builder()
         .name("Pitch Step")
         .description("How many pitch degrees should be rotated each packet.")
         .defaultValue(45)
         .range(0, 180)
         .sliderRange(0, 180)
+        .build()
+    );
+    public final Setting<Double> yawRandomization = sgGeneral.add(new DoubleSetting.Builder()
+        .name("Yaw Randomization")
+        .description(".")
+        .defaultValue(1)
+        .min(0)
+        .sliderRange(0, 10)
+        .build()
+    );
+    public final Setting<Double> pitchRandomization = sgGeneral.add(new DoubleSetting.Builder()
+        .name("Pitch Randomization")
+        .description(".")
+        .defaultValue(1)
+        .min(0)
+        .sliderRange(0, 10)
         .build()
     );
 
@@ -221,14 +235,14 @@ public class RotationSettings extends BlackOutModule {
     public double yawStep(RotationType type) {
         return switch (type) {
             case Other, Use -> 42069;
-            default -> yawStep.get();
+            default -> yawStep.get() + (Math.random() - 0.5) * 2 * yawRandomization.get();
         };
     }
 
     public double pitchStep(RotationType type) {
         return switch (type) {
             case Other, Use -> 42069;
-            default -> pitchStep.get();
+            default -> pitchStep.get() + (Math.random() - 0.5) * 2 * pitchRandomization.get();
         };
     }
 
