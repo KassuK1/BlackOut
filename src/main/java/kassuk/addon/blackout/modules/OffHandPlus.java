@@ -2,6 +2,8 @@ package kassuk.addon.blackout.modules;
 
 import kassuk.addon.blackout.BlackOut;
 import kassuk.addon.blackout.BlackOutModule;
+import kassuk.addon.blackout.managers.Managers;
+import kassuk.addon.blackout.utils.BOInvUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.settings.*;
@@ -13,6 +15,9 @@ import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.item.*;
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 
 import java.util.function.Predicate;
 
@@ -26,7 +31,7 @@ public class OffHandPlus extends BlackOutModule {
     }
 
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private final SettingGroup sgHealth = settings.getDefaultGroup();
+    private final SettingGroup sgHealth = settings.createGroup("Health");
 
     //--------------------General--------------------//
     private final Setting<Boolean> onlyInInv = sgGeneral.add(new BoolSetting.Builder()
@@ -67,6 +72,12 @@ public class OffHandPlus extends BlackOutModule {
         .defaultValue(0.1)
         .range(0, 1)
         .sliderRange(0, 1)
+        .build()
+    );
+    private final Setting<Boolean> strict = sgGeneral.add(new BoolSetting.Builder()
+        .name("Strict Swap")
+        .description("Uses pick silent and swap with offhand packets to bypass ncp inventory checks.")
+        .defaultValue(false)
         .build()
     );
 
@@ -127,8 +138,20 @@ public class OffHandPlus extends BlackOutModule {
 
         int slot = getSlot(getPredicate(item));
 
-        InvUtils.move().from(slot).toOffhand();
+        move(slot);
+
         timer = delay.get();
+    }
+
+    private void move(int slot) {
+        if (strict.get()) {
+            BOInvUtils.pickSwitch(slot);
+            sendSequenced(s -> new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.SWAP_ITEM_WITH_OFFHAND, new BlockPos(0, 0, 0), Direction.DOWN, s));
+            BOInvUtils.pickSwapBack();
+            InvUtils.swap(Managers.HOLDING.slot, false);
+            return;
+        }
+        InvUtils.move().from(slot).toOffhand();
     }
 
     private Predicate<Item> getPredicate(Item item) {
