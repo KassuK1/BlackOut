@@ -61,9 +61,9 @@ public class BODamageUtils {
     }
 
     // Crystal damage
-    public static double crystal(PlayerEntity player, Box bb, Vec3d crystal, BlockPos obsidianPos, boolean ignoreTerrain) {
-        if (SettingUtils.oldDamage()) return oldVerCrystal(player, bb, crystal, obsidianPos, ignoreTerrain);
-        return crystalDamage(player, bb, crystal, obsidianPos, ignoreTerrain);
+    public static double crystal(PlayerEntity player, Box bb, Vec3d crystal, BlockPos ignore, boolean ignoreTerrain) {
+        if (SettingUtils.oldDamage()) return oldVerCrystal(player, bb, crystal, ignore, ignoreTerrain);
+        return crystalDamage(player, bb, crystal, ignore, ignoreTerrain);
     }
 
     public static double crystalDamage(PlayerEntity player, Box bb, Vec3d crystal, BlockPos obsidianPos, boolean ignoreTerrain) {
@@ -89,13 +89,13 @@ public class BODamageUtils {
         return damage < 0 ? 0 : damage;
     }
 
-    public static float oldVerCrystal(PlayerEntity player, Box bb, Vec3d crystal, BlockPos obsidianPos, boolean ignoreTerrain) {
+    public static float oldVerCrystal(PlayerEntity player, Box bb, Vec3d crystal, BlockPos ignore, boolean ignoreTerrain) {
         ((IVec3d) vec3d).set((bb.minX + bb.maxX) / 2, bb.minY, (bb.minZ + bb.maxZ) / 2);
 
         double dist = vec3d.distanceTo(crystal) / 12;
         if (dist > 1) return 0;
 
-        double exposure = getExposure(crystal, player, bb, raycastContext, obsidianPos, ignoreTerrain);
+        double exposure = getExposure(crystal, player, bb, raycastContext, ignore, ignoreTerrain);
         double d10 = (1.0D - dist) * exposure;
 
         float damage = (float)((int)((d10 * d10 + d10) / 2.0D * 7.0D * (double)12 + 1.0D));
@@ -220,13 +220,13 @@ public class BODamageUtils {
 
     // Bed damage
 
-    public static double bedDamage(LivingEntity player, Vec3d bed) {
+    public static double bedDamage(LivingEntity player, Box box, Vec3d bed, BlockPos ignore) {
         if (player instanceof PlayerEntity && ((PlayerEntity) player).getAbilities().creativeMode) return 0;
 
         double modDistance = Math.sqrt(player.squaredDistanceTo(bed));
         if (modDistance > 10) return 0;
 
-        double exposure = getExposure(bed, player, player.getBoundingBox(), raycastContext, null, true);
+        double exposure = getExposure(bed, player, box, raycastContext, ignore, true);
         double impact = (1.0 - (modDistance / 10.0)) * exposure;
         double damage = (impact * impact + impact) / 2 * 7 * (5 * 2) + 1;
 
@@ -249,16 +249,8 @@ public class BODamageUtils {
 
     // Anchor damage
 
-    public static double anchorDamage(LivingEntity player, Vec3d anchor) {
-        BlockPos pos = BlockPos.ofFloored(anchor);
-        BlockState state = mc.world.getBlockState(pos);
-        if (state.getBlock().equals(Blocks.RESPAWN_ANCHOR)) {
-            mc.world.removeBlock(pos, false);
-            double damage = bedDamage(player, anchor);
-            mc.world.setBlockState(pos, state);
-            return damage;
-        }
-        return bedDamage(player, anchor);
+    public static double anchorDamage(LivingEntity player, Box box, BlockPos anchor) {
+        return bedDamage(player, box, anchor.toCenterPos(), anchor);
     }
 
     // Utils
@@ -296,7 +288,7 @@ public class BODamageUtils {
         return damage < 0 ? 0 : damage;
     }
 
-    public static double getExposure(Vec3d source, Entity entity, Box box, RaycastContext raycastContext, BlockPos obsidianPos, boolean ignoreTerrain) {
+    public static double getExposure(Vec3d source, Entity entity, Box box, RaycastContext raycastContext, BlockPos ignore, boolean ignoreTerrain) {
         double d = 1 / ((box.maxX - box.minX) * 2 + 1);
         double e = 1 / ((box.maxY - box.minY) * 2 + 1);
         double f = 1 / ((box.maxZ - box.minZ) * 2 + 1);
@@ -317,7 +309,7 @@ public class BODamageUtils {
                         ((IVec3d) vec3d).set(n + g, o, p + h);
                         ((IRaycastContext) raycastContext).set(vec3d, source, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, entity);
 
-                        if (raycast(raycastContext, obsidianPos, ignoreTerrain).getType() == HitResult.Type.MISS) i++;
+                        if (raycast(raycastContext, ignore, ignoreTerrain).getType() == HitResult.Type.MISS) i++;
 
                         j++;
                     }
@@ -353,10 +345,10 @@ public class BODamageUtils {
         });
     }
 
-    private static BlockHitResult raycast(RaycastContext context, BlockPos obsidianPos, boolean ignoreTerrain) {
+    private static BlockHitResult raycast(RaycastContext context, BlockPos ignore, boolean ignoreTerrain) {
         return BlockView.raycast(context.getStart(), context.getEnd(), context, (raycastContext, blockPos) -> {
             BlockState blockState;
-            if (blockPos.equals(obsidianPos)) blockState = Blocks.AIR.getDefaultState();
+            if (blockPos.equals(ignore)) blockState = Blocks.AIR.getDefaultState();
             else {
                 blockState = mc.world.getBlockState(blockPos);
                 if (blockState.getBlock().getBlastResistance() < 600 && ignoreTerrain)

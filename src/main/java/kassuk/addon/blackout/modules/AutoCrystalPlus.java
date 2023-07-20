@@ -45,10 +45,7 @@ import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Predicate;
 
 /**
@@ -1003,7 +1000,7 @@ public class AutoCrystalPlus extends BlackOutModule {
                 int hotbar = InvUtils.findInHotbar(Items.END_CRYSTAL).slot();
                 if (handToUse != null || (switchMode.get() == SwitchMode.Silent && hotbar >= 0) || ((switchMode.get() == SwitchMode.PickSilent || switchMode.get() == SwitchMode.InvSilent) && silentSlot >= 0)) {
                     placing = true;
-                    if (!SettingUtils.shouldRotate(RotationType.Interact) || Managers.ROTATION.start(placePos.down(), smartRot.get() ? new Vec3d(placePos.getX() + 0.5, placePos.getY(), placePos.getZ() + 0.5) : null, priority, RotationType.Interact)) {
+                    if (!SettingUtils.shouldRotate(RotationType.Interact) || Managers.ROTATION.start(placePos.down(), smartRot.get() ? new Vec3d(placePos.getX() + 0.5, placePos.getY(), placePos.getZ() + 0.5) : null, priority, RotationType.Interact, Objects.hash(name + "placing"))) {
                         if (speedCheck() && delayCheck()) {
                             placeCrystal(placePos.down(), placeDir, handToUse, silentSlot, hotbar);
                         }
@@ -1045,7 +1042,7 @@ public class AutoCrystalPlus extends BlackOutModule {
         }
 
         if (!isAlive(expEntityBB) && SettingUtils.shouldRotate(RotationType.Attacking)) {
-            Managers.ROTATION.end(expEntityBB);
+            Managers.ROTATION.end(Objects.hash(name + "attacking"));
         }
     }
 
@@ -1059,7 +1056,7 @@ public class AutoCrystalPlus extends BlackOutModule {
 
     private boolean startAttackRot() {
         expEntityBB = expEntity.getBoundingBox();
-        return (Managers.ROTATION.start(expEntity.getBoundingBox(), smartRot.get() ? expEntity.getPos() : null, priority + (!isAttacked(expEntity.getId()) && blocksPlacePos(expEntity) ? -0.1 : 0.1), RotationType.Attacking));
+        return (Managers.ROTATION.start(expEntity.getBoundingBox(), smartRot.get() ? expEntity.getPos() : null, priority + (!isAttacked(expEntity.getId()) && blocksPlacePos(expEntity) ? -0.1 : 0.1), RotationType.Attacking, Objects.hash(name + "attacking")));
     }
 
     private boolean blocksPlacePos(Entity entity) {
@@ -1166,7 +1163,7 @@ public class AutoCrystalPlus extends BlackOutModule {
             if (placeSwing.get()) clientSwing(placeHand.get(), switched ? Hand.MAIN_HAND : handToUse);
 
             if (SettingUtils.shouldRotate(RotationType.Interact)) {
-                Managers.ROTATION.end(Box.from(new BlockBox(pos)));
+                Managers.ROTATION.end(Objects.hash(name + "placing"));
             }
 
             if (switched) {

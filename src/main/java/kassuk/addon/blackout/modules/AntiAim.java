@@ -15,6 +15,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 
 /**
@@ -196,8 +197,7 @@ public class AntiAim extends BlackOutModule {
                             case Custom -> pitch.get();
                         };
 
-            Managers.ROTATION.start(y, p,
-                priority, RotationType.Other);
+            Managers.ROTATION.start(y, p, priority, RotationType.Other, Objects.hash(name + "look"));
         }
     }
 

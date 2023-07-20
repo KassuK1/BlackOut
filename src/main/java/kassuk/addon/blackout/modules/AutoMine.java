@@ -45,10 +45,7 @@ import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author OLEPOSSU
@@ -448,7 +445,7 @@ public class AutoMine extends BlackOutModule {
         toRemove.forEach(explodeAt::remove);
 
         if (targetCrystal != null && !isPaused() && mined && System.currentTimeMillis() - lastExplode > (1000 / explodeSpeed.get())) {
-            if (!SettingUtils.shouldRotate(RotationType.Attacking) || Managers.ROTATION.start(targetCrystal.getBoundingBox(), priority, RotationType.Mining)) {
+            if (!SettingUtils.shouldRotate(RotationType.Attacking) || Managers.ROTATION.start(targetCrystal.getBoundingBox(), priority, RotationType.Attacking, Objects.hash(name + "attacking"))) {
 
                 SettingUtils.swing(SwingState.Pre, SwingType.Attacking, Hand.MAIN_HAND);
                 sendPacket(PlayerInteractEntityC2SPacket.attack(targetCrystal, mc.player.isSneaking()));
@@ -458,7 +455,7 @@ public class AutoMine extends BlackOutModule {
                 lastExplode = System.currentTimeMillis();
 
                 if (SettingUtils.shouldRotate(RotationType.Attacking))
-                    Managers.ROTATION.end(targetCrystal.getBoundingBox());
+                    Managers.ROTATION.end(Objects.hash(name + "attacking"));
             }
         }
     }
@@ -522,7 +519,7 @@ public class AutoMine extends BlackOutModule {
         }
 
         if (!started) {
-            boolean rotated = !SettingUtils.startMineRot() || Managers.ROTATION.start(target.pos, priority, RotationType.Mining);
+            boolean rotated = !SettingUtils.startMineRot() || Managers.ROTATION.start(target.pos, priority, RotationType.Mining, Objects.hash(name + "mining"));
 
             if (rotated) {
                 started = true;
@@ -545,7 +542,7 @@ public class AutoMine extends BlackOutModule {
                 if (mineStartSwing.get()) clientSwing(mineHand.get(), Hand.MAIN_HAND);
 
                 if (SettingUtils.startMineRot()) {
-                    Managers.ROTATION.end(target.pos);
+                    Managers.ROTATION.end(Objects.hash(name + "mining"));
                 }
             }
         }
@@ -559,9 +556,6 @@ public class AutoMine extends BlackOutModule {
         if (!civCheck()) return;
         if (!crystalCheck()) return;
         if (!OLEPOSSUtils.solid2(target.pos)) return;
-
-        boolean rotated = !SettingUtils.endMineRot() || Managers.ROTATION.start(target.pos, priority, RotationType.Mining);
-        if (!rotated) return;
 
         endMine();
     }
@@ -590,7 +584,7 @@ public class AutoMine extends BlackOutModule {
             return;
         }
 
-        if (SettingUtils.shouldRotate(RotationType.Mining) && !Managers.ROTATION.start(target.pos, priority, RotationType.Mining)) {
+        if (SettingUtils.shouldRotate(RotationType.Mining) && !Managers.ROTATION.start(target.pos, priority, RotationType.Mining, Objects.hash(name + "mining"))) {
             return;
         }
 
@@ -624,7 +618,7 @@ public class AutoMine extends BlackOutModule {
         }
 
         if (SettingUtils.endMineRot()) {
-            Managers.ROTATION.end(target.pos);
+            Managers.ROTATION.end(Objects.hash(name + "mining"));
         }
 
         if (swapBack) {
@@ -693,7 +687,7 @@ public class AutoMine extends BlackOutModule {
             return false;
         }
 
-        boolean rotated = !SettingUtils.shouldRotate(RotationType.BlockPlace) || Managers.ROTATION.start(target.crystalPos.down(), priority, RotationType.BlockPlace);
+        boolean rotated = !SettingUtils.shouldRotate(RotationType.Interact) || Managers.ROTATION.start(target.crystalPos.down(), priority, RotationType.Interact, Objects.hash(name + "placing"));
 
         if (!rotated) {
             return false;
@@ -726,7 +720,7 @@ public class AutoMine extends BlackOutModule {
             addExplode();
         }
 
-        Managers.ROTATION.end(target.crystalPos.down());
+        if (SettingUtils.shouldRotate(RotationType.Interact)) Managers.ROTATION.end(Objects.hash(name + "placing"));
 
         if (hand == null) {
             switch (crystalSwitchMode.get()) {

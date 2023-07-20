@@ -37,6 +37,7 @@ import net.minecraft.util.math.Vec3d;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author KassuK
@@ -325,7 +326,7 @@ public class ScaffoldPlus extends BlackOutModule {
                         for (int i = 0; i < Math.min(obsidian, toPlace.size()); i++) {
                             PlaceData placeData = SettingUtils.getPlaceData(toPlace.get(i));
                             if (placeData.valid()) {
-                                boolean rotated = !SettingUtils.shouldRotate(RotationType.BlockPlace) || Managers.ROTATION.start(placeData.pos(), 1, RotationType.BlockPlace);
+                                boolean rotated = !SettingUtils.shouldRotate(RotationType.BlockPlace) || Managers.ROTATION.start(placeData.pos(), priority, RotationType.BlockPlace, Objects.hash(name + "placing"));
 
                                 if (!rotated) {
                                     break;
@@ -423,7 +424,7 @@ public class ScaffoldPlus extends BlackOutModule {
         mc.world.setBlockState(ogPos, block.getDefaultState());
 
         if (SettingUtils.shouldRotate(RotationType.BlockPlace)) {
-            Managers.ROTATION.end(d.pos());
+            Managers.ROTATION.end(Objects.hash(name + "placing"));
         }
     }
 

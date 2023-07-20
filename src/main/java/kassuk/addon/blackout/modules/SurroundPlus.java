@@ -45,6 +45,7 @@ import net.minecraft.util.math.*;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author OLEPOSSU
@@ -356,11 +357,13 @@ public class SurroundPlus extends BlackOutModule {
 
         if (blocking == null) return;
 
-        if (SettingUtils.shouldRotate(RotationType.Attacking) && !Managers.ROTATION.start(blocking.getBoundingBox(), priority - 0.1, RotationType.Attacking)) return;
+        if (SettingUtils.shouldRotate(RotationType.Attacking) && !Managers.ROTATION.start(blocking.getBoundingBox(), priority - 0.1, RotationType.Attacking, Objects.hash(name + "attacking"))) return;
 
         SettingUtils.swing(SwingState.Pre, SwingType.Attacking, Hand.MAIN_HAND);
         sendPacket(PlayerInteractEntityC2SPacket.attack(blocking, mc.player.isSneaking()));
         SettingUtils.swing(SwingState.Post, SwingType.Attacking, Hand.MAIN_HAND);
+
+        if (SettingUtils.shouldRotate(RotationType.Attacking)) Managers.ROTATION.end(Objects.hash(name + "attacking"));
 
         if (attackSwing.get()) clientSwing(attackHand.get(), Hand.MAIN_HAND);
 
@@ -538,7 +541,7 @@ public class SurroundPlus extends BlackOutModule {
 
         placing = true;
 
-        if (SettingUtils.shouldRotate(RotationType.BlockPlace) && !Managers.ROTATION.start(data.pos(), priority, RotationType.BlockPlace)) {return;}
+        if (SettingUtils.shouldRotate(RotationType.BlockPlace) && !Managers.ROTATION.start(data.pos(), priority, RotationType.BlockPlace, Objects.hash(name + "placing"))) {return;}
 
         if (!switched && hand == null) {
             switch (switchMode.get()) {
@@ -568,7 +571,7 @@ public class SurroundPlus extends BlackOutModule {
         placesLeft--;
 
         if (SettingUtils.shouldRotate(RotationType.BlockPlace)) {
-            Managers.ROTATION.end(data.pos());
+            Managers.ROTATION.end(Objects.hash(name + "placing"));
         }
     }
 

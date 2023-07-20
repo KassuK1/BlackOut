@@ -7,6 +7,7 @@ import kassuk.addon.blackout.enums.SwingHand;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.utils.BOInvUtils;
 import kassuk.addon.blackout.utils.RotationUtils;
+import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
@@ -20,6 +21,8 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
+
+import java.util.Objects;
 
 /**
  * @author OLEPOSSU
@@ -100,7 +103,7 @@ public class AutoPearl extends BlackOutModule {
 
         if (ccBypass.get() && !cc() && !placed) return;
 
-        boolean rotated = instaRot.get() || Managers.ROTATION.start(getYaw(), pitch.get(), priority, RotationType.Other) || (RotationUtils.yawAngle(Managers.ROTATION.lastDir[0], getYaw()) < 0.1 && pitch.get() - Managers.ROTATION.lastDir[1] < 0.1);
+        boolean rotated = instaRot.get() || Managers.ROTATION.start(getYaw(), pitch.get(), priority, RotationType.Other, Objects.hash(name + "look")) || (RotationUtils.yawAngle(Managers.ROTATION.lastDir[0], getYaw()) < 0.1 && pitch.get() - Managers.ROTATION.lastDir[1] < 0.1);
         if (!rotated) return;
 
 
@@ -126,6 +129,8 @@ public class AutoPearl extends BlackOutModule {
         }
 
         useItem(hand == null ? Hand.MAIN_HAND : hand);
+
+        Managers.ROTATION.end(Objects.hash(name + "look"));
         if (swing.get()) clientSwing(swingHand.get(), hand == null ? Hand.MAIN_HAND : hand);
 
         toggle();
@@ -152,7 +157,7 @@ public class AutoPearl extends BlackOutModule {
 
         BlockPos pos = mc.player.getBlockPos();
 
-        boolean rotated = instaRot.get() || Managers.ROTATION.start(getYaw(), pitch.get(), priority, RotationType.Other) || (RotationUtils.yawAngle(Managers.ROTATION.lastDir[0], getYaw()) < 0.1 && pitch.get() - Managers.ROTATION.lastDir[1] < 0.1);
+        boolean rotated = instaRot.get() || !SettingUtils.shouldRotate(RotationType.BlockPlace) || Managers.ROTATION.start(pos.down(), priority, RotationType.BlockPlace, Objects.hash(name + "placing"));
         if (!rotated) return false;
 
         if (instaRot.get())
@@ -180,6 +185,7 @@ public class AutoPearl extends BlackOutModule {
 
         placeBlock(hand == null ? Hand.MAIN_HAND : hand, pos.down().toCenterPos(), Direction.UP, pos.down());
 
+        if (!instaRot.get() && SettingUtils.shouldRotate(RotationType.BlockPlace)) Managers.ROTATION.end(Objects.hash(name + "placing"));
         placed = true;
 
         if (hand == null) {

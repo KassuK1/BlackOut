@@ -40,6 +40,7 @@ import net.minecraft.util.math.Direction;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author OLEPOSSU
@@ -476,13 +477,15 @@ public class PistonCrystal extends BlackOutModule {
 
         if (crystal == null) return;
 
-        if (SettingUtils.shouldRotate(RotationType.Attacking) && !Managers.ROTATION.start(crystal.getBoundingBox(), priority - 0.1, RotationType.Attacking)) return;
+        if (SettingUtils.shouldRotate(RotationType.Attacking) && !Managers.ROTATION.start(crystal.getBoundingBox(), priority - 0.1, RotationType.Attacking, Objects.hash(name + "attacking"))) return;
 
         if (System.currentTimeMillis() - lastAttack < 1000 / attackSpeed.get()) return;
 
         SettingUtils.swing(SwingState.Pre, SwingType.Attacking, Hand.MAIN_HAND);
         sendPacket(PlayerInteractEntityC2SPacket.attack(crystal, mc.player.isSneaking()));
         SettingUtils.swing(SwingState.Post, SwingType.Attacking, Hand.MAIN_HAND);
+
+        if (SettingUtils.shouldRotate(RotationType.Attacking)) Managers.ROTATION.end(Objects.hash(name + "attacking"));
 
         if (attackSwing.get()) clientSwing(attackHand.get(), Hand.MAIN_HAND);
 
@@ -506,7 +509,7 @@ public class PistonCrystal extends BlackOutModule {
 
         if (!available) return;
 
-        if (SettingUtils.shouldRotate(RotationType.BlockPlace) && !Managers.ROTATION.start(pistonData.pos(), priority, RotationType.BlockPlace)) return;
+        if (SettingUtils.shouldRotate(RotationType.BlockPlace) && !Managers.ROTATION.start(pistonData.pos(), priority, RotationType.BlockPlace, Objects.hash(name + "piston"))) return;
 
         boolean switched = false;
 
@@ -529,6 +532,7 @@ public class PistonCrystal extends BlackOutModule {
 
         placeBlock(hand, pistonData.pos().toCenterPos(), pistonData.dir(), pistonData.pos());
 
+        if (SettingUtils.shouldRotate(RotationType.BlockPlace)) Managers.ROTATION.end(Objects.hash(name + "piston"));
         if (pistonSwing.get()) clientSwing(pistonHand.get(), hand);
 
         pistonTime = System.currentTimeMillis();
@@ -564,7 +568,7 @@ public class PistonCrystal extends BlackOutModule {
 
         if (!available) return;
 
-        if (SettingUtils.shouldRotate(RotationType.Interact) && !Managers.ROTATION.start(crystalPos.down(), priority, RotationType.Interact)) return;
+        if (SettingUtils.shouldRotate(RotationType.Interact) && !Managers.ROTATION.start(crystalPos.down(), priority, RotationType.Interact, Objects.hash(name + "crystal"))) return;
 
         boolean switched = false;
 
@@ -585,6 +589,7 @@ public class PistonCrystal extends BlackOutModule {
 
         interactBlock(hand, crystalPos.down().toCenterPos(), crystalPlaceDir, crystalPos.down());
 
+        if (SettingUtils.shouldRotate(RotationType.Interact)) Managers.ROTATION.end(Objects.hash(name + "crystal"));
         if (crystalSwing.get()) clientSwing(crystalHand.get(), hand);
 
         crystalTime = System.currentTimeMillis();
@@ -617,7 +622,7 @@ public class PistonCrystal extends BlackOutModule {
 
         if (!available) return;
 
-        if (SettingUtils.shouldRotate(RotationType.BlockPlace) && !Managers.ROTATION.start(redstoneData.pos(), priority, RotationType.BlockPlace)) return;
+        if (SettingUtils.shouldRotate(RotationType.BlockPlace) && !Managers.ROTATION.start(redstoneData.pos(), priority, RotationType.BlockPlace, Objects.hash(name + "redstone"))) return;
 
         boolean switched = false;
 
@@ -638,6 +643,7 @@ public class PistonCrystal extends BlackOutModule {
 
         placeBlock(hand, redstoneData.pos().toCenterPos(), redstoneData.dir(), redstoneData.pos());
 
+        if (SettingUtils.shouldRotate(RotationType.BlockPlace)) Managers.ROTATION.end(Objects.hash(name + "redstone"));
         if (redstoneSwing.get()) clientSwing(redstoneHand.get(), hand);
 
         redstoneTime = System.currentTimeMillis();
@@ -719,7 +725,7 @@ public class PistonCrystal extends BlackOutModule {
 
         if (!available) return;
 
-        if (SettingUtils.shouldRotate(RotationType.BlockPlace) && !Managers.ROTATION.start(data.pos(), priority, RotationType.BlockPlace)) return;
+        if (SettingUtils.shouldRotate(RotationType.BlockPlace) && !Managers.ROTATION.start(data.pos(), priority, RotationType.BlockPlace, Objects.hash(name + "fire"))) return;
 
         boolean switched = false;
 
@@ -740,6 +746,7 @@ public class PistonCrystal extends BlackOutModule {
 
         interactBlock(hand, data.pos().toCenterPos(), data.dir(), data.pos());
 
+        if (SettingUtils.shouldRotate(RotationType.BlockPlace)) Managers.ROTATION.end(Objects.hash(name + "fire"));
         if (fireSwing.get()) clientSwing(fireHand.get(), hand);
 
         firePlaced = true;

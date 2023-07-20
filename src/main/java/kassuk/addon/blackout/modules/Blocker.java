@@ -41,6 +41,7 @@ import net.minecraft.util.math.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author OLEPOSSU
@@ -423,13 +424,13 @@ public class Blocker extends BlackOutModule {
         Entity blocking = getBlocking();
 
         if (blocking == null) return;
-
-        if (SettingUtils.shouldRotate(RotationType.Attacking) && !Managers.ROTATION.start(blocking.getBoundingBox(), priority - 0.1, RotationType.Attacking)) return;
+        if (SettingUtils.shouldRotate(RotationType.Attacking) && !Managers.ROTATION.start(blocking.getBoundingBox(), priority - 0.1, RotationType.Attacking, Objects.hash(name + "attacking"))) return;
 
         SettingUtils.swing(SwingState.Pre, SwingType.Attacking, Hand.MAIN_HAND);
         sendPacket(PlayerInteractEntityC2SPacket.attack(blocking, mc.player.isSneaking()));
         SettingUtils.swing(SwingState.Post, SwingType.Attacking, Hand.MAIN_HAND);
 
+        if (SettingUtils.shouldRotate(RotationType.Attacking)) Managers.ROTATION.end(Objects.hash(name + "attacking"));
         if (attackSwing.get()) clientSwing(attackHand.get(), Hand.MAIN_HAND);
 
         lastAttack = System.currentTimeMillis();
@@ -507,7 +508,7 @@ public class Blocker extends BlackOutModule {
             return;
         }
 
-        if (SettingUtils.shouldRotate(RotationType.BlockPlace) && !Managers.ROTATION.start(data.pos(), priority, RotationType.BlockPlace)) {return;}
+        if (SettingUtils.shouldRotate(RotationType.BlockPlace) && !Managers.ROTATION.start(data.pos(), priority, RotationType.BlockPlace, Objects.hash(name + "placing"))) return;
 
         if (!switched && hand == null) {
             switch (switchMode.get()) {
@@ -520,25 +521,19 @@ public class Blocker extends BlackOutModule {
             }
         }
 
-        if (!switched && hand == null) {
-            return;
-        }
+        if (!switched && hand == null) return;
 
         placeBlock(hand == null ? Hand.MAIN_HAND : hand, data.pos().toCenterPos(), data.dir(), data.pos());
 
         if (placeSwing.get()) clientSwing(placeHand.get(), hand == null ? Hand.MAIN_HAND : hand);
 
-        if (!packet.get()) {
-            setBlock(pos);
-        }
+        if (!packet.get()) setBlock(pos);
 
         placed.add(pos, cooldown.get());
         blocksLeft--;
         placesLeft--;
 
-        if (SettingUtils.shouldRotate(RotationType.BlockPlace)) {
-            Managers.ROTATION.end(data.pos());
-        }
+        if (SettingUtils.shouldRotate(RotationType.BlockPlace)) Managers.ROTATION.end(Objects.hash(name + "placing"));
     }
 
     private void setBlock(BlockPos pos) {

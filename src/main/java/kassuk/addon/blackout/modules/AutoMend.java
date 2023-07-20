@@ -23,6 +23,7 @@ import net.minecraft.util.math.BlockPos;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author OLEPOSSU
@@ -244,7 +245,7 @@ public class AutoMend extends BlackOutModule {
 
             if (bottleSlot >= 0 && shouldThrow()) {
                 shouldRot = true;
-                boolean rotated = !(switchMode.get() == SwitchMode.Disabled && hand == null) && Managers.ROTATION.startPitch(90, priority, RotationType.Use);
+                boolean rotated = !(switchMode.get() == SwitchMode.Disabled && hand == null) && Managers.ROTATION.startPitch(90, priority, RotationType.Use, Objects.hash(name + "look"));
 
                 if (rotated) {
                     boolean switched = hand != null;

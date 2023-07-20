@@ -28,10 +28,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author OLEPOSSU
@@ -272,7 +269,7 @@ public class HoleFillRewrite extends BlackOutModule {
                         for (int i = 0; i < Math.min(obsidian, toPlace.size()); i++) {
                             PlaceData placeData = SettingUtils.getPlaceData(toPlace.get(i));
                             if (placeData.valid()) {
-                                boolean rotated = !SettingUtils.shouldRotate(RotationType.BlockPlace) || Managers.ROTATION.start(placeData.pos(), priority, RotationType.BlockPlace);
+                                boolean rotated = !SettingUtils.shouldRotate(RotationType.BlockPlace) || Managers.ROTATION.start(placeData.pos(), priority, RotationType.BlockPlace, Objects.hash(name + "placing"));
 
                                 if (!rotated) {
                                     break;
@@ -378,7 +375,7 @@ public class HoleFillRewrite extends BlackOutModule {
         if (placeSwing.get()) clientSwing(placeHand.get(), hand);
 
         if (SettingUtils.shouldRotate(RotationType.BlockPlace)) {
-            Managers.ROTATION.end(d.pos());
+            Managers.ROTATION.end(Objects.hash(name + "placing"));
         }
 
 

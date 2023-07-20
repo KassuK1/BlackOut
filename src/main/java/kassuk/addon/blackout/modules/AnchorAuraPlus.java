@@ -33,10 +33,7 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author OLEPOSSU
@@ -231,7 +228,7 @@ public class AnchorAuraPlus extends BlackOutModule {
             pos = blocks[i];
 
             dmg = getDmg(pos);
-            self = BODamageUtils.anchorDamage(mc.player, new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5));
+            self = BODamageUtils.anchorDamage(mc.player, mc.player.getBoundingBox(), pos);
 
             if (!dmgCheck(dmg, self)) {
                 continue;
@@ -421,7 +418,7 @@ public class AnchorAuraPlus extends BlackOutModule {
             return false;
         }
 
-        if (SettingUtils.shouldRotate(RotationType.BlockPlace) && !Managers.ROTATION.start(placeData.pos(), priority, RotationType.BlockPlace)) {
+        if (SettingUtils.shouldRotate(RotationType.BlockPlace) && !Managers.ROTATION.start(placeData.pos(), priority, RotationType.BlockPlace, Objects.hash(name + "placing"))) {
             return false;
         }
 
@@ -450,7 +447,7 @@ public class AnchorAuraPlus extends BlackOutModule {
         place(hand == null ? Hand.MAIN_HAND : hand);
 
         if (SettingUtils.shouldRotate(RotationType.BlockPlace)) {
-            Managers.ROTATION.end(placeData.pos());
+            Managers.ROTATION.end(Objects.hash(name + "placing"));
         }
 
         if (hand == null) {
@@ -490,7 +487,7 @@ public class AnchorAuraPlus extends BlackOutModule {
             return false;
         }
 
-        if (SettingUtils.shouldRotate(RotationType.Interact) && !Managers.ROTATION.start(pos, priority, RotationType.Interact)) {
+        if (SettingUtils.shouldRotate(RotationType.Interact) && !Managers.ROTATION.start(pos, priority, RotationType.Interact, Objects.hash(name + "interact"))) {
             return false;
         }
 
@@ -519,7 +516,7 @@ public class AnchorAuraPlus extends BlackOutModule {
         interact(pos, dir, hand == null ? Hand.MAIN_HAND : hand);
 
         if (SettingUtils.shouldRotate(RotationType.Interact)) {
-            Managers.ROTATION.end(placeData.pos());
+            Managers.ROTATION.end(Objects.hash(name + "interact"));
         }
 
         if (hand == null) {
@@ -559,7 +556,7 @@ public class AnchorAuraPlus extends BlackOutModule {
             return false;
         }
 
-        if (SettingUtils.shouldRotate(RotationType.Interact) && !Managers.ROTATION.start(pos, priority, RotationType.Interact)) {
+        if (SettingUtils.shouldRotate(RotationType.Interact) && !Managers.ROTATION.start(pos, priority, RotationType.Interact, Objects.hash(name + "explode"))) {
             return false;
         }
 
@@ -587,7 +584,7 @@ public class AnchorAuraPlus extends BlackOutModule {
         interact(pos, dir, hand == null ? Hand.MAIN_HAND : hand);
 
         if (SettingUtils.shouldRotate(RotationType.Interact)) {
-            Managers.ROTATION.end(placeData.pos());
+            Managers.ROTATION.end(Objects.hash(name + "explode"));
         }
 
         if (hand == null) {
@@ -627,7 +624,7 @@ public class AnchorAuraPlus extends BlackOutModule {
     private double getDmg(BlockPos pos) {
         double highest = -1;
         for (PlayerEntity target : targets) {
-            highest = Math.max(highest, BODamageUtils.anchorDamage(target, new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5)));
+            highest = Math.max(highest, BODamageUtils.anchorDamage(target, target.getBoundingBox(), pos));
         }
         return highest;
     }

@@ -32,6 +32,7 @@ import net.minecraft.util.math.Vec3d;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author OLEPOSSU
@@ -500,7 +501,7 @@ public class BedAuraPlus extends BlackOutModule {
 
     private List<BlockPos> interactUpdate() {
         if (doubleInteract.get()) {
-            if (SettingUtils.shouldRotate(RotationType.Interact) && !Managers.ROTATION.start(placePos, priority, RotationType.Interact)) {
+            if (SettingUtils.shouldRotate(RotationType.Interact) && !Managers.ROTATION.start(placePos, priority, RotationType.Interact, Objects.hash(name + "explode"))) {
                 return null;
             }
 
@@ -516,7 +517,7 @@ public class BedAuraPlus extends BlackOutModule {
             }
 
             if (SettingUtils.shouldRotate(RotationType.Interact)) {
-                Managers.ROTATION.end(placePos);
+                Managers.ROTATION.end(Objects.hash(name + "explode"));
             }
 
             return list;
@@ -534,7 +535,7 @@ public class BedAuraPlus extends BlackOutModule {
             return null;
         }
 
-        if (SettingUtils.shouldRotate(RotationType.Interact) && !Managers.ROTATION.start(interactPos, priority, RotationType.Interact)) {
+        if (SettingUtils.shouldRotate(RotationType.Interact) && !Managers.ROTATION.start(interactPos, priority, RotationType.Interact, Objects.hash(name + "explode"))) {
             return null;
         }
 
@@ -543,7 +544,7 @@ public class BedAuraPlus extends BlackOutModule {
         if (interactSwing.get()) clientSwing(interactHand.get(), Hand.MAIN_HAND);
 
         if (SettingUtils.shouldRotate(RotationType.Interact)) {
-            Managers.ROTATION.end(interactPos);
+            Managers.ROTATION.end(Objects.hash(name + "explode"));
         }
         List<BlockPos> list = new ArrayList<>();
         list.add(interactPos);
@@ -605,7 +606,7 @@ public class BedAuraPlus extends BlackOutModule {
             return false;
         }
 
-        if (SettingUtils.shouldRotate(RotationType.BlockPlace) && !Managers.ROTATION.start(placeData.pos(), priority, RotationType.BlockPlace)) {
+        if (SettingUtils.shouldRotate(RotationType.BlockPlace) && !Managers.ROTATION.start(placeData.pos(), priority, RotationType.BlockPlace, Objects.hash(name + "placing"))) {
             return false;
         }
 
@@ -614,7 +615,7 @@ public class BedAuraPlus extends BlackOutModule {
         if (rotMode.get() == RotationMode.Packet) {
             sendPacket(new PlayerMoveC2SPacket.LookAndOnGround(bedDir.getOpposite().asRotation(), Managers.ROTATION.lastDir[1], Managers.ON_GROUND.isOnGround()));
         } else {
-            Managers.ROTATION.startYaw(bedDir.getOpposite().asRotation(), priority, RotationType.Other);
+            Managers.ROTATION.startYaw(bedDir.getOpposite().asRotation(), priority, RotationType.Other, Objects.hash(name + "placing"));
             if (Math.abs(RotationUtils.yawAngle(Managers.ROTATION.lastDir[0], bedDir.getOpposite().asRotation())) > 45) {
                 return false;
             }
@@ -645,7 +646,7 @@ public class BedAuraPlus extends BlackOutModule {
         place(hand == null ? Hand.MAIN_HAND : hand);
 
         if (SettingUtils.shouldRotate(RotationType.BlockPlace)) {
-            Managers.ROTATION.end(placeData.pos());
+            Managers.ROTATION.end(Objects.hash(name + "placing"));
         }
 
         if (hand == null) {
@@ -698,7 +699,7 @@ public class BedAuraPlus extends BlackOutModule {
     private double getDmg(BlockPos pos) {
         double highest = -1;
         for (PlayerEntity target : targets) {
-            highest = Math.max(highest, BODamageUtils.bedDamage(target, new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5)));
+            highest = Math.max(highest, BODamageUtils.bedDamage(target, target.getBoundingBox(), new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), null));
         }
         return highest;
     }
@@ -710,14 +711,14 @@ public class BedAuraPlus extends BlackOutModule {
         for (PlayerEntity target : targets) {
             if (target.getHealth() <= 0) continue;
 
-            highest = Math.max(highest, BODamageUtils.bedDamage(target, new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5)));
+            highest = Math.max(highest, BODamageUtils.bedDamage(target, target.getBoundingBox(), new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), null));
             highestHP = target.getHealth() + target.getAbsorptionAmount();
         }
         dmg = highest;
         enemyHP = highestHP;
 
         // Self
-        self = BODamageUtils.bedDamage(mc.player, new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5));
+        self = BODamageUtils.bedDamage(mc.player, mc.player.getBoundingBox(), new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), null);
         selfHP = mc.player.getHealth() + mc.player.getAbsorptionAmount();
 
         // Friend
@@ -726,7 +727,7 @@ public class BedAuraPlus extends BlackOutModule {
         for (PlayerEntity friend : friends) {
             if (friend.getHealth() <= 0) continue;
 
-            highest = Math.max(highest, BODamageUtils.bedDamage(friend, new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5)));
+            highest = Math.max(highest, BODamageUtils.bedDamage(friend, friend.getBoundingBox(), new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), null));
             highestHP = friend.getHealth() + friend.getAbsorptionAmount();
         }
         friend = highest;

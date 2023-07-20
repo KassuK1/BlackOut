@@ -23,6 +23,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.math.Direction;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 public class BurrowPlus extends BlackOutModule {
@@ -132,7 +133,7 @@ public class BurrowPlus extends BlackOutModule {
 
         if (!blocksPresent) return;
 
-        boolean rotated = instaRot.get() || !SettingUtils.shouldRotate(RotationType.BlockPlace) || Managers.ROTATION.startPitch(90, priority, RotationType.BlockPlace);
+        boolean rotated = instaRot.get() || !SettingUtils.shouldRotate(RotationType.BlockPlace) || Managers.ROTATION.startPitch(90, priority, RotationType.BlockPlace, Objects.hash(name + "placing"));
         if (!rotated) return;
 
         boolean switched = hand != null;
@@ -166,6 +167,7 @@ public class BurrowPlus extends BlackOutModule {
         }
 
         placeBlock(Hand.MAIN_HAND, mc.player.getBlockPos().down().toCenterPos(), Direction.UP, mc.player.getBlockPos().down());
+        if (!instaRot.get() && SettingUtils.shouldRotate(RotationType.BlockPlace)) Managers.ROTATION.end(Objects.hash(name + "placing"));
 
         if (placeSwing.get()) clientSwing(placeHand.get(), Hand.MAIN_HAND);
 

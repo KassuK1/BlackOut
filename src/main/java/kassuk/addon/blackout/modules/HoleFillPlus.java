@@ -660,7 +660,7 @@ public class HoleFillPlus extends BlackOutModule {
 
         placing = true;
 
-        if (SettingUtils.shouldRotate(RotationType.BlockPlace) && !Managers.ROTATION.start(data.pos(), priority, RotationType.BlockPlace)) {return;}
+        if (SettingUtils.shouldRotate(RotationType.BlockPlace) && !Managers.ROTATION.start(data.pos(), priority, RotationType.BlockPlace, Objects.hash(name + "placing"))) return;
 
         if (!switched && hand == null) {
             switch (switchMode.get()) {
@@ -688,7 +688,7 @@ public class HoleFillPlus extends BlackOutModule {
         placesLeft--;
 
         if (SettingUtils.shouldRotate(RotationType.BlockPlace)) {
-            Managers.ROTATION.end(data.pos());
+            Managers.ROTATION.end(Objects.hash(name + "placing"));
         }
     }
 

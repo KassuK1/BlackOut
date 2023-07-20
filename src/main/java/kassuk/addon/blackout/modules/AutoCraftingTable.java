@@ -29,6 +29,8 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 
+import java.util.Objects;
+
 import static kassuk.addon.blackout.utils.OLEPOSSUtils.replaceable;
 
 /**
@@ -186,13 +188,14 @@ public class AutoCraftingTable extends BlackOutModule {
     }
 
     private boolean interact() {
-        boolean rotated = !SettingUtils.shouldRotate(RotationType.BlockPlace) || Managers.ROTATION.start(tablePos, priority - 0.1, RotationType.Interact);
+        boolean rotated = !SettingUtils.shouldRotate(RotationType.Interact) || Managers.ROTATION.start(tablePos, priority - 0.1, RotationType.Interact, Objects.hash(name + "interact"));
         if (!rotated) {
             return false;
         }
 
         interactBlock(Hand.MAIN_HAND, tablePos.toCenterPos(), tableDir, tablePos);
 
+        if (SettingUtils.shouldRotate(RotationType.Interact)) Managers.ROTATION.end(Objects.hash(name + "interact"));
         if (interactSwing.get()) clientSwing(interactHand.get(), Hand.MAIN_HAND);
 
         return true;
@@ -213,7 +216,7 @@ public class AutoCraftingTable extends BlackOutModule {
             return false;
         }
 
-        boolean rotated = !SettingUtils.shouldRotate(RotationType.BlockPlace) || Managers.ROTATION.start(placeData.pos(), priority, RotationType.BlockPlace);
+        boolean rotated = !SettingUtils.shouldRotate(RotationType.BlockPlace) || Managers.ROTATION.start(placeData.pos(), priority, RotationType.BlockPlace, Objects.hash(name + "placing"));
         if (!rotated) {
             return false;
         }
@@ -240,6 +243,7 @@ public class AutoCraftingTable extends BlackOutModule {
 
         placeBlock(rHand, placeData.pos().toCenterPos(), placeData.dir(), placeData.pos());
 
+        if (SettingUtils.shouldRotate(RotationType.BlockPlace)) Managers.ROTATION.end(Objects.hash(name + "placing"));
         if (placeSwing.get()) clientSwing(placeHand.get(), rHand);
 
         if (hand == null) {

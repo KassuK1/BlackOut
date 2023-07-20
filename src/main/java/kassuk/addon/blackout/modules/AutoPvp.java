@@ -36,6 +36,7 @@ import net.minecraft.util.math.Vec3d;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 /**
@@ -391,7 +392,7 @@ public class AutoPvp extends BlackOutModule {
             Managers.ROTATION.start(
                 RotationUtils.getYaw(mc.player.getEyePos(), target.getEyePos()),
                 RotationUtils.getPitch(mc.player.getEyePos(), target.getEyePos()),
-                priority, RotationType.Other);
+                priority, RotationType.Other, Objects.hash(name + "stare"));
         }
 
         if (inRange && surround.get() && !shouldSuicide) {

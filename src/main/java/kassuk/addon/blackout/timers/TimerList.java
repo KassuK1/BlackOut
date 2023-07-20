@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 public class TimerList<T> {
     public final List<Timer<T>> timers = new ArrayList<>();
@@ -29,6 +30,24 @@ public class TimerList<T> {
         return map;
     }
 
+    public List<T> getList() {
+        List<T> l = new ArrayList<>();
+        for (Timer<T> timer : timers) {
+            l.add(timer.value);
+        }
+        return l;
+    }
+
+    public T remove(Predicate<? super Timer<T>> predicate) {
+        for (Timer<T> timer : timers) {
+            if (predicate.test(timer)) {
+                timers.remove(timer);
+                return timer.value;
+            }
+        }
+        return null;
+    }
+
     public boolean contains(T value) {
         for (Timer<T> timer : timers) {
             if (timer.value.equals(value)) return true;
@@ -36,7 +55,7 @@ public class TimerList<T> {
         return false;
     }
 
-    private static class Timer<T> {
+    public static class Timer<T> {
         public final T value;
         public final long endTime;
         public final double time;

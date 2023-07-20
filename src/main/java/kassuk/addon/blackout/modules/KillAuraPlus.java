@@ -24,6 +24,8 @@ import net.minecraft.item.SwordItem;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.util.Hand;
 
+import java.util.Objects;
+
 /**
  * @author OLEPOSSU
  */
@@ -120,13 +122,13 @@ public class KillAuraPlus extends BlackOutModule {
             return;
         }
 
-        boolean rotated = rotationMode.get() != RotationMode.Constant || !SettingUtils.shouldRotate(RotationType.Attacking) || Managers.ROTATION.start(target.getBoundingBox(), priority, RotationType.Attacking);
+        boolean rotated = rotationMode.get() != RotationMode.Constant || !SettingUtils.shouldRotate(RotationType.Attacking) || Managers.ROTATION.start(target.getBoundingBox(), priority, RotationType.Attacking, Objects.hash(name + "attacking"));
 
         if (!rotated || timer < delay.get()) {
             return;
         }
 
-        rotated = rotationMode.get() != RotationMode.OnHit || !SettingUtils.shouldRotate(RotationType.Attacking) || Managers.ROTATION.start(target.getBoundingBox(), priority, RotationType.Attacking);
+        rotated = rotationMode.get() != RotationMode.OnHit || !SettingUtils.shouldRotate(RotationType.Attacking) || Managers.ROTATION.start(target.getBoundingBox(), priority, RotationType.Attacking, Objects.hash(name + "attacking"));
 
         if (!rotated) {
             return;
@@ -171,7 +173,7 @@ public class KillAuraPlus extends BlackOutModule {
         }
 
         if (rotationMode.get() == RotationMode.OnHit) {
-            Managers.ROTATION.end(target.getBoundingBox());
+            Managers.ROTATION.end(Objects.hash(name + "attacking"));
         }
     }
 
