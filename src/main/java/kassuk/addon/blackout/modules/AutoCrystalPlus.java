@@ -115,7 +115,7 @@ public class AutoCrystalPlus extends BlackOutModule {
     );
     private final Setting<Double> speedLimit = sgPlace.add(new DoubleSetting.Builder()
         .name("Speed Limit")
-        .description("Maximum amount of place packets every second. 0 = no limit")
+        .description("Maximum amount of place packets every second. 0 = no limit.")
         .defaultValue(0)
         .min(0)
         .sliderRange(0, 20)
