@@ -84,7 +84,7 @@ public class BlackOutModule extends Module {
     }
 
     public void sendMessage(Text text, int id) {
-        ((IChatHud) mc.inGameHud.getChatHud()).add(text, id);
+        ((IChatHud) mc.inGameHud.getChatHud()).meteor$add(text, id);
     }
 
     public void sendPacket(Packet<?> packet) {
