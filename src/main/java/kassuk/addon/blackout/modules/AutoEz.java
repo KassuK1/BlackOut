@@ -343,7 +343,7 @@ public class AutoEz extends BlackOutModule {
     private void sendKillMessage() {
         switch (killMsgMode.get()) {
             case Exhibition -> {
-                int num = r.nextInt(0, exhibobo.length - 1);
+                int num = r.nextInt(0, exhibobo.length);
                 if (num == lastNum) {
                     num = num < exhibobo.length - 1 ? num + 1 : 0;
                 }
@@ -353,7 +353,7 @@ public class AutoEz extends BlackOutModule {
 
             case Blackout -> {
                 if (!killMessages.get().isEmpty()) {
-                    int num = r.nextInt(0, killMessages.get().size() - 1);
+                    int num = r.nextInt(0, killMessages.get().size());
                     if (num == lastNum) num = num < killMessages.get().size() - 1 ? num + 1 : 0;
 
                     lastNum = num;
@@ -361,7 +361,7 @@ public class AutoEz extends BlackOutModule {
                 }
             }
             case NoClue -> {
-                int num = r.nextInt(0, noclue.length - 1);
+                int num = r.nextInt(0, noclue.length);
                 if (num == lastNum) {
                     num = num < noclue.length - 1 ? num + 1 : 0;
                 }
