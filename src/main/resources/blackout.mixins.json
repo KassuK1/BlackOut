@@ -3,6 +3,7 @@
   "package": "kassuk.addon.blackout.mixins",
   "compatibilityLevel": "JAVA_17",
   "client": [
+    "AccessorMinecraftClient",
     "IBlockSettings",
     "IEntityS2CPacket",
     "IEntitySetHeadYawS2CPacket",
