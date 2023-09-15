@@ -58,10 +58,8 @@ public class FastXP extends BlackOutModule {
     private void onTick(TickEvent.Pre event) {
         if (mc.player == null || mc.world == null) return;
 
-        int ticks = Math.min(((AccessorMinecraftClient) mc).getItemUseCooldown(), yeetDelay.get());
-
         if (mc.player.getMainHandStack().getItem() == Items.EXPERIENCE_BOTTLE  && mc.options.useKey.isPressed()){
-            ((AccessorMinecraftClient) mc).setItemUseCooldown(ticks);
+            ((AccessorMinecraftClient) mc).setItemUseCooldown(yeetDelay.get());
 
             if (rotMode.get() == RotationMode.Silent && rotate.get())
                 Rotations.rotate(mc.player.getYaw(), pitch.get());

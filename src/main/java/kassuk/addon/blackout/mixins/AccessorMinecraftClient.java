@@ -9,7 +9,4 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface AccessorMinecraftClient {
     @Accessor("itemUseCooldown")
     void setItemUseCooldown(int itemUseCooldown);
-
-    @Accessor("itemUseCooldown")
-    int getItemUseCooldown();
 }
