@@ -688,8 +688,7 @@ public class AutoCrystalPlus extends BlackOutModule {
     private int placed = 0;
 
     private double cps = 0;
-    private double infoCps = 0;
-    private long lastExplosion = 0;
+    private final List<Long> explosions = Collections.synchronizedList(new ArrayList<>());
 
     private final List<Predict> predicts = new ArrayList<>();
     private final List<SetDead> setDeads = new ArrayList<>();
@@ -717,9 +716,7 @@ public class AutoCrystalPlus extends BlackOutModule {
 
     @Override
     public String getInfoString() {
-        super.getInfoString();
-
-        return ((float) Math.round(infoCps * 10) / 10) + " CPS";
+        return String.format("%.1f", cps);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -728,9 +725,7 @@ public class AutoCrystalPlus extends BlackOutModule {
         ticksEnabled++;
         placed++;
 
-        if (mc.player == null || mc.world == null) {
-            return;
-        }
+        if (mc.player == null || mc.world == null) return;
 
         if (autoMine == null) autoMine = Modules.get().get(AutoMine.class);
 
@@ -743,31 +738,26 @@ public class AutoCrystalPlus extends BlackOutModule {
 
         List<BlockPos> toRemove = new ArrayList<>();
         existedList.forEach((key, val) -> {
-            if (System.currentTimeMillis() - val >= 5000 + existed.get() * 1000) {
+            if (System.currentTimeMillis() - val >= 5000 + existed.get() * 1000)
                 toRemove.add(key);
-            }
         });
         toRemove.forEach(existedList::remove);
 
         toRemove.clear();
         existedTicksList.forEach((key, val) -> {
-            if (ticksEnabled - val >= 100 + existedTicks.get()) {
+            if (ticksEnabled - val >= 100 + existedTicks.get())
                 toRemove.add(key);
-            }
         });
         toRemove.forEach(existedTicksList::remove);
 
         toRemove.clear();
         own.forEach((key, val) -> {
-            if (System.currentTimeMillis() - val >= 5000) {
+            if (System.currentTimeMillis() - val >= 5000)
                 toRemove.add(key);
-            }
         });
         toRemove.forEach(own::remove);
 
-        if (performance.get()) {
-            updatePlacement();
-        }
+        if (performance.get()) updatePlacement();
     }
 
     @EventHandler(priority = EventPriority.HIGHEST + 1)
@@ -777,19 +767,29 @@ public class AutoCrystalPlus extends BlackOutModule {
         if (autoMine == null) autoMine = Modules.get().get(AutoMine.class);
 
         suicide = Modules.get().isActive(Suicide.class);
-        double d = (System.currentTimeMillis() - lastMillis) / 1000f;
+        double delta = (System.currentTimeMillis() - lastMillis) / 1000f;
         lastMillis = System.currentTimeMillis();
 
-        if (System.currentTimeMillis() - lastExplosion > 5000) cps = 0;
+        cps = 0;
+        synchronized (explosions) {
+            explosions.removeIf(time -> {
+                double p = (System.currentTimeMillis() - time) / 1000D;
 
-        infoCps = MathHelper.lerp(d / 3, infoCps, cps);
+                if (p >= 5) return true;
+
+                double d = p <= 4 ? 1 : 1 - (p - 4);
+                cps += d;
+                return false;
+            });
+        }
+        cps /= 4.5;
 
         attackedList.update();
-        attackTimer = Math.max(attackTimer - d, 0);
-        placeTimer = Math.max(placeTimer - d * getSpeed(), 0);
-        placeLimitTimer += d;
-        delayTimer += d;
-        switchTimer = Math.max(0, switchTimer - d);
+        attackTimer = Math.max(attackTimer - delta, 0);
+        placeTimer = Math.max(placeTimer - delta * getSpeed(), 0);
+        placeLimitTimer += delta;
+        delayTimer += delta;
+        switchTimer = Math.max(0, switchTimer - delta);
 
         update();
         checkDelayed();
@@ -799,14 +799,14 @@ public class AutoCrystalPlus extends BlackOutModule {
             switch (renderMode.get()) {
                 case BlackOut -> {
                     if (placePos != null && !isPaused() && holdingCheck()) {
-                        renderProgress = Math.min(1, renderProgress + d);
+                        renderProgress = Math.min(1, renderProgress + delta);
                         renderTarget = new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ());
                     } else {
-                        renderProgress = Math.max(0, renderProgress - d);
+                        renderProgress = Math.max(0, renderProgress - delta);
                     }
 
                     if (renderTarget != null) {
-                        renderPos = smoothMove(renderPos, renderTarget, d * animationSpeed.get() * 5);
+                        renderPos = smoothMove(renderPos, renderTarget, delta * animationSpeed.get() * 5);
                     }
 
                     if (renderPos != null) {
@@ -844,7 +844,7 @@ public class AutoCrystalPlus extends BlackOutModule {
                         renderPos = new Vec3d(placePos.getX(), placePos.getY(), placePos.getZ());
                         renderProgress = fadeTime.get() + renderTime.get();
                     } else {
-                        renderProgress = Math.max(0, renderProgress - d);
+                        renderProgress = Math.max(0, renderProgress - delta);
                     }
 
                     if (renderProgress > 0 && renderPos != null) {
@@ -859,7 +859,7 @@ public class AutoCrystalPlus extends BlackOutModule {
                     for (Map.Entry<BlockPos, Double[]> entry : earthMap.entrySet()) {
                         BlockPos pos = entry.getKey();
                         Double[] alpha = entry.getValue();
-                        if (alpha[0] <= d) {
+                        if (alpha[0] <= delta) {
                             toRemove.add(pos);
                         } else {
                             double r = Math.min(1, alpha[0] / alpha[1]) / 2f;
@@ -893,7 +893,7 @@ public class AutoCrystalPlus extends BlackOutModule {
                             event.renderer.box(box,
                                 new Color(color.get().r, color.get().g, color.get().b, (int) Math.round(color.get().a * Math.min(1, alpha[0] / alpha[1]))),
                                 new Color(lineColor.get().r, lineColor.get().g, lineColor.get().b, (int) Math.round(lineColor.get().a * Math.min(1, alpha[0] / alpha[1]))), shapeMode.get(), 0);
-                            entry.setValue(new Double[]{alpha[0] - d, alpha[1]});
+                            entry.setValue(new Double[]{alpha[0] - delta, alpha[1]});
                         }
                     }
                     toRemove.forEach(earthMap::remove);
@@ -915,6 +915,8 @@ public class AutoCrystalPlus extends BlackOutModule {
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onEntity(EntityAddedEvent event) {
         confirmed = event.entity.getId();
+
+        if (event.entity.getBlockPos().equals(placePos)) explosions.add(System.currentTimeMillis());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -926,34 +928,15 @@ public class AutoCrystalPlus extends BlackOutModule {
 
             if (event.packet instanceof PlayerInteractBlockC2SPacket packet) {
 
-                if (!(packet.getHand() == Hand.MAIN_HAND ? Managers.HOLDING.isHolding(Items.END_CRYSTAL) : mc.player.getOffHandStack().getItem() == Items.END_CRYSTAL)) {
+                if (!(packet.getHand() == Hand.MAIN_HAND ? Managers.HOLDING.isHolding(Items.END_CRYSTAL) : mc.player.getOffHandStack().getItem() == Items.END_CRYSTAL))
                     return;
-                }
 
-                if (isOwn(packet.getBlockHitResult().getBlockPos().up())) {
-                    own.remove(packet.getBlockHitResult().getBlockPos().up());
-                }
+                if (isOwn(packet.getBlockHitResult().getBlockPos().up())) own.remove(packet.getBlockHitResult().getBlockPos().up());
 
                 own.put(packet.getBlockHitResult().getBlockPos().up(), System.currentTimeMillis());
-
                 blocked.add(OLEPOSSUtils.getCrystalBox(packet.getBlockHitResult().getBlockPos().up()));
-
                 addExisted(packet.getBlockHitResult().getBlockPos().up());
             }
-        }
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST)
-    private void onReceive(PacketEvent.Receive event) {
-        if (event.packet instanceof EntitySpawnS2CPacket packet && packet.getEntityType() == EntityType.END_CRYSTAL) {
-
-            Vec3d pos = new Vec3d(packet.getX(), packet.getY(), packet.getZ());
-
-            if (!isOwn(pos)) return;
-            double delta = System.currentTimeMillis() - lastExplosion;
-            lastExplosion = System.currentTimeMillis();
-
-            cps = 1000 / delta;
         }
     }
 
@@ -965,9 +948,7 @@ public class AutoCrystalPlus extends BlackOutModule {
         Hand hand = getHand(stack -> stack.getItem() == Items.END_CRYSTAL);
 
         Hand handToUse = hand;
-        if (!performance.get()) {
-            updatePlacement();
-        }
+        if (!performance.get()) updatePlacement();
 
         switch (switchMode.get()) {
             case Simple -> {
@@ -980,9 +961,8 @@ public class AutoCrystalPlus extends BlackOutModule {
             case Gapple -> {
                 int gapSlot = InvUtils.findInHotbar(OLEPOSSUtils::isGapple).slot();
                 if (mc.options.useKey.isPressed() && Managers.HOLDING.isHolding(Items.END_CRYSTAL, Items.ENCHANTED_GOLDEN_APPLE, Items.GOLDEN_APPLE) && gapSlot >= 0) {
-                    if (getHand(OLEPOSSUtils::isGapple) == null) {
+                    if (getHand(OLEPOSSUtils::isGapple) == null)
                         InvUtils.swap(gapSlot, false);
-                    }
                     handToUse = getHand(itemStack -> itemStack.getItem() == Items.END_CRYSTAL);
                 } else if (Managers.HOLDING.isHolding(Items.END_CRYSTAL, Items.ENCHANTED_GOLDEN_APPLE, Items.GOLDEN_APPLE)) {
                     int slot = InvUtils.findInHotbar(Items.END_CRYSTAL).slot();
@@ -1001,9 +981,8 @@ public class AutoCrystalPlus extends BlackOutModule {
                 if (handToUse != null || (switchMode.get() == SwitchMode.Silent && hotbar >= 0) || ((switchMode.get() == SwitchMode.PickSilent || switchMode.get() == SwitchMode.InvSilent) && silentSlot >= 0)) {
                     placing = true;
                     if (!SettingUtils.shouldRotate(RotationType.Interact) || Managers.ROTATION.start(placePos.down(), smartRot.get() ? new Vec3d(placePos.getX() + 0.5, placePos.getY(), placePos.getZ() + 0.5) : null, priority, RotationType.Interact, Objects.hash(name + "placing"))) {
-                        if (speedCheck() && delayCheck()) {
+                        if (speedCheck() && delayCheck())
                             placeCrystal(placePos.down(), placeDir, handToUse, silentSlot, hotbar);
-                        }
                     }
                 }
             }
@@ -1033,25 +1012,21 @@ public class AutoCrystalPlus extends BlackOutModule {
         if (expEntity != null) {
             if (multiTaskCheck() && !isAttacked(expEntity.getId()) && attackDelayCheck() && existedCheck(expEntity.getBlockPos())) {
                 if (!SettingUtils.shouldRotate(RotationType.Attacking) || startAttackRot()) {
-                    if (SettingUtils.shouldRotate(RotationType.Attacking)) {
-                        expEntityBB = expEntity.getBoundingBox();
-                    }
+                    if (SettingUtils.shouldRotate(RotationType.Attacking)) expEntityBB = expEntity.getBoundingBox();
                     explode(expEntity.getId(), expEntity.getPos());
                 }
             }
         }
 
-        if (!isAlive(expEntityBB) && SettingUtils.shouldRotate(RotationType.Attacking)) {
+        if (!isAlive(expEntityBB) && SettingUtils.shouldRotate(RotationType.Attacking))
             Managers.ROTATION.end(Objects.hash(name + "attacking"));
-        }
     }
 
     private boolean attackDelayCheck() {
-        if (instantAttack.get()) {
+        if (instantAttack.get())
             return expSpeedLimit.get() <= 0 || System.currentTimeMillis() > lastAttack + 1000 / expSpeedLimit.get();
-        } else {
+        else
             return System.currentTimeMillis() > lastAttack + 1000 / expSpeed.get();
-        }
     }
 
     private boolean startAttackRot() {
@@ -1064,18 +1039,11 @@ public class AutoCrystalPlus extends BlackOutModule {
     }
 
     private boolean isAlive(Box box) {
-        if (box == null) {
-            return true;
-        }
+        if (box == null) return true;
 
         for (Entity en : mc.world.getEntities()) {
-            if (!(en instanceof EndCrystalEntity)) {
-                continue;
-            }
-
-            if (bbEquals(box, en.getBoundingBox())) {
-                return true;
-            }
+            if (!(en instanceof EndCrystalEntity)) continue;
+            if (bbEquals(box, en.getBoundingBox())) return true;
         }
         return false;
     }
@@ -1091,29 +1059,21 @@ public class AutoCrystalPlus extends BlackOutModule {
 
     private boolean speedCheck() {
 
-        if (speedLimit.get() > 0 && placeLimitTimer < 1 / speedLimit.get()) {
+        if (speedLimit.get() > 0 && placeLimitTimer < 1 / speedLimit.get())
             return false;
-        }
 
-        if (instantPlace.get() && !shouldSlow() && !isBlocked(placePos)) {
+        if (instantPlace.get() && !shouldSlow() && !isBlocked(placePos))
             return true;
-        }
 
         return placeTimer <= 0;
     }
 
     private boolean holdingCheck() {
-        switch (switchMode.get()) {
-            case Silent -> {
-                return InvUtils.findInHotbar(Items.END_CRYSTAL).slot() >= 0;
-            }
-            case PickSilent, InvSilent -> {
-                return InvUtils.find(Items.END_CRYSTAL).slot() >= 0;
-            }
-            default -> {
-                return getHand(itemStack -> itemStack.getItem() == Items.END_CRYSTAL) != null;
-            }
-        }
+        return switch (switchMode.get()) {
+            case Silent -> InvUtils.findInHotbar(Items.END_CRYSTAL).slot() >= 0;
+            case PickSilent, InvSilent -> InvUtils.find(Items.END_CRYSTAL).slot() >= 0;
+            default -> getHand(itemStack -> itemStack.getItem() == Items.END_CRYSTAL) != null;
+        };
     }
 
     private void updatePlacement() {
@@ -1128,11 +1088,10 @@ public class AutoCrystalPlus extends BlackOutModule {
     private void placeCrystal(BlockPos pos, Direction dir, Hand handToUse, int sl, int hsl) {
         if (pos != null && mc.player != null) {
             if (renderMode.get().equals(RenderMode.Earthhack)) {
-                if (!earthMap.containsKey(pos)) {
+                if (!earthMap.containsKey(pos))
                     earthMap.put(pos, new Double[]{fadeTime.get() + renderTime.get(), fadeTime.get()});
-                } else {
+                else
                     earthMap.replace(pos, new Double[]{fadeTime.get() + renderTime.get(), fadeTime.get()});
-                }
             }
 
             blocked.add(new Box(pos.getX() - 0.5, pos.getY() + 1, pos.getZ() - 0.5, pos.getX() + 1.5, pos.getY() + 2, pos.getZ() + 1.5));
@@ -1162,9 +1121,8 @@ public class AutoCrystalPlus extends BlackOutModule {
 
             if (placeSwing.get()) clientSwing(placeHand.get(), switched ? Hand.MAIN_HAND : handToUse);
 
-            if (SettingUtils.shouldRotate(RotationType.Interact)) {
+            if (SettingUtils.shouldRotate(RotationType.Interact))
                 Managers.ROTATION.end(Objects.hash(name + "placing"));
-            }
 
             if (switched) {
                 switch (switchMode.get()) {
@@ -1185,9 +1143,8 @@ public class AutoCrystalPlus extends BlackOutModule {
     }
 
     private boolean delayCheck() {
-        if (placeDelayMode.get() == DelayMode.Seconds) {
+        if (placeDelayMode.get() == DelayMode.Seconds)
             return delayTimer >= placeDelay.get();
-        }
         return delayTicks >= placeDelayTicks.get();
     }
 
@@ -1198,22 +1155,16 @@ public class AutoCrystalPlus extends BlackOutModule {
     private int getHighest() {
         int highest = confirmed;
         for (Entity entity : mc.world.getEntities()) {
-            if (entity.getId() > highest) {
-                highest = entity.getId();
-            }
+            if (entity.getId() > highest) highest = entity.getId();
         }
-        if (highest > confirmed) {
-            confirmed = highest;
-        }
+        if (highest > confirmed) confirmed = highest;
         return highest;
     }
 
     private boolean isBlocked(BlockPos pos) {
         Box box = new Box(pos.getX(), pos.getY(), pos.getZ(), pos.getX() + 1, pos.getY() + 2, pos.getZ() + 1);
         for (Box bb : blocked) {
-            if (bb.intersects(box)) {
-                return true;
-            }
+            if (bb.intersects(box)) return true;
         }
         return false;
     }
@@ -1250,9 +1201,7 @@ public class AutoCrystalPlus extends BlackOutModule {
             blocked.clear();
             if (setDead.get()) {
                 Entity entity = mc.world.getEntityById(id);
-                if (entity == null) {
-                    return;
-                }
+                if (entity == null) return;
 
                 addSetDead(entity, setDeadDelay.get());
             }
@@ -1260,56 +1209,39 @@ public class AutoCrystalPlus extends BlackOutModule {
     }
 
     private boolean existedCheck(BlockPos pos) {
-        if (existedMode.get() == DelayMode.Seconds) {
+        if (existedMode.get() == DelayMode.Seconds)
             return !existedList.containsKey(pos) || System.currentTimeMillis() > existedList.get(pos) + existed.get() * 1000;
-        } else {
+        else
             return !existedTicksList.containsKey(pos) || ticksEnabled >= existedTicksList.get(pos) + existedTicks.get();
-        }
     }
 
     private void addExisted(BlockPos pos) {
         if (existedMode.get() == DelayMode.Seconds) {
-            if (!existedList.containsKey(pos)) {
-                existedList.put(pos, System.currentTimeMillis());
-            }
+            if (!existedList.containsKey(pos)) existedList.put(pos, System.currentTimeMillis());
         } else {
-            if (!existedTicksList.containsKey(pos)) {
-                existedTicksList.put(pos, ticksEnabled);
-            }
+            if (!existedTicksList.containsKey(pos)) existedTicksList.put(pos, ticksEnabled);
         }
     }
 
     private void removeExisted(BlockPos pos) {
         if (existedMode.get() == DelayMode.Seconds) {
-            if (existedList.containsKey(pos)) {
-                existedList.remove(pos);
-            }
+            if (existedList.containsKey(pos)) existedList.remove(pos);
         } else {
-            if (existedTicksList.containsKey(pos)) {
-                existedTicksList.remove(pos);
-            }
+            if (existedTicksList.containsKey(pos)) existedTicksList.remove(pos);
         }
     }
 
     private boolean canExplode(Vec3d vec) {
-        if (onlyOwn.get() && !isOwn(vec)) {
-            return false;
-        }
-        if (!inExplodeRange(vec)) {
-            return false;
-        }
+        if (onlyOwn.get() && !isOwn(vec)) return false;
+        if (!inExplodeRange(vec)) return false;
 
         double[][] result = getDmg(vec, true);
         return explodeDamageCheck(result[0], result[1], isOwn(vec));
     }
 
     private boolean canExplodePlacing(Vec3d vec) {
-        if (onlyOwn.get() && !isOwn(vec)) {
-            return false;
-        }
-        if (!inExplodeRangePlacing(vec)) {
-            return false;
-        }
+        if (onlyOwn.get() && !isOwn(vec)) return false;
+        if (!inExplodeRangePlacing(vec)) return false;
 
         double[][] result = getDmg(vec, false);
         return explodeDamageCheck(result[0], result[1], isOwn(vec));
@@ -1420,20 +1352,15 @@ public class AutoCrystalPlus extends BlackOutModule {
         if (checkOwn) {
             if (playerHP >= 0 && dmg[2] * forcePop.get() >= playerHP) return false;
             if (health[1] >= 0 && dmg[1] * antiFriendPop.get() >= health[1]) return false;
-
         }
+
         if (checkDmg) {
             if (health[0] >= 0 && dmg[0] * forcePop.get() >= health[0]) return true;
-
-        }
-
-        if (checkDmg) {
             if (dmg[0] < minExplode.get()) return false;
 
             if (dmg[1] >= 0 && dmg[0] / dmg[1] < minFriendExpRatio.get()) return false;
             if (dmg[2] >= 0 && dmg[0] / dmg[2] < minExpRatio.get()) return false;
         }
-
 
         if (checkOwn) {
             if (dmg[1] > maxFriendExp.get()) return false;
@@ -1448,9 +1375,7 @@ public class AutoCrystalPlus extends BlackOutModule {
 
     private boolean isOwn(BlockPos pos) {
         for (Map.Entry<BlockPos, Long> entry : own.entrySet()) {
-            if (entry.getKey().equals(pos)) {
-                return true;
-            }
+            if (entry.getKey().equals(pos)) return true;
         }
         return false;
     }
@@ -1467,14 +1392,11 @@ public class AutoCrystalPlus extends BlackOutModule {
         for (Map.Entry<AbstractClientPlayerEntity, Box> entry : extPos.entrySet()) {
             AbstractClientPlayerEntity player = entry.getKey();
             Box box = entry.getValue();
-            if (player.getHealth() <= 0 || player == mc.player) {
-                continue;
-            }
+            if (player.getHealth() <= 0 || player == mc.player) continue;
 
             double dmg = BODamageUtils.crystal(player, box, vec, ignorePos(attack), ignoreTerrain.get());
-            if (BlockPos.ofFloored(vec).down().equals(autoMine.targetPos())) {
+            if (BlockPos.ofFloored(vec).down().equals(autoMine.targetPos()))
                 dmg *= autoMineDamage.get();
-            }
             double hp = player.getHealth() + player.getAbsorptionAmount();
 
             //  friend
@@ -1540,9 +1462,8 @@ public class AutoCrystalPlus extends BlackOutModule {
     }
 
     private boolean validForIntersect(Entity entity) {
-        if (entity instanceof EndCrystalEntity && canExplodePlacing(entity.getPos())) {
+        if (entity instanceof EndCrystalEntity && canExplodePlacing(entity.getPos()))
             return false;
-        }
 
         return !(entity instanceof PlayerEntity) || !entity.isSpectator();
     }
@@ -1558,7 +1479,6 @@ public class AutoCrystalPlus extends BlackOutModule {
 
     private boolean blockBroken(BlockPos pos) {
         if (!amPlace.get()) return false;
-
 
         if (autoMine == null || !autoMine.isActive()) return false;
         if (autoMine.targetPos() == null) return false;
