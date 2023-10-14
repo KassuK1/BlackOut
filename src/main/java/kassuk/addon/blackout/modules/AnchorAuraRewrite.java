@@ -297,8 +297,8 @@ public class AnchorAuraRewrite extends BlackOutModule {
 
         if (pauseEat.get() && pauseCheck()) return;
 
-        updatePlacing();
         updateExploding();
+        updatePlacing();
     }
 
     private void updatePlacing() {
