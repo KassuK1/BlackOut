@@ -359,11 +359,6 @@ public class HoleFillPlus extends BlackOutModule {
     private long lastTime = 0;
     public static boolean placing = false;
 
-    @Override
-    public void onActivate() {
-        super.onActivate();
-    }
-
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onTick(TickEvent.Post event) {
         shouldUpdate = true;
@@ -536,9 +531,7 @@ public class HoleFillPlus extends BlackOutModule {
         PlaceData data = SettingUtils.getPlaceData(pos);
         if (!data.valid()) return false;
         if (!SettingUtils.inPlaceRange(data.pos())) return false;
-        if (BOEntityUtils.intersectsWithEntity(Box.from(new BlockBox(pos)), entity -> !entity.isSpectator() && !(entity instanceof ItemEntity), boxes)) return false;
-
-        return true;
+        return !BOEntityUtils.intersectsWithEntity(Box.from(new BlockBox(pos)), entity -> !entity.isSpectator() && !(entity instanceof ItemEntity), boxes);
     }
 
     private boolean validHole(Hole hole) {
@@ -559,9 +552,7 @@ public class HoleFillPlus extends BlackOutModule {
 
     private boolean selfCheck(Hole hole) {
         if (selfNearCheck(hole)) return true;
-        if (selfWalking.get() && walkCheck(mc.player, hole, selfWalkMemory.get(), selfWalkingDist.get())) return true;
-
-        return false;
+        return selfWalking.get() && walkCheck(mc.player, hole, selfWalkMemory.get(), selfWalkingDist.get());
     }
 
     private boolean selfNearCheck(Hole hole) {
@@ -584,9 +575,7 @@ public class HoleFillPlus extends BlackOutModule {
         double eDist = (nearPosition.containsKey(player) ? feet(nearPosition.get(player)) : player.getPos()).distanceTo(hole.middle);
         if (eDist > nearDistance.get()) return false;
 
-        if (efficient.get() && pDist < eDist) return false;
-
-        return true;
+        return !efficient.get() || pDist >= eDist;
     }
 
     private boolean walkingCheck(AbstractClientPlayerEntity player, Hole hole) {

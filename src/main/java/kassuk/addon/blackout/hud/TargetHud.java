@@ -270,7 +270,7 @@ public class TargetHud extends HudElement {
             stack.scale(0.5f,0.5f,1);
             // Misc info
             RenderUtils.text("Yaw: " + Math.round((target.getYaw()) * 10) / 10f + " Pitch: " + Math.round(target.getPitch() * 10) / 10f + " BodyYaw: " + Math.round((target.getBodyYaw()) * 10) / 10f , stack, 66, 45 - mc.textRenderer.fontHeight / 2f, textColor.get().getPacked());
-            RenderUtils.text("TOG: " + (tog.getOrDefault(target, 0)) + " HURT: " + Math.round((target.hurtTime) * 10) / 10f + " TE: " + Math.round(target.age), stack, 66, 55 - mc.textRenderer.fontHeight / 2f, textColor.get().getPacked());
+            RenderUtils.text("TOG: " + (tog.getOrDefault(target, 0)) + " HURT: " + ((target.hurtTime) * 10) / 10f + " TE: " + target.age, stack, 66, 55 - mc.textRenderer.fontHeight / 2f, textColor.get().getPacked());
         }
         if (mode.get() == Mode.Exhibition){
             int height = 60;

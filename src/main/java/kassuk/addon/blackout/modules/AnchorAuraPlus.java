@@ -604,21 +604,10 @@ public class AnchorAuraPlus extends BlackOutModule {
     }
 
     private boolean dmgCheck(double dmg, double self) {
-        if (dmg < bestDmg) {
-            return false;
-        }
-
-        if (dmg < minDmg.get()) {
-            return false;
-        }
-        if (self > maxDmg.get()) {
-            return false;
-        }
-        if (dmg / self < minRatio.get()) {
-            return false;
-        }
-
-        return true;
+        if (dmg < bestDmg) return false;
+        if (dmg < minDmg.get()) return false;
+        if (self > maxDmg.get()) return false;
+        return dmg / self >= minRatio.get();
     }
 
     private double getDmg(BlockPos pos) {

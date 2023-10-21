@@ -190,11 +190,6 @@ public class HoleFillRewrite extends BlackOutModule {
     private double placeTimer = 0;
     private final Map<BlockPos, Double[]> toRender = new HashMap<>();
 
-    @Override
-    public void onActivate() {
-        super.onActivate();
-    }
-
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
         timers.update();

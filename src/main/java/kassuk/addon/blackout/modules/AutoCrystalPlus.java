@@ -32,7 +32,6 @@ import net.minecraft.block.AirBlock;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -40,8 +39,6 @@ import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket;
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket;
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket;
-import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
-import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.*;
 
@@ -835,7 +832,7 @@ public class AutoCrystalPlus extends BlackOutModule {
                             Box box = new Box(renderPos.getX() + 0.5 - width, renderPos.getY() + down, renderPos.getZ() + 0.5 - width,
                                 renderPos.getX() + 0.5 + width, renderPos.getY() + up, renderPos.getZ() + 0.5 + width);
 
-                            event.renderer.box(box, new Color(color.get().r, color.get().g, color.get().b, Math.round(color.get().a)), lineColor.get(), shapeMode.get(), 0);
+                            event.renderer.box(box, new Color(color.get().r, color.get().g, color.get().b, color.get().a), lineColor.get(), shapeMode.get(), 0);
                         }
                     }
                 }
@@ -1224,11 +1221,8 @@ public class AutoCrystalPlus extends BlackOutModule {
     }
 
     private void removeExisted(BlockPos pos) {
-        if (existedMode.get() == DelayMode.Seconds) {
-            if (existedList.containsKey(pos)) existedList.remove(pos);
-        } else {
-            if (existedTicksList.containsKey(pos)) existedTicksList.remove(pos);
-        }
+        if (existedMode.get() == DelayMode.Seconds) existedList.remove(pos);
+        else existedTicksList.remove(pos);
     }
 
     private boolean canExplode(Vec3d vec) {
@@ -1330,9 +1324,7 @@ public class AutoCrystalPlus extends BlackOutModule {
         if (dmg[1] > maxFriendPlace.get()) return false;
         if (dmg[1] >= 0 && dmg[0] / dmg[1] < minFriendPlaceRatio.get()) return false;
         if (dmg[2] > maxPlace.get()) return false;
-        if (dmg[2] >= 0 && dmg[0] / dmg[2] < minPlaceRatio.get()) return false;
-
-        return true;
+        return dmg[2] < 0 || dmg[0] / dmg[2] >= minPlaceRatio.get();
     }
 
     private boolean explodeDamageCheck(double[] dmg, double[] health, boolean own) {
@@ -1364,7 +1356,7 @@ public class AutoCrystalPlus extends BlackOutModule {
 
         if (checkOwn) {
             if (dmg[1] > maxFriendExp.get()) return false;
-            if (dmg[2] > maxExp.get()) return false;
+            return dmg[2] <= maxExp.get();
         }
         return true;
     }
@@ -1488,9 +1480,7 @@ public class AutoCrystalPlus extends BlackOutModule {
 
         if (progress >= 1 && !amBroken.get().broken) return true;
         if (progress >= amProgress.get() && !amBroken.get().near) return true;
-        if (progress < amProgress.get() && !amBroken.get().normal) return true;
-
-        return false;
+        return progress < amProgress.get() && !amBroken.get().normal;
     }
 
     private void addPredict(int id, Vec3d pos, double delay) {

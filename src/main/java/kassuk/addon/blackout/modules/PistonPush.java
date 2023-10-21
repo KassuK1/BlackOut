@@ -487,11 +487,7 @@ public class PistonPush extends BlackOutModule {
                     if (mc.world.getBlockState(b).getBlock() instanceof TorchBlock) {
                         return false;
                     }
-                    if (mc.world.getBlockState(b).getBlock() instanceof PistonBlock ||
-                        mc.world.getBlockState(b).getBlock() instanceof PistonHeadBlock) {
-                        return false;
-                    }
-                    return true;
+                    return !(mc.world.getBlockState(b).getBlock() instanceof PistonBlock) && !(mc.world.getBlockState(b).getBlock() instanceof PistonHeadBlock);
                 });
 
                 if (redstoneData.valid() && SettingUtils.inPlaceRange(redstoneData.pos()) && SettingUtils.inMineRange(position)) {

@@ -30,19 +30,17 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class RotationManager {
 
-    public Target target = null;
-    public double timer = 0;
+    private Target target = null;
+    private double timer = 0;
 
-    public float[] prevDir = new float[2];
-    public float[] currentDir = new float[2];
+    public final float[] prevDir = new float[2];
+    public final float[] currentDir = new float[2];
+    public final float[] lastDir = new float[2];
 
-    public float[] lastDir = new float[2];
-
-    public double priority = 1000;
-    public RotationSettings settings = null;
-    public boolean unsent = false;
-    public static List<Rotation> history = new ArrayList<>();
-    public Target lastTarget = null;
+    private double priority = 1000;
+    private RotationSettings settings = null;
+    private boolean unsent = false;
+    public static final List<Rotation> history = new ArrayList<>();
     boolean shouldRotate = false;
     private float[] next;
     private boolean rotated = false;
@@ -198,18 +196,15 @@ public class RotationManager {
 
     @EventHandler(priority = EventPriority.HIGHEST + 100)
     private void onSend(PacketEvent.Sent event) {
-        if (event.packet instanceof PlayerMoveC2SPacket packet) {
-            if (packet.changesLook()) {
-                lastDir = new float[]{packet.getYaw(0), packet.getPitch(0)};
-                addHistory(lastDir[0], lastDir[1]);
-            }
+        if (event.packet instanceof PlayerMoveC2SPacket packet && packet.changesLook()) {
+            lastDir[0] = packet.getYaw(0);
+            lastDir[1] = packet.getPitch(0);
+            addHistory(lastDir[0], lastDir[1]);
         }
     }
 
     public void end(long k) {
-        if (k == key) {
-            priority = 1000;
-        }
+        if (k == key) priority = 1000;
     }
 
     public void endYaw(double yaw, boolean reset) {
@@ -254,7 +249,6 @@ public class RotationManager {
         if (p <= priority) {
             this.key = key;
             priority = p;
-            lastTarget = target;
 
             target = new AngleTarget(yaw, pitch, type);
             timer = settings.time(type);
@@ -274,7 +268,6 @@ public class RotationManager {
             if (!alreadyRotated) {
                 priority = p;
             }
-            lastTarget = target;
 
             this.key = key;
             target = pos != null ? new BoxTarget(pos, vec != null ? vec : OLEPOSSUtils.getMiddle(box), p, type) : new BoxTarget(box, vec != null ? vec : OLEPOSSUtils.getMiddle(box), p, type);

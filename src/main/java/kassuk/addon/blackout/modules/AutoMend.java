@@ -195,11 +195,6 @@ public class AutoMend extends BlackOutModule {
     private int moveTimer = 0;
     private int offGroundTimer = 0;
 
-    @Override
-    public void onActivate() {
-        super.onActivate();
-    }
-
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
         if (mc.player == null || mc.world == null) return;

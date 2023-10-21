@@ -559,9 +559,7 @@ public class Blocker extends BlackOutModule {
         }
 
         if (!containsPos(pos)) return false;
-        if (!damageCheck(pos, p.type)) return false;
-
-        return true;
+        return damageCheck(pos, p.type);
     }
 
     private void updateBlocks() {
