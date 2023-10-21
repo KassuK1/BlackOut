@@ -16,7 +16,6 @@ import meteordevelopment.meteorclient.systems.friends.Friends;
 import meteordevelopment.meteorclient.utils.entity.EntityUtils;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
-import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
@@ -527,22 +526,16 @@ public class AnchorAuraRewrite extends BlackOutModule {
 
     private boolean placeDmgCheck() {
         if (dmg < bestDmg) return false;
-
         if (dmg < minDmg.get()) return false;
         if (self > maxDmg.get()) return false;
-        if (dmg / self < minRatio.get()) return false;
-
-        return true;
+        return dmg / self >= minRatio.get();
     }
 
     private boolean explodeDmgCheck() {
         if (dmg < bestDmg) return false;
-
         if (dmg < minDmg.get()) return false;
         if (self > maxDmg.get()) return false;
-        if (dmg / self < minRatio.get()) return false;
-
-        return true;
+        return dmg / self >= minRatio.get();
     }
 
     private void getDmg(BlockPos pos) {

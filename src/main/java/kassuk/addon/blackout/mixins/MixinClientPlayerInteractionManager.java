@@ -10,16 +10,15 @@ import net.minecraft.client.network.SequencedPacketCreator;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ClientPlayerInteractionManager.class)
@@ -47,6 +46,7 @@ public abstract class MixinClientPlayerInteractionManager {
     @Shadow
     public abstract int getBlockBreakingProgress();
 
+    @Unique
     private BlockPos position = null;
 
     @Inject(method = "attackBlock", at = @At("HEAD"))
@@ -65,19 +65,19 @@ public abstract class MixinClientPlayerInteractionManager {
 
         BlockState blockState = world.getBlockState(position);
         boolean bl = !blockState.isAir();
-        if (bl && this.currentBreakingProgress == 0.0F) {
-            blockState.onBlockBreakStart(this.client.world, position, this.client.player);
+        if (bl && currentBreakingProgress == 0.0F) {
+            blockState.onBlockBreakStart(client.world, position, client.player);
         }
 
-        if (bl && blockState.calcBlockBreakingDelta(this.client.player, this.client.player.getWorld(), position) >= 1.0F) {
-            this.breakBlock(position);
+        if (bl && blockState.calcBlockBreakingDelta(client.player, client.player.getWorld(), position) >= 1.0F) {
+            breakBlock(position);
         } else {
             breakingBlock = true;
             currentBreakingPos = position;
-            selectedStack = this.client.player.getMainHandStack();
+            selectedStack = client.player.getMainHandStack();
             currentBreakingProgress = 0.0F;
             blockBreakingSoundCooldown = 0.0F;
-            client.world.setBlockBreakingInfo(this.client.player.getId(), this.currentBreakingPos, getBlockBreakingProgress());
+            client.world.setBlockBreakingInfo(client.player.getId(), currentBreakingPos, getBlockBreakingProgress());
         }
 
         autoMine.onStart(position);

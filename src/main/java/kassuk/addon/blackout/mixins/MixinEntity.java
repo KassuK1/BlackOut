@@ -104,8 +104,8 @@ public abstract class MixinEntity {
         }
     }
 
-    @Inject(method = "wouldPoseNotCollide", at = @At("RETURN"), cancellable = true)
-    private void poseNotCollide(EntityPose pose, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "doesNotCollide*", at = @At("RETURN"), cancellable = true)
+    private void poseNotCollide(Box box, CallbackInfoReturnable<Boolean> cir) {
         if (Modules.get().isActive(AntiCrawl.class)) {
             cir.setReturnValue(true);
         }

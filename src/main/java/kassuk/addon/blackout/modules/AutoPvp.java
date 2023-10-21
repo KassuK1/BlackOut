@@ -499,7 +499,7 @@ public class AutoPvp extends BlackOutModule {
     }
 
     private boolean isSpeed(ItemStack stack) {
-        for (Object instance : PotionUtil.getPotionEffects(stack).stream().toArray()) {
+        for (Object instance : PotionUtil.getPotionEffects(stack).toArray()) {
             StatusEffectInstance i = (StatusEffectInstance) instance;
 
             if (i.getEffectType() == StatusEffects.SPEED) {
@@ -534,13 +534,9 @@ public class AutoPvp extends BlackOutModule {
 
         if (amountOf(i -> i.getItem() == Items.END_CRYSTAL) <= crystalAmount.get()) return true;
 
-        if (amountOf(i -> i.getItem() == Items.EXPERIENCE_BOTTLE) <= expAmount.get())
-            return true;
+        if (amountOf(i -> i.getItem() == Items.EXPERIENCE_BOTTLE) <= expAmount.get()) return true;
 
-        if (amountOf(i -> i.getItem() == Items.TOTEM_OF_UNDYING) <= totemAmount.get())
-            return true;
-
-        return false;
+        return amountOf(i -> i.getItem() == Items.TOTEM_OF_UNDYING) <= totemAmount.get();
     }
 
     private int amountOf(Predicate<ItemStack> predicate) {

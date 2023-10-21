@@ -116,25 +116,23 @@ public class OffHandPlus extends BlackOutModule {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     private void onRender(Render3DEvent event) {
-        if (mc.player == null || mc.world == null) {return;}
+        if (mc.player == null || mc.world == null) return;
         timer -= (System.currentTimeMillis() - lastTime) / 1000d;
         lastTime = System.currentTimeMillis();
 
-        if (suicide == null) {suicide = Modules.get().get(Suicide.class);}
-        if (autoCrystalRewrite == null) {autoCrystalRewrite = Modules.get().get(AutoCrystalPlus.class);}
-        if (crystalAura == null) {crystalAura = Modules.get().get(CrystalAura.class);}
-        if (autoMine == null) {autoMine = Modules.get().get(AutoMine.class);}
+        if (suicide == null) suicide = Modules.get().get(Suicide.class);
+        if (autoCrystalRewrite == null) autoCrystalRewrite = Modules.get().get(AutoCrystalPlus.class);
+        if (crystalAura == null) crystalAura = Modules.get().get(CrystalAura.class);
+        if (autoMine == null) autoMine = Modules.get().get(AutoMine.class);
 
         item = getItem();
-        if (item != null) {
-            update();
-        }
+        if (item != null) update();
     }
 
     private void update() {
-        if (timer > 0) {return;}
-        if (getPredicate(item).test(mc.player.getOffHandStack().getItem())) {return;}
-        if (onlyInInv.get() && !(mc.currentScreen instanceof InventoryScreen)) {return;}
+        if (timer > 0) return;
+        if (getPredicate(item).test(mc.player.getOffHandStack().getItem())) return;
+        if (onlyInInv.get() && !(mc.currentScreen instanceof InventoryScreen)) return;
 
         int slot = getSlot(getPredicate(item));
 
@@ -155,9 +153,8 @@ public class OffHandPlus extends BlackOutModule {
     }
 
     private Predicate<Item> getPredicate(Item item) {
-        if (item == Items.GOLDEN_APPLE) {return OLEPOSSUtils::isGapple;}
-        if (item == Items.RED_BED) {return item1 -> item1 instanceof BedItem;}
-
+        if (item == Items.GOLDEN_APPLE) return OLEPOSSUtils::isGapple;
+        if (item == Items.RED_BED) return BedItem.class::isInstance;
         return item::equals;
     }
 
@@ -203,24 +200,12 @@ public class OffHandPlus extends BlackOutModule {
             }
         }
 
-        if (itemAvailable(OLEPOSSUtils::isGapple) &&
-            switch (gapMode.get()) {
-                case Sword -> false;
-                case LastOption -> true;
-                case Both -> false;
-                case Never -> false;
-            }) {
-            return Items.GOLDEN_APPLE;
-        }
-        return null;
+        return itemAvailable(OLEPOSSUtils::isGapple) && (gapMode.get() == GapMode.LastOption) ? Items.GOLDEN_APPLE : null;
     }
 
     private boolean inDanger() {
         double health = mc.player.getHealth() + mc.player.getAbsorptionAmount();
-
-        return
-            health <= hp.get() ||
-            (safety.get() && health - PlayerUtils.possibleHealthReductions() <= safetyHealth.get());
+        return health <= hp.get() || (safety.get() && health - PlayerUtils.possibleHealthReductions() <= safetyHealth.get());
     }
 
     private int getSlot(Predicate<Item> predicate) {
@@ -272,9 +257,11 @@ public class OffHandPlus extends BlackOutModule {
         Never(false);
 
         public final boolean sword;
+
         GapMode(boolean sword) {
             this.sword = sword;
         }
+
         public boolean isSword() {
             return sword;
         }

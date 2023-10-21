@@ -138,11 +138,6 @@ public class SpeedPlus extends BlackOutModule {
     private int jumpPhase = 1;
 
     @Override
-    public void onActivate() {
-        super.onActivate();
-    }
-
-    @Override
     public void onDeactivate() {
         super.onDeactivate();
         Modules.get().get(Timer.class).setOverride(1);
@@ -151,13 +146,10 @@ public class SpeedPlus extends BlackOutModule {
     @EventHandler
     private void onKB(PacketEvent.Receive event) {
         if (mc.player != null && mc.world != null) {
-            if (knockBack.get() && event.packet instanceof EntityVelocityUpdateS2CPacket) {
-                EntityVelocityUpdateS2CPacket packet = (EntityVelocityUpdateS2CPacket) event.packet;
-                if (packet.getId() == mc.player.getId()) {
-                    double x = packet.getVelocityX() / 8000f;
-                    double z = packet.getVelocityZ() / 8000f;
-                    velocity = Math.max(velocity, Math.sqrt(x * x + z * z) * kbFactor.get());
-                }
+            if (knockBack.get() && event.packet instanceof EntityVelocityUpdateS2CPacket packet && packet.getId() == mc.player.getId()) {
+                double x = packet.getVelocityX() / 8000f;
+                double z = packet.getVelocityZ() / 8000f;
+                velocity = Math.max(velocity, Math.sqrt(x * x + z * z) * kbFactor.get());
             }
             if (rbReset.get() && event.packet instanceof PlayerPositionLookS2CPacket) {
                 acceleration = 0;
@@ -183,37 +175,25 @@ public class SpeedPlus extends BlackOutModule {
 
             switch (pauseWater.get()) {
                 case Touching -> {
-                    if (mc.player.isTouchingWater()) {
-                        return;
-                    }
+                    if (mc.player.isTouchingWater()) return;
                 }
                 case Submerged -> {
-                    if (mc.player.isSubmergedIn(FluidTags.WATER)) {
-                        return;
-                    }
+                    if (mc.player.isSubmergedIn(FluidTags.WATER)) return;
                 }
                 case Both -> {
-                    if (mc.player.isTouchingWater() || mc.player.isSubmergedIn(FluidTags.WATER)) {
-                        return;
-                    }
+                    if (mc.player.isTouchingWater() || mc.player.isSubmergedIn(FluidTags.WATER)) return;
                 }
             }
 
             switch (pauseLava.get()) {
                 case Touching -> {
-                    if (mc.player.isInLava()) {
-                        return;
-                    }
+                    if (mc.player.isInLava()) return;
                 }
                 case Submerged -> {
-                    if (mc.player.isSubmergedIn(FluidTags.LAVA)) {
-                        return;
-                    }
+                    if (mc.player.isSubmergedIn(FluidTags.LAVA)) return;
                 }
                 case Both -> {
-                    if (mc.player.isInLava() || mc.player.isSubmergedIn(FluidTags.LAVA)) {
-                        return;
-                    }
+                    if (mc.player.isInLava() || mc.player.isSubmergedIn(FluidTags.LAVA)) return;
                 }
             }
 

@@ -36,7 +36,6 @@ import net.minecraft.world.BlockView;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.explosion.Explosion;
-import org.apache.commons.lang3.mutable.MutableInt;
 
 import java.util.Objects;
 

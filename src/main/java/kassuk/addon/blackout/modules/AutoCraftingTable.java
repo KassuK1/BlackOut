@@ -116,12 +116,6 @@ public class AutoCraftingTable extends BlackOutModule {
     private double interactTimer = 0;
     private long lastTime = -1;
 
-    @Override
-    public void onActivate() {
-        super.onActivate();
-
-    }
-
     @EventHandler
     private void onRender(Render3DEvent event) {
         if (lastTime < 0) {

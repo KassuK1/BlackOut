@@ -13,7 +13,6 @@ import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
-import meteordevelopment.meteorclient.events.world.BlockUpdateEvent;
 import meteordevelopment.meteorclient.renderer.Renderer3D;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
@@ -562,14 +561,12 @@ public class AutoMine extends BlackOutModule {
 
     private boolean isPaused() {
         if (pauseEat.get() && mc.player.isUsingItem()) return true;
-        if (pauseSword.get() && mc.player.getMainHandStack().getItem() instanceof SwordItem) return true;
-        return false;
+        return pauseSword.get() && mc.player.getMainHandStack().getItem() instanceof SwordItem;
     }
 
     private boolean civCheck() {
         if (civPos == null) return true;
-        if (System.currentTimeMillis() - lastCiv < instaDelay.get() * 1000) return false;
-        return true;
+        return System.currentTimeMillis() - lastCiv >= instaDelay.get() * 1000;
     }
 
     private void endMine() {

@@ -36,7 +36,7 @@ import java.util.Objects;
 
 public class BlackOutModule extends Module {
     private final String prefix = Formatting.DARK_RED + "[BlackOut]";
-    public int priority;
+    public final int priority;
 
     public BlackOutModule(Category category, String name, String description) {
         super(category, name, description);

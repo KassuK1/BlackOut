@@ -10,7 +10,7 @@ public class TimerList<T> {
     public final List<Timer<T>> timers = new ArrayList<>();
 
     public void add(T value, double time) {
-        timers.add(new Timer<T>(value, time));
+        timers.add(new Timer<>(value, time));
     }
 
     public void update() {
