@@ -104,7 +104,7 @@ public abstract class MixinEntity {
         }
     }
 
-    @Inject(method = "doesNotCollide*", at = @At("RETURN"), cancellable = true)
+    @Inject(method = "doesNotCollide(Lnet/minecraft/util/math/Box;)Z", at = @At("RETURN"), cancellable = true)
     private void poseNotCollide(Box box, CallbackInfoReturnable<Boolean> cir) {
         if (Modules.get().isActive(AntiCrawl.class)) {
             cir.setReturnValue(true);
