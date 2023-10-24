@@ -7,6 +7,7 @@ import kassuk.addon.blackout.hud.*;
 import kassuk.addon.blackout.modules.*;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
 import meteordevelopment.meteorclient.commands.Commands;
+import meteordevelopment.meteorclient.pathing.PathManagers;
 import meteordevelopment.meteorclient.systems.hud.Hud;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
@@ -55,7 +56,7 @@ public class BlackOut extends MeteorAddon {
         modules.add(new AutoMine());
         modules.add(new AutoMoan());
         modules.add(new AutoPearl());
-        modules.add(new AutoPvp());
+        initializeAutoPVP(modules);
         modules.add(new AutoTrapPlus());
         modules.add(new BedAuraPlus());
         modules.add(new Blocker());
@@ -120,6 +121,13 @@ public class BlackOut extends MeteorAddon {
         hud.register(Welcomer.INFO);
         hud.register(OnTope.INFO);
         hud.register(CatGirl.INFO);
+    }
+
+    private void initializeAutoPVP(Modules modules) {
+        try {
+            Class.forName("baritone.api.BaritoneAPI");
+            modules.add(new AutoPvp());
+        } catch (ClassNotFoundException ignored) {}
     }
 
     @Override

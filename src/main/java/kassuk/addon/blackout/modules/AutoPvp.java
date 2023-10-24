@@ -296,7 +296,6 @@ public class AutoPvp extends BlackOutModule {
     private long lastStep = 0;
     private long lastReverse = 0;
 
-
     private boolean shouldSuicide = false;
     private long lastRespawn = 0;
 
