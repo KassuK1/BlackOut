@@ -664,7 +664,6 @@ public class AutoCrystalPlus extends BlackOutModule {
     private BlockPos placePos = null;
     private Direction placeDir = null;
     private Entity expEntity = null;
-    private Box expEntityBB = null;
     private final TimerList<Integer> attackedList = new TimerList<>();
     private final TimerList<Integer> inhibitList = new TimerList<>();
     private final Map<BlockPos, Long> existedList = new HashMap<>();
@@ -1016,14 +1015,10 @@ public class AutoCrystalPlus extends BlackOutModule {
         if (expEntity != null) {
             if (multiTaskCheck() && !isAttacked(expEntity.getId()) && attackDelayCheck() && existedCheck(expEntity.getBlockPos())) {
                 if (!SettingUtils.shouldRotate(RotationType.Attacking) || startAttackRot()) {
-                    if (SettingUtils.shouldRotate(RotationType.Attacking)) expEntityBB = expEntity.getBoundingBox();
                     explode(expEntity.getId(), expEntity.getPos());
                 }
             }
-        }
-
-        if (!isAlive(expEntityBB) && SettingUtils.shouldRotate(RotationType.Attacking))
-            Managers.ROTATION.end(Objects.hash(name + "attacking"));
+        } else if (SettingUtils.shouldRotate(RotationType.Attacking)) Managers.ROTATION.end(Objects.hash(name + "attacking"));
     }
 
     private boolean attackDelayCheck() {
@@ -1034,7 +1029,6 @@ public class AutoCrystalPlus extends BlackOutModule {
     }
 
     private boolean startAttackRot() {
-        expEntityBB = expEntity.getBoundingBox();
         return (Managers.ROTATION.start(expEntity.getBoundingBox(), smartRot.get() ? expEntity.getPos() : null, priority + (!isAttacked(expEntity.getId()) && blocksPlacePos(expEntity) ? -0.1 : 0.1), RotationType.Attacking, Objects.hash(name + "attacking")));
     }
 
