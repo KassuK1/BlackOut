@@ -264,7 +264,7 @@ public class RotationManager {
 
         boolean alreadyRotated = SettingUtils.rotationCheck(box, type);
 
-        if (p < priority || (p == priority && (!(target instanceof BoxTarget) || SettingUtils.rotationCheck(((BoxTarget) target).box, type)))) {
+        if (p < priority || key == this.key || (p == priority && (!(target instanceof BoxTarget) || SettingUtils.rotationCheck(((BoxTarget) target).box, type)))) {
             if (!alreadyRotated) {
                 priority = p;
             }
