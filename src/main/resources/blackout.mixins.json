@@ -27,7 +27,6 @@
     "defaultRequire": 1
   },
   "mixins": [
-    "MixinClientConnection",
-    "MixinDefaultChannelPipeline"
+    "MixinClientConnection"
   ]
 }
