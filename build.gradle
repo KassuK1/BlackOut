@@ -1,8 +1,8 @@
 plugins {
-    id 'fabric-loom' version '1.5-SNAPSHOT'
+    id 'fabric-loom' version '1.6-SNAPSHOT'
 }
 
-sourceCompatibility = targetCompatibility = JavaVersion.VERSION_17
+sourceCompatibility = targetCompatibility = JavaVersion.VERSION_21
 
 archivesBaseName = project.archives_base_name
 version = project.mod_version
@@ -31,7 +31,7 @@ dependencies {
 
     // Meteor
     modImplementation "meteordevelopment:meteor-client:${project.meteor_version}"
-    modImplementation "meteordevelopment:baritone:${project.minecraft_version}-SNAPSHOT"
+    modCompileOnly "meteordevelopment:baritone:${project.minecraft_version}-SNAPSHOT"
 }
 
 processResources {

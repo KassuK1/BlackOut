@@ -18,7 +18,7 @@ import java.util.function.Predicate;
  * @author OLEPOSSU
  */
 
-public class SettingUtils extends Utils {
+public class SettingUtils {
 
     private static final FacingSettings facing = Modules.get().get(FacingSettings.class);
     private static final RangeSettings range = Modules.get().get(RangeSettings.class);
