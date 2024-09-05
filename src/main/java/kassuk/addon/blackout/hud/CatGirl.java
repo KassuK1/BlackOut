@@ -30,7 +30,7 @@ public class CatGirl extends HudElement {
         .defaultValue(SideMode.Right)
         .build()
     );
-    private final Identifier catgirl = new Identifier("blackout", "catgirl.png");
+    private final Identifier catgirl = Identifier.of("blackout", "catgirl.png");
 
     public static final HudElementInfo<CatGirl> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "catgirl", "It's a Cat girl what do you want", CatGirl::new);
 

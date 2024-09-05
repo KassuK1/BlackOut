@@ -129,7 +129,7 @@ public class BlackOutModule extends Module {
 
     public void useItem(Hand hand) {
         SettingUtils.swing(SwingState.Pre, SwingType.Using, hand);
-        sendSequenced(s -> new PlayerInteractItemC2SPacket(hand, s));
+        sendSequenced(s -> new PlayerInteractItemC2SPacket(hand, s, mc.player.getYaw(), mc.player.getPitch()));
         SettingUtils.swing(SwingState.Post, SwingType.Using, hand);
     }
 

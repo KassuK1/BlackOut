@@ -9,6 +9,7 @@ import kassuk.addon.blackout.enums.SwingType;
 import kassuk.addon.blackout.globalsettings.SwingSettings;
 import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.utils.BOInvUtils;
+import kassuk.addon.blackout.utils.EnchantmentUtils;
 import kassuk.addon.blackout.utils.OLEPOSSUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
 import meteordevelopment.meteorclient.events.packets.PacketEvent;
@@ -28,9 +29,9 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.decoration.EndCrystalEntity;
 import net.minecraft.entity.effect.StatusEffectUtil;
 import net.minecraft.entity.effect.StatusEffects;
@@ -1092,7 +1093,7 @@ public class AutoMine extends BlackOutModule {
         ItemStack stack = mc.player.getInventory().getStack(slot);
         float f = mc.player.getInventory().getStack(slot).getMiningSpeedMultiplier(state);
         if (f > 1.0) {
-            int i = EnchantmentHelper.getLevel(Enchantments.EFFICIENCY, stack);
+            int i = EnchantmentUtils.getLevel(Enchantments.EFFICIENCY, stack);
             if (i > 0 && !stack.isEmpty()) f += (float) (i * i + 1);
         }
 
@@ -1108,7 +1109,7 @@ public class AutoMine extends BlackOutModule {
             }
         }
 
-        if (waterCheck.get() && mc.player.isSubmergedInWater() && !EnchantmentHelper.hasAquaAffinity(mc.player)) {
+        if (waterCheck.get() && mc.player.isSubmergedInWater() && EnchantmentUtils.getLevel(Enchantments.AQUA_AFFINITY, mc.player.getEquippedStack(EquipmentSlot.HEAD)) == 0) {
             f /= 5.0;
         }
 

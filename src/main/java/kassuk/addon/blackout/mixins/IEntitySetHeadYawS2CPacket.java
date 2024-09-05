@@ -6,6 +6,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(EntitySetHeadYawS2CPacket.class)
 public interface IEntitySetHeadYawS2CPacket {
-    @Accessor("entity")
+    @Accessor("entityId")
     int getId();
 }

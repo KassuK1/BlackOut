@@ -208,7 +208,7 @@ public class TargetHud extends HudElement {
             // Health
             RenderUtils.text(String.valueOf(Math.round((renderHealth) * 10) / 10f), stack, 20, 81 - mc.textRenderer.fontHeight / 2f, textColor.get().getPacked());
 
-            float barAnimation = MathHelper.lerp(mc.getTickDelta() / 10, lastHp, renderHealth);
+            float barAnimation = MathHelper.lerp(mc.getRenderTickCounter().getTickDelta(true) / 10, lastHp, renderHealth);
 
             float barStart = Math.max(mc.textRenderer.getWidth(String.valueOf(Math.round((renderHealth) * 10) / 10f)),
                 mc.textRenderer.getWidth("36.0")) + 28;

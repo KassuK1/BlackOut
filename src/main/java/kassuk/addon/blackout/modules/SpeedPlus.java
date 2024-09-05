@@ -146,7 +146,7 @@ public class SpeedPlus extends BlackOutModule {
     @EventHandler
     private void onKB(PacketEvent.Receive event) {
         if (mc.player != null && mc.world != null) {
-            if (knockBack.get() && event.packet instanceof EntityVelocityUpdateS2CPacket packet && packet.getId() == mc.player.getId()) {
+            if (knockBack.get() && event.packet instanceof EntityVelocityUpdateS2CPacket packet && packet.getEntityId() == mc.player.getId()) {
                 double x = packet.getVelocityX() / 8000f;
                 double z = packet.getVelocityZ() / 8000f;
                 velocity = Math.max(velocity, Math.sqrt(x * x + z * z) * kbFactor.get());

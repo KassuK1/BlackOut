@@ -14,9 +14,7 @@ import meteordevelopment.orbit.EventPriority;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.c2s.common.*;
-import net.minecraft.network.packet.c2s.config.ReadyC2SPacket;
 import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket;
-import net.minecraft.network.packet.c2s.login.EnterConfigurationC2SPacket;
 import net.minecraft.network.packet.c2s.login.LoginHelloC2SPacket;
 import net.minecraft.network.packet.c2s.login.LoginKeyC2SPacket;
 import net.minecraft.network.packet.c2s.login.LoginQueryResponseC2SPacket;
@@ -24,9 +22,7 @@ import net.minecraft.network.packet.c2s.play.*;
 import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket;
 import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket;
 import net.minecraft.network.packet.s2c.common.*;
-import net.minecraft.network.packet.s2c.config.DynamicRegistriesS2CPacket;
-import net.minecraft.network.packet.s2c.config.FeaturesS2CPacket;
-import net.minecraft.network.packet.s2c.config.ReadyS2CPacket;
+import net.minecraft.network.packet.s2c.config.*;
 import net.minecraft.network.packet.s2c.login.*;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.network.packet.s2c.query.PingResultS2CPacket;
@@ -96,7 +92,8 @@ public class PacketLogger extends BlackOutModule {
 
         if (packet instanceof ClientOptionsC2SPacket p) return "ClientOptions language:" + p.options().language() + " allowsServerListing:" + p.options().allowsServerListing() + " chatColorsEnabled:" + p.options().chatColorsEnabled() + " chatVisibility:" + p.options().chatVisibility().name() + " filtersText:" + p.options().filtersText() + " mainArm:" + p.options().mainArm().name() + " playerModelParts:" + p.options().playerModelParts() + " viewDistance:" + p.options().viewDistance();
         if (packet instanceof CommonPongC2SPacket p) return "CommonPong parameter:" + p.getParameter();
-// TODO if (packet instanceof CustomPayloadC2SPacket p) return "CustomPayload data:" + p.getData() + " channel:" + p.payload().id();
+        //if (packet instanceof CookieResponseC2SPacket p) return "CookieResponse data:" + p.payload();
+        if (packet instanceof CustomPayloadC2SPacket p) return "CustomPayload data:" + p.payload() + " channel:" + p.payload().getId();
         if (packet instanceof KeepAliveC2SPacket p) return "KeepAlive id:" + p.getId();
         if (packet instanceof ResourcePackStatusC2SPacket p) return "ResourcePackStatus status:" + p.status().name() + " id:" + p.id().toString();
 
@@ -115,14 +112,16 @@ public class PacketLogger extends BlackOutModule {
         if (packet instanceof BoatPaddleStateC2SPacket p) return "BoatPaddle isLeftPadling:" + p.isLeftPaddling() + " isRightPaddling:" + p.isRightPaddling();
         if (packet instanceof BookUpdateC2SPacket p) return "BookUpdate slot:" + p.slot() + " pages:" + p.pages().size() + " title:" + p.title();
         if (packet instanceof ButtonClickC2SPacket p) return "ButtonClick button:" + p.buttonId() + " syncId" + p.syncId();
+        if (packet instanceof ChatCommandSignedC2SPacket p) return "ChatCommandSigned command:" + p.command() + " timestamp:" + p.timestamp() + " salt:" + p.salt() + " argumentSignatures:" + p.argumentSignatures() + " lastSeenMessages:" + p.lastSeenMessages();
         if (packet instanceof ChatMessageC2SPacket p) return "ChatMessage message:" + p.chatMessage();
         if (packet instanceof ClickSlotC2SPacket p) return "ClickSlot syncId:" + p.getSyncId() + " slot:" + p.getSlot() + " button:" + p.getButton() + " action:" + p.getActionType().name() + " revision" + p.getRevision() + " item:" + p.getStack().getItem() + " count:" + p.getStack().getCount();
         if (packet instanceof ClientCommandC2SPacket p) return "ClientCommand entityId:" + p.getEntityId() + " jumpHeight" + p.getMountJumpHeight() + " mode" + p.getMode().name();
         if (packet instanceof ClientStatusC2SPacket p) return "ClientStatus mode:" + p.getMode().name();
         if (packet instanceof CloseHandledScreenC2SPacket p) return "CloseHandledScreen syncId:" + p.getSyncId();
         if (packet instanceof CommandExecutionC2SPacket p) return "CommandExecution command:" + p.command();
-        if (packet instanceof CraftRequestC2SPacket p) return "CraftRequest syncId:" + p.getSyncId() + " craftAll:" + p.shouldCraftAll() + " recipe:" + p.getRecipe();
+        if (packet instanceof CraftRequestC2SPacket p) return "CraftRequest syncId:" + p.getSyncId() + " craftAll:" + p.shouldCraftAll() + " recipeId:" + p.getRecipeId();
         if (packet instanceof CreativeInventoryActionC2SPacket p) return "CreativeInventoryAction slot:" + p.slot() + " item:" + p.stack().getItem() + " count:" + p.stack().getCount();
+        if (packet instanceof DebugSampleS2CPacket p) return "DebugSample sample:" + p.sample() + " sampleType:" + p.debugSampleType();
         if (packet instanceof HandSwingC2SPacket p) return "HandSwing hand:" + p.getHand().name();
         if (packet instanceof JigsawGeneratingC2SPacket p) return "JigsawGeneration x:" + p.getPos().getX() + " y:" + p.getPos().getY() + " z:" + p.getPos().getZ() + " maxDepth" + p.getMaxDepth() + " shouldKeepJigsaws:" + p.shouldKeepJigsaws();
         if (packet instanceof MessageAcknowledgmentC2SPacket p) return "MessageAcknowledgment offset:" + p.offset();
@@ -164,15 +163,23 @@ public class PacketLogger extends BlackOutModule {
 
         //----------Receive----------//
         if (packet instanceof CommonPingS2CPacket p) return "PlayPing parameter:" + p.getParameter();
+        if (packet instanceof CookieRequestS2CPacket p) return "CookieRequest key:" + p.key();
         if (packet instanceof CustomPayloadS2CPacket p) return "CustomPayload channel:" + p.payload().getId().id();
+        if (packet instanceof CustomReportDetailsS2CPacket p) return "CustomReportDetails details:" + p.details();
         if (packet instanceof DisconnectS2CPacket p) return "Disconnect reason:" + p.reason().getString();
         if (packet instanceof KeepAliveS2CPacket p) return "KeepAlive id:" + p.getId();
+        if (packet instanceof ResourcePackRemoveS2CPacket p) return "ResourcePackRemove id:" + p.id();
         if (packet instanceof ResourcePackSendS2CPacket p) return "ResourcePackSend URL:" + p.url() + " hash:" + p.hash() + " prompt:" + p.prompt() + " required:" + p.required() + " id:" + p.id();
+        if (packet instanceof ServerLinksS2CPacket p) return "ServerLinks links" + p.links();
+        if (packet instanceof ServerTransferS2CPacket p) return "ServerTransfer host" + p.host() + " port" + p.port();
+        if (packet instanceof StoreCookieS2CPacket p) return "StoreCookie id" + p.key() + " paylod" + p.payload();
         if (packet instanceof SynchronizeTagsS2CPacket) return "SynchronizeTags";
+        if (packet instanceof SelectKnownPacksS2CPacket) return "SelectKnownPacks";
 
         if (packet instanceof DynamicRegistriesS2CPacket p) return "DynamicRegistries manager:" + p.registry();
         if (packet instanceof FeaturesS2CPacket p) return "Features featureCount:" + p.features().size();
         //if (packet instanceof ReadyS2CPacket p) return "Ready state:" + (p.getNewNetworkState() == null ? "null" : p.getNewNetworkState().name());
+        if (packet instanceof ResetChatS2CPacket) return "ResetChat";
 
         if (packet instanceof LoginCompressionS2CPacket p) return "LoginCompression compressionThreshold:" + p.getCompressionThreshold();
         if (packet instanceof LoginDisconnectS2CPacket p) return "LoginDisconnect reason:" + p.getReason();
@@ -186,7 +193,9 @@ public class PacketLogger extends BlackOutModule {
         if (packet instanceof BlockEventS2CPacket p) return "BlockEvent x:" + p.getPos().getX() + " y:" + p.getPos().getY() + " z:" + p.getPos().getZ() + " block:" + p.getBlock().getName() + " type:" + p.getType() + " data:" + p.getData();
         if (packet instanceof BlockUpdateS2CPacket p) return "BlockUpdate x:" + p.getPos().getX() + " y:" + p.getPos().getY() + " z:" + p.getPos().getZ() + " block:" + p.getState().getBlock();
         if (packet instanceof BossBarS2CPacket) return "BossBar";
+        if (packet instanceof BundleDelimiterS2CPacket) return "BundleDelimiter";
         if (packet instanceof BundleS2CPacket) return "PacketBundle";
+        if (packet instanceof ChangeUnlockedRecipesS2CPacket p) return "ChangeUnlockedRecipes action:" + p.getAction() + " recipeIdsToChange:" + p.getRecipeIdsToChange() + " recipeIdsToInit:" + p.getRecipeIdsToInit()  + " options:" + p.getOptions();
         if (packet instanceof ChatMessageS2CPacket p) return "ChatMessage message:" + p.unsignedContent() + " sender:" + p.sender() + " index:" + p.index();
         if (packet instanceof ChatSuggestionsS2CPacket p) return "ChatSuggestions action:" + p.action().name() + " entries:[\n" + merge(p.entries()) + "]";
         if (packet instanceof ChunkBiomeDataS2CPacket p) return "ChunkBiomeData size:" + p.chunkBiomeData().size();
@@ -203,27 +212,28 @@ public class PacketLogger extends BlackOutModule {
         if (packet instanceof CraftFailedResponseS2CPacket p) return "CraftFailedResponse syncId:" + p.getSyncId() + " recipeId:" + p.getRecipeId();
         if (packet instanceof DamageTiltS2CPacket p) return "DamageTilt yaw:" + p.yaw() + " id:" + p.id();
         if (packet instanceof DeathMessageS2CPacket p) return "DeathMessage entityId:" + p.playerId() + " message:" + p.message().getString();
+        //if (packet instanceof DebugSampleS2CPacket p) return "DebugSample sample:" + p.sample() + " debugSampleType:" + p.debugSampleType();
         if (packet instanceof DifficultyS2CPacket p) return "Difficulty difficulty:" + p.getDifficulty().getName();
         if (packet instanceof EndCombatS2CPacket) return "EndCombat";
         if (packet instanceof EnterCombatS2CPacket) return "EnterCombat";
         //if (packet instanceof EnterReconfigurationS2CPacket p) return "EnterReconfiguration state:" + (p.getNewNetworkState() == null ? "null" : p.getNewNetworkState().name());
         if (packet instanceof EntitiesDestroyS2CPacket p) return "EntitiesDestroy size:" + p.getEntityIds().size();
-        if (packet instanceof EntityAnimationS2CPacket p) return "EntityAnimation id:" + p.getId() + " animationId:" + p.getAnimationId();
+        if (packet instanceof EntityAnimationS2CPacket p) return "EntityAnimation id:" + p.getAnimationId() + " animationId:" + p.getAnimationId();
         if (packet instanceof EntityAttachS2CPacket p) return "EntityAttack attackedId:" + p.getAttachedEntityId() + " holdingId:" + p.getHoldingEntityId();
         if (packet instanceof EntityAttributesS2CPacket p) return "EntityAttributes entityId:" + p.getEntityId();
         if (packet instanceof EntityDamageS2CPacket p) return "EntityDamage entityId:" + p.entityId() + " causeId:" + p.sourceCauseId() + " directId:" + p.sourceDirectId() + " sourceType:" + p.sourceType();
-        if (packet instanceof EntityEquipmentUpdateS2CPacket p) return "EntityEquipment entityId:" + p.getId();
-        if (packet instanceof EntityPassengersSetS2CPacket p) return "EntityPassengersSet entityId:" + p.getId() + mergeIds(p.getPassengerIds());
-        if (packet instanceof EntityPositionS2CPacket p) return "EntityPosition id:" + p.getId() + " x:" + p.getX() + " y:" + p.getY() + " z:" + p.getZ() + " yaw:" + p.getYaw() + " pitch:" + p.getPitch() + " ground:" + p.isOnGround();
+        if (packet instanceof EntityEquipmentUpdateS2CPacket p) return "EntityEquipment entityId:" + p.getEntityId();
+        if (packet instanceof EntityPassengersSetS2CPacket p) return "EntityPassengersSet entityId:" + p.getEntityId() + mergeIds(p.getPassengerIds());
+        if (packet instanceof EntityPositionS2CPacket p) return "EntityPosition id:" + p.getEntityId() + " x:" + p.getX() + " y:" + p.getY() + " z:" + p.getZ() + " yaw:" + p.getYaw() + " pitch:" + p.getPitch() + " ground:" + p.isOnGround();
         if (packet instanceof EntityS2CPacket p) return "Entity id:" + ((IEntityS2CPacket) p).getId() + " deltaX:" + p.getDeltaX() + " deltaY:" + p.getDeltaY() + " deltaZ:" + p.getDeltaZ() + " yaw:" + p.getYaw() + " pitch:" + p.getPitch() + " hasRotation:" + p.hasRotation() + " posChange:" + p.isPositionChanged() + " ground:" + p.isOnGround();
         if (packet instanceof EntitySetHeadYawS2CPacket p) return "EntitySetHeadYaw id:" + ((IEntitySetHeadYawS2CPacket) p).getId();
-        if (packet instanceof EntitySpawnS2CPacket p) return "EntitySpawn id:" + p.getId() + " type:" + p.getEntityType() + " x:" + p.getX() + " y:" + p.getY() + " z:" + p.getZ() + " yaw:" + p.getYaw() + " pitch:" + p.getPitch() + " velX:" + p.getVelocityX() + " velY:" + p.getVelocityY() + " velZ:" + p.getVelocityZ() + " headYaw:" + p.getHeadYaw() + " UUID:" + p.getUuid() + " data:" + p.getEntityData();
+        if (packet instanceof EntitySpawnS2CPacket p) return "EntitySpawn id:" + p.getEntityId() + " type:" + p.getEntityType() + " x:" + p.getX() + " y:" + p.getY() + " z:" + p.getZ() + " yaw:" + p.getYaw() + " pitch:" + p.getPitch() + " velX:" + p.getVelocityX() + " velY:" + p.getVelocityY() + " velZ:" + p.getVelocityZ() + " headYaw:" + p.getHeadYaw() + " UUID:" + p.getUuid() + " data:" + p.getEntityData();
         if (packet instanceof EntityStatusEffectS2CPacket p) return "EntityStatusEffect entityId:" + p.getEntityId() + " effect:" + p.getEffectId().value().getName() + " amplifier:" + p.getAmplifier() + " duration:" + p.getDuration() + " showIcon:" + p.shouldShowIcon() + " particles:" + p.shouldShowParticles() + " ambient:" + p.isAmbient();
         if (packet instanceof EntityStatusS2CPacket p) return "EntityStatus status:" + p.getStatus() + " id:" + ((IEntityStatusS2CPacket) p).getId();
         if (packet instanceof EntityTrackerUpdateS2CPacket p) return "EntityTrackerUpdate id:" + p.id() ;
-        if (packet instanceof EntityVelocityUpdateS2CPacket p) return "EntityVelocityUpdate id:" + p.getId() + " x:" + p.getVelocityX() + " y:" + p.getVelocityY() + " z:" + p.getVelocityZ();
+        if (packet instanceof EntityVelocityUpdateS2CPacket p) return "EntityVelocityUpdate id:" + p.getEntityId() + " x:" + p.getVelocityX() + " y:" + p.getVelocityY() + " z:" + p.getVelocityZ();
         if (packet instanceof ExperienceBarUpdateS2CPacket p) return "ExperienceBarUpdate exp:" + p.getExperience() + " level" + p.getExperienceLevel() + " barProgress:" + p.getBarProgress();
-        if (packet instanceof ExperienceOrbSpawnS2CPacket p) return "ExperienceOrbSpawn id:" + p.getId() + " x:" + p.getX() + " y:" + p.getY() + " z:" + p.getZ() + " expAmount" + p.getExperience();
+        if (packet instanceof ExperienceOrbSpawnS2CPacket p) return "ExperienceOrbSpawn id:" + p.getEntityId() + " x:" + p.getX() + " y:" + p.getY() + " z:" + p.getZ() + " expAmount" + p.getExperience();
         if (packet instanceof ExplosionS2CPacket p) return "Explosion x:" + p.getX() + " y:" + p.getY() + " z:" + p.getZ() + " radius:" + p.getRadius() + " playerVelX:" + p.getPlayerVelocityX() + " playerVelY:" + p.getPlayerVelocityY() + " playerVelZ:" + p.getPlayerVelocityZ();
         if (packet instanceof GameJoinS2CPacket p) return "GameJoin isDebug:" + p.commonPlayerSpawnInfo().isDebug() + " isFlat:" + p.commonPlayerSpawnInfo().isFlat() + " gameMode:" + p.commonPlayerSpawnInfo().gameMode().getName() + " viewDist:"  + p.viewDistance() + " simulationDist:" + p.simulationDistance() + " dimensionsId:" + p.dimensionIds() + " hardcode:" + p.hardcore() + " ownId:" + p.playerEntityId() + " maxPlayers:" + p.maxPlayers() + " portalCooldown:" + p.commonPlayerSpawnInfo().portalCooldown() + " prevGameMode:" + p.commonPlayerSpawnInfo().prevGameMode().getName() + " showDeathScreen:" + p.showDeathScreen() + " reducedDebugInfo:" + p.reducedDebugInfo();
         if (packet instanceof GameMessageS2CPacket p) return "GameMessage content:" + p.content().getString();
@@ -235,7 +245,7 @@ public class PacketLogger extends BlackOutModule {
         if (packet instanceof LookAtS2CPacket) return "LookAt";
         if (packet instanceof MapUpdateS2CPacket p) return "MapUpdate id:" + p.mapId() + " scale:" + p.scale() + " locked:" + p.locked();
         if (packet instanceof NbtQueryResponseS2CPacket p) return "NbtQueryResponse transactionId:" + p.getTransactionId();
-        if (packet instanceof OpenHorseScreenS2CPacket p) return "OpenHorseScreen horseId:" + p.getHorseId() + " syncId:" + p.getSyncId() + " slotCount:" + p.getSlotCount();
+        if (packet instanceof OpenHorseScreenS2CPacket p) return "OpenHorseScreen horseId:" + p.getHorseId() + " syncId:" + p.getSyncId() + " slotCount:" + p.getSlotColumnCount();
         if (packet instanceof OpenScreenS2CPacket p) return "OpenScreen name:" + p.getName().getString() + " syncId:" + p.getSyncId();
         if (packet instanceof OpenWrittenBookS2CPacket p) return "OpenWrittenBook hand:" + p.getHand().name();
         if (packet instanceof OverlayMessageS2CPacket p) return "OverlayMessage message:" + p.text().getString();
@@ -251,6 +261,7 @@ public class PacketLogger extends BlackOutModule {
         if (packet instanceof PlaySoundFromEntityS2CPacket p) return "PlaySoundFromEntity entityId:" + p.getEntityId() + " category:" + p.getCategory().getName() + " sound:" + p.getSound().getType().name() + " pitch:" + p.getPitch() + " volume:" + p.getVolume() + " seed:" + p.getSeed();
         if (packet instanceof PlaySoundS2CPacket p) return "PlaySound x:" + p.getX() + " y:" + p.getY() + " z:" + p.getZ() + " category:" + p.getCategory() + " sound:" + p.getSound().getType().name() + " pitch:" + p.getPitch() + " volume:" + p.getVolume() + " seed:" + p.getSeed();
         if (packet instanceof ProfilelessChatMessageS2CPacket p) return "ProfilelessChatMessage message:" + p.message();
+        if (packet instanceof ProjectilePowerS2CPacket p) return "ProjectilePower id:" + p.getEntityId() + " accelerationPower:" + p.getAccelerationPower();
         if (packet instanceof RemoveEntityStatusEffectS2CPacket p) return "RemoveEntityStatusEffect effect:" + (p.effect().value() == null ? "null" : p.effect().value().getName());
         if (packet instanceof RemoveMessageS2CPacket p) return "RemoveMessage signature:" + p.messageSignature();
         if (packet instanceof ScoreboardDisplayS2CPacket p) return "ScoreboardDisplay name:" + p.getName() + " slot:" + p.getSlot();
@@ -275,7 +286,6 @@ public class PacketLogger extends BlackOutModule {
         if (packet instanceof TitleFadeS2CPacket p) return "TitleFade fadeInTicks:" + p.getFadeInTicks() + " stayTicks:" + p.getStayTicks() + " fadeOutTicks:" + p.getFadeOutTicks();
         if (packet instanceof TitleS2CPacket p) return "Title title:" + (p.text() == null ? "null" : p.text().getString());
         if (packet instanceof UnloadChunkS2CPacket p) return "UnloadChunk x:" + p.pos().x + " z:" + p.pos().z;
-        if (packet instanceof UnlockRecipesS2CPacket p) return "UnlockRecipes action:" + p.getAction().name();
         if (packet instanceof UpdateSelectedSlotS2CPacket p) return "UpdateSelectedSlot slot:" + p.getSlot();
         if (packet instanceof UpdateTickRateS2CPacket p) return "UpdateTickRate tickRate:" + p.tickRate();
         if (packet instanceof VehicleMoveS2CPacket p) return "VehicleMove x:" + p.getX() + " y:" + p.getY() + " z:" + p.getZ() + " yaw:" + p.getYaw() + " pitch:" + p.getPitch();
