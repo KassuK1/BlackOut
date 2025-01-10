@@ -48,6 +48,16 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 public class BODamageUtils {
     public static RaycastContext raycastContext;
 
+    @PreInit
+    public static void init() {
+        MeteorClient.EVENT_BUS.subscribe(BODamageUtils.class);
+    }
+
+    @EventHandler
+    public static void onGameJoin(GameJoinedEvent event) {
+        raycastContext = new RaycastContext(Vec3d.ZERO, Vec3d.ZERO, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player);
+    }
+
     public static double crystalDamage(LivingEntity entity, Box box, Vec3d pos, boolean ignoreTerrain) {
         return crystalDamage(entity, box, pos, null, ignoreTerrain);
     }
