@@ -1092,7 +1092,7 @@ public class AutoMine extends BlackOutModule {
         ItemStack stack = mc.player.getInventory().getStack(slot);
         float f = mc.player.getInventory().getStack(slot).getMiningSpeedMultiplier(state);
         if (f > 1.0) {
-            int i = EnchantmentHelper.getLevel(Enchantments.EFFICIENCY, stack);
+            int i = OLEPOSSUtils.getLevel(Enchantments.EFFICIENCY, stack);
             if (i > 0 && !stack.isEmpty()) f += (float) (i * i + 1);
         }
 
@@ -1101,19 +1101,19 @@ public class AutoMine extends BlackOutModule {
 
         if (effectCheck.get()) {
             if (StatusEffectUtil.hasHaste(mc.player)) {
-                f *= 1.0 + (float) (StatusEffectUtil.getHasteAmplifier(mc.player) + 1) * 0.2F;
+                f *= 1.0f + (StatusEffectUtil.getHasteAmplifier(mc.player) + 1) * 0.2F;
             }
             if (mc.player.hasStatusEffect(StatusEffects.MINING_FATIGUE)) {
-                f *= Math.pow(0.3, mc.player.getStatusEffect(StatusEffects.MINING_FATIGUE).getAmplifier() + 1);
+                f *= (float) Math.pow(0.3f, mc.player.getStatusEffect(StatusEffects.MINING_FATIGUE).getAmplifier() + 1);
             }
         }
 
-        if (waterCheck.get() && mc.player.isSubmergedInWater() && !EnchantmentHelper.hasAquaAffinity(mc.player)) {
-            f /= 5.0;
+        if (waterCheck.get() && mc.player.isSubmergedInWater() && !OLEPOSSUtils.hasAquaAffinity(mc.player)) {
+            f /= 5.0f;
         }
 
         if (onGroundCheck.get() && !mc.player.isOnGround()) {
-            f /= 5.0;
+            f /= 5.0f;
         }
 
         return f;

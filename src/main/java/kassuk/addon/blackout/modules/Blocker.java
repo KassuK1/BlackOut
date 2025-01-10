@@ -448,7 +448,7 @@ public class Blocker extends BlackOutModule {
             for (BlockPos pos : placePositions) {
                 if (!Box.from(new BlockBox(pos)).intersects(entity.getBoundingBox())) continue;
 
-                double dmg = BODamageUtils.crystal(mc.player, mc.player.getBoundingBox(), entity.getPos(), null, false);
+                double dmg = BODamageUtils.crystalDamage(mc.player, mc.player.getBoundingBox(), entity.getPos(), null, false);
                 if (dmg < lowest) {
                     crystal = entity;
                     lowest = dmg;
@@ -639,7 +639,7 @@ public class Blocker extends BlackOutModule {
                             if (!(mc.world.getBlockState(pos).getBlock() instanceof AirBlock)) continue;
                             if (oldVer.get() && !(mc.world.getBlockState(pos.up()).getBlock() instanceof AirBlock)) continue;
 
-                            double self = BODamageUtils.crystal(mc.player, mc.player.getBoundingBox(), feet(pos), blockPos, true);
+                            double self = BODamageUtils.crystalDamage(mc.player, mc.player.getBoundingBox(), feet(pos), blockPos, true);
                             if (self >= maxDmg.get()) return true;
                         }
                     }
@@ -649,7 +649,7 @@ public class Blocker extends BlackOutModule {
                 if (!(mc.world.getBlockState(blockPos).getBlock() instanceof AirBlock)) return false;
                 if (oldVer.get() && !(mc.world.getBlockState(blockPos.up()).getBlock() instanceof AirBlock)) return false;
 
-                double self = BODamageUtils.crystal(mc.player, mc.player.getBoundingBox(), feet(blockPos.up()), blockPos, true);
+                double self = BODamageUtils.crystalDamage(mc.player, mc.player.getBoundingBox(), feet(blockPos.up()), blockPos, true);
                 if (self >= maxDmg.get()) return true;
             }
         }

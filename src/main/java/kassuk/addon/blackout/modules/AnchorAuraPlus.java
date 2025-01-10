@@ -228,7 +228,7 @@ public class AnchorAuraPlus extends BlackOutModule {
             pos = blocks[i];
 
             dmg = getDmg(pos);
-            self = BODamageUtils.anchorDamage(mc.player, mc.player.getBoundingBox(), pos);
+            self = BODamageUtils.anchorDamage(mc.player, mc.player.getBoundingBox(), pos.toCenterPos(), pos, false);
 
             if (!dmgCheck(dmg, self)) {
                 continue;
@@ -613,7 +613,7 @@ public class AnchorAuraPlus extends BlackOutModule {
     private double getDmg(BlockPos pos) {
         double highest = -1;
         for (PlayerEntity target : targets) {
-            highest = Math.max(highest, BODamageUtils.anchorDamage(target, target.getBoundingBox(), pos));
+            highest = Math.max(highest, BODamageUtils.anchorDamage(target, target.getBoundingBox(), pos.toCenterPos(), pos, true));
         }
         return highest;
     }

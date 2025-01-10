@@ -27,6 +27,7 @@
     "defaultRequire": 1
   },
   "mixins": [
+    "AccessorNbtCompound",
     "MixinClientConnection"
   ]
 }

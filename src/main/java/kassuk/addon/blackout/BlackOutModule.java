@@ -3,6 +3,7 @@ package kassuk.addon.blackout;
 import kassuk.addon.blackout.enums.SwingHand;
 import kassuk.addon.blackout.enums.SwingState;
 import kassuk.addon.blackout.enums.SwingType;
+import kassuk.addon.blackout.managers.Managers;
 import kassuk.addon.blackout.modules.SwingModifier;
 import kassuk.addon.blackout.utils.PriorityUtils;
 import kassuk.addon.blackout.utils.SettingUtils;
@@ -129,7 +130,7 @@ public class BlackOutModule extends Module {
 
     public void useItem(Hand hand) {
         SettingUtils.swing(SwingState.Pre, SwingType.Using, hand);
-        sendSequenced(s -> new PlayerInteractItemC2SPacket(hand, s));
+        sendSequenced(s -> new PlayerInteractItemC2SPacket(hand, s, Managers.ROTATION.lastDir[0], Managers.ROTATION.lastDir[1]));
         SettingUtils.swing(SwingState.Post, SwingType.Using, hand);
     }
 

@@ -15,5 +15,8 @@ public interface IInteractEntityC2SPacket {
 
     @Accessor("entityId")
     int getId();
+
+    @Accessor("type")
+    PlayerInteractEntityC2SPacket.InteractTypeHandler getType();
 }
 

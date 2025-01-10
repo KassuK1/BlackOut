@@ -42,7 +42,7 @@ public class RotationManager {
     private boolean unsent = false;
     public static final List<Rotation> history = new ArrayList<>();
     boolean shouldRotate = false;
-    private float[] next;
+    public float[] next;
     private boolean rotated = false;
     private long key = 0;
 
@@ -90,8 +90,9 @@ public class RotationManager {
         timer -= event.frameTime;
         if (timer > 0 && target != null && lastDir != null) {
             if (SettingUtils.shouldVanillaRotate()) {
-                mc.player.setYaw(MathHelper.lerpAngleDegrees(mc.getTickDelta(), prevDir[0], currentDir[0]));
-                mc.player.setPitch(MathHelper.lerp(mc.getTickDelta(), prevDir[1], currentDir[1]));
+                float tickDelta = mc.getRenderTickCounter().getTickDelta(true);
+                mc.player.setYaw(MathHelper.lerpAngleDegrees(tickDelta, prevDir[0], currentDir[0]));
+                mc.player.setPitch(MathHelper.lerp(tickDelta, prevDir[1], currentDir[1]));
             }
         } else if (target != null) {
             target = null;

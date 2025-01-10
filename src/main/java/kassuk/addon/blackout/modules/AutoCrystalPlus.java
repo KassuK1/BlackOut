@@ -1375,7 +1375,7 @@ public class AutoCrystalPlus extends BlackOutModule {
     }
 
     private double[][] getDmg(Vec3d vec, boolean attack) {
-        double self = BODamageUtils.crystal(mc.player, extPos.containsKey(mc.player) ? extPos.get(mc.player) : mc.player.getBoundingBox(), vec, ignorePos(attack), ignoreTerrain.get());
+        double self = BODamageUtils.crystalDamage(mc.player, extPos.containsKey(mc.player) ? extPos.get(mc.player) : mc.player.getBoundingBox(), vec, ignorePos(attack), ignoreTerrain.get());
 
         if (suicide) return new double[][]{new double[]{self, -1, -1}, new double[]{20, 20}};
 
@@ -1388,7 +1388,7 @@ public class AutoCrystalPlus extends BlackOutModule {
             Box box = entry.getValue();
             if (player.getHealth() <= 0 || player == mc.player) continue;
 
-            double dmg = BODamageUtils.crystal(player, box, vec, ignorePos(attack), ignoreTerrain.get());
+            double dmg = BODamageUtils.crystalDamage(player, box, vec, ignorePos(attack), ignoreTerrain.get());
             if (BlockPos.ofFloored(vec).down().equals(autoMine.targetPos()))
                 dmg *= autoMineDamage.get();
             double hp = player.getHealth() + player.getAbsorptionAmount();

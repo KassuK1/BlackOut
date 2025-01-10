@@ -3,11 +3,19 @@ package kassuk.addon.blackout.utils;
 import kassuk.addon.blackout.mixins.IBlockSettings;
 import meteordevelopment.meteorclient.mixin.AbstractBlockAccessor;
 import net.minecraft.block.*;
+import net.minecraft.component.type.ItemEnchantmentsComponent;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.Enchantments;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.*;
+
+import java.util.Comparator;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
@@ -16,6 +24,29 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
  */
 
 public class OLEPOSSUtils {
+    public static Vec3d feet(Box box) {
+        return new Vec3d((box.minX + box.maxX) / 2, box.minY, (box.minZ + box.maxZ) / 2);
+    }
+
+    public static boolean hasAquaAffinity(LivingEntity entity) {
+        for (ItemStack stack : entity.getArmorItems()) {
+            if (hasEnchantment(Enchantments.AQUA_AFFINITY, stack)) return true;
+        }
+        return false;
+    }
+
+    public static boolean hasEnchantment(RegistryKey<Enchantment> enchantment, ItemStack stack) {
+        ItemEnchantmentsComponent v = stack.getEnchantments();
+        Identifier enchantmentId = enchantment.getValue();
+        return v.getEnchantments().stream().anyMatch(entry -> entry.matchesId(enchantmentId));
+    }
+
+    public static int getLevel(RegistryKey<Enchantment> enchantment, ItemStack stack) {
+        ItemEnchantmentsComponent v = stack.getEnchantments();
+        Identifier enchantmentId = enchantment.getValue();
+        return v.getEnchantments().stream().filter(entry -> entry.matchesId(enchantmentId)).map(v::getLevel).max(Comparator.comparingInt(level -> level)).orElse(0);
+    }
+
     public static Vec3d getMiddle(Box box) {
         return new Vec3d((box.minX + box.maxX) / 2, (box.minY + box.maxY) / 2, (box.minZ + box.maxZ) / 2);
     }

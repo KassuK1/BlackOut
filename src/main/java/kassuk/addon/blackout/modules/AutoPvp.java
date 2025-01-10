@@ -24,13 +24,14 @@ import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.client.gui.screen.DeathScreen;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.PotionContentsComponent;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.s2c.play.PlayerRespawnS2CPacket;
-import net.minecraft.potion.PotionUtil;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 
@@ -498,12 +499,9 @@ public class AutoPvp extends BlackOutModule {
     }
 
     private boolean isSpeed(ItemStack stack) {
-        for (Object instance : PotionUtil.getPotionEffects(stack).toArray()) {
-            StatusEffectInstance i = (StatusEffectInstance) instance;
-
-            if (i.getEffectType() == StatusEffects.SPEED) {
+        for (StatusEffectInstance instance : stack.getOrDefault(DataComponentTypes.POTION_CONTENTS, PotionContentsComponent.DEFAULT).getEffects()) {
+            if (instance.getEffectType() == StatusEffects.SPEED)
                 return true;
-            }
         }
         return false;
     }

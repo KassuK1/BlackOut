@@ -49,7 +49,7 @@ public class HudWaterMark extends HudElement {
         .build()
     );
 
-    private final Identifier LOGO = new Identifier("blackout", "logo.png");
+    private final Identifier LOGO = Identifier.of("blackout", "logo.png");
 
     public static final HudElementInfo<HudWaterMark> INFO = new HudElementInfo<>(BlackOut.HUD_BLACKOUT, "BlackoutWatermark", "The Blackout watermark.", HudWaterMark::new);
 

@@ -699,7 +699,7 @@ public class BedAuraPlus extends BlackOutModule {
     private double getDmg(BlockPos pos) {
         double highest = -1;
         for (PlayerEntity target : targets) {
-            highest = Math.max(highest, BODamageUtils.bedDamage(target, target.getBoundingBox(), new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), null));
+            highest = Math.max(highest, BODamageUtils.anchorDamage(target, target.getBoundingBox(), pos.toCenterPos(), pos, false));
         }
         return highest;
     }
@@ -711,14 +711,14 @@ public class BedAuraPlus extends BlackOutModule {
         for (PlayerEntity target : targets) {
             if (target.getHealth() <= 0) continue;
 
-            highest = Math.max(highest, BODamageUtils.bedDamage(target, target.getBoundingBox(), new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), null));
+            highest = Math.max(highest, BODamageUtils.anchorDamage(target, target.getBoundingBox(), pos.toCenterPos(), pos, true));
             highestHP = target.getHealth() + target.getAbsorptionAmount();
         }
         dmg = highest;
         enemyHP = highestHP;
 
         // Self
-        self = BODamageUtils.bedDamage(mc.player, mc.player.getBoundingBox(), new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), null);
+        self = BODamageUtils.anchorDamage(mc.player, mc.player.getBoundingBox(), pos.toCenterPos(), pos, false);
         selfHP = mc.player.getHealth() + mc.player.getAbsorptionAmount();
 
         // Friend
@@ -727,7 +727,7 @@ public class BedAuraPlus extends BlackOutModule {
         for (PlayerEntity friend : friends) {
             if (friend.getHealth() <= 0) continue;
 
-            highest = Math.max(highest, BODamageUtils.bedDamage(friend, friend.getBoundingBox(), new Vec3d(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5), null));
+            highest = Math.max(highest, BODamageUtils.anchorDamage(friend, friend.getBoundingBox(), pos.toCenterPos(), pos, true));
             highestHP = friend.getHealth() + friend.getAbsorptionAmount();
         }
         friend = highest;
