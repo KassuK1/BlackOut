@@ -49,7 +49,6 @@ public class BOInvUtils {
                 handler.getRevision(), PlayerInventory.MAIN_SIZE + Managers.HOLDING.slot,
                 slot, SlotActionType.SWAP, handler.getSlot(slot).getStack(), stack)
             );
-            ((IClientPlayerInteractionManager) mc.interactionManager).meteor$syncSelected();
             slots = new int[]{slot, Managers.HOLDING.slot};
             return true;
         }
@@ -65,6 +64,5 @@ public class BOInvUtils {
             handler.getRevision(), PlayerInventory.MAIN_SIZE + slots[1],
             slots[0], SlotActionType.SWAP, handler.getSlot(slots[0]).getStack().copy(), stack)
         );
-        ((IClientPlayerInteractionManager) mc.interactionManager).meteor$syncSelected();
     }
 }
